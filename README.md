@@ -13,6 +13,13 @@ Shubo Li <cite>[Statistical logic cell delay analysis using a current-based mode
 <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite> <br />
 University of Southern California (USC) 
 
+[1]: http://sportlab.usc.edu/ 
+[2]: https://arxiv.org/abs/2002.05291
+[3]: https://arxiv.org/abs/2002.05292
+[4]: https://ieeexplore.ieee.org/abstract/document/5393095
+[5]: https://ieeexplore.ieee.org/abstract/document/4196129
+[6]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
+
 
 ## Setup Environment
 
