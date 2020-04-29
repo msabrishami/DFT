@@ -9,6 +9,8 @@ This package is written to cover different methods used for circuit netlists (gr
 - Different controllability and observability measurements (e.g. SCOAP)
 - Translation between different formats of circuits (.bench, .verilog, .ckt)
 
+The package is capable of producing test-related datasets later used in down stream machine learning applications. 
+
 ## Developers and Affiliation: <br />
 The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
 
