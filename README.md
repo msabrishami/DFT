@@ -7,14 +7,19 @@ The package was first developed by a group of graduate students as a joint resea
 University of Southern California (USC). 
 
 **Manager:** 
+
 <cite>[M. Saeed Abrishami][1]</cite>  <br />
+
 **Graduate Students:**
+
 Jiayi Wang <cite>[Linkedin][2]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][2]</cite><br />
 Jiaming <cite>[][5]</cite> <br />
 Han Zhang <cite>[LinkedIn][6]</cite>  <br />
 Shubo Li <cite>[LinkedIn][6]</cite>  <br />
+
 **Advisors:**
+
 <cite>[Prof. Massoud Pedram][2]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][2]</cite>  <br />
 
