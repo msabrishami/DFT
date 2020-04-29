@@ -7,18 +7,18 @@ The package was first developed by a group of graduate students as a joint resea
 University of Southern California (USC). 
 
 **Manager:** <br />
-<cite>[M. Saeed Abrishami][1]</cite>  <br />
+<cite>[M. Saeed Abrishami][10]</cite>  <br />
 
 **Graduate Students:** <br />
-Jiayi Wang <cite>[Linkedin][2]</cite>  <br />
-Yang Shen  <cite>[LinkedIn][2]</cite><br />
-Jiaming <cite>[][5]</cite> <br />
-Han Zhang <cite>[LinkedIn][6]</cite>  <br />
-Shubo Li <cite>[LinkedIn][6]</cite>  <br />
+Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
+Yang Shen  <cite>[LinkedIn][14]</cite><br />
+Jiaming Li <cite>[LinkedIn][15]</cite> <br />
+Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
+Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 
 **Advisors:** <br />
-<cite>[Prof. Massoud Pedram][2]</cite>  <br />
-<cite>[Prof. Shahin Nazarian][2]</cite>  <br />
+<cite>[Prof. Massoud Pedram][11]</cite>  <br />
+<cite>[Prof. Shahin Nazarian][12]</cite>  <br />
 
 [1]: http://sportlab.usc.edu/ 
 [2]: https://arxiv.org/abs/2002.05291
