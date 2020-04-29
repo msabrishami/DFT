@@ -17,7 +17,7 @@ The package was first developed by a group of University of Southern California 
 **Manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
 
-**Graduate Students:** <br /> *equal contribution*
+**Graduate Students:** *(equal contribution)* <br /> 
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][14]</cite><br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
