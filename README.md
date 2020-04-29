@@ -6,20 +6,17 @@ The package was first developed by a group of graduate students as a joint resea
 <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite> <br />
 University of Southern California (USC). 
 
-**Manager:** 
-
+**Manager:** <br />
 <cite>[M. Saeed Abrishami][1]</cite>  <br />
 
-**Graduate Students:**
-
+**Graduate Students:** <br />
 Jiayi Wang <cite>[Linkedin][2]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][2]</cite><br />
 Jiaming <cite>[][5]</cite> <br />
 Han Zhang <cite>[LinkedIn][6]</cite>  <br />
 Shubo Li <cite>[LinkedIn][6]</cite>  <br />
 
-**Advisors:**
-
+**Advisors:** <br />
 <cite>[Prof. Massoud Pedram][2]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][2]</cite>  <br />
 
