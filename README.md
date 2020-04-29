@@ -31,8 +31,12 @@ Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 [17]: https://www.linkedin.com/in/shubo-li-760991193/
 
 ## Setup Environment
+Python3
 
-Make sure you have installed Python3
+## Circuit Input Format
+The initial implementation was based on a modified version of *.CKT*, referred as *CKT658* [reference]. A translator is availabel to convert standard *.bench* format to *CKT658* and implemented inside the platform. 
+`translator.py`
+<!--This part is written by Yida-->
 
 ## Repository Structures
 
