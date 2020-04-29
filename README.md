@@ -46,17 +46,6 @@ The initial implementation was based on a modified version of *.CKT*, referred a
 `translator.py`
 <!--This part is written by Yida-->
 
-## Repository Structures
-
-source codes are included in `src/` folder
-
-input & output files are included in `tests/` folder
-
-circuit file. like `.ckt` and `.bench`, and description files of the circuits are included in `circuits/` folder
-
-fault dictionaries are included in `fault_dic/` folder
-
-documents includes some rerferences and reports
 
 ## Run code
 
@@ -126,3 +115,14 @@ To run this code, type command:
 
 `atpg_vo.py` is the source code for implementtation of ATPG. Given circuit, atpg will return fault coverage, timing and respondning the number of input pattern. The detail explanations have been written in atpg_v0_report.pdf in documents repo  <!--This part is written by Han-->   
 
+## Repository Structures
+
+source codes are included in `src/` folder
+
+input & output files are included in `tests/` folder
+
+circuit file. like `.ckt` and `.bench`, and description files of the circuits are included in `circuits/` folder
+
+fault dictionaries are included in `fault_dic/` folder
+
+documents includes some rerferences and reports
