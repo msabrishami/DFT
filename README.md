@@ -1,5 +1,11 @@
 # Circuit Test Package
-This package is written to cover different methods used for circuit netlists (graphs). 
+This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *design for test* (DFT) operations, including: 
+- Gate level logical simulation
+- Fault simulation (PFS, DFS)
+- Dominancy and equivalency relations
+- Reducing fault list (CPT)
+- ATPG(different versions of D-Algorithm and PODEM)
+- Different controllability and observability measurements (e.g. SCOAP)
 
 ## Developers and Affiliation: <br />
 The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
