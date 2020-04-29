@@ -3,8 +3,9 @@ This package is written to cover different methods used for circuit netlists (gr
 - Gate level logical simulation
 - Fault simulation (PFS, DFS)
 - Dominancy and equivalency relations
-- Reducing fault list (CPT)
-- ATPG(different versions of D-Algorithm and PODEM)
+- Systematic fault dropping (CPT)
+- Fault based ATPG (different versions of D-Algorithm and PODEM)
+- Full circuit ATPG 
 - Different controllability and observability measurements (e.g. SCOAP)
 
 ## Developers and Affiliation: <br />
