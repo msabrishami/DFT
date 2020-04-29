@@ -1,0 +1,5 @@
+PODEM:
+5_Value algebra: strcuture(0,1,X), operator, state judge
+Objective
+Backtrace
+Imply
