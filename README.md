@@ -1,7 +1,7 @@
 # Circuit Test Package
 This package is written to cover different methods used for circuit netlists (graphs). 
 
-**Developers and Affiliation:** <br />
+## Developers and Affiliation:** <br />
 The package was first developed by a group of graduate students as a joint research project with 
 <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite> <br />
 University of Southern California (USC). 
@@ -24,11 +24,11 @@ Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 [10]: http://sportlab.usc.edu/~msabrishami/
 [11]: http://sportlab.usc.edu/~shahin/
 [12]: http://www.mpedram.com/
-[13]: https://arxiv.org/abs/2002.05292
-[14]: https://ieeexplore.ieee.org/abstract/document/5393095
-[15]: https://ieeexplore.ieee.org/abstract/document/4196129
-[16]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
-[17]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
+[13]: https://www.linkedin.com/in/jiayi-wang-a40473101/
+[14]: https://www.linkedin.com/in/yshen245/
+[15]: https://www.linkedin.com/in/jiaming-li-73b873191/
+[16]: https://www.linkedin.com/in/han-zhang-usc/
+[17]: https://www.linkedin.com/in/shubo-li-760991193/
 
 ## Setup Environment
 
