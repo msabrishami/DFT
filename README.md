@@ -20,13 +20,14 @@ Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 <cite>[Prof. Massoud Pedram][11]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][12]</cite>  <br />
 
-[1]: http://sportlab.usc.edu/ 
-[2]: https://arxiv.org/abs/2002.05291
-[3]: https://arxiv.org/abs/2002.05292
-[4]: https://ieeexplore.ieee.org/abstract/document/5393095
-[5]: https://ieeexplore.ieee.org/abstract/document/4196129
-[6]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
-
+[10]: http://sportlab.usc.edu/~msabrishami/
+[11]: http://sportlab.usc.edu/~shahin/
+[12]: http://www.mpedram.com/
+[13]: https://arxiv.org/abs/2002.05292
+[14]: https://ieeexplore.ieee.org/abstract/document/5393095
+[15]: https://ieeexplore.ieee.org/abstract/document/4196129
+[16]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
+[17]: https://dl.acm.org/doi/abs/10.1145/1146909.1146975
 
 ## Setup Environment
 
