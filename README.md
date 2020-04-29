@@ -1,6 +1,9 @@
-# README
+# Design For Test Package
+This package is written to cover different methods used for circuit netlists (graphs). 
 
-These are codes for ATPG Project
+## Collaborators: 
+M. Saeed Abrishami <\br>
+
 
 ## Setup Environment
 
