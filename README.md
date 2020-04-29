@@ -20,6 +20,7 @@ Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 <cite>[Prof. Massoud Pedram][11]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][12]</cite>  <br />
 
+[1]: http://sportlab.usc.edu/ 
 [10]: http://sportlab.usc.edu/~msabrishami/
 [11]: http://sportlab.usc.edu/~shahin/
 [12]: http://www.mpedram.com/
