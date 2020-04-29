@@ -2,7 +2,7 @@
 This package is written to cover different methods used for circuit netlists (graphs). 
 
 ## Developers and Affiliation: <br />
-The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite> <br />. 
+The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
 
 **Manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
