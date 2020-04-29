@@ -7,6 +7,7 @@ This package is written to cover different methods used for circuit netlists (gr
 - Fault based ATPG (different versions of D-Algorithm and PODEM)
 - Full circuit ATPG 
 - Different controllability and observability measurements (e.g. SCOAP)
+- Translation between different formats of circuits (.bench, .verilog, .ckt)
 
 ## Developers and Affiliation: <br />
 The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
