@@ -2,16 +2,20 @@
 This package is written to cover different methods used for circuit netlists (graphs). 
 
 **Developers and Affiliation:** <br />
+The package was first developed by a group of graduate students as a joint research project with 
 <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite> <br />
-University of Southern California (USC) 
+University of Southern California (USC). 
 
-Manager: <cite>[M. Saeed Abrishami][1]</cite>  <br />
+**Manager:** 
+<cite>[M. Saeed Abrishami][1]</cite>  <br />
+**Graduate Students:**
 Jiayi Wang <cite>[Linkedin][2]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][2]</cite><br />
 Jiaming <cite>[][5]</cite> <br />
 Han Zhang <cite>[Statistical logic cell delay analysis using a current-based model, DAC 2006][6]</cite>  <br />
 Shubo Li <cite>[Statistical logic cell delay analysis using a current-based model, DAC 2006][6]</cite>  <br />
-
+**Advisors:**
+Jiayi Wang <cite>[Linkedin][2]</cite>  <br />
 
 [1]: http://sportlab.usc.edu/ 
 [2]: https://arxiv.org/abs/2002.05291
