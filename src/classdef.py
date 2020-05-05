@@ -54,6 +54,14 @@ class node:
         self.CC0 = 0
         self.CC1 = 0
         self.CO = 0
+        self.one_count = 0
+        self.zero_count = 0
+        self.sen_count = 0
+        self.sen_p = 0.0
+        self.one_control = 0.0
+        self.zero_control = 0.0
+        self.one_observe = 0.0
+        self.zero_observe = 0.0
         
     def add_unodes(self, unode):
         self.unodes.append(unode)
