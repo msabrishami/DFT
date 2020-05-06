@@ -15,7 +15,8 @@ def main():
     #observability() need to follow controllability()
     circuit.controllability()
     circuit.observability()    
-    # circuit.STAFAN()  
+    circuit.gen_graph()
+    circuit.STAFAN()  
 
 
     

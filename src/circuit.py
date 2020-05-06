@@ -19,6 +19,8 @@ from d_alg import D_alg
 from classdef import five_value
 from classdef import podem_node_5val
 from podem import podem
+import networkx as nx
+import matplotlib.pyplot as plt
 # from podem_m import podem
 
 #from D_alg import imply_and_check
@@ -43,6 +45,7 @@ class Circuit:
         self.d_correctness_rate = None
         self.pd_correctness_rate = None
         self.pass_cnt = 0
+        self.input_cnt = None
         self.rfl_node = []
         self.rfl_ftype = []
         self.lev_max_temp = [] #controllability and observabilitiy
@@ -119,6 +122,7 @@ class Circuit:
                 self.input_num_list.append(self.nodes[i].num)
         
         self.nodes_cnt = len(self.nodes)
+        self.input_cnt = len(self.input_num_list)
         # return self.nodes
 
     def lev(self):
@@ -517,8 +521,49 @@ class Circuit:
             fault_dict_result.write('\n')
             
         fault_dict_result.close()
-    
-    #to be continued
+    def gen_fault_dic_multithreading(self, thread_cnt, idx):
+        """
+        Create threads to generate fault dictionaries.
+        Speed up the fault dictionary generation process.
+        """
+        fault_dict = {}
+        total_pattern = pow(2, self.input_cnt)
+        pattern_per_thread = int(total_pattern / thread_cnt)
+
+        for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
+            #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
+            b = ('{:0%db}'%self.input_cnt).format(i)
+            list_to_pfs = []
+            for j in range(self.input_cnt):
+                list_to_pfs.append(int(b[j]))
+        #do pfs based on the prodeuced input files
+            result = []
+            result = self.pfs(list_to_pfs)
+            fault = []
+            #print(result)
+            for i in result:
+                fault.append("%d@%d" % (i[0], i[1]))
+
+            fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
+            fault_dict.update({b: fault})
+
+        with open ("../fault_dic/{}_{}.fd".format(self.c_name, idx), "w") as fo:
+            for i in range(self.input_cnt):
+                if (i < self.input_cnt - 1):
+                    fo.write('%d->' % self.input_num_list[i])
+                else:
+                    fo.write('%d' % self.input_num_list[i])
+            fo.write(' as sequence of inputs')    
+            fo.write('\n')
+            fo.write('input_patterns\t\t\tdetected_faults\n')
+            for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
+                b = ('{:0%db}'%self.input_cnt).format(i)
+                fo.write('%s\t\t\t\t' % b)
+                for i in range(len(fault_dict.get(b))):
+                    fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
+                fo.write('\n')
+        print("thread #{} of {} threads finished".format(idx, thread_cnt))
+
     def get_reduced_fault_list(self):
         """
         Using checkpoint theorem, 
@@ -913,76 +958,187 @@ class Circuit:
         for i in reversed(range(len(self.nodes_lev))):
             print("node num:",self.nodes_lev[i].num,"node lev:",self.nodes_lev[i].lev,"CC0:",self.nodes_lev[i].CC0,"CC1:",self.nodes_lev[i].CC1,"CO:",self.nodes_lev[i].CO)       
 
-    def STAFAN(self):
-    	fail = 0
-    	inputnum = len(self.input_num_list)
-    	total_pattern = pow(2,inputnum)
-    	for k in range(total_pattern):
-    		b = ('{:0%db}'%inputnum).format(k)
-    		list_to_logicsim = []
-    		for j in range(inputnum):
-    			list_to_logicsim.append(int(b[j]))
-    		self.logic_sim(list_to_logicsim)
-    		for i in self.nodes_lev:
-    			if i.value == 1:
-    				i.one_count = i.one_count + 1
-    			elif i.value == 0:
-    				i.zero_count = i.zero_count + 1
+    def gen_graph(self):
+        """
+        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
+        """
+        G = nx.DiGraph()
+        for n in self.nodes_lev:
+            G.add_node(n.num)
+            G.nodes[n.num]['CC0'] = n.CC0
+            G.nodes[n.num]['CC1'] = n.CC1
+            G.nodes[n.num]['CO'] = n.CO
+            G.nodes[n.num]['lev'] = n.lev
+            if n.gtype != 'IPT':
+                for unode in n.unodes:
+                    G.add_edge(unode.num, n.num)
+            else:
+                pass
+        # labels = {}
+        # for node in self.nodes_lev:
+        #     print('{}'.format(G.nodes[node.num]))
+        # pos = nx.spring_layout(G)
+        nx.draw_networkx(G)
+        # nx.draw_networkx_labels(G, pos, labels)
+        plt.show()
 
-    			if (i.ntype != 'PO'):
-    				if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
-    					for j in i.dnodes[0].unodes:
-    						if (j.num != i.num):
-    							if (j.value != 1):
-    								fail = 1
-    								break
-    					if (fail != 1):
-    						i.sen_count = i.sen_count + 1
-    					fail = 0
-    				elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
-    					for j in i.dnodes[0].unodes:
-    						if (j.num != i.num):
-    							if (j.value != 0):
-    								fail = 1
-    								break
-    					if (fail != 1):
-    						i.sen_count = i.sen_count + 1
-    					fail = 0
-    				# print(i.num, i.one_count, i.zero_count, i.sen_count)
-    	# calculate controllability
-    	for i in self.nodes_lev:
-    		i.one_control = i.one_count / total_pattern
-    		i.zero_control = i.zero_count / total_pattern
-    		i.sen_p = i.sen_count / total_pattern
-    		# print(i.num, i.one_control, i.zero_control, i.sen_p)
-    	# calculate observability
-    	for i in reversed(self.nodes_lev):
-    		if (i.ntype == 'PO'):
-    			i.one_observe = 1.0
-    			i.zero_observe = 1.0
-    		else:
-    			if(i.dnodes[0].gtype == 'AND'):
-    				i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
-    				i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
-    			elif(i.dnodes[0].gtype == 'NAND'):
-    				i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
-    				i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
-    			elif(i.dnodes[0].gtype == 'OR'):
-    				i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
-    				i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
-    			elif(i.dnodes[0].gtype == 'NOR'):
-    				i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
-    				i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
-    			elif(i.dnodes[0].gtype == 'NOT'):
-    				i.one_observe = i.dnodes[0].zero_observe
-    				i.zero_observe = i.dnodes[0].one_observe
-    			elif(i.dnodes[0].gtype == 'XOR'):
-    				i.one_observe = i.dnodes[0].zero_observe
-    				i.zero_observe = i.dnodes[0].one_observe
-    			elif(i.dnodes[0].gtype == 'BRCH'):
-    				i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
-    				i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
-    		print(i.num, i.one_observe, i.zero_observe)
+
+
+    def STAFAN(self):
+        fail = 0
+        inputnum = len(self.input_num_list)
+        total_pattern = pow(2,inputnum)
+        for k in range(total_pattern):
+            b = ('{:0%db}'%inputnum).format(k)
+            list_to_logicsim = []
+            for j in range(inputnum):
+                list_to_logicsim.append(int(b[j]))
+            self.logic_sim(list_to_logicsim)
+            for i in self.nodes_lev:
+                if i.value == 1:
+                    i.one_count = i.one_count + 1
+                elif i.value == 0:
+                    i.zero_count = i.zero_count + 1
+
+                if (i.ntype != 'PO'):
+                    if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 1):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 0):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
+        # calculate controllability
+        for i in self.nodes_lev:
+            i.one_control = i.one_count / total_pattern
+            i.zero_control = i.zero_count / total_pattern
+            i.sen_p = i.sen_count / total_pattern
+            # print(i.num, i.one_control, i.zero_control, i.sen_p)
+        # calculate observability
+        for i in reversed(self.nodes_lev):
+            if (i.ntype == 'PO'):
+                i.one_observe = 1.0
+                i.zero_observe = 1.0
+            else:
+                if(i.dnodes[0].gtype == 'AND'):
+                    i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
+                    i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                elif(i.dnodes[0].gtype == 'NAND'):
+                    i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
+                    i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                elif(i.dnodes[0].gtype == 'OR'):
+                    i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
+                    i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+                elif(i.dnodes[0].gtype == 'NOR'):
+                    i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
+                    i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+                elif(i.dnodes[0].gtype == 'NOT'):
+                    i.one_observe = i.dnodes[0].zero_observe
+                    i.zero_observe = i.dnodes[0].one_observe
+                elif(i.dnodes[0].gtype == 'XOR'):
+                    i.one_observe = i.dnodes[0].zero_observe
+                    i.zero_observe = i.dnodes[0].one_observe
+                elif(i.dnodes[0].gtype == 'BRCH'):
+                    i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
+                    i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
+            print(i.num, i.one_observe, i.zero_observe)
+
+    def STAFAN_multithreading(self, thread_cnt, idx):
+        """
+        Create threads to generate STAFAN controllability and observability.
+        Each thread calculate 
+        """
+        fail = 0
+        total_pattern = pow(2,self.input_cnt)
+        pattern_per_thread = int(total_pattern / thread_cnt)
+        for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
+            b = ('{:0%db}'%self.input_cnt).format(i)
+            list_to_logicsim = []
+            for j in range(self.input_cnt):
+                list_to_logicsim.append(int(b[j]))
+            self.logic_sim(list_to_logicsim)
+            for i in self.nodes_lev:
+                if i.value == 1:
+                    i.one_count = i.one_count + 1
+                elif i.value == 0:
+                    i.zero_count = i.zero_count + 1
+
+                if (i.ntype != 'PO'):
+                    if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 1):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 0):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
+        # calculate controllability
+        one_count_list = []
+        zero_count_list = []
+        sen_count_list = []
+        for i in self.nodes_lev:
+            one_count_list.append(i.one_count)
+            zero_count_list.append(i.zero_count)
+            sen_count_list.append(i.sen_count)
+        return one_count_list, zero_count_list, sen_count_list
+            # print(i.num, i.one_control, i.zero_control, i.sen_p)
+
+    def STAFAN_observability(self):
+        """
+        for multiprocessing
+        """
+        # calculate observability
+        for i in reversed(self.nodes_lev):
+        	if (i.ntype == 'PO'):
+        		i.one_observe = 1.0
+        		i.zero_observe = 1.0
+        	else:
+        		if(i.dnodes[0].gtype == 'AND'):
+        			i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
+        			i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+        		elif(i.dnodes[0].gtype == 'NAND'):
+        			i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
+        			i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+        		elif(i.dnodes[0].gtype == 'OR'):
+        			i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
+        			i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+        		elif(i.dnodes[0].gtype == 'NOR'):
+        			i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
+        			i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+        		elif(i.dnodes[0].gtype == 'NOT'):
+        			i.one_observe = i.dnodes[0].zero_observe
+        			i.zero_observe = i.dnodes[0].one_observe
+        		elif(i.dnodes[0].gtype == 'XOR'):
+        			i.one_observe = i.dnodes[0].zero_observe
+        			i.zero_observe = i.dnodes[0].one_observe
+        		elif(i.dnodes[0].gtype == 'BRCH'):
+        			i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
+        			i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
+        	print(i.num, i.one_observe, i.zero_observe)
+
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
