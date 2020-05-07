@@ -21,6 +21,8 @@ from classdef import podem_node_5val
 from podem import podem
 import networkx as nx
 import matplotlib.pyplot as plt
+from random import randint
+import time
 # from podem_m import podem
 
 #from D_alg import imply_and_check
@@ -984,12 +986,13 @@ class Circuit:
 
 
 
-    def STAFAN(self):
+    def STAFAN(self, num_of_pattern):
+        starttime = time.time()
         fail = 0
         inputnum = len(self.input_num_list)
         total_pattern = pow(2,inputnum)
-        for k in range(total_pattern):
-            b = ('{:0%db}'%inputnum).format(k)
+        for k in range(num_of_pattern):
+            b = ('{:0%db}'%inputnum).format(randint(0,total_pattern))
             list_to_logicsim = []
             for j in range(inputnum):
                 list_to_logicsim.append(int(b[j]))
@@ -1019,12 +1022,11 @@ class Circuit:
                         if (fail != 1):
                             i.sen_count = i.sen_count + 1
                         fail = 0
-                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
         # calculate controllability
         for i in self.nodes_lev:
-            i.one_control = i.one_count / total_pattern
-            i.zero_control = i.zero_count / total_pattern
-            i.sen_p = i.sen_count / total_pattern
+            i.one_control = i.one_count / num_of_pattern
+            i.zero_control = i.zero_count / num_of_pattern
+            i.sen_p = i.sen_count / num_of_pattern
             # print(i.num, i.one_control, i.zero_control, i.sen_p)
         # calculate observability
         for i in reversed(self.nodes_lev):
@@ -1033,27 +1035,62 @@ class Circuit:
                 i.zero_observe = 1.0
             else:
                 if(i.dnodes[0].gtype == 'AND'):
-                    i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
-                    i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                    if (i.one_control == 0):
+                        i.one_observe = 1.0
+                    else :
+                        i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
+                    
+                    if (i.zero_control == 0):
+                        i.zero_observe = 1.0
+                    else :
+                        i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+
                 elif(i.dnodes[0].gtype == 'NAND'):
-                    i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
-                    i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                    if (i.one_control == 0):
+                        i.one_observe = 1.0
+                    else :
+                        i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
+                    if (i.zero_control == 0):
+                        i.zero_observe = 1.0
+                    else :
+                        i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+
                 elif(i.dnodes[0].gtype == 'OR'):
-                    i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
-                    i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+                    if (i.one_control == 0):
+                        i.one_observe = 1.0
+                    else :
+                        i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
+                    
+                    if (i.zero_control == 0):
+                        i.zero_observe = 1.0
+                    else :
+                        i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+
                 elif(i.dnodes[0].gtype == 'NOR'):
-                    i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
-                    i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+                    if (i.one_control == 0):
+                        i.one_observe = 1.0
+                    else :
+                        i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
+                    if (i.zero_control == 0):
+                        i.zero_observe = 1.0
+                    else :
+                        i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+
                 elif(i.dnodes[0].gtype == 'NOT'):
                     i.one_observe = i.dnodes[0].zero_observe
                     i.zero_observe = i.dnodes[0].one_observe
+                
                 elif(i.dnodes[0].gtype == 'XOR'):
                     i.one_observe = i.dnodes[0].zero_observe
                     i.zero_observe = i.dnodes[0].one_observe
+                
                 elif(i.dnodes[0].gtype == 'BRCH'):
                     i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
                     i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
-            print(i.num, i.one_observe, i.zero_observe)
+            # print(i.num, i.one_control, i.zero_control, i.one_observe, i.zero_observe)
+
+        endtime = time.time()
+        print(endtime - starttime)
 
     def STAFAN_multithreading(self, thread_cnt, idx):
         """
