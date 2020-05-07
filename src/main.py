@@ -16,7 +16,7 @@ def main():
     circuit.controllability()
     circuit.observability()    
     circuit.gen_graph()
-    circuit.STAFAN()  
+    circuit.STAFAN(1000)  
 
 
     
