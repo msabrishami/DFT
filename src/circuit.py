@@ -874,8 +874,6 @@ class Circuit:
         for i in self.nodes_lev:
             self.lev_max_temp.append(i.lev)
         
-        print(self.lev_max_temp)
-        print(self.leveled)
         num_lvls =  max(self.lev_max_temp)
         print(num_lvls)
 
@@ -885,21 +883,15 @@ class Circuit:
                 if i.lev == j:
                     self.leveled[j].append(i)
         
-        pdb.set_trace()
-        # for lvl in range(num_lvls):
-        #     print("level {}: {}".format(lvl, len(self.leveled[lvl])))
-        
         for i in self.leveled[0]:
-            print(type(i))
             i.CC0 = 1
             i.CC1 = 1
-        print("Done")
-
 
         for i in range(1, num_lvls+1):
+            print("level {}, {}".format(i, len(self.leveled[i])))
+            
             for j in self.leveled[i]:
-                print(j.gtype)
-                print("here") 
+                # print(j.gtype)
                 unodes_CC0 = []
                 unodes_CC1 = []
                 for unode in j.unodes:
@@ -908,56 +900,44 @@ class Circuit:
                 minCC0 = min(unodes_CC0)
                 minCC1 = min(unodes_CC1)
                 
+                # TODO: this seems not ok!
                 if j.gtype == "BRCH":
                     j.CC0 = minCC0
-                    j.CC1 = minCC1 #??????? #TODO: why question mark?
+                    j.CC1 = minCC1 
                 
                 # TODO: this is only for XOR with 2 inputs
                 elif j.gtype == "XOR":
-                    j.CC0 = min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1) + 1
-                    j.CC1 = min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1) + 1
+                    j.CC0 = 1 + min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1)
+                    j.CC1 = 1 +  min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1)
+                
                 elif j.gtype == "OR":
-                    CC0 = 1
-                    for k in j.unodes:
-                        CC0 = CC0 + k.CC0
-                    print(CC0)
-                    print(1+sum(unodes_CC0))
-                    print("----------------")
-                    # j.CC0 = 
-                    j.CC0 = CC0
-                    j.CC1 = minCC1 + 1
+                    j.CC0 = 1 + sum(unodes_CC0)
+                    j.CC1 = 1 + minCC1
                 
                 elif j.gtype == "NOR":
-                    CC0 = 1
-                    for k in j.unodes:
-                        CC0 = CC0 + k.CC0
-                    j.CC1 = CC0
-                    j.CC0 = minCC1 + 1
+                    j.CC1 = 1 + sum(unodes_CC0)
+                    j.CC0 = 1 + minCC1 
                 
                 elif j.gtype == "NOT":
                     j.CC0 = j.unodes[0].CC1 + 1
-                    j.CC1 = j.unodes[1].CC0 + 1
+                    j.CC1 = j.unodes[0].CC0 + 1
                 
                 elif j.gtype == "NAND":
-                    CC1 = 1
-                    for k in j.unodes:
-                        CC1 = CC1 + k.CC1
-                    j.CC0 = CC1
-                    j.CC1 = minCC0 + 1
+                    j.CC0 = 1 + sum(unodes_CC1)
+                    j.CC1 = 1 + minCC0
                 
                 elif j.gtype == "AND":
-                    CC1 = 1
-                    for k in j.unodes:
-                        CC1 = CC1 + k.CC1
-                    j.CC1 = CC1
-                    j.CC0 = minCC0 + 1
-                
+                    j.CC1 = 1 + sum(unodes_CC1)
+                    j.CC0 = 1 + minCC0
+    
     
     def observability(self):
         # for i in reversed(range(len(self.nodes_lev))):
         #     print(self.nodes_lev[i].num,self.nodes_lev[i].lev,self.nodes_lev[i].CC0,self.nodes_lev[i].CC1)
+        
         for i in self.leveled[-1]:
             i.CO = 1
+
         for i in range(max(self.lev_max_temp),-1,-1):
             #print("level",i)
             for j in self.leveled[i]:
@@ -1024,6 +1004,7 @@ class Circuit:
         fail = 0
         inputnum = len(self.input_num_list)
         total_pattern = pow(2,inputnum)
+        
         for k in range(num_of_pattern):
             b = ('{:0%db}'%inputnum).format(randint(0,total_pattern))
             list_to_logicsim = []
