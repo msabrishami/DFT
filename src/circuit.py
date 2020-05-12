@@ -876,7 +876,9 @@ class Circuit:
         
         print(self.lev_max_temp)
         print(self.leveled)
-        
+        num_lvls =  max(self.lev_max_temp)
+        print(num_lvls)
+
         for j in range(max(self.lev_max_temp)+1):
             self.leveled.append([])
             for i in self.nodes_lev:
@@ -884,26 +886,31 @@ class Circuit:
                     self.leveled[j].append(i)
         
         pdb.set_trace()
+        # for lvl in range(num_lvls):
+        #     print("level {}: {}".format(lvl, len(self.leveled[lvl])))
         
         for i in self.leveled[0]:
+            print(type(i))
             i.CC0 = 1
             i.CC1 = 1
+        print("Done")
 
-        num_lvls =  max(self.lev_,ax_temp)
+
         for i in range(1, num_lvls+1):
             for j in self.leveled[i]:
-                
+                print(j.gtype)
+                print("here") 
                 unodes_CC0 = []
                 unodes_CC1 = []
                 for unode in j.unodes:
                     unodes_CC0.append(unode.CC0)
                     unodes_CC1.append(unode.CC1)
-                minCC0 = min(temp_CC0)
-                minCC1 = min(temp_CC1)
+                minCC0 = min(unodes_CC0)
+                minCC1 = min(unodes_CC1)
                 
                 if j.gtype == "BRCH":
                     j.CC0 = minCC0
-                    j.CC1 = minCC1#???????
+                    j.CC1 = minCC1 #??????? #TODO: why question mark?
                 
                 # TODO: this is only for XOR with 2 inputs
                 elif j.gtype == "XOR":
@@ -913,6 +920,9 @@ class Circuit:
                     CC0 = 1
                     for k in j.unodes:
                         CC0 = CC0 + k.CC0
+                    print(CC0)
+                    print(1+sum(unodes_CC0))
+                    print("----------------")
                     # j.CC0 = 
                     j.CC0 = CC0
                     j.CC1 = minCC1 + 1

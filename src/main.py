@@ -13,9 +13,6 @@ def main():
     circuit.read_circuit()
     circuit.lev()
     
-    
-    pdb.set_trace()
-
     #observability() need to follow controllability()
     circuit.controllability()
     circuit.observability()    
