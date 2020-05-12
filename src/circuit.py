@@ -23,6 +23,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from random import randint
 import time
+import pdb
 # from podem_m import podem
 
 #from D_alg import imply_and_check
@@ -857,6 +858,7 @@ class Circuit:
         res = podem(fault_node_num, fault_type, self.nodes, self.nodes_lev)
         return res
 
+    
     def time_for_podem(self):
         totaltime = 0
         for i in range(len(self.fault_node_num)): 
@@ -865,30 +867,45 @@ class Circuit:
             endtime = time.time()
             totaltime = totaltime + (endtime - starttime)
         print(totaltime)
+
+    
     def controllability(self):
+
         for i in self.nodes_lev:
             self.lev_max_temp.append(i.lev)
-
+        
+        print(self.lev_max_temp)
+        print(self.leveled)
+        
         for j in range(max(self.lev_max_temp)+1):
             self.leveled.append([])
             for i in self.nodes_lev:
                 if i.lev == j:
                     self.leveled[j].append(i)
+        
+        pdb.set_trace()
+        
         for i in self.leveled[0]:
             i.CC0 = 1
             i.CC1 = 1
-        for i in range(1,max(self.lev_max_temp)+1):
+
+        num_lvls =  max(self.lev_,ax_temp)
+        for i in range(1, num_lvls+1):
             for j in self.leveled[i]:
-                temp_CC0 = []
-                temp_CC1 = []
-                for k in j.unodes:
-                    temp_CC0.append(k.CC0)
-                    temp_CC1.append(k.CC1)
+                
+                unodes_CC0 = []
+                unodes_CC1 = []
+                for unode in j.unodes:
+                    unodes_CC0.append(unode.CC0)
+                    unodes_CC1.append(unode.CC1)
                 minCC0 = min(temp_CC0)
                 minCC1 = min(temp_CC1)
+                
                 if j.gtype == "BRCH":
                     j.CC0 = minCC0
                     j.CC1 = minCC1#???????
+                
+                # TODO: this is only for XOR with 2 inputs
                 elif j.gtype == "XOR":
                     j.CC0 = min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1) + 1
                     j.CC1 = min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1) + 1
@@ -896,23 +913,28 @@ class Circuit:
                     CC0 = 1
                     for k in j.unodes:
                         CC0 = CC0 + k.CC0
+                    # j.CC0 = 
                     j.CC0 = CC0
                     j.CC1 = minCC1 + 1
+                
                 elif j.gtype == "NOR":
                     CC0 = 1
                     for k in j.unodes:
                         CC0 = CC0 + k.CC0
                     j.CC1 = CC0
                     j.CC0 = minCC1 + 1
+                
                 elif j.gtype == "NOT":
                     j.CC0 = j.unodes[0].CC1 + 1
                     j.CC1 = j.unodes[1].CC0 + 1
+                
                 elif j.gtype == "NAND":
                     CC1 = 1
                     for k in j.unodes:
                         CC1 = CC1 + k.CC1
                     j.CC0 = CC1
                     j.CC1 = minCC0 + 1
+                
                 elif j.gtype == "AND":
                     CC1 = 1
                     for k in j.unodes:
@@ -920,6 +942,7 @@ class Circuit:
                     j.CC1 = CC1
                     j.CC0 = minCC0 + 1
                 
+    
     def observability(self):
         # for i in reversed(range(len(self.nodes_lev))):
         #     print(self.nodes_lev[i].num,self.nodes_lev[i].lev,self.nodes_lev[i].CC0,self.nodes_lev[i].CC1)

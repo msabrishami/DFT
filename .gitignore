@@ -1,5 +1,9 @@
 # git ignore
 
+# Saeed:
+**.swp
+
+
 # python cache file
 __pycache__/:
 *.pyc

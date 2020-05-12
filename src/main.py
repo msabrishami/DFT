@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
+
 from circuit import Circuit
-import argparse
 from atpg_v0 import ATPG
+import argparse
+import pdb
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("c_name", type = str, help = "Please enter the name of circuit, i.e., c17, c880, no extensions required")
+    parser.add_argument("-ckt", type=str, help="name of the ircuit, i.e., c17, c880, no extension")
     args = parser.parse_args()
-    c_name = args.c_name
-    circuit = Circuit(c_name)
+    circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
+    
+    
+    pdb.set_trace()
 
     #observability() need to follow controllability()
     circuit.controllability()
     circuit.observability()    
-    circuit.gen_graph()
+    # circuit.gen_graph()
     circuit.STAFAN(1000)  
-
-
-    
 
 
     # circuit.get_full_fault_list()
@@ -41,4 +42,7 @@ def main():
     #-------------------ATPG part-----------------
     # atpg = ATPG(c_name)
     # atpg.class_main()
-main()
+
+
+if __name__ == "__main__":
+    main()
