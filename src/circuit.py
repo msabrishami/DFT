@@ -51,8 +51,7 @@ class Circuit:
         self.input_cnt = None
         self.rfl_node = []
         self.rfl_ftype = []
-        self.lev_max_temp = [] #controllability and observabilitiy
-        self.leveled = [] #controllability and observability
+        self.lvls_list = [] #controllability and observability
 
     def read_circuit(self):
         """
@@ -135,7 +134,7 @@ class Circuit:
         give every node a level information. Primary inputs have the loweset level, i.e., 0
         """
         count = self.nodes_cnt
-        max = 0
+        max_lvl = 0
         for i in self.nodes:
             if i.gtype == 'IPT':
                 i.lev = 0
@@ -154,12 +153,21 @@ class Circuit:
                     
                     if flag == 0:
                         for j in range(0, i.fin):
-                            if i.unodes[j].lev >= max:
-                                max = i.unodes[j].lev
-                        i.lev = max + 1
+                            if i.unodes[j].lev >= max_lvl:
+                                max_lvl = i.unodes[j].lev
+                        i.lev = max_lvl + 1
                         count -= 1
         self.nodes_lev = sorted(self.nodes, key=lambda x: x.lev)
-        # return self.nodes_lev
+        
+        self.num_lvls = 0
+        for i in self.nodes_lev:
+            self.num_lvls = max(i.lev, self.num_lvls)
+        
+        for j in range(self.num_lvls + 1):
+            self.lvls_list.append([])
+            for i in self.nodes_lev:
+                if i.lev == j:
+                    self.lvls_list[j].append(i)
 
     def get_random_input_pattern(self):
         """
@@ -870,27 +878,16 @@ class Circuit:
 
     
     def controllability(self):
-
-        for i in self.nodes_lev:
-            self.lev_max_temp.append(i.lev)
-        
-        num_lvls =  max(self.lev_max_temp)
-        print(num_lvls)
-
-        for j in range(max(self.lev_max_temp)+1):
-            self.leveled.append([])
-            for i in self.nodes_lev:
-                if i.lev == j:
-                    self.leveled[j].append(i)
-        
-        for i in self.leveled[0]:
+       
+                
+        for i in self.lvls_list[0]:
             i.CC0 = 1
             i.CC1 = 1
 
-        for i in range(1, num_lvls+1):
-            print("level {}, {}".format(i, len(self.leveled[i])))
+        for i in range(1, self.num_lvls+1):
+            print("level {}, {}".format(i, len(self.lvls_list[i])))
             
-            for j in self.leveled[i]:
+            for j in self.lvls_list[i]:
                 # print(j.gtype)
                 unodes_CC0 = []
                 unodes_CC1 = []
@@ -935,12 +932,12 @@ class Circuit:
         # for i in reversed(range(len(self.nodes_lev))):
         #     print(self.nodes_lev[i].num,self.nodes_lev[i].lev,self.nodes_lev[i].CC0,self.nodes_lev[i].CC1)
         
-        for i in self.leveled[-1]:
+        for i in self.lvls_list[-1]:
             i.CO = 1
 
-        for i in range(max(self.lev_max_temp),-1,-1):
+        for i in range(self.num_lvls,-1,-1):
             #print("level",i)
-            for j in self.leveled[i]:
+            for j in self.lvls_list[i]:
                 sum_CC0 = 0
                 sum_CC1 = 0
                 for k in j.unodes:
