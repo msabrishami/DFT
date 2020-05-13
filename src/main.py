@@ -12,12 +12,13 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
-    
+
     #observability() need to follow controllability()
     circuit.controllability()
-    circuit.observability()    
+    circuit.observability()
     graph = circuit.gen_graph()
-    circuit.STAFAN(100)  
+    circuit.STAFAN(100)
+    circuit.STAFAN_observability()
     circuit.co_ob_info()
 
 
@@ -31,12 +32,12 @@ def main():
     # # circuit.get_d_correctness()
 
     # circuit.get_d_coverage()
-    
+
     # # circuit.get_podem_correctness()
     # circuit.get_podem_coverage()
     # circuit.time_for_podem()
-    
-    
+
+
     #-------------------ATPG part-----------------
     # atpg = ATPG(c_name)
     # atpg.class_main()

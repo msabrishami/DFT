@@ -1174,32 +1174,32 @@ class Circuit:
         """
         # calculate observability
         for i in reversed(self.nodes_lev):
-        	if (i.ntype == 'PO'):
-        		i.B1 = 1.0
-        		i.B0 = 1.0
-        	else:
-        		if(i.dnodes[0].gtype == 'AND'):
-        			i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
-        			i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
-        		elif(i.dnodes[0].gtype == 'NAND'):
-        			i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
-        			i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
-        		elif(i.dnodes[0].gtype == 'OR'):
-        			i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
-        			i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
-        		elif(i.dnodes[0].gtype == 'NOR'):
-        			i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
-        			i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
-        		elif(i.dnodes[0].gtype == 'NOT'):
-        			i.B1 = i.dnodes[0].B0
-        			i.B0 = i.dnodes[0].B1
-        		elif(i.dnodes[0].gtype == 'XOR'):
-        			i.B1 = i.dnodes[0].B0
-        			i.B0 = i.dnodes[0].B1
-        		elif(i.dnodes[0].gtype == 'BRCH'):
-        			i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
-        			i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
-        	print(i.num, i.B1, i.B0)
+            if (i.ntype == 'PO'):
+                i.B1 = 1.0
+                i.B0 = 1.0
+            else:
+                if(i.dnodes[0].gtype == 'AND'):
+                    i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
+                    i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                elif(i.dnodes[0].gtype == 'NAND'):
+                    i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
+                    i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                elif(i.dnodes[0].gtype == 'OR'):
+                    i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
+                    i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
+                elif(i.dnodes[0].gtype == 'NOR'):
+                    i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
+                    i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
+                elif(i.dnodes[0].gtype == 'NOT'):
+                    i.B1 = i.dnodes[0].B0
+                    i.B0 = i.dnodes[0].B1
+                elif(i.dnodes[0].gtype == 'XOR'):
+                    i.B1 = i.dnodes[0].B0
+                    i.B0 = i.dnodes[0].B1
+                elif(i.dnodes[0].gtype == 'BRCH'):
+                    i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
+                    i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
+            print(i.num, i.B1, i.B0)
 
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
