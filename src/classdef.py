@@ -6,7 +6,7 @@ from enum import Enum
 #_____________________CLASSDEF_____________________#
 #__________________________________________________#
 
-class five_value(Enum): 
+class five_value(Enum):
    ZERO = 0
    ONE = 15
    D = 12
@@ -28,12 +28,12 @@ class ntype(Enum):
     PI = 1
     FB = 2
     PO = 3
- 
+
 
 
 
 class node:
-    
+
     def __init__(self):
         self.value = None
         self.num = None
@@ -58,11 +58,11 @@ class node:
         self.zero_count = 0
         self.sen_count = 0
         self.sen_p = 0.0
-        self.one_control = 0.0
-        self.zero_control = 0.0
-        self.one_observe = 0.0
-        self.zero_observe = 0.0
-        
+        self.C1 = 0.0
+        self.C0 = 0.0
+        self.B1 = 0.0
+        self.B0 = 0.0
+
     def add_unodes(self, unode):
         self.unodes.append(unode)
     def add_dnodes(self, dnode):
@@ -86,7 +86,7 @@ class podem_node_5val():
         if (self.x == 0):
             self.bit0 = SA1
             self.bit1 = not SA1
-  	
+
     def is_0(self):
         if (self.x == 1):
             return False
@@ -156,7 +156,7 @@ class podem_node_5val():
             else:
                 val.x = 1
         return val
-    
+
     def __xor__(self, other):
         val = podem_node_5val()
         val.bit0 = self.bit0 ^ other.bit0

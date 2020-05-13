@@ -55,7 +55,7 @@ class Circuit:
 
     def read_circuit(self):
         """
-        Read circuit from .ckt file, instantiate each node as a class, 
+        Read circuit from .ckt file, instantiate each node as a class,
         initialize self.nodes
         """
         path = "../circuits/{}.ckt".format(self.c_name)
@@ -66,7 +66,7 @@ class Circuit:
         nodedict_list = [None] * 1355
         temp_dict = {}
         lines = f.readlines()
-        
+
         for line in lines:
             if (line != "\n"):
                 fileList.append(line.split())
@@ -77,10 +77,10 @@ class Circuit:
             new_node.ntype = ntype(int(line[0])).name
             new_node.num = int(line[1])
             new_node.gtype = gtype(int(line[2])).name
-            
+
             if (ntype(int(line[0])).value == 2):   #if BRCH --> unodes
                 new_node.add_unodes(nodedict_list[int(line[3])])
-                new_node.fout = 1 
+                new_node.fout = 1
             else:                                       #if not BRCH --> fout
                 new_node.fout = int(line[3])
 
@@ -98,10 +98,10 @@ class Circuit:
                         new_node.add_unodes(nodedict_list[int(line[5 + i])])
             else:
                 new_node.fin = 1
-            
+
             if ((ntype(int(line[0])).value == 1) or (ntype(int(line[0])).value == 2)):
                 new_node.cpt = 1
-            
+
             new_node.index = indx
             indx = indx + 1
             self.nodes.append(new_node)
@@ -111,7 +111,7 @@ class Circuit:
                         for j in i.unodes:
                             if (j.num == new_node.num):
                                 i.unodes.remove(j)
-                                i.unodes.append(new_node)         
+                                i.unodes.append(new_node)
             nodedict_list[new_node.num] = new_node
             nodedict.update({new_node.num: new_node})
             #TODO:feedback only to one gate
@@ -122,15 +122,15 @@ class Circuit:
                     self.nodes[i].unodes[j].add_dnodes(self.nodes[i])
             else:
                 self.input_num_list.append(self.nodes[i].num)
-        
+
         self.nodes_cnt = len(self.nodes)
         self.input_cnt = len(self.input_num_list)
         # return self.nodes
 
     def lev(self):
         """
-        Levelization. 
-        Based on gate type of the nodes and connection relationship between nodes, 
+        Levelization.
+        Based on gate type of the nodes and connection relationship between nodes,
         give every node a level information. Primary inputs have the loweset level, i.e., 0
         """
         count = self.nodes_cnt
@@ -150,7 +150,7 @@ class Circuit:
                         if i.unodes[k].lev == -1:
                             flag = 1
                             break
-                    
+
                     if flag == 0:
                         for j in range(0, i.fin):
                             if i.unodes[j].lev >= max_lvl:
@@ -158,11 +158,11 @@ class Circuit:
                         i.lev = max_lvl + 1
                         count -= 1
         self.nodes_lev = sorted(self.nodes, key=lambda x: x.lev)
-        
+
         self.num_lvls = 0
         for i in self.nodes_lev:
             self.num_lvls = max(i.lev, self.num_lvls)
-        
+
         for j in range(self.num_lvls + 1):
             self.lvls_list.append([])
             for i in self.nodes_lev:
@@ -172,18 +172,18 @@ class Circuit:
     def get_random_input_pattern(self):
         """
         Randomly generate a test pattern for input nodes.
-        Could be used to check the validity of logic simulation 
+        Could be used to check the validity of logic simulation
         and deductive fault simulation.
         """
         rand_input_val_list = []
-        for i in range(len(self.input_num_list)): 
-            rand_input_val_list.append(random.randint(0,1)) 
+        for i in range(len(self.input_num_list)):
+            rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
 
 
     def logic_sim(self, input_val_list):
         """
-        Logic simulation: 
+        Logic simulation:
         Reads a given pattern and perform the logic simulation
         """
         node_dict = dict(zip(self.input_num_list, input_val_list))
@@ -230,9 +230,9 @@ class Circuit:
                         temp_value = i.unodes[j].value
                     else:
                         temp_value = GAND(temp_value, i.unodes[j].value)
-                i.value = temp_value 
-    
-    
+                i.value = temp_value
+
+
     # deductive fault simulation
     # execute after logic simulation
     def dfs(self):
@@ -306,7 +306,7 @@ class Circuit:
                     fault_list = fault_list.union(set(item.faultlist_dfs))
 
         return fault_list
-    
+
     # generate full fault list
     def get_full_fault_list(self):
         """
@@ -322,9 +322,9 @@ class Circuit:
             sa1_str = "{}@1".format(node.num)
             self.fault_name.append(sa1_str)
             self.fault_node_num.append(node.num)
-            self.fault_type.append(1)  
-    
-    
+            self.fault_type.append(1)
+
+
 
     def pfs(self,input_val):
         """
@@ -369,7 +369,7 @@ class Circuit:
         detected_node_value = []
 
         output_empty = 0
-        pfs_fault_val = [] 
+        pfs_fault_val = []
         pfs_fault_num = []
         for n in self.fault_node_num:
             pfs_fault_num.append(n)
@@ -487,7 +487,7 @@ class Circuit:
         """
         Fault Dictionary:
         key: input pattern value: detected fault (returned by PFS)
-        Fault Dictionary can only be generated for small circuits 
+        Fault Dictionary can only be generated for small circuits
         because the file size will become too large for big circuits.
         """
         fault_dict = {}
@@ -520,7 +520,7 @@ class Circuit:
                 fault_dict_result.write('%d->' % self.input_num_list[i])
             else:
                 fault_dict_result.write('%d' % self.input_num_list[i])
-        fault_dict_result.write(' as sequence of inputs')    
+        fault_dict_result.write(' as sequence of inputs')
         fault_dict_result.write('\n')
         fault_dict_result.write('input_patterns\t\t\tdetected_faults\n')
         for i in range(total_pattern):
@@ -530,7 +530,7 @@ class Circuit:
             for i in range(len(fault_dict.get(b))):
                 fault_dict_result.write('%-5s ' % fault_dict.get(b)[i])#format ok?
             fault_dict_result.write('\n')
-            
+
         fault_dict_result.close()
     def gen_fault_dic_multithreading(self, thread_cnt, idx):
         """
@@ -564,7 +564,7 @@ class Circuit:
                     fo.write('%d->' % self.input_num_list[i])
                 else:
                     fo.write('%d' % self.input_num_list[i])
-            fo.write(' as sequence of inputs')    
+            fo.write(' as sequence of inputs')
             fo.write('\n')
             fo.write('input_patterns\t\t\tdetected_faults\n')
             for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
@@ -577,18 +577,18 @@ class Circuit:
 
     def get_reduced_fault_list(self):
         """
-        Using checkpoint theorem, 
+        Using checkpoint theorem,
         generate reduced fault list
         """
         faults_fanout = []
         for i in range(len(self.nodes)):
             if (self.nodes[i].cpt == 1):
                 #print self.nodes[i].num
-                for j in range(self.nodes[i].fout): 
+                for j in range(self.nodes[i].fout):
                     faults_fanout.append(self.nodes[i].dnodes[j].index)
                 self.nodes[i].sa0 = 1
                 self.nodes[i].sa1 = 1
-        # uniquefanout = sorted(set(faults_fanout)) 
+        # uniquefanout = sorted(set(faults_fanout))
         # print uniquefanout
         for i in range(len(faults_fanout)):
             cptflag = 0
@@ -604,14 +604,14 @@ class Circuit:
                         if cptflag == 0:
                             cptflag = 1
                         else: self.nodes[faults_fanout[i]].unodes[j].sa0 = 0
-        for i in range(len(self.nodes)):        
+        for i in range(len(self.nodes)):
             if self.nodes[i].sa0 == 1:
                 self.rfl_node.append(self.nodes[i].num)
                 self.rfl_ftype.append(0)
             if self.nodes[i].sa1 == 1:
                 self.rfl_node.append(self.nodes[i].num)
-                self.rfl_ftype.append(1)	
-    
+                self.rfl_ftype.append(1)
+
     #to be continued
     def equvalenceAndDominance(self):
         return
@@ -631,16 +631,16 @@ class Circuit:
         """
         res = podem(self.fault_node_num[i], self.fault_type[i], self.nodes, self.nodes_lev)
         return res
-    
+
     def read_fault_dict(self):
         """read already generated fault dictionary"""
         fd = open("../fault_dic/{}.fd".format(self.c_name),"r")
         self.fd_data = fd.read()
-        fd.close() 
-    
+        fd.close()
+
     def get_patterns(self, test_pattern):
         """
-        Given a test pattern with "X"s, 
+        Given a test pattern with "X"s,
         generate all possible patterns represent by that pattern.
         """
         xidx = []
@@ -676,7 +676,7 @@ class Circuit:
         if re.findall(srch_str, self.fd_data):
             return False
         else:
-            return True 
+            return True
 
     def check_success(self, fault_name, search_patterns):
         """
@@ -697,10 +697,10 @@ class Circuit:
             return True
         else:
             return False
-    
+
     def get_Xless_pattern(self, pattern):
         """
-        For big circuit with too many Xs, 
+        For big circuit with too many Xs,
         randomly assign 1 or 0 to each X and returns a pattern.
         """
         pattern_Xless = []
@@ -711,7 +711,7 @@ class Circuit:
                 entry = v
             pattern_Xless.append(entry)
         return pattern_Xless
-    
+
     def get_d_correctness(self):
         """
         Check correctness of D algorithm for both detected and undetected faults.
@@ -719,7 +719,7 @@ class Circuit:
         """
         self.read_fault_dict()
         d_error_cnt = 0
-        # run the faults in full fault list 
+        # run the faults in full fault list
         for j in range(len(self.fault_node_num)):
             fault_index = -1
             for i in range(len(self.nodes_lev)):
@@ -748,7 +748,7 @@ class Circuit:
                     d_error_cnt += 1
                 else:
                     pass
-                
+
             else:
                 # print("D_alg FAILURE")
                 error_not_found = self.check_failure(self.fault_name[j])
@@ -756,7 +756,7 @@ class Circuit:
                     print("D algorithm Error at fault {}, type FAILURE".format(self.fault_name[j]))
                     d_error_cnt += 1
                 else:
-                    pass  
+                    pass
         self.d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / len(self.fault_node_num)) * 100
         print ("D algorithm correctness rate: {}%".format(self.d_correctness_rate))
 
@@ -770,7 +770,7 @@ class Circuit:
         failure_fault_list = []
         check_cnt = 0
         self.pass_cnt = 0
-        
+
         for j in range(len(self.fault_node_num)):
             fault_index = -1
             for i in range(len(self.nodes)):
@@ -789,14 +789,14 @@ class Circuit:
                     self.nodes[i].d_value.append(five_value.X.value)
             imply_counter = Imply_counter(8000)
             res = self.D_alg(fault_index, imply_counter)
-            
+
             if res.result == 1:
                 self.pass_cnt += 1
-                
+
             else:
                 failure_fault_list.append(self.fault_name[j])
 
-        
+
             check_cnt += 1
             print ("check_cnt={}".format(check_cnt))
         self.d_coverage = (self.pass_cnt / len(self.fault_node_num)) * 100
@@ -811,7 +811,7 @@ class Circuit:
         """
         self.read_fault_dict()
         pd_error_cnt = 0
-        for i in range(len(self.fault_node_num)): 
+        for i in range(len(self.fault_node_num)):
             res = self.podem(i)
             if res.result == 1:
                 search_patterns = self.get_patterns(res.pattern)
@@ -840,7 +840,7 @@ class Circuit:
         called for big circuits
         """
         self.pass_cnt = 0
-        for i in range(len(self.fault_node_num)): 
+        for i in range(len(self.fault_node_num)):
             res = self.podem(i)
             if res.result == 1:
                 self.pass_cnt += 1
@@ -860,23 +860,23 @@ class Circuit:
         self.pd_coverage = self.pass_cnt / len(self.fault_node_num) * 100
         self.pass_cnt = 0
         print ("Podem algorithm fault coverage: {}%".format(self.pd_coverage))
-    
-    
+
+
     def podem_single_test(self, fault_node_num, fault_type):
         res = podem(fault_node_num, fault_type, self.nodes, self.nodes_lev)
         return res
 
-    
+
     def time_for_podem(self):
         totaltime = 0
-        for i in range(len(self.fault_node_num)): 
+        for i in range(len(self.fault_node_num)):
             starttime = time.time()
             res = self.podem_single_test(self.fault_node_num[i], self.fault_type[i])
             endtime = time.time()
             totaltime = totaltime + (endtime - starttime)
         print(totaltime)
 
-    
+
     def co_ob_info(self):
         for lvl in self.lvls_list:
             for node in lvl:
@@ -890,7 +890,7 @@ class Circuit:
             i.CC1 = 1
 
         for i in range(1, self.num_lvls+1):
-            
+
             for j in self.lvls_list[i]:
                 # print(j.gtype)
                 unodes_CC0 = []
@@ -900,84 +900,84 @@ class Circuit:
                     unodes_CC1.append(unode.CC1)
                 minCC0 = min(unodes_CC0)
                 minCC1 = min(unodes_CC1)
-                
+
                 # TODO: this seems not ok!
                 # For BRCH, the same as upnode
                 if j.gtype == "BRCH":
                     j.CC0 = minCC0
-                    j.CC1 = minCC1 
-                
+                    j.CC1 = minCC1
+
                 # TODO: this is only for XOR with 2 inputs
                 elif j.gtype == "XOR":
                     j.CC0 = 1 + min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1)
                     j.CC1 = 1 +  min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1)
-                
+
                 elif j.gtype == "OR":
                     j.CC0 = 1 + sum(unodes_CC0)
                     j.CC1 = 1 + minCC1
-                
+
                 elif j.gtype == "NOR":
                     j.CC1 = 1 + sum(unodes_CC0)
-                    j.CC0 = 1 + minCC1 
-                
+                    j.CC0 = 1 + minCC1
+
                 elif j.gtype == "NOT":
                     j.CC0 = j.unodes[0].CC1 + 1
                     j.CC1 = j.unodes[0].CC0 + 1
-                
+
                 elif j.gtype == "NAND":
                     j.CC0 = 1 + sum(unodes_CC1)
                     j.CC1 = 1 + minCC0
-                
+
                 elif j.gtype == "AND":
                     j.CC1 = 1 + sum(unodes_CC1)
                     j.CC0 = 1 + minCC0
-    
-    
+
+
     def observability(self):
-        
+
         for i in self.lvls_list[-1]:
             i.CO = 1
 
         for lvl in range(self.num_lvls, -1, -1):
             for j in self.lvls_list[lvl]:
-                
+
                 unodes_CC0 = []
                 unodes_CC1 = []
                 for unode in j.unodes:
                     unodes_CC0.append(unode.CC0)
                     unodes_CC1.append(unode.CC1)
-                
+
                 if j.gtype == "BRCH":
                     dnodes_CO =  []
                     for k in j.unodes[0].dnodes:
                         dnodes_CO.append(k.CO)
                     j.unodes[0].CO = min(dnodes_CO)
-                    
+
                 # TODO: Only works for XOR2
                 elif j.gtype == "XOR":
                     j.unodes[0].CO = min(j.unodes[1].CC1, j.unodes[1].CC0)+ j.CO + 1
                     j.unodes[1].CO = min(j.unodes[0].CC1, j.unodes[0].CC0)+ j.CO + 1
-                
+
                 elif j.gtype == "NOT":
                     j.unodes[0].CO = j.CO + 1
-                
+
                 elif j.gtype == "OR":
                     for k in j.unodes:
                         k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
-                
+
                 elif j.gtype == "NOR":
                     for k in j.unodes:
                         k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
-                
+
                 elif j.gtype == "NAND":
                     for k in j.unodes:
                         k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
-                
+
                 elif j.gtype == "AND":
                     for k in j.unodes:
                         k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
 
-    
+
     def gen_graph(self):
         """
         Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
@@ -1010,104 +1010,109 @@ class Circuit:
         fail = 0
         inputnum = len(self.input_num_list)
         total_pattern = pow(2, inputnum)
-        
+
         for k in range(num_pattern):
+
+            # TODO: change this to have no replacement
             b = ('{:0%db}'%inputnum).format(randint(0,total_pattern))
             list_to_logicsim = []
             for j in range(inputnum):
                 list_to_logicsim.append(int(b[j]))
+
             self.logic_sim(list_to_logicsim)
+
             for i in self.nodes_lev:
+                # counting values
                 if i.value == 1:
                     i.one_count = i.one_count + 1
                 elif i.value == 0:
                     i.zero_count = i.zero_count + 1
 
+                # sensitization
+                sense = True
                 if (i.ntype != 'PO'):
                     if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
                         for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 1):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
+                            if ((j.num != i.num) & (j.value != 1)):
+                                sense = False
+                                break
+
                     elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
                         for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 0):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
+                            if ((j.num != i.num) & (j.value != 0)):
+                                sense = False
+                                break
+                    if (sense):
+                        i.sen_count = i.sen_count + 1
+
         # calculate controllability
         for i in self.nodes_lev:
-            i.one_control = i.one_count / num_pattern
-            i.zero_control = i.zero_count / num_pattern
+            i.C1 = i.one_count / num_pattern
+            i.C0 = i.zero_count / num_pattern
             i.sen_p = i.sen_count / num_pattern
-            # print(i.num, i.one_control, i.zero_control, i.sen_p)
+
         # calculate observability
         for i in reversed(self.nodes_lev):
+
             if (i.ntype == 'PO'):
-                i.one_observe = 1.0
-                i.zero_observe = 1.0
+                i.B1 = 1.0
+                i.B0 = 1.0
+
             else:
-                if(i.dnodes[0].gtype == 'AND'):
-                    if (i.one_control == 0):
-                        i.one_observe = 1.0
+                if (i.dnodes[0].gtype == 'AND'):
+                    if (i.C1 == 0):
+                        i.B1 = 1.0
                     else :
-                        i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
-                    
-                    if (i.zero_control == 0):
-                        i.zero_observe = 1.0
+                        i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
+
+                    if (i.C0 == 0):
+                        i.B0 = 1.0
                     else :
-                        i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                        i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
 
                 elif(i.dnodes[0].gtype == 'NAND'):
-                    if (i.one_control == 0):
-                        i.one_observe = 1.0
+                    if (i.C1 == 0):
+                        i.B1 = 1.0
                     else :
-                        i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
-                    if (i.zero_control == 0):
-                        i.zero_observe = 1.0
+                        i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
+                    if (i.C0 == 0):
+                        i.B0 = 1.0
                     else :
-                        i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+                        i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
 
                 elif(i.dnodes[0].gtype == 'OR'):
-                    if (i.one_control == 0):
-                        i.one_observe = 1.0
+                    if (i.C1 == 0):
+                        i.B1 = 1.0
                     else :
-                        i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
-                    
-                    if (i.zero_control == 0):
-                        i.zero_observe = 1.0
+                        i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
+
+                    if (i.C0 == 0):
+                        i.B0 = 1.0
                     else :
-                        i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+                        i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
 
                 elif(i.dnodes[0].gtype == 'NOR'):
-                    if (i.one_control == 0):
-                        i.one_observe = 1.0
+                    if (i.C1 == 0):
+                        i.B1 = 1.0
                     else :
-                        i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
-                    if (i.zero_control == 0):
-                        i.zero_observe = 1.0
+                        i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
+                    if (i.C0 == 0):
+                        i.B0 = 1.0
                     else :
-                        i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+                        i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
 
                 elif(i.dnodes[0].gtype == 'NOT'):
-                    i.one_observe = i.dnodes[0].zero_observe
-                    i.zero_observe = i.dnodes[0].one_observe
-                
+                    i.B1 = i.dnodes[0].B0
+                    i.B0 = i.dnodes[0].B1
+
                 elif(i.dnodes[0].gtype == 'XOR'):
-                    i.one_observe = i.dnodes[0].zero_observe
-                    i.zero_observe = i.dnodes[0].one_observe
-                
+                    i.B1 = i.dnodes[0].B0
+                    i.B0 = i.dnodes[0].B1
+
                 elif(i.dnodes[0].gtype == 'BRCH'):
-                    i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
-                    i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
-            # print(i.num, i.one_control, i.zero_control, i.one_observe, i.zero_observe)
+                    i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
+                    i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
+            # print(i.num, i.C1, i.C0, i.B1, i.B0)
 
         endtime = time.time()
         print(endtime - starttime)
@@ -1115,7 +1120,7 @@ class Circuit:
     def STAFAN_multithreading(self, thread_cnt, idx):
         """
         Create threads to generate STAFAN controllability and observability.
-        Each thread calculate 
+        Each thread calculate
         """
         fail = 0
         total_pattern = pow(2,self.input_cnt)
@@ -1161,7 +1166,7 @@ class Circuit:
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
         return one_count_list, zero_count_list, sen_count_list
-            # print(i.num, i.one_control, i.zero_control, i.sen_p)
+            # print(i.num, i.C1, i.C0, i.sen_p)
 
     def STAFAN_observability(self):
         """
@@ -1170,31 +1175,31 @@ class Circuit:
         # calculate observability
         for i in reversed(self.nodes_lev):
         	if (i.ntype == 'PO'):
-        		i.one_observe = 1.0
-        		i.zero_observe = 1.0
+        		i.B1 = 1.0
+        		i.B0 = 1.0
         	else:
         		if(i.dnodes[0].gtype == 'AND'):
-        			i.one_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.one_control
-        			i.zero_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+        			i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
+        			i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
         		elif(i.dnodes[0].gtype == 'NAND'):
-        			i.one_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.one_control
-        			i.zero_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].one_control) / i.zero_control
+        			i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
+        			i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
         		elif(i.dnodes[0].gtype == 'OR'):
-        			i.one_observe = i.dnodes[0].one_observe * (i.sen_p - i.dnodes[0].zero_control) / i.one_control
-        			i.zero_observe = i.dnodes[0].zero_observe * i.dnodes[0].zero_control / i.zero_control
+        			i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
+        			i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
         		elif(i.dnodes[0].gtype == 'NOR'):
-        			i.one_observe = i.dnodes[0].zero_observe * (i.sen_p - i.dnodes[0].one_control) / i.one_control
-        			i.zero_observe = i.dnodes[0].one_observe * i.dnodes[0].one_control / i.zero_control
+        			i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
+        			i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
         		elif(i.dnodes[0].gtype == 'NOT'):
-        			i.one_observe = i.dnodes[0].zero_observe
-        			i.zero_observe = i.dnodes[0].one_observe
+        			i.B1 = i.dnodes[0].B0
+        			i.B0 = i.dnodes[0].B1
         		elif(i.dnodes[0].gtype == 'XOR'):
-        			i.one_observe = i.dnodes[0].zero_observe
-        			i.zero_observe = i.dnodes[0].one_observe
+        			i.B1 = i.dnodes[0].B0
+        			i.B0 = i.dnodes[0].B1
         		elif(i.dnodes[0].gtype == 'BRCH'):
-        			i.one_observe = i.dnodes[0].one_observe + i.dnodes[1].one_observe - (i.dnodes[0].one_observe * i.dnodes[1].one_observe)
-        			i.zero_observe = i.dnodes[0].zero_observe + i.dnodes[1].zero_observe - (i.dnodes[0].zero_observe * i.dnodes[1].zero_observe)
-        	print(i.num, i.one_observe, i.zero_observe)
+        			i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
+        			i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
+        	print(i.num, i.B1, i.B0)
 
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
