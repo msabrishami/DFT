@@ -18,6 +18,7 @@ def main():
     circuit.observability()    
     # circuit.gen_graph()
     circuit.STAFAN(1000)  
+    circuit.co_ob_info()
 
 
     # circuit.get_full_fault_list()

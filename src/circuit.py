@@ -877,15 +877,19 @@ class Circuit:
         print(totaltime)
 
     
+    def co_ob_info(self):
+        for lvl in self.lvls_list:
+            for node in lvl:
+                print("N:{}\tLEV:{}\tFIN:{}\t".format(node.num, node.lev, node.fin), end="")
+                print("CC0:{}\tCC1:{}\tCO:{}".format(node.num, node.CC0, node.CC1, node.CO))
+
     def controllability(self):
-       
-                
+
         for i in self.lvls_list[0]:
             i.CC0 = 1
             i.CC1 = 1
 
         for i in range(1, self.num_lvls+1):
-            print("level {}, {}".format(i, len(self.lvls_list[i])))
             
             for j in self.lvls_list[i]:
                 # print(j.gtype)
@@ -898,6 +902,7 @@ class Circuit:
                 minCC1 = min(unodes_CC1)
                 
                 # TODO: this seems not ok!
+                # For BRCH, the same as upnode
                 if j.gtype == "BRCH":
                     j.CC0 = minCC0
                     j.CC1 = minCC1 
@@ -929,46 +934,48 @@ class Circuit:
     
     
     def observability(self):
-        # for i in reversed(range(len(self.nodes_lev))):
-        #     print(self.nodes_lev[i].num,self.nodes_lev[i].lev,self.nodes_lev[i].CC0,self.nodes_lev[i].CC1)
         
         for i in self.lvls_list[-1]:
             i.CO = 1
 
-        for i in range(self.num_lvls,-1,-1):
-            #print("level",i)
-            for j in self.lvls_list[i]:
-                sum_CC0 = 0
-                sum_CC1 = 0
-                for k in j.unodes:
-                    sum_CC0+=k.CC0
-                    sum_CC1+=k.CC1
+        for lvl in range(self.num_lvls, -1, -1):
+            for j in self.lvls_list[lvl]:
+                
+                unodes_CC0 = []
+                unodes_CC1 = []
+                for unode in j.unodes:
+                    unodes_CC0.append(unode.CC0)
+                    unodes_CC1.append(unode.CC1)
+                
                 if j.gtype == "BRCH":
-                    temp_CO =  []
+                    dnodes_CO =  []
                     for k in j.unodes[0].dnodes:
-                        temp_CO.append(k.CO)
-                    minCO = min(temp_CO)
-                    j.unodes[0].CO = minCO
+                        dnodes_CO.append(k.CO)
+                    j.unodes[0].CO = min(dnodes_CO)
+                    
                 elif j.gtype == "XOR":
                     j.unodes[0].CO = min(j.unodes[1].CC1,j.unodes[1].CC0)+ j.CO + 1
                     j.unodes[1].CO = min(j.unodes[0].CC1,j.unodes[0].CC0)+ j.CO + 1
+                
                 elif j.gtype == "NOT":
                     j.unodes[0].CO = j.CO + 1
+                
                 elif j.gtype == "OR":
                     for k in j.unodes:
                         k.CO = sum_CC0 - k.CC0 + j.CO + 1
+                
                 elif j.gtype == "NOR":
                     for k in j.unodes:
                         k.CO = sum_CC0 - k.CC0 + j.CO + 1
+                
                 elif j.gtype == "NAND":
                     for k in j.unodes:
                         k.CO = sum_CC1 - k.CC1 + j.CO + 1
                         #print("k.num",k.num,k.CO)
+                
                 elif j.gtype == "AND":
                     for k in j.unodes:
                         k.CO = sum_CC1 - k.CC1 + j.CO + 1
-        for i in reversed(range(len(self.nodes_lev))):
-            print("node num:",self.nodes_lev[i].num,"node lev:",self.nodes_lev[i].lev,"CC0:",self.nodes_lev[i].CC0,"CC1:",self.nodes_lev[i].CC1,"CO:",self.nodes_lev[i].CO)       
 
     def gen_graph(self):
         """
