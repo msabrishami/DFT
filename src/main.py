@@ -7,7 +7,7 @@ import pdb
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-ckt", type=str, help="name of the ircuit, i.e., c17, c880, no extension")
+    parser.add_argument("-ckt", type=str, help="name of the ircuit, e.g. c17, no extension")
     args = parser.parse_args()
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
@@ -16,8 +16,8 @@ def main():
     #observability() need to follow controllability()
     circuit.controllability()
     circuit.observability()    
-    # circuit.gen_graph()
-    circuit.STAFAN(1000)  
+    graph = circuit.gen_graph()
+    circuit.STAFAN(100)  
     circuit.co_ob_info()
 
 

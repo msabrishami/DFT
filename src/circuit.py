@@ -953,30 +953,31 @@ class Circuit:
                         dnodes_CO.append(k.CO)
                     j.unodes[0].CO = min(dnodes_CO)
                     
+                # TODO: Only works for XOR2
                 elif j.gtype == "XOR":
-                    j.unodes[0].CO = min(j.unodes[1].CC1,j.unodes[1].CC0)+ j.CO + 1
-                    j.unodes[1].CO = min(j.unodes[0].CC1,j.unodes[0].CC0)+ j.CO + 1
+                    j.unodes[0].CO = min(j.unodes[1].CC1, j.unodes[1].CC0)+ j.CO + 1
+                    j.unodes[1].CO = min(j.unodes[0].CC1, j.unodes[0].CC0)+ j.CO + 1
                 
                 elif j.gtype == "NOT":
                     j.unodes[0].CO = j.CO + 1
                 
                 elif j.gtype == "OR":
                     for k in j.unodes:
-                        k.CO = sum_CC0 - k.CC0 + j.CO + 1
+                        k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
                 
                 elif j.gtype == "NOR":
                     for k in j.unodes:
-                        k.CO = sum_CC0 - k.CC0 + j.CO + 1
+                        k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
                 
                 elif j.gtype == "NAND":
                     for k in j.unodes:
-                        k.CO = sum_CC1 - k.CC1 + j.CO + 1
-                        #print("k.num",k.num,k.CO)
+                        k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
                 
                 elif j.gtype == "AND":
                     for k in j.unodes:
-                        k.CO = sum_CC1 - k.CC1 + j.CO + 1
+                        k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
 
+    
     def gen_graph(self):
         """
         Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
@@ -997,19 +998,20 @@ class Circuit:
         # for node in self.nodes_lev:
         #     print('{}'.format(G.nodes[node.num]))
         # pos = nx.spring_layout(G)
-        nx.draw_networkx(G)
+        # nx.draw_networkx(G)
         # nx.draw_networkx_labels(G, pos, labels)
-        plt.show()
+        # plt.show()
+        return G
 
 
 
-    def STAFAN(self, num_of_pattern):
+    def STAFAN(self, num_pattern):
         starttime = time.time()
         fail = 0
         inputnum = len(self.input_num_list)
-        total_pattern = pow(2,inputnum)
+        total_pattern = pow(2, inputnum)
         
-        for k in range(num_of_pattern):
+        for k in range(num_pattern):
             b = ('{:0%db}'%inputnum).format(randint(0,total_pattern))
             list_to_logicsim = []
             for j in range(inputnum):
@@ -1042,9 +1044,9 @@ class Circuit:
                         fail = 0
         # calculate controllability
         for i in self.nodes_lev:
-            i.one_control = i.one_count / num_of_pattern
-            i.zero_control = i.zero_count / num_of_pattern
-            i.sen_p = i.sen_count / num_of_pattern
+            i.one_control = i.one_count / num_pattern
+            i.zero_control = i.zero_count / num_pattern
+            i.sen_p = i.sen_count / num_pattern
             # print(i.num, i.one_control, i.zero_control, i.sen_p)
         # calculate observability
         for i in reversed(self.nodes_lev):
