@@ -1051,6 +1051,7 @@ class Circuit:
 
 
     def STAFAN_B(self):
+        # TODO: comment and also the issue of if C1==1
         # calculate observability
         for i in reversed(self.nodes_lev):
 
@@ -1122,7 +1123,10 @@ class Circuit:
                     i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
             print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
 
+    def STAFAN(self, total_T, num_proc=1):
+        print("Jiayi please complete me!")
 
+    # Must be deleted
     def STAFAN_multithreading(self, thread_cnt, idx):
         """
         Create threads to generate STAFAN controllability and observability.
@@ -1174,6 +1178,7 @@ class Circuit:
         return one_count_list, zero_count_list, sen_count_list
             # print(i.num, i.C1, i.C0, i.S)
 
+    # Must be deleted
     def STAFAN_observability(self):
         """
         for multiprocessing
