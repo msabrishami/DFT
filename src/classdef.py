@@ -57,7 +57,7 @@ class node:
         self.one_count = 0
         self.zero_count = 0
         self.sen_count = 0
-        self.sen_p = 0.0
+        self.S = 0.0
         self.C1 = 0.0
         self.C0 = 0.0
         self.B1 = 0.0

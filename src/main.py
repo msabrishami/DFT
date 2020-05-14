@@ -17,9 +17,10 @@ def main():
     circuit.controllability()
     circuit.observability()
     graph = circuit.gen_graph()
-    circuit.STAFAN(100)
-    circuit.STAFAN_observability()
-    circuit.co_ob_info()
+    circuit.STAFAN_CS(7000)
+    circuit.STAFAN_B()
+    # circuit.STAFAN_observability()
+    # circuit.co_ob_info()
 
 
     # circuit.get_full_fault_list()

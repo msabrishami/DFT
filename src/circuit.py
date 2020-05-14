@@ -1005,16 +1005,14 @@ class Circuit:
 
 
 
-    def STAFAN(self, num_pattern):
-        starttime = time.time()
-        fail = 0
+    def STAFAN_CS(self, num_pattern, limit=None):
         inputnum = len(self.input_num_list)
-        total_pattern = pow(2, inputnum)
+        limit = [0, pow(2, inputnum)-1] if limit==None else limit
 
         for k in range(num_pattern):
 
             # TODO: change this to have no replacement
-            b = ('{:0%db}'%inputnum).format(randint(0,total_pattern))
+            b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
             list_to_logicsim = []
             for j in range(inputnum):
                 list_to_logicsim.append(int(b[j]))
@@ -1049,8 +1047,10 @@ class Circuit:
         for i in self.nodes_lev:
             i.C1 = i.one_count / num_pattern
             i.C0 = i.zero_count / num_pattern
-            i.sen_p = i.sen_count / num_pattern
+            i.S = i.sen_count / num_pattern
 
+
+    def STAFAN_B(self):
         # calculate observability
         for i in reversed(self.nodes_lev):
 
@@ -1061,42 +1061,50 @@ class Circuit:
             else:
                 if (i.dnodes[0].gtype == 'AND'):
                     if (i.C1 == 0):
+                        print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
 
                     if (i.C0 == 0):
+                        print("case 0")
                         i.B0 = 1.0
                     else :
-                        i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                        i.B0 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C0
 
                 elif(i.dnodes[0].gtype == 'NAND'):
                     if (i.C1 == 0):
+                        print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
                     if (i.C0 == 0):
+                        print("case 0")
                         i.B0 = 1.0
                     else :
-                        i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                        i.B0 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C0
 
                 elif(i.dnodes[0].gtype == 'OR'):
                     if (i.C1 == 0):
+                        print("case 0")
                         i.B1 = 1.0
                     else :
-                        i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
+                        i.B1 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C1
 
                     if (i.C0 == 0):
+                        print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
 
                 elif(i.dnodes[0].gtype == 'NOR'):
                     if (i.C1 == 0):
+                        print("case 0")
                         i.B1 = 1.0
                     else :
-                        i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
+                        i.B1 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C1
                     if (i.C0 == 0):
+                        print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
@@ -1112,10 +1120,8 @@ class Circuit:
                 elif(i.dnodes[0].gtype == 'BRCH'):
                     i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
                     i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
-            # print(i.num, i.C1, i.C0, i.B1, i.B0)
+            print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
 
-        endtime = time.time()
-        print(endtime - starttime)
 
     def STAFAN_multithreading(self, thread_cnt, idx):
         """
@@ -1166,7 +1172,7 @@ class Circuit:
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
         return one_count_list, zero_count_list, sen_count_list
-            # print(i.num, i.C1, i.C0, i.sen_p)
+            # print(i.num, i.C1, i.C0, i.S)
 
     def STAFAN_observability(self):
         """
@@ -1180,15 +1186,15 @@ class Circuit:
             else:
                 if(i.dnodes[0].gtype == 'AND'):
                     i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
-                    i.B0 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                    i.B0 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C0
                 elif(i.dnodes[0].gtype == 'NAND'):
                     i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
-                    i.B0 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C1) / i.C0
+                    i.B0 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C1) / i.C0
                 elif(i.dnodes[0].gtype == 'OR'):
-                    i.B1 = i.dnodes[0].B1 * (i.sen_p - i.dnodes[0].C0) / i.C1
+                    i.B1 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C1
                     i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
                 elif(i.dnodes[0].gtype == 'NOR'):
-                    i.B1 = i.dnodes[0].B0 * (i.sen_p - i.dnodes[0].C1) / i.C1
+                    i.B1 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C1
                     i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
                 elif(i.dnodes[0].gtype == 'NOT'):
                     i.B1 = i.dnodes[0].B0
