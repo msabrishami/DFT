@@ -2,16 +2,14 @@
 from circuit import Circuit
 import argparse
 import multiprocessing
+import time
 from multiprocessing import Process, Pipe
-"""
-Multiprocessing calculate STAFAN controllability for each node.
-"""
 
-def control_thread(conn, c_name, thread_cnt, idx):
+def control_thread(conn, c_name, thread_cnt, N, idx):
     circuit = Circuit(c_name)
     circuit.read_circuit()
     circuit.lev()
-    one_count_list, zero_count_list, sen_count_list = circuit.STAFAN_multithreading(thread_cnt, idx)
+    one_count_list, zero_count_list, sen_count_list = circuit.STAFAN_multithreading(thread_cnt, N, idx)
     conn.send((one_count_list, zero_count_list, sen_count_list))
     conn.close()
 
@@ -26,12 +24,15 @@ if __name__ == '__main__':
     circuit.lev()
     nodes_cnt = circuit.nodes_cnt
     total_pattern = pow(2, circuit.input_cnt)
+    start_time = time.time()
+    # thread_cnt = 1
     thread_cnt = multiprocessing.cpu_count()
     process_list = []
+    N = 2**20
     for i in range(thread_cnt):
     # for idx in process_list:
         parent_conn, child_conn = Pipe()
-        p = Process(target = control_thread, args =(child_conn, c_name, thread_cnt, i, ))
+        p = Process(target = control_thread, args =(child_conn, c_name, thread_cnt, N, i, ))
         p.start()
         process_list.append((p, parent_conn))
     
@@ -51,6 +52,6 @@ if __name__ == '__main__':
         circuit.nodes_lev[i].sen_p = sen_count_list[i] / total_pattern
         # print (circuit.nodes_lev[i].one_control, circuit.nodes_lev[i].zero_control,circuit.nodes_lev[i].sen_p)
     circuit.STAFAN_observability()
-
-
-
+    end_time = time.time()
+    duration = end_time - start_time
+    print ("Thread count : {}, Time taken: {}".format(thread_cnt, duration))

@@ -1127,7 +1127,59 @@ class Circuit:
         print("Jiayi please complete me!")
 
     # Must be deleted
-    def STAFAN_multithreading(self, thread_cnt, idx):
+    def STAFAN_multithreading(self, thread_cnt, N, idx):
+        """
+        Create threads to generate STAFAN controllability and observability.
+        Each thread calculate 
+        """
+        fail = 0
+        total_pattern = pow(2,self.input_cnt)
+        pattern_per_thread = int(total_pattern / thread_cnt)
+        pattern_cnt = int(N / thread_cnt)
+        pattern_list = random.sample(range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread), pattern_cnt)
+        for i in pattern_list:
+            b = ('{:0%db}'%self.input_cnt).format(i)
+            list_to_logicsim = []
+            for j in range(self.input_cnt):
+                list_to_logicsim.append(int(b[j]))
+            self.logic_sim(list_to_logicsim)
+            for i in self.nodes_lev:
+                if i.value == 1:
+                    i.one_count = i.one_count + 1
+                elif i.value == 0:
+                    i.zero_count = i.zero_count + 1
+
+                if (i.ntype != 'PO'):
+                    if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 1):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
+                        for j in i.dnodes[0].unodes:
+                            if (j.num != i.num):
+                                if (j.value != 0):
+                                    fail = 1
+                                    break
+                        if (fail != 1):
+                            i.sen_count = i.sen_count + 1
+                        fail = 0
+                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
+        # calculate controllability
+        one_count_list = []
+        zero_count_list = []
+        sen_count_list = []
+        for i in self.nodes_lev:
+            one_count_list.append(i.one_count)
+            zero_count_list.append(i.zero_count)
+            sen_count_list.append(i.sen_count)
+        return one_count_list, zero_count_list, sen_count_list
+            # print(i.num, i.one_control, i.zero_control, i.sen_p)
+
         """
         Create threads to generate STAFAN controllability and observability.
         Each thread calculate
