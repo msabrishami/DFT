@@ -1123,147 +1123,59 @@ class Circuit:
                     i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
             print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
 
+    def control_thread(self, conn, c_name, i, total_T,num_proc):
+        circuit = Circuit(c_name)
+        circuit.read_circuit()
+        circuit.lev()
+        inputnum = len(circuit.input_num_list)
+        circuit.STAFAN_CS(int(total_T/num_proc), [int(pow(2, inputnum)/num_proc)*i,int(pow(2, inputnum)/num_proc)*(i+1)-1])
+        circuit.nodes_lev.sort(key=lambda x: x.num)
+        one_count_list = []
+        zero_count_list = []
+        sen_count_list = []
+        for i in circuit.nodes_lev:
+            one_count_list.append(i.one_count)
+            zero_count_list.append(i.zero_count)
+            sen_count_list.append(i.sen_count)
+        circuit.nodes_lev.sort(key=lambda x: x.lev)   
+        conn.send((one_count_list, zero_count_list, sen_count_list))
+        conn.close() 
+
+
     def STAFAN(self, total_T, num_proc=1):
-        print("Jiayi please complete me!")
+        start_time = time.time()
+        # thread_cnt = 1
+        process_list = []
+        for i in range(num_proc):
+        # for idx in process_list:
+            parent_conn, child_conn = Pipe()
+            p = Process(target = self.control_thread, args =(child_conn, self.c_name, i, total_T,num_proc, ))
+            p.start()
+            process_list.append((p, parent_conn))
+        
+        one_count_list = [0] * self.nodes_cnt
+        zero_count_list = [0] * self.nodes_cnt
+        sen_count_list = [0] * self.nodes_cnt
+        for p, conn in process_list:
+            tup = conn.recv()
+            for i in range(len(tup[0])):
+                one_count_list[i] += tup[0][i]
+                zero_count_list[i] += tup[1][i]
+                sen_count_list[i] += tup[2][i]
+            p.join()
+        self.nodes_lev.sort(key=lambda x: x.num)
+        for i in range(len(self.nodes_lev)):
+            self.nodes_lev[i].C1 = one_count_list[i] / total_T
+            self.nodes_lev[i].C0 = zero_count_list[i] / total_T
+            self.nodes_lev[i].S = sen_count_list[i] / total_T
+        #print (self.nodes_lev[i].num, self.nodes_lev[i].one_control, self.nodes_lev[i].zero_control,self.nodes_lev[i].sen_p)
+        self.nodes_lev.sort(key=lambda x: x.lev)
+        self.STAFAN_B()
+        end_time = time.time()
+        duration = end_time - start_time
+        print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
 
-    # Must be deleted
-    def STAFAN_multithreading(self, thread_cnt, N, idx):
-        """
-        Create threads to generate STAFAN controllability and observability.
-        Each thread calculate 
-        """
-        fail = 0
-        total_pattern = pow(2,self.input_cnt)
-        pattern_per_thread = int(total_pattern / thread_cnt)
-        pattern_cnt = int(N / thread_cnt)
-        pattern_list = random.sample(range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread), pattern_cnt)
-        for i in pattern_list:
-            b = ('{:0%db}'%self.input_cnt).format(i)
-            list_to_logicsim = []
-            for j in range(self.input_cnt):
-                list_to_logicsim.append(int(b[j]))
-            self.logic_sim(list_to_logicsim)
-            for i in self.nodes_lev:
-                if i.value == 1:
-                    i.one_count = i.one_count + 1
-                elif i.value == 0:
-                    i.zero_count = i.zero_count + 1
-
-                if (i.ntype != 'PO'):
-                    if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
-                        for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 1):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
-                    elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
-                        for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 0):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
-                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
-        # calculate controllability
-        one_count_list = []
-        zero_count_list = []
-        sen_count_list = []
-        for i in self.nodes_lev:
-            one_count_list.append(i.one_count)
-            zero_count_list.append(i.zero_count)
-            sen_count_list.append(i.sen_count)
-        return one_count_list, zero_count_list, sen_count_list
-            # print(i.num, i.one_control, i.zero_control, i.sen_p)
-
-        """
-        Create threads to generate STAFAN controllability and observability.
-        Each thread calculate
-        """
-        fail = 0
-        total_pattern = pow(2,self.input_cnt)
-        pattern_per_thread = int(total_pattern / thread_cnt)
-        for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-            b = ('{:0%db}'%self.input_cnt).format(i)
-            list_to_logicsim = []
-            for j in range(self.input_cnt):
-                list_to_logicsim.append(int(b[j]))
-            self.logic_sim(list_to_logicsim)
-            for i in self.nodes_lev:
-                if i.value == 1:
-                    i.one_count = i.one_count + 1
-                elif i.value == 0:
-                    i.zero_count = i.zero_count + 1
-
-                if (i.ntype != 'PO'):
-                    if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
-                        for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 1):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
-                    elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
-                        for j in i.dnodes[0].unodes:
-                            if (j.num != i.num):
-                                if (j.value != 0):
-                                    fail = 1
-                                    break
-                        if (fail != 1):
-                            i.sen_count = i.sen_count + 1
-                        fail = 0
-                    # print(i.num, i.one_count, i.zero_count, i.sen_count)
-        # calculate controllability
-        one_count_list = []
-        zero_count_list = []
-        sen_count_list = []
-        for i in self.nodes_lev:
-            one_count_list.append(i.one_count)
-            zero_count_list.append(i.zero_count)
-            sen_count_list.append(i.sen_count)
-        return one_count_list, zero_count_list, sen_count_list
-            # print(i.num, i.C1, i.C0, i.S)
-
-    # Must be deleted
-    def STAFAN_observability(self):
-        """
-        for multiprocessing
-        """
-        # calculate observability
-        for i in reversed(self.nodes_lev):
-            if (i.ntype == 'PO'):
-                i.B1 = 1.0
-                i.B0 = 1.0
-            else:
-                if(i.dnodes[0].gtype == 'AND'):
-                    i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
-                    i.B0 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C0
-                elif(i.dnodes[0].gtype == 'NAND'):
-                    i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
-                    i.B0 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C1) / i.C0
-                elif(i.dnodes[0].gtype == 'OR'):
-                    i.B1 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C1
-                    i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
-                elif(i.dnodes[0].gtype == 'NOR'):
-                    i.B1 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C1
-                    i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
-                elif(i.dnodes[0].gtype == 'NOT'):
-                    i.B1 = i.dnodes[0].B0
-                    i.B0 = i.dnodes[0].B1
-                elif(i.dnodes[0].gtype == 'XOR'):
-                    i.B1 = i.dnodes[0].B0
-                    i.B0 = i.dnodes[0].B1
-                elif(i.dnodes[0].gtype == 'BRCH'):
-                    i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
-                    i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
-            print(i.num, i.B1, i.B0)
-
+   
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
