@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 from random import randint
 import time
 import pdb
+from multiprocessing import Process, Pipe
+
 # from podem_m import podem
 
 #from D_alg import imply_and_check
@@ -879,10 +881,10 @@ class Circuit:
 
     def co_ob_info(self):
         for lvl in self.lvls_list:
-            for node in lvl:
-                print("N:{}\tLEV:{}\tFIN:{}\t".format(node.num, node.lev, node.fin), end="")
-                print("CC0:{}\tCC1:{}\tCO:{}".format(node.num, node.CC0, node.CC1, node.CO))
-
+            for i in lvl:
+                # print("N:{}\tLEV:{}\tFIN:{}\t".format(node.num, node.lev, node.fin), end="")
+                # print("CC0:{}\tCC1:{}\tCO:{}".format(node.num, node.CC0, node.CC1, node.CO))
+                print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
     def controllability(self):
 
         for i in self.lvls_list[0]:
@@ -1121,7 +1123,7 @@ class Circuit:
                 elif(i.dnodes[0].gtype == 'BRCH'):
                     i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
                     i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
-            print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
+
 
     def control_thread(self, conn, c_name, i, total_T,num_proc):
         circuit = Circuit(c_name)

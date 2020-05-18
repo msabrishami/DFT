@@ -16,21 +16,22 @@ def main():
     #observability() need to follow controllability()
     circuit.controllability()
     circuit.observability()
+
+    # circuit.STAFAN_CS(7000)
+    # circuit.STAFAN_B()
+    circuit.STAFAN(10000, num_proc=2)
+    circuit.co_ob_info()
     graph = circuit.gen_graph()
-    circuit.STAFAN_CS(7000)
-    circuit.STAFAN_B()
-    # circuit.STAFAN_observability()
-    # circuit.co_ob_info()
 
 
     # circuit.get_full_fault_list()
-    # # circuit.gen_fault_dic()
-    # # circuit.get_reduced_fault_list()
-    # # pattern = circuit.get_random_input_pattern()
-    # # pfs_list = circuit.pfs(pattern)
-    # # print (pfs_list)
-    # # pfs_fault_list = circuit.pfs(pattern)
-    # # circuit.get_d_correctness()
+    # circuit.gen_fault_dic()
+    # circuit.get_reduced_fault_list()
+    # pattern = circuit.get_random_input_pattern()
+    # pfs_list = circuit.pfs(pattern)
+    # print (pfs_list)
+    # pfs_fault_list = circuit.pfs(pattern)
+    # circuit.get_d_correctness()
 
     # circuit.get_d_coverage()
 
