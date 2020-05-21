@@ -191,6 +191,10 @@ class Circuit:
         node_dict = dict(zip(self.input_num_list, input_val_list))
         self.nodes_sim = self.nodes_lev.copy()
         for i in self.nodes_sim:
+            
+            i.D1 = False
+            i.D2 = False
+
             if (i.gtype == 'IPT'):
                 if i.num in self.input_num_list:
                     i.value = node_dict[i.num]
@@ -881,10 +885,13 @@ class Circuit:
 
     def co_ob_info(self):
         for lvl in self.lvls_list:
-            for i in lvl:
-                # print("N:{}\tLEV:{}\tFIN:{}\t".format(node.num, node.lev, node.fin), end="")
-                # print("CC0:{}\tCC1:{}\tCO:{}".format(node.num, node.CC0, node.CC1, node.CO))
-                print("N{}: \tGate:{} \tC0:{:.2f} \tC1:{:.2f} \tS:{:.2f}  \tB0:{:.2f} \tB1:{:.2f}".format(i.num, i.gtype, i.C0, i.C1, i.S, i.B0, i.B1))
+            for n in lvl:
+                print("N:{}\tLEV:{}\tGATE:\t".format(n.num, n.lev, n.gtype), end="")
+                print("CC0:{}\tCC1:{}\tCO:{}\t".format(n.num, n.CC0, n.CC1, n.CO), end="")
+                print("C0:{:.2f} \tC1:{:.2f} \tS:{:.2f}\t".format(n.C0, n.C1, n.S),end="")
+                print("B0:{:.2f} \tB1:{:.2f}  ".format(n.B0, n.B1),end="")
+                print("\t#D0:{}\t#D1:{}".format(n.D0_count,n.D1_count))
+    
     def controllability(self):
 
         for i in self.lvls_list[0]:
@@ -894,7 +901,6 @@ class Circuit:
         for i in range(1, self.num_lvls+1):
 
             for j in self.lvls_list[i]:
-                # print(j.gtype)
                 unodes_CC0 = []
                 unodes_CC1 = []
                 for unode in j.unodes:
@@ -1006,8 +1012,8 @@ class Circuit:
         return G
 
 
-
-    def STAFAN_CS(self, num_pattern, limit=None):
+    ## TODO: What about inverter? 
+    def STAFAN_CS(self, num_pattern, limit=None, detect=False):
         inputnum = len(self.input_num_list)
         limit = [0, pow(2, inputnum)-1] if limit==None else limit
 
@@ -1018,7 +1024,9 @@ class Circuit:
             list_to_logicsim = []
             for j in range(inputnum):
                 list_to_logicsim.append(int(b[j]))
-
+            # list_to_logicsim = [1,1,1,1,1]
+            print(b)
+            print(list_to_logicsim)
             self.logic_sim(list_to_logicsim)
 
             for i in self.nodes_lev:
@@ -1029,21 +1037,104 @@ class Circuit:
                     i.zero_count = i.zero_count + 1
 
                 # sensitization
-                sense = True
+                i.sense = True
                 if (i.ntype != 'PO'):
                     if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
                         for j in i.dnodes[0].unodes:
                             if ((j.num != i.num) & (j.value != 1)):
-                                sense = False
+                                i.sense = False
                                 break
 
                     elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
                         for j in i.dnodes[0].unodes:
                             if ((j.num != i.num) & (j.value != 0)):
-                                sense = False
+                                i.sense = False
                                 break
-                    if (sense):
+                    if (i.sense):
                         i.sen_count = i.sen_count + 1
+
+            
+            # HERE
+            for node in reversed(self.nodes_lev):
+                print(">]", node.num, node.gtype, node.ntype, node.sense)
+                
+                if node.ntype == 'PO':
+                    if node.value == 1:
+                        node.D1 = True
+                        node.D1_count += 1
+                    elif node.value == 0:
+                        node.D0 = True
+                        node.D0_count += 1
+
+                elif node.sense:
+
+                    dn = node.dnodes[0]
+
+                    if (dn.gtype == 'AND'):
+                        if (node.value == 1) & (dn.D1):
+                            node.D1 = True
+                            node.D1_count += 1
+                        elif (node.value == 0) & (dn.D0):
+                            node.D0 = True
+                            node.D0_count +=1 
+                    
+                    elif (dn.gtype == 'NAND'):
+                        if (node.value == 1) & (dn.D0):
+                            node.D1 = True
+                            node.D1_count += 1
+                        elif (node.value ==0) & (dn.D1):
+                            node.D0 = True
+                            node.D0_count += 1
+                    
+                    elif (dn.gtype) == 'OR':
+                        if (node.value == 1) & (dn.D1):
+                            node.D1 = True
+                            node.D1_count += 1
+                        elif (node.value == 0) & (dn.D0):
+                            node.D0 = True
+                            node.D0_count += 1
+                    
+                    elif (dn.gtype == 'NOR'):
+                        if (node.value == 1) & (dn.D0):
+                            node.D1 = True
+                            node.D1_count += 1
+                        elif (node.value == 0) & (dn.D1):
+                            node.D0 = True
+                            node.D0_count += 1
+                    
+                    elif (dn.gtype == 'NOT'):
+                        if (node.value == 1) & (node.dnodes[0].D0):
+                            node.D1 = True
+                            node.D1_count += 1
+                        elif (node.value == 0) & (node.dnodes[0].D1):
+                            node.D0 = True
+                            node.D0_count += 1
+                    
+                    elif (dn.gtype == 'BRCH'):
+                        if (node.value == 1):
+                            for branch in node.dnodes:
+                                if branch.D1:
+                                    node.D1 = True
+                                    node.D1_count += 1
+                                    break
+                        elif (node.value == 0):
+                            for branch in node.dnodes:
+                                if branch.D0:
+                                    node.D0 = True
+                                    node.D0_count += 1
+                                    break
+                    # elif (node.gtype == 'IPT'):
+                    #     if node.dnodes[0].D1:
+                    #         node.D1 = True
+                    #         node.D1_count += 1
+                    #     if node.dnodes[0].D0:
+                    #         node.D0 = True
+                    #         node.D0_count += 1
+
+                    else:
+                        print("gate type is {}".format(node.gtype))
+                        print("This gate is not supported yet")
+
 
         # calculate controllability
         for i in self.nodes_lev:

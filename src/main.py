@@ -17,9 +17,9 @@ def main():
     circuit.controllability()
     circuit.observability()
 
-    # circuit.STAFAN_CS(7000)
-    # circuit.STAFAN_B()
-    circuit.STAFAN(10000, num_proc=2)
+    circuit.STAFAN_CS(100)
+    circuit.STAFAN_B()
+    # circuit.STAFAN(1, num_proc=1)
     circuit.co_ob_info()
     graph = circuit.gen_graph()
 

@@ -63,6 +63,13 @@ class node:
         self.B1 = 0.0
         self.B0 = 0.0
 
+        # Saeed & Erfan:
+        self.D1 = False
+        self.D0 = False
+        self.D1_count = 0
+        self.D0_count = 0
+        self.sense = True
+
     def add_unodes(self, unode):
         self.unodes.append(unode)
     def add_dnodes(self, dnode):
