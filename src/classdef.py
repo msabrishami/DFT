@@ -30,8 +30,6 @@ class ntype(Enum):
     PO = 3
 
 
-
-
 class node:
 
     def __init__(self):
@@ -80,6 +78,139 @@ class node:
         self.faultlist_dfs.clear()
     def copy_faultlist(self, faultlist):
         faultlist_dfs = faultlist.copy()
+
+    def get_neighbors(self, value=False, inclusive=False):
+        ''' returns a list of nodes (or the values of ndoes) 
+        that have the same out gate as this node
+        inclusive: if set True, includes this node itself. 
+        value: if set True, returns the value of neighbors node, by default list of nodes
+        '''
+        # TODO: Check this for all possible gates, specially branch
+        # TODO: not tested
+        res = []
+        for node in self.dnodes[0].unodes:
+            if self.num == node.num:
+                res = res.append(node) if inclusive else res
+            else:
+                res.append(node)
+        
+        return [n.value for n in res] if value else res
+
+
+    def is_sensible(self):
+        ''' calculates if this node can propagate the gate infront of it. 
+        i.e. if current value changes, down-node (output gate) value will change.
+        '''
+        # TODO: implemented on two value system, not sure if it applies to others
+
+        if self.ntype == 'PO':
+            return True
+
+        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH']:
+            return True
+
+        elif self.dnodes[0].gtype in ['AND', 'NAND']:
+            if 0 in self.get_neighbors(inclusive=False, value = True):
+                return False
+            else:
+                return True
+
+        elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
+            if 1 in self.get_neighbors(inclusive=False, value=True):
+                return False
+            else:
+                return True
+
+        else:
+            print("Error: Not implemented yet")
+
+    def is_detectable(self):
+        ''' checks if a node is detectable with current values
+        logic-sim and sense should be pre-calculated
+        updates D0/D1 flag and D0/D1 count 
+        D_count is set to 0 when circuit is initilized
+        D0: 
+        D1: 
+        '''
+        # TODO: initialization should be done as dependent mathod in circuit
+        if self.ntype == 'PO':
+            if self.value == 1:
+                self.D1 = True
+                self.D1_count += 1
+            elif self.value == 0:
+                self.D0 = True
+                self.D0_count += 1
+
+        elif self.sense:
+
+            dn = self.dnodes[0]
+
+            if (dn.gtype == 'AND'):
+                if (self.value == 1) & (dn.D1):
+                    self.D1 = True
+                    self.D1_count += 1
+                elif (self.value == 0) & (dn.D0):
+                    self.D0 = True
+                    self.D0_count +=1 
+            
+            elif (dn.gtype == 'NAND'):
+                if (self.value == 1) & (dn.D0):
+                    self.D1 = True
+                    self.D1_count += 1
+                elif (self.value ==0) & (dn.D1):
+                    self.D0 = True
+                    self.D0_count += 1
+            
+            elif (dn.gtype) == 'OR':
+                if (self.value == 1) & (dn.D1):
+                    self.D1 = True
+                    self.D1_count += 1
+                elif (self.value == 0) & (dn.D0):
+                    self.D0 = True
+                    self.D0_count += 1
+            
+            elif (dn.gtype == 'NOR'):
+                if (self.value == 1) & (dn.D0):
+                    self.D1 = True
+                    self.D1_count += 1
+                elif (self.value == 0) & (dn.D1):
+                    self.D0 = True
+                    self.D0_count += 1
+            
+            elif (dn.gtype == 'NOT'):
+                if (self.value == 1) & (self.dnodes[0].D0):
+                    self.D1 = True
+                    self.D1_count += 1
+                elif (self.value == 0) & (self.dnodes[0].D1):
+                    self.D0 = True
+                    self.D0_count += 1
+            
+            elif (dn.gtype == 'BRCH'):
+                if (self.value == 1):
+                    for branch in self.dnodes:
+                        if branch.D1:
+                            self.D1 = True
+                            self.D1_count += 1
+                            break
+                elif (self.value == 0):
+                    for branch in self.dnodes:
+                        if branch.D0:
+                            self.D0 = True
+                            self.D0_count += 1
+                            break
+            # elif (self.gtype == 'IPT'):
+            #     if self.dnodes[0].D1:
+            #         self.D1 = True
+            #         self.D1_count += 1
+            #     if self.dnodes[0].D0:
+            #         self.D0 = True
+            #         self.D0_count += 1
+
+            else:
+                print("gate type is {}".format(self.gtype))
+                print("This gate is not supported yet")
+
+
 
 
 
@@ -176,7 +307,5 @@ class podem_node_5val():
         val.bit1 = not self.bit1
         val.x = self.x
         return val
-
-
-
+    
 

@@ -986,31 +986,7 @@ class Circuit:
                         k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
 
 
-    def gen_graph(self):
-        """
-        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
-        """
-        G = nx.DiGraph()
-        for n in self.nodes_lev:
-            G.add_node(n.num)
-            G.nodes[n.num]['CC0'] = n.CC0
-            G.nodes[n.num]['CC1'] = n.CC1
-            G.nodes[n.num]['CO'] = n.CO
-            G.nodes[n.num]['lev'] = n.lev
-            if n.gtype != 'IPT':
-                for unode in n.unodes:
-                    G.add_edge(unode.num, n.num)
-            else:
-                pass
-        # labels = {}
-        # for node in self.nodes_lev:
-        #     print('{}'.format(G.nodes[node.num]))
-        # pos = nx.spring_layout(G)
-        # nx.draw_networkx(G)
-        # nx.draw_networkx_labels(G, pos, labels)
-        # plt.show()
-        return G
-
+    
 
     ## TODO: What about inverter? 
     def STAFAN_CS(self, num_pattern, limit=None, detect=False):
@@ -1026,17 +1002,17 @@ class Circuit:
                 list_to_logicsim.append(int(b[j]))
             # list_to_logicsim = [1,1,1,1,1]
             print(b)
-            print(list_to_logicsim)
             self.logic_sim(list_to_logicsim)
 
             for i in self.nodes_lev:
                 # counting values
-                if i.value == 1:
-                    i.one_count = i.one_count + 1
-                elif i.value == 0:
-                    i.zero_count = i.zero_count + 1
+                i.one_count = i.one_count + 1 if i.value == 1 else i.one_count
+                i.zero_count = i.zero_count + 1 if i.value ==0 else i.zero_count
 
                 # sensitization
+                if i.is_sensible():
+                    i.sen_count += 1
+                '''
                 i.sense = True
                 if (i.ntype != 'PO'):
                     if ((i.dnodes[0].gtype == 'AND') | (i.dnodes[0].gtype == 'NAND')):
@@ -1052,12 +1028,17 @@ class Circuit:
                                 break
                     if (i.sense):
                         i.sen_count = i.sen_count + 1
+                '''
 
             
             # HERE
             for node in reversed(self.nodes_lev):
+                node.sense = node.is_sensible()
                 print(">]", node.num, node.gtype, node.ntype, node.sense)
+                node.is_detectable()
+                # TODO: call node.is_detectable 
                 
+                '''
                 if node.ntype == 'PO':
                     if node.value == 1:
                         node.D1 = True
@@ -1134,7 +1115,7 @@ class Circuit:
                     else:
                         print("gate type is {}".format(node.gtype))
                         print("This gate is not supported yet")
-
+                '''
 
         # calculate controllability
         for i in self.nodes_lev:
@@ -1268,7 +1249,35 @@ class Circuit:
         duration = end_time - start_time
         print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
 
-   
+
+
+    def gen_graph(self):
+        """
+        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
+        """
+        G = nx.DiGraph()
+        for n in self.nodes_lev:
+            G.add_node(n.num)
+            G.nodes[n.num]['CC0'] = n.CC0
+            G.nodes[n.num]['CC1'] = n.CC1
+            G.nodes[n.num]['CO'] = n.CO
+            G.nodes[n.num]['lev'] = n.lev
+            if n.gtype != 'IPT':
+                for unode in n.unodes:
+                    G.add_edge(unode.num, n.num)
+            else:
+                pass
+        # labels = {}
+        # for node in self.nodes_lev:
+        #     print('{}'.format(G.nodes[node.num]))
+        # pos = nx.spring_layout(G)
+        # nx.draw_networkx(G)
+        # nx.draw_networkx_labels(G, pos, labels)
+        # plt.show()
+        return G
+
+
+
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
