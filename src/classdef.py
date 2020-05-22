@@ -189,7 +189,36 @@ class node:
 
         self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
-
+    
+    def print_info(self, label=True):
+        if label:
+            print("N:{}\t".format(str(self.num).zfill(4)), end="")
+            print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
+            print("GATE:{}\t".format(self.gtype), end="")
+            print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
+            print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
+            print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
+            print("C0:{:.2f}\t".format(self.C0), end="")
+            print("C1:{:.2f}\t".format(self.C1), end="")
+            print("S:{:.2f}\t".format(self.S), end="")
+            print("B0:{:.2f}\t".format(self.B0), end="")
+            print("B1:{:.2f}\t".format(self.B1), end="")
+            print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
+            print("#D1:{}\t".format(str(self.D1_count).zfill(4)))
+        else:
+            print("N:{}\t".format(str(self.num).zfill(4)), end="")
+            print("{}\t".format(str(self.lev).zfill(2)), end="")
+            print("{}\t".format(self.gtype), end="")
+            print("{}\t".format(str(self.CC0).zfill(3)), end="")
+            print("{}\t".format(str(self.CC1).zfill(3)), end="")
+            print("{}\t".format(str(self.CO).zfill(3)), end="")
+            print("{:.2f}\t".format(self.C0), end="")
+            print("{:.2f}\t".format(self.C1), end="")
+            print("{:.2f}\t".format(self.S), end="")
+            print("{:.2f}\t".format(self.B0), end="")
+            print("{:.2f}\t".format(self.B1), end="")
+            print("{}\t".format(str(self.D0_count).zfill(4)), end="")
+            print("{}\t".format(str(self.D1_count).zfill(4)))
 
 class podem_node_5val():
     def __init__(self):

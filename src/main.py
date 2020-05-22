@@ -14,10 +14,12 @@ def main():
     circuit.lev()
 
     #observability() need to follow controllability()
-    circuit.controllability()
-    circuit.observability()
+    # circuit.controllability()
+    circuit.SCOAP_CC()
+    # circuit.observability()
+    circuit.SCOAP_CO()
 
-    circuit.STAFAN_CS(100)
+    circuit.STAFAN_CS(10000)
     circuit.STAFAN_B()
     # circuit.STAFAN(1, num_proc=1)
     circuit.co_ob_info()

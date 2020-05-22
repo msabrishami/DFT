@@ -886,13 +886,9 @@ class Circuit:
     def co_ob_info(self):
         for lvl in self.lvls_list:
             for n in lvl:
-                print("N:{}\tLEV:{}\tGATE:\t".format(n.num, n.lev, n.gtype), end="")
-                print("CC0:{}\tCC1:{}\tCO:{}\t".format(n.num, n.CC0, n.CC1, n.CO), end="")
-                print("C0:{:.2f} \tC1:{:.2f} \tS:{:.2f}\t".format(n.C0, n.C1, n.S),end="")
-                print("B0:{:.2f} \tB1:{:.2f}  ".format(n.B0, n.B1),end="")
-                print("\t#D0:{}\t#D1:{}".format(n.D0_count,n.D1_count))
-    
-    def controllability(self):
+                n.print_info(label=False)
+                    
+    def SCOAP_CC(self):
 
         for i in self.lvls_list[0]:
             i.CC0 = 1
@@ -941,7 +937,7 @@ class Circuit:
                     j.CC0 = 1 + minCC0
 
 
-    def observability(self):
+    def SCOAP_CO(self):
 
         for i in self.lvls_list[-1]:
             i.CO = 1
@@ -1001,7 +997,7 @@ class Circuit:
             for j in range(inputnum):
                 list_to_logicsim.append(int(b[j]))
             # list_to_logicsim = [1,1,1,1,1]
-            print(b)
+            # print(b)
             self.logic_sim(list_to_logicsim)
 
             for i in self.nodes_lev:
@@ -1016,7 +1012,7 @@ class Circuit:
             
             for node in reversed(self.nodes_lev):
                 node.sense = node.is_sensible()
-                print(">]", node.num, node.gtype, node.ntype, node.sense)
+                # print(">]", node.num, node.gtype, node.ntype, node.sense)
                 node.is_detectable()
             
         # calculate controllability
