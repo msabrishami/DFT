@@ -1183,6 +1183,10 @@ class Circuit:
             G.nodes[n_num_normal]['CC1'] = n.CC1
             G.nodes[n_num_normal]['CO'] = n.CO
             G.nodes[n_num_normal]['lev'] = n.lev
+            G.nodes[n_num_normal]['gtype'] = n.gtype
+            G.nodes[n_num_normal]['ntype'] = n.ntype
+            G.nodes[n_num_normal]['D0_p'] = n.D0_p
+            G.nodes[n_num_normal]['D1_p'] = n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(self.node_ids.index(unode.num), n_num_normal)
