@@ -115,7 +115,7 @@ class node:
             else:
                 return True
 
-        elif ((i.dnodes[0].gtype == 'OR') | (i.dnodes[0].gtype == 'NOR')):
+        elif ((self.dnodes[0].gtype == 'OR') | (self.dnodes[0].gtype == 'NOR')):
             if 1 in self.get_neighbors(inclusive=False, value=True):
                 return False
             else:
@@ -132,86 +132,63 @@ class node:
         D0: 
         D1: 
         '''
-        # TODO: initialization should be done as dependent mathod in circuit
+        # Jiayi please check this method, 
+        self.D1 = False
+        self.D0 = False
+
         if self.ntype == 'PO':
-            if self.value == 1:
-                self.D1 = True
-                self.D1_count += 1
-            elif self.value == 0:
-                self.D0 = True
-                self.D0_count += 1
+            self.D1 = True if (self.value == 1) else False
+            self.D0 = True if (self.value == 0) else False
 
         elif self.sense:
-
+            
             dn = self.dnodes[0]
 
-            if (dn.gtype == 'AND'):
-                if (self.value == 1) & (dn.D1):
-                    self.D1 = True
-                    self.D1_count += 1
-                elif (self.value == 0) & (dn.D0):
-                    self.D0 = True
-                    self.D0_count +=1 
+            if dn.gtype == 'AND':
+                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
             
-            elif (dn.gtype == 'NAND'):
-                if (self.value == 1) & (dn.D0):
-                    self.D1 = True
-                    self.D1_count += 1
-                elif (self.value ==0) & (dn.D1):
-                    self.D0 = True
-                    self.D0_count += 1
+            elif dn.gtype == 'NAND':
+                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
             
-            elif (dn.gtype) == 'OR':
-                if (self.value == 1) & (dn.D1):
-                    self.D1 = True
-                    self.D1_count += 1
-                elif (self.value == 0) & (dn.D0):
-                    self.D0 = True
-                    self.D0_count += 1
+            elif dn.gtype == 'OR':
+                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
             
-            elif (dn.gtype == 'NOR'):
-                if (self.value == 1) & (dn.D0):
-                    self.D1 = True
-                    self.D1_count += 1
-                elif (self.value == 0) & (dn.D1):
-                    self.D0 = True
-                    self.D0_count += 1
+            elif dn.gtype == 'NOR':
+                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
             
-            elif (dn.gtype == 'NOT'):
-                if (self.value == 1) & (self.dnodes[0].D0):
-                    self.D1 = True
-                    self.D1_count += 1
-                elif (self.value == 0) & (self.dnodes[0].D1):
-                    self.D0 = True
-                    self.D0_count += 1
+            elif dn.gtype == 'NOT':
+                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
             
-            elif (dn.gtype == 'BRCH'):
+            elif dn.gtype == 'XOR':
+                if dn.value == 1:
+                    self.D1 = dn.D1
+                    self.D0 = dn.D1
+                elif dn.value == 0:
+                    self.D1 = dn.D0
+                    self.D0 = dn.D0
+
+            elif dn.gtype == 'BRCH':
                 if (self.value == 1):
                     for branch in self.dnodes:
                         if branch.D1:
                             self.D1 = True
-                            self.D1_count += 1
                             break
                 elif (self.value == 0):
                     for branch in self.dnodes:
                         if branch.D0:
                             self.D0 = True
-                            self.D0_count += 1
                             break
-            # elif (self.gtype == 'IPT'):
-            #     if self.dnodes[0].D1:
-            #         self.D1 = True
-            #         self.D1_count += 1
-            #     if self.dnodes[0].D0:
-            #         self.D0 = True
-            #         self.D0_count += 1
-
             else:
                 print("gate type is {}".format(self.gtype))
                 print("This gate is not supported yet")
 
-
-
+        self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
+        self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
 
 
 class podem_node_5val():
