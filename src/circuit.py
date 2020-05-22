@@ -55,6 +55,7 @@ class Circuit:
         self.rfl_ftype = []
         self.lvls_list = [] #controllability and observability
 
+        self.node_ids = [] #for mapping random node ids to 0-len(nodes)
     def read_circuit(self):
         """
         Read circuit from .ckt file, instantiate each node as a class,
@@ -78,6 +79,8 @@ class Circuit:
             new_node = node()
             new_node.ntype = ntype(int(line[0])).name
             new_node.num = int(line[1])
+            if new_node.num not in self.node_ids:
+                self.node_ids.append(new_node.num)
             new_node.gtype = gtype(int(line[2])).name
 
             if (ntype(int(line[0])).value == 2):   #if BRCH --> unodes
@@ -1174,25 +1177,18 @@ class Circuit:
         """
         G = nx.DiGraph()
         for n in self.nodes_lev:
-            G.add_node(n.num)
-            G.nodes[n.num]['CC0'] = n.CC0
-            G.nodes[n.num]['CC1'] = n.CC1
-            G.nodes[n.num]['CO'] = n.CO
-            G.nodes[n.num]['lev'] = n.lev
+            n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
+            G.add_node(n_num_normal)
+            G.nodes[n_num_normal]['CC0'] = n.CC0
+            G.nodes[n_num_normal]['CC1'] = n.CC1
+            G.nodes[n_num_normal]['CO'] = n.CO
+            G.nodes[n_num_normal]['lev'] = n.lev
             if n.gtype != 'IPT':
                 for unode in n.unodes:
-                    G.add_edge(unode.num, n.num)
+                    G.add_edge(self.node_ids.index(unode.num), n_num_normal)
             else:
                 pass
-        # labels = {}
-        # for node in self.nodes_lev:
-        #     print('{}'.format(G.nodes[node.num]))
-        # pos = nx.spring_layout(G)
-        # nx.draw_networkx(G)
-        # nx.draw_networkx_labels(G, pos, labels)
-        # plt.show()
         return G
-
 
 
 # prevent D algorithm deadlock. For debug purposes only
