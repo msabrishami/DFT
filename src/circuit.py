@@ -884,9 +884,10 @@ class Circuit:
 
 
     def co_ob_info(self):
+        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
         for lvl in self.lvls_list:
             for n in lvl:
-                n.print_info(label=False)
+                n.print_info(print_labels=False)
                     
     def SCOAP_CC(self):
 

@@ -190,8 +190,11 @@ class node:
         self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
     
-    def print_info(self, label=True):
-        if label:
+    def print_info(self, get_labels=False, print_labels=True):
+        if get_labels:
+            return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0", 
+                    "C1", "S", "B0", "B1", "D0#", "D1#"]
+        if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
             print("GATE:{}\t".format(self.gtype), end="")
