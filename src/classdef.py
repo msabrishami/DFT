@@ -191,9 +191,10 @@ class node:
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
     
     def print_info(self, get_labels=False, print_labels=True):
+        # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0", 
-                    "C1", "S", "B0", "B1", "D0#", "D1#"]
+                    "C1", "S", "B0", "B1", "D0#", "D1#", "D0%", "D1%"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -207,7 +208,9 @@ class node:
             print("B0:{:.2f}\t".format(self.B0), end="")
             print("B1:{:.2f}\t".format(self.B1), end="")
             print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("#D1:{}\t".format(str(self.D1_count).zfill(4)))
+            print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
+            print("%D0:{:.2f}\t".format(self.D0_p), end="")
+            print("%D1:{:.2f}\t".format(self.D1_p))
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -221,7 +224,9 @@ class node:
             print("{:.2f}\t".format(self.B0), end="")
             print("{:.2f}\t".format(self.B1), end="")
             print("{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("{}\t".format(str(self.D1_count).zfill(4)))
+            print("{}\t".format(str(self.D1_count).zfill(4)), end="")
+            print("{:.2f}\t".format(self.D0_p), end="")
+            print("{:.2f}\t".format(self.D1_p))
 
 class podem_node_5val():
     def __init__(self):

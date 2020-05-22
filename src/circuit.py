@@ -1016,11 +1016,13 @@ class Circuit:
                 # print(">]", node.num, node.gtype, node.ntype, node.sense)
                 node.is_detectable()
             
-        # calculate controllability
+        # calculate percentage/prob
         for i in self.nodes_lev:
             i.C1 = i.one_count / num_pattern
             i.C0 = i.zero_count / num_pattern
             i.S = i.sen_count / num_pattern
+            i.D0_p = i.D0_count / num_pattern
+            i.D1_p = i.D1_count / num_pattern
 
 
     def STAFAN_B(self):
@@ -1106,12 +1108,16 @@ class Circuit:
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
+        D0_count = []
+        D1_count = []
         for i in circuit.nodes_lev:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
+            D0_count.append(i.D0_count)
+            D1_count.append(i.D1_count)
         circuit.nodes_lev.sort(key=lambda x: x.lev)   
-        conn.send((one_count_list, zero_count_list, sen_count_list))
+        conn.send((one_count_list, zero_count_list, sen_count_list, D0_count, D1_count))
         conn.close() 
 
 
@@ -1125,22 +1131,34 @@ class Circuit:
             p = Process(target = self.control_thread, args =(child_conn, self.c_name, i, total_T,num_proc, ))
             p.start()
             process_list.append((p, parent_conn))
-        
+         
+        print("all lucnhed")
         one_count_list = [0] * self.nodes_cnt
         zero_count_list = [0] * self.nodes_cnt
         sen_count_list = [0] * self.nodes_cnt
+        D1_count_list = [0] * self.nodes_cnt
+        D0_count_list = [0] * self.nodes_cnt
+        
         for p, conn in process_list:
             tup = conn.recv()
+            print("done", p)
             for i in range(len(tup[0])):
                 one_count_list[i] += tup[0][i]
                 zero_count_list[i] += tup[1][i]
                 sen_count_list[i] += tup[2][i]
+                D0_count_list[i] += tup[3][i]
+                D1_count_list[i] += tup[4][i]
             p.join()
         self.nodes_lev.sort(key=lambda x: x.num)
         for i in range(len(self.nodes_lev)):
             self.nodes_lev[i].C1 = one_count_list[i] / total_T
             self.nodes_lev[i].C0 = zero_count_list[i] / total_T
             self.nodes_lev[i].S = sen_count_list[i] / total_T
+            self.nodes_lev[i].D0_count = D0_count_list[i]
+            self.nodes_lev[i].D1_count = D1_count_list[i]
+            self.nodes_lev[i].D0_p = D0_count_list[i] / total_T
+            self.nodes_lev[i].D1_p = D1_count_list[i] / total_T
+
         #print (self.nodes_lev[i].num, self.nodes_lev[i].one_control, self.nodes_lev[i].zero_control,self.nodes_lev[i].sen_p)
         self.nodes_lev.sort(key=lambda x: x.lev)
         self.STAFAN_B()
