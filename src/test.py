@@ -9,14 +9,13 @@ circuit = Circuit(ckt)
 circuit.read_circuit()
 circuit.lev()
 
-#observability() need to follow controllability()
-circuit.controllability()
-circuit.observability()
+circuit.SCOAP_CC()
+# circuit.observability()
+circuit.SCOAP_CO()
 
-# circuit.STAFAN_CS(7000)
+# circuit.STAFAN_CS(100)
 # circuit.STAFAN_B()
-circuit.STAFAN(10000, num_proc=2)
+circuit.STAFAN(1000, num_proc=8)
 circuit.co_ob_info()
 graph = circuit.gen_graph()
-
-
+nx.write_graphml(graph, "./g_noon.graphml")

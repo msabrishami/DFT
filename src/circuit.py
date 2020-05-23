@@ -25,7 +25,7 @@ from random import randint
 import time
 import pdb
 from multiprocessing import Process, Pipe
-
+import numpy as np
 # from podem_m import podem
 
 #from D_alg import imply_and_check
@@ -990,12 +990,20 @@ class Circuit:
 
     ## TODO: What about inverter? 
     def STAFAN_CS(self, num_pattern, limit=None, detect=False):
+        ''' note: 
+        we are generating random numbers with replacement
+        if u need to test all the patterns, add a new flag
+        initial test showed when 10**7 in 4G patterns, 16M replacements
+        random.choice is very inefficient
+        '''
         inputnum = len(self.input_num_list)
         limit = [0, pow(2, inputnum)-1] if limit==None else limit
+        # patterns = np.random.choice(limit[1]-limit[0], num_pattern, replace=False)
+        # patterns = [x+limit[0] for x in patterns]
 
+        # for pattern in patterns:
         for k in range(num_pattern):
-
-            # TODO: change this to have no replacement
+            # TODO: Read note about replacement 
             b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
             list_to_logicsim = []
             for j in range(inputnum):
