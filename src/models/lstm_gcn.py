@@ -12,10 +12,6 @@ from torch.autograd import Variable
 gcn_msg = fn.copy_src(src='h', out='m')
 gcn_reduce = fn.sum(msg='m', out='h')
 
-"""We then proceed to define the GCNLayer module. A GCNLayer essentially performs
-message passing on all the nodes then applies a fully-connected layer.
-"""
-
 class GCNLayer(nn.Module):
     def __init__(self, in_feats, out_feats):
         super(GCNLayer, self).__init__()
@@ -55,22 +51,14 @@ class GCNLSTMLayer(nn.Module):
         cell = Variable(next(self.lstm.parameters()).data.new(batch_size, 1, self.out_feats), requires_grad=False)
         return hidden.zero_(), cell.zero_()
 
-"""The forward function is essentially the same as any other commonly seen NNs
-model in PyTorch.  We can initialize GCN like any ``nn.Module``. For example,
-let's define a simple neural network consisting of two GCN layers. Suppose we
-are training the classifier for the cora dataset (the input feature size is
-1433 and the number of classes is 7). The last GCN layer computes node embeddings,
-so the last layer in general does not apply activation.
-"""
-
 class LSTMGCN(nn.Module):
-    def __init__(self, feat_dim=6, weight_dim=2048, depth=50):
+    def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10):
         super(LSTMGCN, self).__init__()
-        self.input_layer = GCNLayer(feat_dim, weight_dim)
+        self.input_layer = GCNLayer(feature_dim, weight_dim)
         self.lstm_layer = GCNLSTMLayer(weight_dim, weight_dim)
-        self.output_layer = GCNLayer(weight_dim, 1)
+        self.output_layer = self.output_layer = nn.Linear(weight_dim, output_dim)
         self.weight_dim = weight_dim
-        self.feat_dim = feat_dim
+        self.feature_dim = feature_dim
         self.depth = depth
 
     def forward(self, g, features):
@@ -86,6 +74,6 @@ class LSTMGCN(nn.Module):
             _, state = self.lstm_layer(g, state[0], state)
         h_t = state[0]
         c_t = state[1]
-        x = self.output_layer(g, h_t.view(-1, self.weight_dim))
+        x = self.output_layer(h_t.view(-1, self.weight_dim))
         return x
 
