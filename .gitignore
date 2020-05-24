@@ -1,6 +1,6 @@
 # git ignore
 # Erfan
-*.png
+**.png
 
 # Saeed:
 **.swp
