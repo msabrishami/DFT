@@ -40,7 +40,7 @@ def translator(src,dst):
     for i in range(len(input_of_gate_list)):
         if (i % 2) == 1:
             gate_input_line = gate_input_line + re.findall('\d+', input_of_gate_list[i])
-        
+
     line = [0] * len(all_line_list)
     line2 = [0] * len(gate_input_line)
     for i in range(len(all_line_list)):

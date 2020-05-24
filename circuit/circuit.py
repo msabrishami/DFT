@@ -1049,50 +1049,50 @@ class Circuit:
             else:
                 if (i.dnodes[0].gtype == 'AND'):
                     if (i.C1 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
 
                     if (i.C0 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C0
 
                 elif(i.dnodes[0].gtype == 'NAND'):
                     if (i.C1 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
                     if (i.C0 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C0
 
                 elif(i.dnodes[0].gtype == 'OR'):
                     if (i.C1 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C1
 
                     if (i.C0 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
 
                 elif(i.dnodes[0].gtype == 'NOR'):
                     if (i.C1 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B1 = 1.0
                     else :
                         i.B1 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C1
                     if (i.C0 == 0):
-                        print("case 0")
+                        # print("case 0")
                         i.B0 = 1.0
                     else :
                         i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
@@ -1144,7 +1144,6 @@ class Circuit:
             p.start()
             process_list.append((p, parent_conn))
 
-        print("all lucnhed")
         one_count_list = [0] * self.nodes_cnt
         zero_count_list = [0] * self.nodes_cnt
         sen_count_list = [0] * self.nodes_cnt
@@ -1153,7 +1152,6 @@ class Circuit:
 
         for p, conn in process_list:
             tup = conn.recv()
-            print("done", p)
             for i in range(len(tup[0])):
                 one_count_list[i] += tup[0][i]
                 zero_count_list[i] += tup[1][i]
@@ -1187,12 +1185,17 @@ class Circuit:
         for n in self.nodes_lev:
             n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
             G.add_node(n_num_normal)
-            G.nodes[n_num_normal]['CC0'] = n.CC0
-            G.nodes[n_num_normal]['CC1'] = n.CC1
-            G.nodes[n_num_normal]['CO'] = n.CO
             G.nodes[n_num_normal]['lev'] = n.lev
             G.nodes[n_num_normal]['gtype'] = n.gtype
             G.nodes[n_num_normal]['ntype'] = n.ntype
+            G.nodes[n_num_normal]['CC0'] = n.CC0
+            G.nodes[n_num_normal]['CC1'] = n.CC1
+            G.nodes[n_num_normal]['CO'] = n.CO
+            G.nodes[n_num_normal]['C0'] = n.C0
+            G.nodes[n_num_normal]['C1'] = n.C1
+            G.nodes[n_num_normal]['S'] = n.S
+            G.nodes[n_num_normal]['B0'] = n.B0
+            G.nodes[n_num_normal]['B1'] = n.B1
             G.nodes[n_num_normal]['D0_p'] = n.D0_p
             G.nodes[n_num_normal]['D1_p'] = n.D1_p
             if n.gtype != 'IPT':
@@ -1213,8 +1216,7 @@ class Circuit:
         plt.clf()
         data = self.get_node_attr(node_attr)
         res = plt.hist(data)
-        print(res)
-        pdb.set_trace()
+        # print(res)
         plt.title(self.c_name)
         plt.xlabel(node_attr)
         plt.ylabel("Occurrence")

@@ -5,7 +5,7 @@ from atpg_v0 import ATPG
 import argparse
 import pdb
 import networkx as nx
-import time 
+import time
 
 def main():
     parser = argparse.ArgumentParser()
@@ -27,7 +27,9 @@ def main():
     # circuit.STAFAN(100, num_proc=4)
     circuit.co_ob_info()
     graph = circuit.gen_graph()
-    # nx.write_graphml(graph, "./g_noon.graphml")
+    nx.write_graphml(graph, "./g_noon.graphml")
+    print("Graph Saved")
+    temp = nx.read_graphml("./g_noon.graphml")
     # print(time.time() - start_time)
 
     # circuit.get_full_fault_list()
@@ -38,13 +40,7 @@ def main():
     # print (pfs_list)
     # pfs_fault_list = circuit.pfs(pattern)
     # circuit.get_d_correctness()
-
     # circuit.get_d_coverage()
-
-    # # circuit.get_podem_correctness()
-    # circuit.get_podem_coverage()
-    # circuit.time_for_podem()
-
 
     #-------------------ATPG part-----------------
     # atpg = ATPG(c_name)

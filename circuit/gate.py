@@ -1,4 +1,7 @@
 #AND gate
+
+import pdb
+
 def GAND(a, b):
     if a == 1:
         if b == 1:
