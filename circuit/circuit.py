@@ -61,12 +61,13 @@ class Circuit:
         Read circuit from .ckt file, instantiate each node as a class,
         initialize self.nodes
         """
-        path = "../circuits/{}.ckt".format(self.c_name)
+        path = "../data/ckt/{}.ckt".format(self.c_name)
         f = open(path,'r')
         indx = 0
         nodedict = {}
         fileList = []
-        nodedict_list = [None] * 1355
+        # TODO: this is a big issue here, emergency to fix
+        nodedict_list = [None] * (2*int(self.c_name[1:]))
         temp_dict = {}
         lines = f.readlines()
 
@@ -1212,6 +1213,8 @@ class Circuit:
         plt.clf()
         data = self.get_node_attr(node_attr)
         res = plt.hist(data)
+        print(res)
+        pdb.set_trace()
         plt.title(self.c_name)
         plt.xlabel(node_attr)
         plt.ylabel("Occurrence")
