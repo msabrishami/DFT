@@ -194,7 +194,7 @@ class Circuit:
         node_dict = dict(zip(self.input_num_list, input_val_list))
         self.nodes_sim = self.nodes_lev.copy()
         for i in self.nodes_sim:
-            
+
             i.D1 = False
             i.D2 = False
 
@@ -891,7 +891,7 @@ class Circuit:
         for lvl in self.lvls_list:
             for n in lvl:
                 n.print_info(print_labels=False)
-                    
+
     def SCOAP_CC(self):
 
         for i in self.lvls_list[0]:
@@ -986,11 +986,11 @@ class Circuit:
                         k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
 
 
-    
 
-    ## TODO: What about inverter? 
+
+    ## TODO: What about inverter?
     def STAFAN_CS(self, num_pattern, limit=None, detect=False):
-        ''' note: 
+        ''' note:
         we are generating random numbers with replacement
         if u need to test all the patterns, add a new flag
         initial test showed when 10**7 in 4G patterns, 16M replacements
@@ -1003,7 +1003,7 @@ class Circuit:
 
         # for pattern in patterns:
         for k in range(num_pattern):
-            # TODO: Read note about replacement 
+            # TODO: Read note about replacement
             b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
             list_to_logicsim = []
             for j in range(inputnum):
@@ -1013,7 +1013,7 @@ class Circuit:
             self.logic_sim(list_to_logicsim)
 
             for i in self.nodes_lev:
-                
+
                 # counting values
                 i.one_count = i.one_count + 1 if i.value == 1 else i.one_count
                 i.zero_count = i.zero_count + 1 if i.value ==0 else i.zero_count
@@ -1021,12 +1021,12 @@ class Circuit:
                 # sensitization
                 if i.is_sensible():
                     i.sen_count += 1
-            
+
             for node in reversed(self.nodes_lev):
                 node.sense = node.is_sensible()
                 # print(">]", node.num, node.gtype, node.ntype, node.sense)
                 node.is_detectable()
-            
+
         # calculate percentage/prob
         for i in self.nodes_lev:
             i.C1 = i.one_count / num_pattern
@@ -1127,9 +1127,9 @@ class Circuit:
             sen_count_list.append(i.sen_count)
             D0_count.append(i.D0_count)
             D1_count.append(i.D1_count)
-        circuit.nodes_lev.sort(key=lambda x: x.lev)   
+        circuit.nodes_lev.sort(key=lambda x: x.lev)
         conn.send((one_count_list, zero_count_list, sen_count_list, D0_count, D1_count))
-        conn.close() 
+        conn.close()
 
 
     def STAFAN(self, total_T, num_proc=1):
@@ -1142,14 +1142,14 @@ class Circuit:
             p = Process(target = self.control_thread, args =(child_conn, self.c_name, i, total_T,num_proc, ))
             p.start()
             process_list.append((p, parent_conn))
-         
+
         print("all lucnhed")
         one_count_list = [0] * self.nodes_cnt
         zero_count_list = [0] * self.nodes_cnt
         sen_count_list = [0] * self.nodes_cnt
         D1_count_list = [0] * self.nodes_cnt
         D0_count_list = [0] * self.nodes_cnt
-        
+
         for p, conn in process_list:
             tup = conn.recv()
             print("done", p)
@@ -1176,8 +1176,8 @@ class Circuit:
         end_time = time.time()
         duration = end_time - start_time
         print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
-    
-    
+
+
     def gen_graph(self):
         """
         Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
@@ -1200,7 +1200,7 @@ class Circuit:
             else:
                 pass
         return G
-    
+
     def get_node_attr(self, node_attr):
         data = []
         for node in self.nodes_lev:
@@ -1208,9 +1208,19 @@ class Circuit:
 
         return data
 
-    def get_hist(self, node_attr):
+    def get_hist(self, node_attr, plot=False, fname=None):
+        plt.clf()
         data = self.get_node_attr(node_attr)
-        return data
+        res = plt.hist(data)
+        plt.title(self.c_name)
+        plt.xlabel(node_attr)
+        plt.ylabel("Occurrence")
+        if plot:
+            plt.show()
+        else:
+            fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
+            # print(fname)
+            plt.savefig(fname)
 
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:

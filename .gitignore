@@ -5,7 +5,7 @@
 # Saeed:
 **.swp
 **.graphml
-
+**.png
 # python cache file
 __pycache__/:
 *.pyc
