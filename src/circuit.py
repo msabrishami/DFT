@@ -1176,9 +1176,8 @@ class Circuit:
         end_time = time.time()
         duration = end_time - start_time
         print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
-
-
-
+    
+    
     def gen_graph(self):
         """
         Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
@@ -1201,7 +1200,17 @@ class Circuit:
             else:
                 pass
         return G
+    
+    def get_node_attr(self, node_attr):
+        data = []
+        for node in self.nodes_lev:
+            data.append(getattr(node, node_attr))
 
+        return data
+
+    def get_hist(self, node_attr):
+        data = self.get_node_attr(node_attr)
+        return data
 
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
