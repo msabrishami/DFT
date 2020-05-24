@@ -35,6 +35,8 @@ parser.add_option('-c', '--circuit', dest='circuit', default="c1355", type='str'
                   help='circuit name (default: c1355)')
 parser.add_option('-p', '--problem', dest='problem', default="classification", type='str',
                   help='classification or regression? (default: classification)')
+parser.add_option('-b', '--bidirectional', dest='bidirectional', action="store_true",
+                  help='make the graph uni-directional or bi-directional')
 
 (options, args) = parser.parse_args()
 
@@ -46,9 +48,14 @@ def load_data_with_model():
     circuit = Circuit(options.circuit)
     circuit.read_circuit()
     circuit.lev()
-    circuit.STAFAN(10000, num_proc=8)
+    circuit.STAFAN(1000, num_proc=8)
     circuit.co_ob_info()
     graph = circuit.gen_graph()
+
+    if options.bidirectional:
+        for edge in graph.edges():
+            graph.add_edge(edge[1],edge[0])
+
     g = DGLGraph(graph)
 
     # Extract the unique gate types present in the circuit for creating the labels
@@ -60,7 +67,7 @@ def load_data_with_model():
                 all_types.append(n.gtype)
         features = np.zeros((len(circuit.nodes_lev), len(all_types)))
     else:
-        raise ValueError('The objective ' + options.objective + ' is not available')
+        raise ValueError('The objective ' + options.objective + ' is not available!')
 
     labels = np.zeros(len(circuit.nodes_lev), dtype=np.float32)
     for n in circuit.nodes_lev:
