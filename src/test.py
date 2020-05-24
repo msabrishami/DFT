@@ -3,6 +3,7 @@
 from circuit import Circuit
 from atpg_v0 import ATPG
 import pdb
+import networkx as nx 
 
 ckt = "c17"
 circuit = Circuit(ckt)
