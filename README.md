@@ -21,12 +21,13 @@ The package was first developed by a group of University of Southern California 
 <cite>[Amir Erfan Eshratifar][19]</cite>  <br />
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
 
-**Graduate students who contributed:** *(equal contribution:)* <br /> 
+**Graduate students who contributed** *(equal contribution):* <br /> 
 Yang Shen  <cite>[LinkedIn][14]</cite> <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
 Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
 Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 Yida Yan <cite>[LinkedIn][18]</cite>  <br />
+
 **Advisors:** <br />
 <cite>[Prof. Massoud Pedram][11]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][12]</cite>  <br />
