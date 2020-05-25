@@ -14,16 +14,19 @@ The package is capable of producing test-related datasets later used in down str
 ## Developers and Affiliation: <br />
 The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
 
-**Manager:** <br />
+**Repository manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
 
-**Graduate Students:** *(equal contribution)* <br /> 
+**Main contributers:**  <br /> 
+<cite>[Amir Erfan Eshratifar][19]</cite>  <br />
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
-Yang Shen  <cite>[LinkedIn][14]</cite><br />
+
+**Graduate students who contributed:** *(equal contribution:)* <br /> 
+Yang Shen  <cite>[LinkedIn][14]</cite> <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
 Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
 Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
-
+Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 **Advisors:** <br />
 <cite>[Prof. Massoud Pedram][11]</cite>  <br />
 <cite>[Prof. Shahin Nazarian][12]</cite>  <br />
@@ -37,6 +40,8 @@ Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
 [15]: https://www.linkedin.com/in/jiaming-li-73b873191/
 [16]: https://www.linkedin.com/in/han-zhang-usc/
 [17]: https://www.linkedin.com/in/shubo-li-760991193/
+[18]: https://www.linkedin.com/in/yida-yan-489b06191/
+[19]: http://amirerfan.com/
 
 ## Setup Environment
 Python3
