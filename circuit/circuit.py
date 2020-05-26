@@ -78,7 +78,7 @@ class Circuit:
         nodedict = {}
         fileList = []
         # TODO: this is a big issue here, emergency to fix
-        nodedict_list = [None] * (2*int(self.c_name[1:]))
+        nodedict_list = [None] * (10*int(self.c_name[1:]))
         temp_dict = {}
         lines = f.readlines()
 

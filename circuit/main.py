@@ -25,7 +25,7 @@ def main():
     circuit.STAFAN(10000, num_proc=4)
     circuit.co_ob_info()
     graph = circuit.gen_graph()
-    nx.write_graphml(graph, "./g_noon.graphml")
+    nx.write_graphml(graph, "./../data/graph/" + args.ckt + "10e4.graphml")
     print("Graph Saved")
     # temp = nx.read_graphml("./g_noon.graphml")
     # print(time.time() - start_time)
@@ -44,6 +44,10 @@ def main():
     # atpg = ATPG(c_name)
     # atpg.class_main()
 
+
+def parallel_graph():
+    netlists = ["c17", "c432", "c499", "c880", "c1355", "c1908", "c2670", 
+            "c3540", "c5315", "c6288", "c7552"]
 
 if __name__ == "__main__":
     main()
