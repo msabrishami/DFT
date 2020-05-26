@@ -35,14 +35,25 @@ import numpy as np
 
 class Circuit:
     def __init__(self, c_name):
+        ''' a digital logic circuit
+        c_name:             circuit name, without .ckt extension
+        nodes:              list of nodes objects
+        input_num_list:     list of PI node numbers
+        nodes_cnt:          total number of nodes in the circuit
+        nodes_lev:          circuit information after levelization,
+                            each node has level info, previous nodelist_order
+        nodes_sim:          circuit information after logic simulation, each node has value
+        fautl_name:         full fault list in string format
+        fault_node_num:     node numbers in full fault list
+        '''
         self.c_name = c_name
-        self.nodes = [] # list of nodes, or nodelist / nodelist test.
-        self.input_num_list = [] # list of input node numbers
-        self.nodes_cnt = None # The total number of nodes in the circuit, or Nnodes
-        self.nodes_lev = None # circuit information after levelization, each node has level information. previous nodelist_order
-        self.nodes_sim = None # circuit information after logic simulation, each node has value.
-        self.fault_name = [] # full fault list in string format, i.e. 1@0, for printing fault names when error occurs
-        self.fault_node_num = [] # node numbers in full fault list
+        self.nodes = []
+        self.input_num_list = []
+        self.nodes_cnt = None
+        self.nodes_lev = None
+        self.nodes_sim = None
+        self.fault_name = []
+        self.fault_node_num = []
         self.fault_type = [] # fault type for each node in fault list, (stuck at)1 or (stuck at)0
         self.d_coverage = None
         self.pd_coverage = None
@@ -54,8 +65,8 @@ class Circuit:
         self.rfl_node = []
         self.rfl_ftype = []
         self.lvls_list = [] #controllability and observability
-
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
+
     def read_circuit(self):
         """
         Read circuit from .ckt file, instantiate each node as a class,
