@@ -12,7 +12,7 @@ from gate import GAND
 from gate import GOR
 from gate import GXOR
 from gate import GNOT
-from faultdict_gen import faultdict_gen
+# from faultdict_gen import faultdict_gen
 from mini_faultlist_gen import mini_faultlist_gen
 from equv_domain import equv_domain
 from d_alg import D_alg
@@ -151,7 +151,7 @@ class Circuit:
         give every node a level information. Primary inputs have the loweset level, i.e., 0
         """
         count = self.nodes_cnt
-        max_lvl = 0
+        flag_changed = True
         for i in self.nodes:
             if i.gtype == 'IPT':
                 i.lev = 0
@@ -159,7 +159,8 @@ class Circuit:
             else:
                 i.lev = -1
 
-        while count:
+        while flag_changed:
+            flag_changed = False
             for i in self.nodes:
                 if i.lev == -1:
                     for k in range(0, i.fin):
@@ -169,6 +170,8 @@ class Circuit:
                             break
 
                     if flag == 0:
+                        flag_changed = True
+                        max_lvl = 0
                         for j in range(0, i.fin):
                             if i.unodes[j].lev >= max_lvl:
                                 max_lvl = i.unodes[j].lev
