@@ -16,15 +16,13 @@ def main():
     circuit.lev()
 
     #observability() need to follow controllability()
-    # circuit.controllability()
     circuit.SCOAP_CC()
-    # circuit.observability()
     circuit.SCOAP_CO()
 
     # circuit.STAFAN_CS(100)
     # circuit.STAFAN_B()
     start_time = time.time()
-    circuit.STAFAN(100, num_proc=4)
+    circuit.STAFAN(10000, num_proc=4)
     circuit.co_ob_info()
     graph = circuit.gen_graph()
     nx.write_graphml(graph, "./g_noon.graphml")
