@@ -1025,7 +1025,6 @@ class Circuit:
 
             for node in reversed(self.nodes_lev):
                 node.sense = node.is_sensible()
-                # print(">]", node.num, node.gtype, node.ntype, node.sense)
                 node.is_detectable()
 
         # calculate percentage/prob

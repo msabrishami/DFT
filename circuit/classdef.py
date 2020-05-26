@@ -49,24 +49,31 @@ class node:
         self.faultlist_dfs = []
         self.parallel_value = 0
         self.d_value = []
-        self.CC0 = 0
-        self.CC1 = 0
-        self.CO = 0
-        self.one_count = 0
-        self.zero_count = 0
-        self.sen_count = 0
-        self.S = 0.0
-        self.C1 = 0.0
-        self.C0 = 0.0
-        self.B1 = 0.0
-        self.B0 = 0.0
 
-        # Saeed & Erfan:
-        self.D1 = False
-        self.D0 = False
-        self.D1_count = 0
-        self.D0_count = 0
-        self.sense = True
+        # SCOAP measures
+        self.CC0 = 0            # INT value
+        self.CC1 = 0            # INT value
+        self.CO = 0             # INT value
+
+        # STAFAN measures
+        self.one_count = 0      # count
+        self.zero_count = 0     # count
+
+
+        self.sen_count = 0      # count
+        self.S = 0.0            # prob
+        self.C1 = 0.0           # prob
+        self.C0 = 0.0           # prob
+        self.B1 = 0.0           # prob
+        self.B0 = 0.0           # prob
+
+        # GNN-CAD (our work)
+        self.sense = True       # Boolean, maybe redundant
+        self.D1 = False         # Boolean
+        self.D0 = False         # Boolean
+        self.D1_count = 0       # Count
+        self.D0_count = 0       # Count
+
 
     def add_unodes(self, unode):
         self.unodes.append(unode)
@@ -80,9 +87,9 @@ class node:
         faultlist_dfs = faultlist.copy()
 
     def get_neighbors(self, value=False, inclusive=False):
-        ''' returns a list of nodes (or the values of ndoes) 
+        ''' returns a list of nodes (or the values of ndoes)
         that have the same out gate as this node
-        inclusive: if set True, includes this node itself. 
+        inclusive: if set True, includes this node itself.
         value: if set True, returns the value of neighbors node, by default list of nodes
         '''
         # TODO: Check this for all possible gates, specially branch
@@ -93,12 +100,12 @@ class node:
                 res = res.append(node) if inclusive else res
             else:
                 res.append(node)
-        
+
         return [n.value for n in res] if value else res
 
 
     def is_sensible(self):
-        ''' calculates if this node can propagate the gate infront of it. 
+        ''' calculates if this node can propagate the gate infront of it.
         i.e. if current value changes, down-node (output gate) value will change.
         '''
         # TODO: implemented on two value system, not sure if it applies to others
@@ -124,15 +131,16 @@ class node:
         else:
             print("Error: Not implemented yet")
 
+
     def is_detectable(self):
         ''' checks if a node is detectable with current values
         logic-sim and sense should be pre-calculated
-        updates D0/D1 flag and D0/D1 count 
+        updates D0/D1 flag and D0/D1 count
         D_count is set to 0 when circuit is initilized
-        D0: 
-        D1: 
+        D0:
+        D1:
         '''
-        # Jiayi please check this method, 
+        # Jiayi please check this method,
         self.D1 = False
         self.D0 = False
 
@@ -141,29 +149,29 @@ class node:
             self.D0 = True if (self.value == 0) else False
 
         elif self.sense:
-            
+
             dn = self.dnodes[0]
 
             if dn.gtype == 'AND':
                 self.D1 = True if ((self.value == 1) & (dn.D1)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D0)) else False
-            
+
             elif dn.gtype == 'NAND':
                 self.D1 = True if ((self.value == 1) & (dn.D0)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D1)) else False
-            
+
             elif dn.gtype == 'OR':
                 self.D1 = True if ((self.value == 1) & (dn.D1)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D0)) else False
-            
+
             elif dn.gtype == 'NOR':
                 self.D1 = True if ((self.value == 1) & (dn.D0)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D1)) else False
-            
+
             elif dn.gtype == 'NOT':
                 self.D1 = True if ((self.value == 1) & (dn.D0)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D1)) else False
-            
+
             elif dn.gtype == 'XOR':
                 if dn.value == 1:
                     self.D1 = dn.D1
@@ -189,11 +197,11 @@ class node:
 
         self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
-    
+
     def print_info(self, get_labels=False, print_labels=True):
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
-            return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0", 
+            return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
                     "C1", "S", "B0", "B1", "D0#", "D1#", "D0%", "D1%"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
@@ -321,5 +329,5 @@ class podem_node_5val():
         val.bit1 = not self.bit1
         val.x = self.x
         return val
-    
+
 
