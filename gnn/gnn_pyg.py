@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dgl import DGLGraph
 from dgl.nn.pytorch import Sequential
+import torch_geometric as pyg
 import numpy as np
 import time
 import copy
@@ -61,11 +62,14 @@ def load_data_with_model():
         for edge in edges:
             graph_train.add_edge(edge[1],edge[0])
         graph_train.remove_edges_from(list(edges))
-    g_train = DGLGraph(graph_train)
+
+    g_train = pyg.utils.from_networkx(graph_train)
+#    g_train = DGLGraph(graph_train)
 
     # Read the test circuit
     graph_test = nx.readwrite.graphml.read_graphml('../data/graph/'+options.circuit_test+'_10e4.graphml')
-    g_test = DGLGraph(graph_test)
+    g_test = pyg.utils.from_networkx(graph_test)
+#    g_test = DGLGraph(graph_test)
 
     # Extract the unique gate types present in the train adn test circuits for creating the labels
     all_types = []
@@ -91,7 +95,6 @@ def load_data_with_model():
     for node_id in graph_train.nodes:
         node_index = all_ids_train.index(node_id)
         if options.objective == "level":
-#            features_train[node_index, all_types.index(graph_train.nodes[node_id]['gtype'])] = 1.0
             labels_train[node_index] = graph_train.nodes[node_id]['lev']
         if options.objective == "STAFAN":
             features_train[node_index, all_types.index(graph_train.nodes[node_id]['gtype'])] = 1.0
@@ -113,8 +116,9 @@ def load_data_with_model():
 
     print ("All labels: ")
     print (np.sort(labels_train))
-
-    random_bools = np.random.choice(a=[False, True], size=(len(graph_train.nodes)), p=[0.05, 0.95])
+    for x in np.sort(labels_train):
+        print (x)
+    random_bools = np.random.choice(a=[False, True], size=(len(graph_train.nodes)), p=[0.2, 0.8])
     train_mask = torch.BoolTensor(random_bools).cuda()
     test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
     features_train = torch.FloatTensor(features_train).cuda()
@@ -160,7 +164,6 @@ def evaluate(model, g, features, labels, mask, loss_function):
     model.eval()
     with torch.no_grad():
         logits = model(g, features)
-        logits = logits.squeeze()
         if options.sigmoid:
             logits = torch.sigmoid(logits)
         logits = logits[mask]
@@ -198,12 +201,12 @@ def evaluate(model, g, features, labels, mask, loss_function):
             for j in range(len(labels_buckets)-1):
                  count = (np.logical_and(np.logical_and(labels > labels_buckets[i], labels <= labels_buckets[i+1]), \
                           np.logical_and(preds > labels_buckets[j], preds <= labels_buckets[j+1]))).sum()
-                 grid_count[len(labels_buckets)-1-j, i] = count
+                 grid_count[len(labels_buckets)-i-1,j] = count
 
         plt.figure()
         ax = sns.heatmap(grid_count)
         fig = ax.get_figure()
-        axis_labels = [] #[round(x,2) for x in labels_buckets]
+        axis_labels = [round(x,2) for x in labels_buckets]
         fig.savefig(options.problem + ".png", annot=True, xticklabels=axis_labels, yticklabels=axis_labels)
         plt.close()
         return accuracy, loss
@@ -211,25 +214,20 @@ def evaluate(model, g, features, labels, mask, loss_function):
 g_train, g_test, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
 
 #g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
-optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)
+optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 dur = []
 
 # Gradient clipping for avoiding gradient explosion
 #for p in net.parameters():
 #    p.register_hook(lambda grad: torch.clamp(grad, -0.1, 0.1))
 
-for epoch in range(50000):
-#    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
-#    train_mask = torch.BoolTensor(random_bools).cuda()
-#    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
-
+for epoch in range(5000):
     t0 = time.time()
     net.train()
     logits = net(g_train, features_train)
-    logits = logits.squeeze()
     if options.sigmoid:
         logits = torch.sigmoid(logits)
-    loss = loss_function(logits[train_mask], labels_train[train_mask])
+    loss = loss_function(logits[train_mask].squeeze(), labels_train[train_mask])
 
     optimizer.zero_grad()
     loss.backward()
