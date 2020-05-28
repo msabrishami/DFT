@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from dgl import DGLGraph
 from dgl.nn.pytorch import Sequential
 import numpy as np
-
+import pdb
 from torch.autograd import Variable
 
 gcn_msg = fn.copy_src(src='h', out='m')
@@ -25,7 +25,10 @@ class GCNLayer(nn.Module):
             g.ndata['h'] = feature
             g.update_all(gcn_msg, gcn_reduce)
             h = g.ndata['h']
-            return self.linear(h)
+            pdb.set_trace()
+            x = torch.cat((h, feature), dim=1)
+
+            return self.linear(x)
 
 
 class GCNLSTMLayer(nn.Module):
@@ -49,14 +52,11 @@ class GCNLSTMLayer(nn.Module):
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(self.num_layers, batch_size, self.out_feats)),
                 Variable(torch.zeros(self.num_layers, batch_size, self.out_feats)))
-        hidden = Variable(next(self.lstm.parameters()).data.new(batch_size, 1, self.out_feats), requires_grad=False)
-        cell = Variable(next(self.lstm.parameters()).data.new(batch_size, 1, self.out_feats), requires_grad=False)
-        return 0.1*hidden.zero_(), 0.1*cell.zero_()
 
 class LSTMGCN(nn.Module):
     def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10):
         super(LSTMGCN, self).__init__()
-        self.input_layer = GCNLayer(feature_dim, weight_dim)
+        self.input_layer = GCNLayer(2*feature_dim, weight_dim)
         self.lstm_layer = GCNLSTMLayer(2*weight_dim, weight_dim) #as we concat node feature and its neighbours features
         self.output_layer = nn.Linear(weight_dim, output_dim)
         self.weight_dim = weight_dim
