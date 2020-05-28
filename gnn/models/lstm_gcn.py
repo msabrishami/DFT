@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from dgl import DGLGraph
 from dgl.nn.pytorch import Sequential
 import numpy as np
-import pdb
 from torch.autograd import Variable
 
 gcn_msg = fn.copy_src(src='h', out='m')
@@ -25,7 +24,7 @@ class GCNLayer(nn.Module):
             g.ndata['h'] = feature
             g.update_all(gcn_msg, gcn_reduce)
             h = g.ndata['h']
-            pdb.set_trace()
+            print(h.shape, feature.shape)
             x = torch.cat((h, feature), dim=1)
 
             return self.linear(x)
