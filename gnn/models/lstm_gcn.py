@@ -24,7 +24,6 @@ class GCNLayer(nn.Module):
             g.ndata['h'] = feature
             g.update_all(gcn_msg, gcn_reduce)
             h = g.ndata['h']
-            print(h.shape, feature.shape)
             x = torch.cat((h, feature), dim=1)
 
             return self.linear(x)

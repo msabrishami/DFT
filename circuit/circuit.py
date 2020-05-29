@@ -8,10 +8,8 @@ import sys
 from classdef import node
 from classdef import gtype
 from classdef import ntype
-from gate import GAND
-from gate import GOR
-from gate import GXOR
-from gate import GNOT
+from gate import GAND_m, GOR_m, GXOR_m, GNOT
+from gate import GNAND_m, GNOR_m# , GXNOR_m, GNOT
 # from faultdict_gen import faultdict_gen
 from mini_faultlist_gen import mini_faultlist_gen
 from equv_domain import equv_domain
@@ -205,57 +203,44 @@ class Circuit:
         """
         Logic simulation:
         Reads a given pattern and perform the logic simulation
+        For now, this is just for binary logic
         """
         node_dict = dict(zip(self.input_num_list, input_val_list))
-        self.nodes_sim = self.nodes_lev.copy()
-        for i in self.nodes_sim:
+        # TODO Emergency: why did they make a copy
+        # self.nodes_sim = self.nodes_lev.copy()
+        
+        for i in self.nodes_lev:
 
             i.D1 = False
             i.D2 = False
+            
+            unodes_val = []
+            for unode in i.unodes:
+                unodes_val.append(unode.value)
 
             if (i.gtype == 'IPT'):
-                if i.num in self.input_num_list:
-                    i.value = node_dict[i.num]
+                i.value = node_dict[i.num]
+            
             elif (i.gtype == 'BRCH'):
                 i.value = i.unodes[0].value
+            
             elif (i.gtype == 'XOR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GXOR(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GXOR_m(unodes_val)
+            
             elif (i.gtype == 'OR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GOR(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GOR_m(unodes_val)
+
             elif (i.gtype == 'NOR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GOR(temp_value, i.unodes[j].value)
-                i.value = GNOT(temp_value)
+                i.value = GNOR_m(unodes_val)
+
             elif (i.gtype == 'NOT'):
                 i.value = GNOT(i.unodes[0].value)
+            
             elif (i.gtype == 'NAND'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GAND(temp_value, i.unodes[j].value)
-                i.value = GNOT(temp_value)
-            elif (i.gtype == 'AND'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GAND(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GNAND_m(unodes_val)
 
+            elif (i.gtype == 'AND'):
+                i.value = GAND_m(unodes_val)
 
     # deductive fault simulation
     # execute after logic simulation

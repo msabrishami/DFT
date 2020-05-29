@@ -8,7 +8,7 @@ from dgl.nn.pytorch import Sequential
 import numpy as np
 
 gcn_msg = fn.copy_src(src='h', out='m')
-gcn_reduce = fn.sum(msg='m', out='h')
+gcn_reduce = fn.max(msg='m', out='h')
 
 class GCNLayer(nn.Module):
     def __init__(self, in_feats, out_feats):
@@ -23,18 +23,19 @@ class GCNLayer(nn.Module):
             g.ndata['h'] = feature
             g.update_all(gcn_msg, gcn_reduce)
             h = g.ndata['h']
-            return self.linear(h)
+            x = th.cat((h, feature), dim=1)
+            return F.relu(self.linear(x))
 
 
 class VanillaGCN(nn.Module):
     def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10):
         super(VanillaGCN, self).__init__()
-        self.input_layer = GCNLayer(feature_dim, weight_dim)
-        self.hidden_layers = Sequential(*[GCNLayer(weight_dim, weight_dim) for i in range(depth)])
+        self.input_layer = GCNLayer(2*feature_dim, weight_dim)
+        self.hidden_layers = Sequential(*[GCNLayer(2*weight_dim, weight_dim) for i in range(depth)])
         self.output_layer = nn.Linear(weight_dim, output_dim)
 
     def forward(self, g, features):
-        x = F.relu(self.input_layer(g, features))
+        x = self.input_layer(g, features)
         x = self.hidden_layers(g, x)
         x = self.output_layer(x)
         return x

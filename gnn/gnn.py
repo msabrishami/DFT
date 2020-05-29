@@ -219,9 +219,9 @@ dur = []
 #    p.register_hook(lambda grad: torch.clamp(grad, -0.1, 0.1))
 
 for epoch in range(50000):
-#    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
-#    train_mask = torch.BoolTensor(random_bools).cuda()
-#    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
+    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
+    train_mask = torch.BoolTensor(random_bools).cuda()
+    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
 
     t0 = time.time()
     net.train()
