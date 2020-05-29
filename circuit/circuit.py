@@ -8,10 +8,8 @@ import sys
 from classdef import node
 from classdef import gtype
 from classdef import ntype
-from gate import GAND
-from gate import GOR
-from gate import GXOR
-from gate import GNOT
+from gate import GAND_m, GOR_m, GXOR_m, GNOT
+from gate import GNAND_m, GNOR_m# , GXNOR_m, GNOT
 # from faultdict_gen import faultdict_gen
 from mini_faultlist_gen import mini_faultlist_gen
 from equv_domain import equv_domain
@@ -27,8 +25,8 @@ import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
 # from podem_m import podem
-
 #from D_alg import imply_and_check
+
 #__________________________________________________#
 #________________main_test for cread_______________#
 #__________________________________________________#
@@ -133,6 +131,7 @@ class Circuit:
             nodedict.update({new_node.num: new_node})
             #TODO:feedback only to one gate
         f.close()
+
         for i in range(len(self.nodes)):
             if (self.nodes[i].ntype != 'PI'):
                 for j in range (self.nodes[i].fin):
@@ -143,6 +142,10 @@ class Circuit:
         self.nodes_cnt = len(self.nodes)
         self.input_cnt = len(self.input_num_list)
         # return self.nodes
+
+    def lev_DFS(self):
+        print("levelization with BFS")
+
 
     def lev(self):
         """
@@ -189,6 +192,7 @@ class Circuit:
                 if i.lev == j:
                     self.lvls_list[j].append(i)
 
+
     def get_random_input_pattern(self):
         """
         Randomly generate a test pattern for input nodes.
@@ -205,60 +209,46 @@ class Circuit:
         """
         Logic simulation:
         Reads a given pattern and perform the logic simulation
+        For now, this is just for binary logic
         """
         node_dict = dict(zip(self.input_num_list, input_val_list))
-        self.nodes_sim = self.nodes_lev.copy()
-        for i in self.nodes_sim:
+        # TODO Emergency: why did they make a copy
+        # self.nodes_sim = self.nodes_lev.copy()
+
+        for i in self.nodes_lev:
 
             i.D1 = False
             i.D2 = False
 
+            unodes_val = []
+            for unode in i.unodes:
+                unodes_val.append(unode.value)
+
             if (i.gtype == 'IPT'):
-                if i.num in self.input_num_list:
-                    i.value = node_dict[i.num]
+                i.value = node_dict[i.num]
+
             elif (i.gtype == 'BRCH'):
                 i.value = i.unodes[0].value
+
             elif (i.gtype == 'XOR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GXOR(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GXOR_m(unodes_val)
+
             elif (i.gtype == 'OR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GOR(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GOR_m(unodes_val)
+
             elif (i.gtype == 'NOR'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GOR(temp_value, i.unodes[j].value)
-                i.value = GNOT(temp_value)
+                i.value = GNOR_m(unodes_val)
+
             elif (i.gtype == 'NOT'):
                 i.value = GNOT(i.unodes[0].value)
+
             elif (i.gtype == 'NAND'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GAND(temp_value, i.unodes[j].value)
-                i.value = GNOT(temp_value)
+                i.value = GNAND_m(unodes_val)
+
             elif (i.gtype == 'AND'):
-                for j in range(0, i.fin):
-                    if j == 0:
-                        temp_value = i.unodes[j].value
-                    else:
-                        temp_value = GAND(temp_value, i.unodes[j].value)
-                i.value = temp_value
+                i.value = GAND_m(unodes_val)
 
 
-    # deductive fault simulation
-    # execute after logic simulation
     def dfs(self):
         """
         Deductive fault simulation:
@@ -331,7 +321,7 @@ class Circuit:
 
         return fault_list
 
-    # generate full fault list
+
     def get_full_fault_list(self):
         """
         Generate a list of all SSAFs in the circuit.
@@ -479,7 +469,6 @@ class Circuit:
                         else:
                             temp_value = temp_value & i.unodes[j].parallel_value
                     i.parallel_value = ((~i.sa0) & temp_value) | i.sa1
-            # print("successful")
             iter -= 1
 
             for i in range(read_fault_ind):
@@ -507,6 +496,7 @@ class Circuit:
 
         return output
 
+
     def gen_fault_dic(self):
         """
         Fault Dictionary:
@@ -525,11 +515,10 @@ class Circuit:
             for j in range(inputnum):
                 list_to_pfs.append(int(b[j]))
 
-        #do pfs based on the prodeuced input files
+            #do pfs based on the prodeuced input files
             result = []
             result = self.pfs(list_to_pfs)
             fault = []
-            #print(result)
             for i in result:
                 fault.append("%d@%d" % (i[0], i[1]))
 
@@ -544,6 +533,7 @@ class Circuit:
                 fault_dict_result.write('%d->' % self.input_num_list[i])
             else:
                 fault_dict_result.write('%d' % self.input_num_list[i])
+
         fault_dict_result.write(' as sequence of inputs')
         fault_dict_result.write('\n')
         fault_dict_result.write('input_patterns\t\t\tdetected_faults\n')
@@ -556,6 +546,8 @@ class Circuit:
             fault_dict_result.write('\n')
 
         fault_dict_result.close()
+
+
     def gen_fault_dic_multithreading(self, thread_cnt, idx):
         """
         Create threads to generate fault dictionaries.
