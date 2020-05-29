@@ -192,6 +192,7 @@ class Circuit:
                 if i.lev == j:
                     self.lvls_list[j].append(i)
 
+
     def get_random_input_pattern(self):
         """
         Randomly generate a test pattern for input nodes.
@@ -247,8 +248,7 @@ class Circuit:
             elif (i.gtype == 'AND'):
                 i.value = GAND_m(unodes_val)
 
-    # deductive fault simulation
-    # execute after logic simulation
+
     def dfs(self):
         """
         Deductive fault simulation:
@@ -321,7 +321,7 @@ class Circuit:
 
         return fault_list
 
-    # generate full fault list
+
     def get_full_fault_list(self):
         """
         Generate a list of all SSAFs in the circuit.
@@ -469,7 +469,6 @@ class Circuit:
                         else:
                             temp_value = temp_value & i.unodes[j].parallel_value
                     i.parallel_value = ((~i.sa0) & temp_value) | i.sa1
-            # print("successful")
             iter -= 1
 
             for i in range(read_fault_ind):
@@ -497,6 +496,7 @@ class Circuit:
 
         return output
 
+
     def gen_fault_dic(self):
         """
         Fault Dictionary:
@@ -515,11 +515,10 @@ class Circuit:
             for j in range(inputnum):
                 list_to_pfs.append(int(b[j]))
 
-        #do pfs based on the prodeuced input files
+            #do pfs based on the prodeuced input files
             result = []
             result = self.pfs(list_to_pfs)
             fault = []
-            #print(result)
             for i in result:
                 fault.append("%d@%d" % (i[0], i[1]))
 
@@ -534,6 +533,7 @@ class Circuit:
                 fault_dict_result.write('%d->' % self.input_num_list[i])
             else:
                 fault_dict_result.write('%d' % self.input_num_list[i])
+
         fault_dict_result.write(' as sequence of inputs')
         fault_dict_result.write('\n')
         fault_dict_result.write('input_patterns\t\t\tdetected_faults\n')
@@ -546,6 +546,8 @@ class Circuit:
             fault_dict_result.write('\n')
 
         fault_dict_result.close()
+
+
     def gen_fault_dic_multithreading(self, thread_cnt, idx):
         """
         Create threads to generate fault dictionaries.
