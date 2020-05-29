@@ -25,8 +25,8 @@ import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
 # from podem_m import podem
-
 #from D_alg import imply_and_check
+
 #__________________________________________________#
 #________________main_test for cread_______________#
 #__________________________________________________#
@@ -131,6 +131,7 @@ class Circuit:
             nodedict.update({new_node.num: new_node})
             #TODO:feedback only to one gate
         f.close()
+
         for i in range(len(self.nodes)):
             if (self.nodes[i].ntype != 'PI'):
                 for j in range (self.nodes[i].fin):
@@ -141,6 +142,10 @@ class Circuit:
         self.nodes_cnt = len(self.nodes)
         self.input_cnt = len(self.input_num_list)
         # return self.nodes
+
+    def lev_DFS(self):
+        print("levelization with BFS")
+
 
     def lev(self):
         """
@@ -208,25 +213,25 @@ class Circuit:
         node_dict = dict(zip(self.input_num_list, input_val_list))
         # TODO Emergency: why did they make a copy
         # self.nodes_sim = self.nodes_lev.copy()
-        
+
         for i in self.nodes_lev:
 
             i.D1 = False
             i.D2 = False
-            
+
             unodes_val = []
             for unode in i.unodes:
                 unodes_val.append(unode.value)
 
             if (i.gtype == 'IPT'):
                 i.value = node_dict[i.num]
-            
+
             elif (i.gtype == 'BRCH'):
                 i.value = i.unodes[0].value
-            
+
             elif (i.gtype == 'XOR'):
                 i.value = GXOR_m(unodes_val)
-            
+
             elif (i.gtype == 'OR'):
                 i.value = GOR_m(unodes_val)
 
@@ -235,7 +240,7 @@ class Circuit:
 
             elif (i.gtype == 'NOT'):
                 i.value = GNOT(i.unodes[0].value)
-            
+
             elif (i.gtype == 'NAND'):
                 i.value = GNAND_m(unodes_val)
 

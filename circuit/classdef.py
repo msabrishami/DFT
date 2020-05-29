@@ -47,6 +47,8 @@ class node:
     sa0:        #TODO: possibly single stuck at 0 fault
     sa1:        #TODO: possibly single stuck at 1 fault
     index:      #TODO: Not known
+    TODO: add information about the rest of the attributes,
+    including paper references for STAFAN and SCOAP
     '''
     def __init__(self):
         self.value = None
