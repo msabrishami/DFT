@@ -211,7 +211,7 @@ def evaluate(model, g, features, labels, mask, loss_function):
 g_train, g_test, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
 
 #g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
-optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)
+optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 dur = []
 
 # Gradient clipping for avoiding gradient explosion
@@ -219,9 +219,9 @@ dur = []
 #    p.register_hook(lambda grad: torch.clamp(grad, -0.1, 0.1))
 
 for epoch in range(50000):
-#    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
-#    train_mask = torch.BoolTensor(random_bools).cuda()
-#    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
+    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
+    train_mask = torch.BoolTensor(random_bools).cuda()
+    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
 
     t0 = time.time()
     net.train()
