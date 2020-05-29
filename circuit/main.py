@@ -20,10 +20,10 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
-    
+
     inputnum = len(circuit.input_num_list)
-    limit = [0, pow(2, inputnum)-1] 
-    for i in range(300):
+    limit = [0, pow(2, inputnum)-1]
+    for i in range(100):
         b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
         list_to_logicsim = []
         for j in range(inputnum):
@@ -63,7 +63,7 @@ def main():
 
 
 def parallel_graph():
-    netlists = ["c17", "c432", "c499", "c880", "c1355", "c1908", "c2670", 
+    netlists = ["c17", "c432", "c499", "c880", "c1355", "c1908", "c2670",
             "c3540", "c5315", "c6288", "c7552"]
 
 if __name__ == "__main__":

@@ -31,7 +31,23 @@ class ntype(Enum):
 
 
 class node:
-
+    ''' Implementation is node based.
+    A node also represents the upnode gate, as it is always unique.
+    Difference of node type and gate type important, refer to ckt document.
+    value:      value on the node, currently only accepting 2-value logic
+    num:        the node number as in ckt format
+    lev:        level of the node in circuit
+    gtype:      the upnode gate type
+                supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND
+    ntype:      the node type
+                supporting: GATE, PI, FB, PO
+    unodes:     list of upper hand node objects
+    dnodes:     list of lower hand node objects
+    cpt:        #TODO: possibly checkpoints
+    sa0:        #TODO: possibly single stuck at 0 fault
+    sa1:        #TODO: possibly single stuck at 1 fault
+    index:      #TODO: Not known
+    '''
     def __init__(self):
         self.value = None
         self.num = None
@@ -45,7 +61,7 @@ class node:
         self.cpt = 0
         self.sa0 = 0
         self.sa1 = 0
-        self.index = 0
+        self.index = 0 # should be removed
         self.faultlist_dfs = []
         self.parallel_value = 0
         self.d_value = []
