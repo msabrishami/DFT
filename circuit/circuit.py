@@ -44,6 +44,9 @@ class Circuit:
         fautl_name:         full fault list in string format
         fault_node_num:     node numbers in full fault list
         '''
+        #TODO: we need a list of PI nodes
+        #TODO: we need a list of PO nodes
+
         self.c_name = c_name
         self.nodes = []
         self.input_num_list = []
@@ -64,6 +67,9 @@ class Circuit:
         self.rfl_ftype = []
         self.lvls_list = [] #controllability and observability
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
+
+        # possibly Redundant, Saeed added temporary:
+        self.PI = []
 
     def read_circuit(self):
         """
@@ -1221,7 +1227,6 @@ class Circuit:
         plt.clf()
         data = self.get_node_attr(node_attr)
         res = plt.hist(data)
-        # print(res)
         plt.title(self.c_name)
         plt.xlabel(node_attr)
         plt.ylabel("Occurrence")
@@ -1229,7 +1234,6 @@ class Circuit:
             plt.show()
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
-            # print(fname)
             plt.savefig(fname)
 
 # prevent D algorithm deadlock. For debug purposes only

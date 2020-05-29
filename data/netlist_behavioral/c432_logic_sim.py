@@ -53,7 +53,7 @@ def M4(E, A, B, C, PA, PB, PC):
 
 
 def M5(I):
-    I8b = ~I[8-8] 
+    I8b = ~I[8-8]
     for i in range(1, len(I)):
         if i == 1:
             Iand = I[i]
