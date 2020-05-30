@@ -211,6 +211,14 @@ class Circuit:
         return rand_input_val_list
 
 
+    def read_PO(self):
+        res = {}
+        for node in self.nodes:
+            if node.ntype == "PO":
+                res["out" + str(node.num)] = node.value
+        return res
+
+
     def logic_sim(self, input_val_list):
         """
         Logic simulation:

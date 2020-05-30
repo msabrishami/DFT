@@ -10,15 +10,34 @@ from random import randint
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
-# import c432_sim
+from c432_logic_sim import c432_sim
+
 def print_nodes(ckt):
     for node in ckt.nodes_lev:
         print(node.num, node.value)
 
 
 
-def check_gate_netlist(circuit):
-    print(circuit)
+def check_gate_netlist(circuit, total_T=1):
+
+    for t in range(total_T):
+        PI_dict = dict()
+        PI_list = []
+
+        for PI_num in circuit.input_num_list:
+            val = randint(0,1)
+            PI_dict["in" + str(PI_num)] = val
+            PI_list.append(val)
+
+        res_beh = c432_sim(PI_dict)
+        circuit.logic_sim(PI_list)
+        res_ckt = circuit.read_PO()
+        if res_beh != res_ckt:
+            print("Wrong")
+            return False
+    print("all test patterns passed")
+    return True
+
 
 def main():
     parser = argparse.ArgumentParser()
