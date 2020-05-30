@@ -5,6 +5,7 @@ from atpg_v0 import ATPG
 import argparse
 import pdb
 import networkx as nx
+import math
 import time
 from random import randint
 
@@ -41,8 +42,14 @@ def check_gate_netlist(circuit, total_T=1):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-ckt", type=str, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-ckt", type=str, required=True, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-tp", type=int, required=True, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-cpu", type=int, required=True, help="name of the ircuit, e.g. c17, no extension")
     args = parser.parse_args()
+
+    print("\n======================================================")
+    print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
+    start_time = time.time()
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
@@ -61,18 +68,23 @@ def main():
     # observability() need to follow controllability()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
+    # circuit.STAFAN_CS(100)
+    # circuit.STAFAN_B()
 
-    circuit.STAFAN_CS(10000)
-    circuit.STAFAN_B()
-    # start_time = time.time()
-    # circuit.STAFAN(10000, num_proc=4)
-    circuit.co_ob_info()
-    # graph = circuit.gen_graph()
-    # nx.write_graphml(graph, "./../data/graph/" + args.ckt + "10e4.graphml")
-    # print("Graph Saved")
+    circuit.STAFAN(args.tp, num_proc=args.cpu)
+    # circuit.co_ob_info()
+    graph = circuit.gen_graph()
+    suffix = round(math.log10(args.tp)) 
+    fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)
+    fname = "./../data/graph/" + args.ckt + "_" + fname + ".graphml"
+    print("Saving graph in ", fname)
+    nx.write_graphml(graph, fname)
+    print("Saved!")
+    print("Total simulation ime: {:.2f} seconds".format(time.time() - start_time))
+    print()
+
     # temp = nx.read_graphml("./g_noon.graphml")
-    # print(time.time() - start_time)
-
+    
     # circuit.get_full_fault_list()
     # circuit.gen_fault_dic()
     # circuit.get_reduced_fault_list()

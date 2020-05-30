@@ -25,7 +25,10 @@ import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
 # from podem_m import podem
-#from D_alg import imply_and_check
+# from D_alg import imply_and_check
+
+#TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
+#TODO: Error "NoneType' object has no attribute 'add_dnodes" because of size error
 
 #__________________________________________________#
 #________________main_test for cread_______________#
@@ -82,7 +85,8 @@ class Circuit:
         nodedict = {}
         fileList = []
         # TODO: this is a big issue here, emergency to fix
-        nodedict_list = [None] * (10*int(self.c_name[1:]))
+        # Referred to as size error
+        nodedict_list = [None] * (100*int(self.c_name[1:]))
         temp_dict = {}
         lines = f.readlines()
 
@@ -137,10 +141,13 @@ class Circuit:
             nodedict.update({new_node.num: new_node})
             #TODO:feedback only to one gate
         f.close()
-
         for i in range(len(self.nodes)):
             if (self.nodes[i].ntype != 'PI'):
                 for j in range (self.nodes[i].fin):
+                    # TODO: debugging
+                    if self.nodes[i].unodes[j] == None:
+                        print(i, j, self.nodes[i].num)
+                        pdb.set_trace()
                     self.nodes[i].unodes[j].add_dnodes(self.nodes[i])
             else:
                 self.input_num_list.append(self.nodes[i].num)
@@ -1193,7 +1200,7 @@ class Circuit:
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time
-        print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
+        print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
 
     def gen_graph(self):
