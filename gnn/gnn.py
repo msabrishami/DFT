@@ -211,7 +211,7 @@ def evaluate(model, g, features, labels, mask, loss_function):
 g_train, g_test, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
 
 #g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
-optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)
+optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 dur = []
 
 # Gradient clipping for avoiding gradient explosion
