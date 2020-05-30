@@ -1217,6 +1217,7 @@ class Circuit:
             G.nodes[n_num_normal]['B1'] = n.B1
             G.nodes[n_num_normal]['D0_p'] = n.D0_p
             G.nodes[n_num_normal]['D1_p'] = n.D1_p
+            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(self.node_ids.index(unode.num), n_num_normal)
