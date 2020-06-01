@@ -26,13 +26,12 @@ for ckt in all_ckts:
     # circuit.co_ob_info()
     circuit.get_hist("CC0", plot=False)
 '''
-ckt = "c432"
+ckt = "c5315"
 circuit = Circuit(ckt)
 circuit.read_circuit()
 circuit.lev()
 
 '''
-
 
 
 
