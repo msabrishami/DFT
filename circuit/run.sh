@@ -5,14 +5,14 @@
 # python3 main.py -ckt c432 -tp 100000 -cpu 100
 # python3 main.py -ckt c432 -tp 1000000 -cpu 100
 # python3 main.py -ckt c432 -tp 10000000 -cpu 100
-python3 main.py -ckt c432 -tp 100000000 -cpu 100
+# python3 main.py -ckt c432 -tp 100000000 -cpu 100
 
 # python3 main.py -ckt c499 -tp 1000 -cpu 10
 # python3 main.py -ckt c499 -tp 10000 -cpu 100
 # python3 main.py -ckt c499 -tp 100000 -cpu 100
 # python3 main.py -ckt c499 -tp 1000000 -cpu 100
 # python3 main.py -ckt c499 -tp 10000000 -cpu 100
-python3 main.py -ckt c499 -tp 10000000 -cpu 100
+python3 main.py -ckt c499 -tp 100000000 -cpu 100
 
 # python3 main.py -ckt c1355 -tp 1000 -cpu 10
 # python3 main.py -ckt c1355 -tp 10000 -cpu 100
