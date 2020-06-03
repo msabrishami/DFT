@@ -25,7 +25,10 @@ import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
 # from podem_m import podem
-#from D_alg import imply_and_check
+# from D_alg import imply_and_check
+
+#TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
+#TODO: Error "NoneType' object has no attribute 'add_dnodes" because of size error
 
 #__________________________________________________#
 #________________main_test for cread_______________#
@@ -44,6 +47,9 @@ class Circuit:
         fautl_name:         full fault list in string format
         fault_node_num:     node numbers in full fault list
         '''
+        #TODO: we need a list of PI nodes
+        #TODO: we need a list of PO nodes
+
         self.c_name = c_name
         self.nodes = []
         self.input_num_list = []
@@ -65,6 +71,9 @@ class Circuit:
         self.lvls_list = [] #controllability and observability
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
+        # possibly Redundant, Saeed added temporary:
+        self.PI = []
+
     def read_circuit(self):
         """
         Read circuit from .ckt file, instantiate each node as a class,
@@ -76,7 +85,8 @@ class Circuit:
         nodedict = {}
         fileList = []
         # TODO: this is a big issue here, emergency to fix
-        nodedict_list = [None] * (10*int(self.c_name[1:]))
+        # Referred to as size error
+        nodedict_list = [None] * (100*int(self.c_name[1:]))
         temp_dict = {}
         lines = f.readlines()
 
@@ -131,10 +141,13 @@ class Circuit:
             nodedict.update({new_node.num: new_node})
             #TODO:feedback only to one gate
         f.close()
-
         for i in range(len(self.nodes)):
             if (self.nodes[i].ntype != 'PI'):
                 for j in range (self.nodes[i].fin):
+                    # TODO: debugging
+                    if self.nodes[i].unodes[j] == None:
+                        print(i, j, self.nodes[i].num)
+                        pdb.set_trace()
                     self.nodes[i].unodes[j].add_dnodes(self.nodes[i])
             else:
                 self.input_num_list.append(self.nodes[i].num)
@@ -203,6 +216,14 @@ class Circuit:
         for i in range(len(self.input_num_list)):
             rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
+
+
+    def read_PO(self):
+        res = {}
+        for node in self.nodes:
+            if node.ntype == "PO":
+                res["out" + str(node.num)] = node.value
+        return res
 
 
     def logic_sim(self, input_val_list):
@@ -1179,7 +1200,7 @@ class Circuit:
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time
-        print ("Processor count : {}, Time taken: {}".format(num_proc, duration))
+        print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
 
     def gen_graph(self):
@@ -1203,6 +1224,7 @@ class Circuit:
             G.nodes[n_num_normal]['B1'] = n.B1
             G.nodes[n_num_normal]['D0_p'] = n.D0_p
             G.nodes[n_num_normal]['D1_p'] = n.D1_p
+            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(self.node_ids.index(unode.num), n_num_normal)
@@ -1221,7 +1243,6 @@ class Circuit:
         plt.clf()
         data = self.get_node_attr(node_attr)
         res = plt.hist(data)
-        # print(res)
         plt.title(self.c_name)
         plt.xlabel(node_attr)
         plt.ylabel("Occurrence")
@@ -1229,7 +1250,6 @@ class Circuit:
             plt.show()
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
-            # print(fname)
             plt.savefig(fname)
 
 # prevent D algorithm deadlock. For debug purposes only

@@ -5,48 +5,86 @@ from atpg_v0 import ATPG
 import argparse
 import pdb
 import networkx as nx
+import math
 import time
+from random import randint
 
+import sys
+sys.path.insert(1, "../data/netlist_behavioral")
+from c432_logic_sim import c432_sim
 
 def print_nodes(ckt):
     for node in ckt.nodes_lev:
         print(node.num, node.value)
 
-from random import randint
+
+
+def check_gate_netlist(circuit, total_T=1):
+
+    for t in range(total_T):
+        PI_dict = dict()
+        PI_list = []
+
+        for PI_num in circuit.input_num_list:
+            val = randint(0,1)
+            PI_dict["in" + str(PI_num)] = val
+            PI_list.append(val)
+
+        res_beh = c432_sim(PI_dict)
+        circuit.logic_sim(PI_list)
+        res_ckt = circuit.read_PO()
+        if res_beh != res_ckt:
+            print("Wrong")
+            return False
+    print("all test patterns passed")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-ckt", type=str, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-ckt", type=str, required=True, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-tp", type=int, required=True, help="name of the ircuit, e.g. c17, no extension")
+    parser.add_argument("-cpu", type=int, required=True, help="name of the ircuit, e.g. c17, no extension")
     args = parser.parse_args()
+
+    print("\n======================================================")
+    print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
+    start_time = time.time()
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
 
-    inputnum = len(circuit.input_num_list)
-    limit = [0, pow(2, inputnum)-1]
-    for i in range(100):
-        b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
-        list_to_logicsim = []
-        for j in range(inputnum):
-            list_to_logicsim.append(int(b[j]))
-        circuit.logic_sim(list_to_logicsim)
-        print(b)
-        # print_nodes(circuit)
+    # inputnum = len(circuit.input_num_list)
+    # limit = [0, pow(2, inputnum)-1]
+    # for i in range(100):
+    #     b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
+    #     list_to_logicsim = []
+    #     for j in range(inputnum):
+    #         list_to_logicsim.append(int(b[j]))
+    #     circuit.logic_sim(list_to_logicsim)
+    #     print(b)
+    #     # print_nodes(circuit)
 
-    #observability() need to follow controllability()
-    # circuit.SCOAP_CC()
-    # circuit.SCOAP_CO()
-
+    # observability() need to follow controllability()
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
     # circuit.STAFAN_CS(100)
     # circuit.STAFAN_B()
-    # start_time = time.time()
-    # circuit.STAFAN(10000, num_proc=4)
-    # circuit.co_ob_info()
-    # graph = circuit.gen_graph()
-    # nx.write_graphml(graph, "./../data/graph/" + args.ckt + "10e4.graphml")
-    # print("Graph Saved")
-    # temp = nx.read_graphml("./g_noon.graphml")
-    # print(time.time() - start_time)
 
+    circuit.STAFAN(args.tp, num_proc=args.cpu)
+    # circuit.co_ob_info()
+    graph = circuit.gen_graph()
+    suffix = round(math.log10(args.tp)) 
+    fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)
+    fname = "./../data/graph/" + args.ckt + "_" + fname + ".graphml"
+    print("Saving graph in ", fname)
+    nx.write_graphml(graph, fname)
+    print("Saved!")
+    print("Total simulation ime: {:.2f} seconds".format(time.time() - start_time))
+    print()
+
+    # temp = nx.read_graphml("./g_noon.graphml")
+    
     # circuit.get_full_fault_list()
     # circuit.gen_fault_dic()
     # circuit.get_reduced_fault_list()
