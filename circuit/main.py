@@ -70,8 +70,9 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
+    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 1000)
-    # exit()
+    exit()
     inputnum = len(circuit.input_num_list)
     limit = [0, pow(2, inputnum)-1]
     for i in range(100):

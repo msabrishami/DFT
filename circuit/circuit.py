@@ -72,7 +72,8 @@ class Circuit:
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
         # possibly Redundant, Saeed added temporary:
-        self.PI = []
+        self.PI = [] # this should repalce input_num_list
+        self.PO = [] # this should be created to have a list of outputs
 
     def read_circuit(self):
         """
@@ -155,9 +156,6 @@ class Circuit:
         self.nodes_cnt = len(self.nodes)
         self.input_cnt = len(self.input_num_list)
         # return self.nodes
-
-    def lev_DFS(self):
-        print("levelization with BFS")
 
 
     def lev(self):
@@ -268,6 +266,31 @@ class Circuit:
 
             elif (i.gtype == 'AND'):
                 i.value = GAND_m(unodes_val)
+
+
+    def golden_test(self, golden_io_filename):
+        infile = open(golden_io_filename, "r")
+        lines = infile.readlines()
+        in_node_order  = [int(x[1:]) for x in lines[0][8:].strip().split(',')]
+        out_node_order = [int(x[1:]) for x in lines[1][8:].strip().split(',')]
+        print("Validating logic sim with golden IO file with {} patterns".format(int((len(lines)-2)/3)))
+        if in_node_order != self.input_num_list:
+            print("Orders don't match, code not covered yet")
+            return False
+        for t in range(int((len(lines)-2)/3)):
+            test_in  = [int(x) for x in lines[(t+1)*3].strip().split(',')]
+            test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
+            self.logic_sim(test_in)
+            logic_out = self.read_PO()
+            for i in range(len(out_node_order)):
+                out_node = out_node_order[i]
+                out_node_golden = test_out[i]
+                if out_node_golden != logic_out["out"+str(out_node)]:
+                    print("ERROR")
+                    return False
+        print("Validation completed successfully")
+        return True
+
 
 
     def dfs(self):
