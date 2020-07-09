@@ -3,10 +3,16 @@
 # important : the finin parameter is not useable
 
 import re
-
+import argparse
 
 def translator(src, dst):
-    fin = open('../data/bench/' + src, 'r')
+    '''
+    translates a bench circuit format to ckt-658 format.
+    src: path for source bench file, with .bench suffix
+    dst: path for destination ckt658 file, with .ckt suffix
+    '''
+
+    fin = open(src, 'r')
     f = fin.readlines()
     fin.close()
     for i in range(len(f)):
@@ -112,15 +118,15 @@ def translator(src, dst):
         item2 = [str(x) for x in item]
         output_str="    ".join(item2)+'\n'
         output_write.append(output_str)
-    fv = open('../data/ckt/' + dst, 'w')
+    fv = open(dst, 'w')
     fv.writelines(output_write)
     fv.close()
 
-translator("c432", "c432.ckt")
-translator("c499", "c499.ckt")
-translator("c2670", "c2670.ckt")
-translator("c2670", "c2670.ckt")
-translator("c3540", "c3540.ckt")
-translator("c5315", "c5315.ckt")
-translator("c7552", "c7552.ckt")
 
+if __name__ == "__main__": 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-ckt", type=str, required=True, help="path to store the ckt file")
+    parser.add_argument("-bench", type=str, required=True, help="path to read the bench file")
+    args = parser.parse_args()
+    translator(args.bench, args.ckt)
+    

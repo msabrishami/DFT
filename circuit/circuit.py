@@ -152,6 +152,11 @@ class Circuit:
                     self.nodes[i].unodes[j].add_dnodes(self.nodes[i])
             else:
                 self.input_num_list.append(self.nodes[i].num)
+        
+        # TODO: done in July 9th 2020, 
+        # Saeed sorted self.input_num_list just after creating it. 
+        # Not sure if it will impact other functions
+        self.input_num_list.sort()
 
         self.nodes_cnt = len(self.nodes)
         self.input_cnt = len(self.input_num_list)
@@ -229,6 +234,8 @@ class Circuit:
         Logic simulation:
         Reads a given pattern and perform the logic simulation
         For now, this is just for binary logic
+        TODO: the main issue is that input_value list shoul be with the same ... 
+         .... order as self.input_num_list
         """
         node_dict = dict(zip(self.input_num_list, input_val_list))
         # TODO Emergency: why did they make a copy
@@ -273,6 +280,8 @@ class Circuit:
         lines = infile.readlines()
         in_node_order  = [int(x[1:]) for x in lines[0][8:].strip().split(',')]
         out_node_order = [int(x[1:]) for x in lines[1][8:].strip().split(',')]
+        print(in_node_order)
+        print(self.input_num_list)
         print("Validating logic sim with golden IO file with {} patterns".format(int((len(lines)-2)/3)))
         if in_node_order != self.input_num_list:
             print("Orders don't match, code not covered yet")
