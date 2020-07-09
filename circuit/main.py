@@ -40,6 +40,7 @@ def check_gate_netlist(circuit, total_T=1):
     return True
 
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-ckt", type=str, required=True, help="name of the ircuit, e.g. c17, no extension")
@@ -49,21 +50,41 @@ def main():
 
     print("\n======================================================")
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
-    start_time = time.time()
+    # start_time = time.time()
+
+    # for each benchmark dataset in ["ISCAS85", "ITC", "EPFL", "LGSynth"]
+    # Read a verilog/bench original file
+    # Simulate this file using Tejasvi's code which runs modelsim, call it golden
+    # convert this file to ckt658 [you have two options:
+        # 1. Our new ckt658 https://github.com/yydyid/CircuitTranslator
+        # 2. Yuhang's code
+    # Use logic_sim on the ckt658 circuit using this platform and the generated golden inputs
+    # Compare the golden output with the output of logic_sim
+    # Results can determine a few things:
+        # is Eda's translator working ok?
+        # is Yuhang's translator working ok?
+        # is logic_sim working ok?
+
+    # ckt1 = Circuit("c17_orig")
+    # ckt2 = Circuit("c17_tran")
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
-
-    # inputnum = len(circuit.input_num_list)
-    # limit = [0, pow(2, inputnum)-1]
-    # for i in range(100):
-    #     b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
-    #     list_to_logicsim = []
-    #     for j in range(inputnum):
-    #         list_to_logicsim.append(int(b[j]))
-    #     circuit.logic_sim(list_to_logicsim)
-    #     print(b)
-    #     # print_nodes(circuit)
+    # check_gate_netlist(circuit, 1000)
+    # exit()
+    inputnum = len(circuit.input_num_list)
+    limit = [0, pow(2, inputnum)-1]
+    for i in range(100):
+        b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
+        list_to_logicsim = []
+        for j in range(inputnum):
+            list_to_logicsim.append(int(b[j]))
+        pdb.set_trace()
+        print(circuit.input_num_list)
+        print(list_to_logicsim)
+        circuit.logic_sim(list_to_logicsim)
+        print(b)
+        # print_nodes(circuit)
 
     # observability() need to follow controllability()
     circuit.SCOAP_CC()
@@ -74,7 +95,7 @@ def main():
     circuit.STAFAN(args.tp, num_proc=args.cpu)
     # circuit.co_ob_info()
     graph = circuit.gen_graph()
-    suffix = round(math.log10(args.tp)) 
+    suffix = round(math.log10(args.tp))
     fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)
     fname = "./../data/graph/" + args.ckt + "_" + fname + ".graphml"
     print("Saving graph in ", fname)
@@ -84,7 +105,7 @@ def main():
     print()
 
     # temp = nx.read_graphml("./g_noon.graphml")
-    
+
     # circuit.get_full_fault_list()
     # circuit.gen_fault_dic()
     # circuit.get_reduced_fault_list()
