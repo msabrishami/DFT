@@ -87,9 +87,14 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
+<<<<<<< HEAD
     lab_parser(circuit)
     exit()
     circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+=======
+    exit()
+    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+>>>>>>> d89a56b07e33b806f54ee3d9fba054ae77e673fd
     # check_gate_netlist(circuit, 1000)
     exit()
     inputnum = len(circuit.input_num_list)
