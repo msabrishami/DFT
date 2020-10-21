@@ -87,7 +87,7 @@ class Circuit:
         fileList = []
         # TODO: this is a big issue here, emergency to fix
         # Referred to as size error
-        nodedict_list = [None] * (100*int(self.c_name[1:]))
+        nodedict_list = [None] * 500 # (100*int(self.c_name[1:]))
         temp_dict = {}
         lines = f.readlines()
 

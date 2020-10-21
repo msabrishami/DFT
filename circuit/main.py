@@ -39,6 +39,23 @@ def check_gate_netlist(circuit, total_T=1):
     print("all test patterns passed")
     return True
 
+def lab_parser(circuit):
+    print(circuit.c_name)
+    print("#PI: {}".format(len(circuit.input_num_list)))
+    PO_counter = 0
+    G_counter = 0
+    for node in circuit.nodes:
+        if node.ntype == 'PO':
+            PO_counter += 1
+            if node.gtype in ["XOR", "OR", "NOR", "NOT", "NAND", "AND"]:
+                G_counter += 1
+        elif node.ntype == "GATE":
+            G_counter += 1
+    print("#PO: {}".format(PO_counter))
+    print("#Nodes: {}".format(len(circuit.nodes)))
+    print("#Gates: {}".format(G_counter))
+    for node in circuit.nodes:
+        print(str(node.num) + " " + str(node.lev))
 
 
 def main():
@@ -70,6 +87,8 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_circuit()
     circuit.lev()
+    lab_parser(circuit)
+    exit()
     circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 1000)
     exit()
