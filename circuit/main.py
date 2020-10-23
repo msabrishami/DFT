@@ -24,10 +24,11 @@ def check_gate_netlist(circuit, total_T=1):
     for t in range(total_T):
         PI_dict = dict()
         PI_list = []
-
-        for PI_num in circuit.input_num_list:
+        
+        PI_num = [x.num for x in circuit.PI]
+        for pi in PI_num:
             val = randint(0,1)
-            PI_dict["in" + str(PI_num)] = val
+            PI_dict["in" + str(pi)] = val
             PI_list.append(val)
 
         res_beh = c432_sim(PI_dict)
@@ -69,33 +70,12 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     # start_time = time.time()
 
-    # for each benchmark dataset in ["ISCAS85", "ITC", "EPFL", "LGSynth"]
-    # Read a verilog/bench original file
-    # Simulate this file using Tejasvi's code which runs modelsim, call it golden
-    # convert this file to ckt658 [you have two options:
-        # 1. Our new ckt658 https://github.com/yydyid/CircuitTranslator
-        # 2. Yuhang's code
-    # Use logic_sim on the ckt658 circuit using this platform and the generated golden inputs
-    # Compare the golden output with the output of logic_sim
-    # Results can determine a few things:
-        # is Eda's translator working ok?
-        # is Yuhang's translator working ok?
-        # is logic_sim working ok?
-
-    # ckt1 = Circuit("c17_orig")
-    # ckt2 = Circuit("c17_tran")
     circuit = Circuit(args.ckt)
-    circuit.read_circuit()
+    circuit.read_ckt()
     circuit.lev()
-<<<<<<< HEAD
-    lab_parser(circuit)
-    exit()
-    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
-=======
-    exit()
+    # print(circuit)
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
->>>>>>> d89a56b07e33b806f54ee3d9fba054ae77e673fd
-    # check_gate_netlist(circuit, 1000)
+    check_gate_netlist(circuit, 1000)
     exit()
     inputnum = len(circuit.input_num_list)
     limit = [0, pow(2, inputnum)-1]

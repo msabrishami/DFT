@@ -51,6 +51,7 @@ class node:
     including paper references for STAFAN and SCOAP
     '''
     def __init__(self):
+        # Saeed confirms: 
         self.value = None
         self.num = None
         self.lev = None
@@ -58,6 +59,8 @@ class node:
         self.ntype = None
         self.unodes = []
         self.dnodes = []
+
+        # Saeed does not confirm
         self.fin = None
         self.fout = None
         self.cpt = 0
@@ -77,7 +80,6 @@ class node:
         self.one_count = 0      # count
         self.zero_count = 0     # count
 
-
         self.sen_count = 0      # count
         self.S = 0.0            # prob
         self.C1 = 0.0           # prob
@@ -91,6 +93,9 @@ class node:
         self.D0 = False         # Boolean
         self.D1_count = 0       # Count
         self.D0_count = 0       # Count
+    
+    def __str__(self):
+        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]))
 
 
     def add_unodes(self, unode):
@@ -253,7 +258,8 @@ class node:
             print("{}\t".format(str(self.D1_count).zfill(4)), end="")
             print("{:.2f}\t".format(self.D0_p), end="")
             print("{:.2f}\t".format(self.D1_p))
-
+    
+    
 class podem_node_5val():
     def __init__(self):
         self.x = 1

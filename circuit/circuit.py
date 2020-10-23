@@ -30,9 +30,6 @@ import numpy as np
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: Error "NoneType' object has no attribute 'add_dnodes" because of size error
 
-#__________________________________________________#
-#________________main_test for cread_______________#
-#__________________________________________________#
 
 class Circuit:
     def __init__(self, c_name):
@@ -50,11 +47,10 @@ class Circuit:
         #TODO: we need a list of PI nodes
         #TODO: we need a list of PO nodes
 
-        self.c_name = c_name
-        self.nodes = []
-        self.input_num_list = []
-        self.nodes_cnt = None
-        self.nodes_lev = None
+
+        # self.nodes = []           # has been changed to a dict
+        self.input_num_list = []    # redundant
+        self.nodes_cnt = None       # redundant
         self.nodes_sim = None
         self.fault_name = []
         self.fault_node_num = []
@@ -71,14 +67,109 @@ class Circuit:
         self.lvls_list = [] #controllability and observability
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
-        # possibly Redundant, Saeed added temporary:
+        # Saeed  
+        self.c_name = c_name
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
+        # self.nodes = {}
+        # self.nodes_lev = []
 
+    def read_ckt(self):
+        """
+        Read circuit from .ckt file, each node as an object
+        """
+        path = "../data/ckt/{}.ckt".format(self.c_name)
+        infile = open(path, 'r')
+        lines = infile.readlines()
+        node_dict = {}
+
+        for line in lines:
+
+            # possible empty lines
+            if len(line) < 6:
+                continue
+            attr = [int(x) for x in line.split()]
+            new_node = node()
+            new_node.ntype = ntype(attr[0]).name
+            new_node.num = attr[1]
+            new_node.gtype = gtype(attr[2]).name
+            if new_node.ntype == "PI":
+                self.PI.append(new_node)
+            elif new_node.ntype == "PO":
+                self.PO.append(new_node)
+            node_dict[new_node.num] = new_node
+
+        for line in lines:
+            attr = [int(x) for x in line.split()]
+            ptr = node_dict[attr[1]]
+            # We move forward, find the upnodes should be enough? 
+            
+            # ntype=PI and gtype=IPT: good
+            # we don't care about #fan-out
+            if ptr.ntype == "PI" and ptr.gtype=="IPT":
+                None
+            
+            # ntype=FB and gtyep=BRCH
+            elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
+                unode = node_dict[attr[3]]
+                ptr.unodes.append(unode)
+                unode.dnodes.append(ptr)
+            
+            # ntype=GATE and gtype=BRCH
+            elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
+                print("ERROR: gate and branch", ptr.num)
+
+            # ntype=GATE or ntype=PO 
+            # we don't care about #fan-out
+            # some gates have a single input, they are buffer
+            elif ptr.ntype == "GATE" or ptr.ntype == "PO":
+                for unode_num in attr[5:]:
+                    unode = node_dict[unode_num]
+                    ptr.unodes.append(unode)
+                    unode.dnodes.append(ptr)
+            else:
+                print("ERROR: not known!", ptr.num)
+        
+        self.nodes = node_dict
+
+
+    def lev(self):
+        """
+        Levelization, assigns a level to each node
+        Branches are also considered as gates: lev(branch) = lev(stem) + 1 
+        Algorithm is not efficient at all, don't care now
+        """
+        for ptr in self.PI:
+            ptr.lev = 0
+
+        flag_change = True
+        while flag_change: 
+            flag_change = False
+            for num, node in self.nodes.items():
+                if node.lev == None: # not levelized yet
+                    lev_u = [x.lev for x in node.unodes]
+                    if None in lev_u:
+                        continue
+                    else:
+                        node.lev = max(lev_u) + 1
+                        flag_change = True
+    
+        self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
+    
+    def __str__(self):
+        res = ["Circuit name: " + self.c_name]
+        res.append("#Nodes: " + str(len(self.nodes)))
+        res.append("#PI: " + str(len(self.PI)))
+        res.append("#PP: " + str(len(self.PO)))
+
+        for num, node in self.nodes.items():
+            res.append(str(node))
+        return "\n".join(res)
+    
+    
     def read_circuit(self):
         """
-        Read circuit from .ckt file, instantiate each node as a class,
-        initialize self.nodes
+        Read circuit from .ckt file, each node as an object
         """
         path = "../data/ckt/{}.ckt".format(self.c_name)
         f = open(path,'r')
@@ -162,8 +253,9 @@ class Circuit:
         self.input_cnt = len(self.input_num_list)
         # return self.nodes
 
+    
 
-    def lev(self):
+    def lev_2(self):
         """
         Levelization.
         Based on gate type of the nodes and connection relationship between nodes,
@@ -223,9 +315,8 @@ class Circuit:
 
     def read_PO(self):
         res = {}
-        for node in self.nodes:
-            if node.ntype == "PO":
-                res["out" + str(node.num)] = node.value
+        for node in self.PO:
+            res["out" + str(node.num)] = node.value
         return res
 
 
@@ -234,10 +325,11 @@ class Circuit:
         Logic simulation:
         Reads a given pattern and perform the logic simulation
         For now, this is just for binary logic
-        TODO: the main issue is that input_value list shoul be with the same ... 
+        TODO: the main issue is that input_value list should be with the same ... 
          .... order as self.input_num_list
         """
-        node_dict = dict(zip(self.input_num_list, input_val_list))
+        PI_num = [x.num for x in self.PI]
+        node_dict = dict(zip(PI_num, input_val_list))
         # TODO Emergency: why did they make a copy
         # self.nodes_sim = self.nodes_lev.copy()
 
@@ -246,9 +338,7 @@ class Circuit:
             i.D1 = False
             i.D2 = False
 
-            unodes_val = []
-            for unode in i.unodes:
-                unodes_val.append(unode.value)
+            unodes_val = [unode.value for unode in i.unodes]
 
             if (i.gtype == 'IPT'):
                 i.value = node_dict[i.num]
@@ -278,12 +368,13 @@ class Circuit:
     def golden_test(self, golden_io_filename):
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
-        in_node_order  = [int(x[1:]) for x in lines[0][8:].strip().split(',')]
-        out_node_order = [int(x[1:]) for x in lines[1][8:].strip().split(',')]
-        print(in_node_order)
-        print(self.input_num_list)
+        PI_t_order  = [int(x[1:]) for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [int(x[1:]) for x in lines[1][8:].strip().split(',')]
+        print(PI_t_order)
+        PI_num = [x.num for x in self.PI]
+        print(PI_num)
         print("Validating logic sim with golden IO file with {} patterns".format(int((len(lines)-2)/3)))
-        if in_node_order != self.input_num_list:
+        if PI_t_order != PI_num:
             print("Orders don't match, code not covered yet")
             return False
         for t in range(int((len(lines)-2)/3)):
@@ -291,16 +382,14 @@ class Circuit:
             test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
             self.logic_sim(test_in)
             logic_out = self.read_PO()
-            for i in range(len(out_node_order)):
-                out_node = out_node_order[i]
+            for i in range(len(PO_t_order)):
+                out_node = PO_t_order[i]
                 out_node_golden = test_out[i]
                 if out_node_golden != logic_out["out"+str(out_node)]:
                     print("ERROR")
                     return False
         print("Validation completed successfully")
         return True
-
-
 
     def dfs(self):
         """
