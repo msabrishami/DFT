@@ -72,12 +72,10 @@ def main():
 
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
-    print(circuit)
+    # print(circuit)
     circuit.lev()
-    print(circuit)
-    exit()
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
-    # check_gate_netlist(circuit, 1000)
+    # check_gate_netlist(circuit, 3000) # c432
     
     # inputnum = len(circuit.input_num_list)
     # limit = [0, pow(2, inputnum)-1]
@@ -94,7 +92,8 @@ def main():
     #     # print_nodes(circuit)
 
     circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
+    # circuit.SCOAP_CO()
+    exit()
     # circuit.STAFAN_CS(100)
     # circuit.STAFAN_B()
 

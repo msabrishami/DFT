@@ -186,7 +186,6 @@ class Circuit:
         Algorithm is not efficient at all, don't care now
         """
         for ptr in self.PI:
-            print("HELLP")
             ptr.lev = 0
 
         flag_change = True
@@ -195,7 +194,7 @@ class Circuit:
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
                     lev_u = [x.lev for x in node.unodes]
-                    print(num, lev_u)
+                    # print(num, lev_u)
                     if None in lev_u:
                         continue
                     else:
@@ -378,11 +377,16 @@ class Circuit:
         """
         PI_num = [x.num for x in self.PI]
         node_dict = dict(zip(PI_num, input_val_list))
+
         # TODO Emergency: why did they make a copy
         # self.nodes_sim = self.nodes_lev.copy()
 
-        for i in self.nodes_lev:
-
+        for node in self.nodes_lev:
+            if node.gtype == "IPT":
+                node.imply(node_dict[node.num])
+            else:
+                node.imply()
+        """
             # i.D1 = False # Saeed commented
             # i.D2 = False # Saeed commented
 
@@ -411,7 +415,7 @@ class Circuit:
 
             elif (i.gtype == 'AND'):
                 i.value = GAND_m(unodes_val)
-
+        """
 
     def golden_test(self, golden_io_filename):
         infile = open(golden_io_filename, "r")
@@ -1089,55 +1093,10 @@ class Circuit:
             for n in lvl:
                 n.print_info(print_labels=False)
 
-    def SCOAP_CC_2(self):
 
-        for n in self.PI[0]:
-            n.scoap["CC0"] = 1
-            n.scoap["CC1"] = 1
-
-        for n in self.nodes_lev:
-
-            unodes_CC0 = []
-            unodes_CC1 = []
-            for unode in j.unodes:
-                unodes_CC0.append(unode.CC0)
-                unodes_CC1.append(unode.CC1)
-            minCC0 = min(unodes_CC0)
-            minCC1 = min(unodes_CC1)
-
-            # TODO: this seems not ok!
-            # For BRCH, the same as upnode
-            if j.gtype == "BRCH":
-                j.CC0 = minCC0
-                j.CC1 = minCC1
-
-            # TODO: this is only for XOR with 2 inputs
-            elif j.gtype == "XOR":
-                j.CC0 = 1 + min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1)
-                j.CC1 = 1 +  min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1)
-
-            elif j.gtype == "OR":
-                j.CC0 = 1 + sum(unodes_CC0)
-                j.CC1 = 1 + minCC1
-
-            elif j.gtype == "NOR":
-                j.CC1 = 1 + sum(unodes_CC0)
-                j.CC0 = 1 + minCC1
-
-            elif j.gtype == "NOT":
-                j.CC0 = j.unodes[0].CC1 + 1
-                j.CC1 = j.unodes[0].CC0 + 1
-
-            elif j.gtype == "NAND":
-                j.CC0 = 1 + sum(unodes_CC1)
-                j.CC1 = 1 + minCC0
-
-            elif j.gtype == "AND":
-                j.CC1 = 1 + sum(unodes_CC1)
-                j.CC0 = 1 + minCC0
-
-
-
+    def SCOAP_CC(self):
+        for node in self.nodes_lev:
+            node.eval_CC()
         
     def SCOAP_CC_2(self):
 

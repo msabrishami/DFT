@@ -104,7 +104,10 @@ class Node:
     def unodes_val(self):
         return [unode.value for unode in self.unodes]
     
-    
+    def eval_CC(self):
+        ''' forward implication for a logic gate ''' 
+        raise NotImplementedError()
+
     # TODO: Saeed thinks many of these are redundant! 
     '''
     def add_unodes(self, unode):
@@ -270,20 +273,13 @@ class Node:
             print("{:.2f}\t".format(self.D1_p))
     
 
-class NAND(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, ntype, g_type, num)
-    
-    def imply(self):
-        self.value = 1 if (0 in self.unodes_val) else 0
+# class NAND(Node):
+#     def __init__(self, n_type, g_type, num):
+#         Node.__init__(self, ntype, g_type, num)
+#     
+#     def imply(self):
+#         self.value = 1 if (0 in self.unodes_val()) else 0
 
-
-class NAND(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, ntype, g_type, num)
-    
-    def imply(self):
-        self.value = 1 if (0 in self.unodes_val) else 0
 
 
 class OR(Node):
@@ -291,7 +287,11 @@ class OR(Node):
         Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 1 if (1 in self.unodes_val) else 0
+        self.value = 1 if (1 in self.unodes_val()) else 0
+
+    def eval_CC(self):
+        self.CC0 = 1 + sum([unode.CC0 for unode in self.unodes])
+        self.CC1 = 1 + min([unode.CC1 for unode in self.unodes])
 
 
 class NOR(Node):
@@ -299,7 +299,11 @@ class NOR(Node):
         Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 0 if (1 in self.unodes_val) else 0
+        self.value = 0 if (1 in self.unodes_val()) else 1
+
+    def eval_CC(self):
+        self.CC1 = 1 + sum([unode.CC0 for unode in self.unodes])
+        self.CC0 = 1 + min([unode.CC1 for unode in self.unodes])
 
 
 class AND(Node):
@@ -307,7 +311,23 @@ class AND(Node):
         Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 0 if (0 in self.unodes_val) else 0
+        self.value = 0 if (0 in self.unodes_val()) else 1
+
+    def eval_CC(self):
+        self.CC1 = 1 + sum([unode.CC1 for unode in self.unodes])
+        self.CC0 = 1 + min([unode.CC0 for unode in self.unodes])
+
+
+class NAND(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+    
+    def imply(self):
+        self.value = 1 if (0 in self.unodes_val()) else 0
+
+    def eval_CC(self):
+        self.CC0 = 1 + sum([unode.CC1 for unode in self.unodes])
+        self.CC1 = 1 + min([unode.CC0 for unode in self.unodes])
 
 
 class XOR(Node):
@@ -315,7 +335,18 @@ class XOR(Node):
         Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 1 if (sum(val_list)%2 == 1) else 0
+        self.value = 1 if (sum(self.unodes_val())%2 == 1) else 0
+
+    def eval_CC(self):
+        #TODO: only 2 inputs supported for now, we can later add multiple inputs
+        if len(self.unodes) != 2:
+            raise NameError('XOR with more than 2 inputs not implemented')
+        u_CC1 = [unode.CC1 for unode in self.unodes]
+        u_CC0 = [unode.CC0 for unode in self.unodes]
+        self.CC1 = 1 + min(self.unodes[0].CC1+self.unodes[1].CC0, 
+                self.unodes[0].CC0+self.unodes[1].CC1)
+        self.CC0 = 1 + min(self.unodes[0].CC0+self.unodes[1].CC0, 
+                self.unodes[0].CC1+self.unodes[1].CC1)
 
 
 class IPT(Node):
@@ -325,15 +356,21 @@ class IPT(Node):
     def imply(self, value):
         self.value = value 
 
+    def eval_CC(self):
+        self.CC0 = 0 
+        self.CC1 = 0
+
 
 class BRCH(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, ntype, g_type, num)
     
-    def imply(self, value):
+    def imply(self):
         self.value = self.unodes[0].value
 
-
+    def eval_CC(self):
+        self.CC0 = self.unodes[0].CC0 + 1 
+        self.CC1 = self.unodes[0].CC1 + 1
 
 
 class podem_node_5val():
