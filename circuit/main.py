@@ -72,8 +72,10 @@ def main():
 
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
+    print(circuit)
     circuit.lev()
-    # print(circuit)
+    print(circuit)
+    exit()
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 1000)
     

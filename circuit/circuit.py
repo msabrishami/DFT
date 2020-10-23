@@ -5,18 +5,19 @@ import random
 from enum import Enum
 import math
 import sys
-from classdef import node
+# from classdef import Node
 from classdef import gtype
 from classdef import ntype
-from gate import GAND_m, GOR_m, GXOR_m, GNOT
-from gate import GNAND_m, GNOR_m# , GXNOR_m, GNOT
+from classdef import *
+# from gate import GAND_m, GOR_m, GXOR_m, GNOT
+# from gate import GNAND_m, GNOR_m# , GXNOR_m, GNOT
 # from faultdict_gen import faultdict_gen
-from mini_faultlist_gen import mini_faultlist_gen
-from equv_domain import equv_domain
-from d_alg import D_alg
-from classdef import five_value
-from classdef import podem_node_5val
-from podem import podem
+# from mini_faultlist_gen import mini_faultlist_gen
+# from equv_domain import equv_domain
+# from d_alg import D_alg
+# from classdef import five_value
+# from classdef import podem_node_5val
+# from podem import podem
 import networkx as nx
 import matplotlib.pyplot as plt
 from random import randint
@@ -82,12 +83,13 @@ class Circuit:
         """
         # possible empty lines
         if len(line) < 6:
-            continue
+            return 
+        
         attr = [int(x) for x in line.split()]
         n_type = ntype(attr[0]).name
-        g_type = gtype(arrt[2]).name
+        g_type = gtype(attr[2]).name
         num = attr[1]
-
+        
         if n_type == "PI" and g_type=="IPT":
             node = IPT(n_type, g_type, num)
 
@@ -116,25 +118,49 @@ class Circuit:
             elif g_type == 'AND':
                 node = AND(n_type, g_type, num)
 
-        new_node.num = attr[1]
-        new_node.gtype = gtype(attr[2]).name
-        if new_node.ntype == "PI":
-            self.PI.append(new_node)
-        elif new_node.ntype == "PO":
-            self.PO.append(new_node)
-        node_dict[new_node.num] = new_node
+        node.ntype = n_type
+        node.gtype = g_type
+        if node.ntype == "PI":
+            self.PI.append(node)
+
+        elif node.ntype == "PO":
+            self.PO.append(node)
+        return node 
+
+    def connect_node(self, line):
+        # As we move forward, find the upnodes and connects them
+
+        
+        attr = [int(x) for x in line.split()]
+        ptr = self.nodes[attr[1]]
+        
+        # ntype=PI and gtype=IPT: good
+        # we don't care about #fan-out
+        if ptr.ntype == "PI" and ptr.gtype=="IPT":
+            None
+        
+        # ntype=FB and gtyep=BRCH
+        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
+            unode = self.nodes[attr[3]]
+            ptr.unodes.append(unode)
+            unode.dnodes.append(ptr)
+        
+        # ntype=GATE and gtype=BRCH
+        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
+            print("ERROR: gate and branch", ptr.num)
+
+        # ntype=GATE or ntype=PO 
+        # we don't care about #fan-out
+        # some gates have a single input, they are buffer
+        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
+            for unode_num in attr[5:]:
+                unode = self.nodes[unode_num]
+                ptr.unodes.append(unode)
+                unode.dnodes.append(ptr)
+        else:
+            print("ERROR: not known!", ptr.num)
 
 
-
-
-
-           
-
-
-
-
-
-    
     def read_ckt(self):
         """
         Read circuit from .ckt file, each node as an object
@@ -142,46 +168,17 @@ class Circuit:
         path = "../data/ckt/{}.ckt".format(self.c_name)
         infile = open(path, 'r')
         lines = infile.readlines()
-        node_dict = {}
+        self.nodes= {}
 
         # First time over the netlist
         for line in lines:
-            self.add_node(line.strip())
+            new_node = self.add_node(line.strip())
+            self.nodes[new_node.num] = new_node
             
         for line in lines:
-            attr = [int(x) for x in line.split()]
-            ptr = node_dict[attr[1]]
-            # We move forward, find the upnodes should be enough? 
-            
-            # ntype=PI and gtype=IPT: good
-            # we don't care about #fan-out
-            if ptr.ntype == "PI" and ptr.gtype=="IPT":
-                None
-            
-            # ntype=FB and gtyep=BRCH
-            elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
-                unode = node_dict[attr[3]]
-                ptr.unodes.append(unode)
-                unode.dnodes.append(ptr)
-            
-            # ntype=GATE and gtype=BRCH
-            elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
-                print("ERROR: gate and branch", ptr.num)
-
-            # ntype=GATE or ntype=PO 
-            # we don't care about #fan-out
-            # some gates have a single input, they are buffer
-            elif ptr.ntype == "GATE" or ptr.ntype == "PO":
-                for unode_num in attr[5:]:
-                    unode = node_dict[unode_num]
-                    ptr.unodes.append(unode)
-                    unode.dnodes.append(ptr)
-            else:
-                print("ERROR: not known!", ptr.num)
-        
-        self.nodes = node_dict
-
-
+            self.connect_node(line.strip())
+                    
+    
     def lev(self):
         """
         Levelization, assigns a level to each node
@@ -189,6 +186,7 @@ class Circuit:
         Algorithm is not efficient at all, don't care now
         """
         for ptr in self.PI:
+            print("HELLP")
             ptr.lev = 0
 
         flag_change = True
@@ -197,6 +195,7 @@ class Circuit:
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
                     lev_u = [x.lev for x in node.unodes]
+                    print(num, lev_u)
                     if None in lev_u:
                         continue
                     else:

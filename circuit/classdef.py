@@ -94,7 +94,8 @@ class Node:
         self.D0_count = 0       # Count
     
     def __str__(self):
-        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]))
+        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
+            str(len(self.unodes)), str(len(self.dnodes))]))
     
     def imply(self):
         ''' forward implication for a logic gate ''' 

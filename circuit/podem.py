@@ -1,6 +1,6 @@
 from classdef import five_value
 from classdef import podem_node_5val
-from classdef import node
+from classdef import Node
 from classdef import gtype
 from classdef import ntype
 from lev import lev
