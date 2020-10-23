@@ -2,6 +2,8 @@
 
 import pdb
 
+
+
 def GOR_m(val_list):
     return 1 if (1 in val_list) else 0
 

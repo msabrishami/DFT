@@ -75,6 +75,66 @@ class Circuit:
         self.nodes = {}         # dict of all nodes, key is node-num
         self.nodes_lev = []     # list of all nodes, ordered by level
 
+    
+    def add_node(self, line):
+        """ Create a node based on 1 line of ckt file
+        does not make the unodes/dnodes connections
+        """
+        # possible empty lines
+        if len(line) < 6:
+            continue
+        attr = [int(x) for x in line.split()]
+        n_type = ntype(attr[0]).name
+        g_type = gtype(arrt[2]).name
+        num = attr[1]
+
+        if n_type == "PI" and g_type=="IPT":
+            node = IPT(n_type, g_type, num)
+
+        elif n_type == "FB" and g_type=="BRCH":
+            node = BRCH(n_type, g_type, num)
+        
+        elif n_type == "GATE" and g_type=="BRCH":
+            raise NotImplementedError()
+
+        elif n_type == "GATE" or n_type == "PO":
+            if g_type == 'XOR':
+                node = XOR(n_type, g_type, num)
+
+            elif g_type == 'OR':
+                node = OR(n_type, g_type, num)
+
+            elif g_type == 'NOR':
+                node = NOR(n_type, g_type, num)
+
+            elif g_type == 'NOT':
+                node = NOR(n_type, g_type, num)
+
+            elif g_type == 'NAND':
+                node = NAND(n_type, g_type, num)
+
+            elif g_type == 'AND':
+                node = AND(n_type, g_type, num)
+
+        new_node.num = attr[1]
+        new_node.gtype = gtype(attr[2]).name
+        if new_node.ntype == "PI":
+            self.PI.append(new_node)
+        elif new_node.ntype == "PO":
+            self.PO.append(new_node)
+        node_dict[new_node.num] = new_node
+
+
+
+
+
+           
+
+
+
+
+
+    
     def read_ckt(self):
         """
         Read circuit from .ckt file, each node as an object
@@ -84,22 +144,10 @@ class Circuit:
         lines = infile.readlines()
         node_dict = {}
 
+        # First time over the netlist
         for line in lines:
-
-            # possible empty lines
-            if len(line) < 6:
-                continue
-            attr = [int(x) for x in line.split()]
-            new_node = node()
-            new_node.ntype = ntype(attr[0]).name
-            new_node.num = attr[1]
-            new_node.gtype = gtype(attr[2]).name
-            if new_node.ntype == "PI":
-                self.PI.append(new_node)
-            elif new_node.ntype == "PO":
-                self.PO.append(new_node)
-            node_dict[new_node.num] = new_node
-
+            self.add_node(line.strip())
+            
         for line in lines:
             attr = [int(x) for x in line.split()]
             ptr = node_dict[attr[1]]

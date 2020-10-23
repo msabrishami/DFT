@@ -30,7 +30,7 @@ class ntype(Enum):
     PO = 3
 
 
-class node:
+class Node:
     ''' Implementation is node based.
     A node also represents the upnode gate, as it is always unique.
     Difference of node type and gate type important, refer to ckt document.
@@ -50,13 +50,13 @@ class node:
     TODO: add information about the rest of the attributes,
     including paper references for STAFAN and SCOAP
     '''
-    def __init__(self):
+    def __init__(self, n_type, g_type, num):
         # Saeed confirms: 
-        self.value = None
-        self.num = None
+        self.gtype = g_type
+        self.ntype = n_type
+        self.num = num
         self.lev = None
-        self.gtype = None
-        self.ntype = None
+        self.value = None
         self.unodes = []
         self.dnodes = []
         self.scoap = {}
@@ -95,8 +95,17 @@ class node:
     
     def __str__(self):
         return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]))
-
-
+    
+    def imply(self):
+        ''' forward implication for a logic gate ''' 
+        raise NotImplementedError()
+    
+    def unodes_val(self):
+        return [unode.value for unode in self.unodes]
+    
+    
+    # TODO: Saeed thinks many of these are redundant! 
+    '''
     def add_unodes(self, unode):
         self.unodes.append(unode)
     def add_dnodes(self, dnode):
@@ -107,6 +116,7 @@ class node:
         self.faultlist_dfs.clear()
     def copy_faultlist(self, faultlist):
         faultlist_dfs = faultlist.copy()
+    '''
 
     def get_neighbors(self, value=False, inclusive=False):
         ''' returns a list of nodes (or the values of ndoes)
@@ -125,7 +135,7 @@ class node:
 
         return [n.value for n in res] if value else res
 
-
+    # TODO Move to children later
     def is_sensible(self):
         ''' calculates if this node can propagate the gate infront of it.
         i.e. if current value changes, down-node (output gate) value will change.
@@ -258,7 +268,73 @@ class node:
             print("{:.2f}\t".format(self.D0_p), end="")
             print("{:.2f}\t".format(self.D1_p))
     
+
+class NAND(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
     
+    def imply(self):
+        self.value = 1 if (0 in self.unodes_val) else 0
+
+
+class NAND(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+    
+    def imply(self):
+        self.value = 1 if (0 in self.unodes_val) else 0
+
+
+class OR(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 1 if (1 in self.unodes_val) else 0
+
+
+class NOR(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 0 if (1 in self.unodes_val) else 0
+
+
+class AND(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 0 if (0 in self.unodes_val) else 0
+
+
+class XOR(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 1 if (sum(val_list)%2 == 1) else 0
+
+
+class IPT(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+    
+    def imply(self, value):
+        self.value = value 
+
+
+class BRCH(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+    
+    def imply(self, value):
+        self.value = self.unodes[0].value
+
+
+
+
 class podem_node_5val():
     def __init__(self):
         self.x = 1
