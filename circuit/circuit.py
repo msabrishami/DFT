@@ -27,6 +27,7 @@ import numpy as np
 # from podem_m import podem
 # from D_alg import imply_and_check
 
+# Note: the node-ID in ckt is just an integer number
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: Error "NoneType' object has no attribute 'add_dnodes" because of size error
 
@@ -49,8 +50,8 @@ class Circuit:
 
 
         # self.nodes = []           # has been changed to a dict
-        self.input_num_list = []    # redundant
-        self.nodes_cnt = None       # redundant
+        # self.input_num_list = []    # redundant
+        # self.nodes_cnt = None       # redundant
         self.nodes_sim = None
         self.fault_name = []
         self.fault_node_num = []
@@ -71,8 +72,8 @@ class Circuit:
         self.c_name = c_name
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
-        # self.nodes = {}
-        # self.nodes_lev = []
+        self.nodes = {}         # dict of all nodes, key is node-num
+        self.nodes_lev = []     # list of all nodes, ordered by level
 
     def read_ckt(self):
         """
@@ -335,8 +336,8 @@ class Circuit:
 
         for i in self.nodes_lev:
 
-            i.D1 = False
-            i.D2 = False
+            # i.D1 = False # Saeed commented
+            # i.D2 = False # Saeed commented
 
             unodes_val = [unode.value for unode in i.unodes]
 
@@ -1041,9 +1042,59 @@ class Circuit:
             for n in lvl:
                 n.print_info(print_labels=False)
 
-    def SCOAP_CC(self):
+    def SCOAP_CC_2(self):
 
-        for i in self.lvls_list[0]:
+        for n in self.PI[0]:
+            n.scoap["CC0"] = 1
+            n.scoap["CC1"] = 1
+
+        for n in self.nodes_lev:
+
+            unodes_CC0 = []
+            unodes_CC1 = []
+            for unode in j.unodes:
+                unodes_CC0.append(unode.CC0)
+                unodes_CC1.append(unode.CC1)
+            minCC0 = min(unodes_CC0)
+            minCC1 = min(unodes_CC1)
+
+            # TODO: this seems not ok!
+            # For BRCH, the same as upnode
+            if j.gtype == "BRCH":
+                j.CC0 = minCC0
+                j.CC1 = minCC1
+
+            # TODO: this is only for XOR with 2 inputs
+            elif j.gtype == "XOR":
+                j.CC0 = 1 + min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1)
+                j.CC1 = 1 +  min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1)
+
+            elif j.gtype == "OR":
+                j.CC0 = 1 + sum(unodes_CC0)
+                j.CC1 = 1 + minCC1
+
+            elif j.gtype == "NOR":
+                j.CC1 = 1 + sum(unodes_CC0)
+                j.CC0 = 1 + minCC1
+
+            elif j.gtype == "NOT":
+                j.CC0 = j.unodes[0].CC1 + 1
+                j.CC1 = j.unodes[0].CC0 + 1
+
+            elif j.gtype == "NAND":
+                j.CC0 = 1 + sum(unodes_CC1)
+                j.CC1 = 1 + minCC0
+
+            elif j.gtype == "AND":
+                j.CC1 = 1 + sum(unodes_CC1)
+                j.CC0 = 1 + minCC0
+
+
+
+        
+    def SCOAP_CC_2(self):
+
+        for i in self.PI[0]:
             i.CC0 = 1
             i.CC1 = 1
 

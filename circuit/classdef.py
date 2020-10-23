@@ -59,22 +59,21 @@ class node:
         self.ntype = None
         self.unodes = []
         self.dnodes = []
+        self.scoap = {}
 
         # Saeed does not confirm
-        self.fin = None
-        self.fout = None
         self.cpt = 0
         self.sa0 = 0
         self.sa1 = 0
-        self.index = 0 # should be removed
-        self.faultlist_dfs = []
-        self.parallel_value = 0
-        self.d_value = []
+        # self.index = 0 # should be removed
+        # self.faultlist_dfs = []
+        # self.parallel_value = 0
+        # self.d_value = []
 
         # SCOAP measures
-        self.CC0 = 0            # INT value
-        self.CC1 = 0            # INT value
-        self.CO = 0             # INT value
+        # self.CC0 = 0            # INT value
+        # self.CC1 = 0            # INT value
+        # self.CO = 0             # INT value
 
         # STAFAN measures
         self.one_count = 0      # count
