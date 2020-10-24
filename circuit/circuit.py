@@ -1097,55 +1097,7 @@ class Circuit:
     def SCOAP_CC(self):
         for node in self.nodes_lev:
             node.eval_CC()
-        
-    def SCOAP_CC_2(self):
-
-        for i in self.PI[0]:
-            i.CC0 = 1
-            i.CC1 = 1
-
-        for i in range(1, self.num_lvls+1):
-
-            for j in self.lvls_list[i]:
-                unodes_CC0 = []
-                unodes_CC1 = []
-                for unode in j.unodes:
-                    unodes_CC0.append(unode.CC0)
-                    unodes_CC1.append(unode.CC1)
-                minCC0 = min(unodes_CC0)
-                minCC1 = min(unodes_CC1)
-
-                # TODO: this seems not ok!
-                # For BRCH, the same as upnode
-                if j.gtype == "BRCH":
-                    j.CC0 = minCC0
-                    j.CC1 = minCC1
-
-                # TODO: this is only for XOR with 2 inputs
-                elif j.gtype == "XOR":
-                    j.CC0 = 1 + min(j.unodes[0].CC1+j.unodes[1].CC0, j.unodes[0].CC0+j.unodes[1].CC1)
-                    j.CC1 = 1 +  min(j.unodes[0].CC0+j.unodes[1].CC0, j.unodes[0].CC1+j.unodes[1].CC1)
-
-                elif j.gtype == "OR":
-                    j.CC0 = 1 + sum(unodes_CC0)
-                    j.CC1 = 1 + minCC1
-
-                elif j.gtype == "NOR":
-                    j.CC1 = 1 + sum(unodes_CC0)
-                    j.CC0 = 1 + minCC1
-
-                elif j.gtype == "NOT":
-                    j.CC0 = j.unodes[0].CC1 + 1
-                    j.CC1 = j.unodes[0].CC0 + 1
-
-                elif j.gtype == "NAND":
-                    j.CC0 = 1 + sum(unodes_CC1)
-                    j.CC1 = 1 + minCC0
-
-                elif j.gtype == "AND":
-                    j.CC1 = 1 + sum(unodes_CC1)
-                    j.CC0 = 1 + minCC0
-
+    
 
     def SCOAP_CO(self):
 

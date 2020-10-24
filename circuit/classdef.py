@@ -105,7 +105,11 @@ class Node:
         return [unode.value for unode in self.unodes]
     
     def eval_CC(self):
-        ''' forward implication for a logic gate ''' 
+        ''' forward assignment of SCOAP-CC for this node based on unodes''' 
+        raise NotImplementedError()
+    
+    def eval_CO(self):
+        ''' backward assignment of SCOAP-CO for unodes of this node''' 
         raise NotImplementedError()
 
     # TODO: Saeed thinks many of these are redundant! 
@@ -292,6 +296,10 @@ class OR(Node):
     def eval_CC(self):
         self.CC0 = 1 + sum([unode.CC0 for unode in self.unodes])
         self.CC1 = 1 + min([unode.CC1 for unode in self.unodes])
+    
+    def eval_CO(self):
+        for unode in self.unodes:
+            unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
 
 
 class NOR(Node):
@@ -304,6 +312,10 @@ class NOR(Node):
     def eval_CC(self):
         self.CC1 = 1 + sum([unode.CC0 for unode in self.unodes])
         self.CC0 = 1 + min([unode.CC1 for unode in self.unodes])
+    
+    def eval_CO(self):
+        for unode in self.unodes:
+            unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
 
 
 class AND(Node):
@@ -317,6 +329,10 @@ class AND(Node):
         self.CC1 = 1 + sum([unode.CC1 for unode in self.unodes])
         self.CC0 = 1 + min([unode.CC0 for unode in self.unodes])
 
+    def eval_CO(self):
+        for unode in self.unodes:
+            unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
+
 
 class NAND(Node):
     def __init__(self, n_type, g_type, num):
@@ -328,6 +344,10 @@ class NAND(Node):
     def eval_CC(self):
         self.CC0 = 1 + sum([unode.CC1 for unode in self.unodes])
         self.CC1 = 1 + min([unode.CC0 for unode in self.unodes])
+
+    def eval_CO(self):
+        for unode in self.unodes:
+            unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
 
 
 class XOR(Node):
@@ -341,12 +361,19 @@ class XOR(Node):
         #TODO: only 2 inputs supported for now, we can later add multiple inputs
         if len(self.unodes) != 2:
             raise NameError('XOR with more than 2 inputs not implemented')
-        u_CC1 = [unode.CC1 for unode in self.unodes]
-        u_CC0 = [unode.CC0 for unode in self.unodes]
+        # u_CC1 = [unode.CC1 for unode in self.unodes]
+        # u_CC0 = [unode.CC0 for unode in self.unodes]
         self.CC1 = 1 + min(self.unodes[0].CC1+self.unodes[1].CC0, 
                 self.unodes[0].CC0+self.unodes[1].CC1)
         self.CC0 = 1 + min(self.unodes[0].CC0+self.unodes[1].CC0, 
                 self.unodes[0].CC1+self.unodes[1].CC1)
+
+    def eval_CO(self):
+        if len(self.unodes) != 2:
+            raise NameError('XOR with more than 2 inputs not implemented')
+
+        self.unodes[0].CO = min(self.unodes[1].CC0, self.unodes[1].CC1) + self.CO + 1
+        self.unodes[1].CO = min(self.unodes[0].CC0, self.unodes[0].CC1) + self.CO + 1
 
 
 class IPT(Node):
