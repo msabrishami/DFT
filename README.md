@@ -19,9 +19,10 @@ The package was first developed by a group of University of Southern California 
 
 **Main contributers:**  <br /> 
 <cite>[Amir Erfan Eshratifar][19]</cite>  <br />
-Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
+
 
 **Graduate students who contributed** *(equal contribution):* <br /> 
+Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][14]</cite> <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
 Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
