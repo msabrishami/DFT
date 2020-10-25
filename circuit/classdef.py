@@ -83,8 +83,8 @@ class Node:
         self.S = 0.0            # prob
         self.C1 = 0.0           # prob
         self.C0 = 0.0           # prob
-        self.B1 = 0.0           # prob
-        self.B0 = 0.0           # prob
+        self.B1 = None          # prob
+        self.B0 = None          # prob
 
         # GNN-CAD (our work)
         self.sense = True       # Boolean, maybe redundant
@@ -110,6 +110,10 @@ class Node:
     
     def eval_CO(self):
         ''' backward assignment of SCOAP-CO for unodes of this node''' 
+        raise NotImplementedError()
+    
+    def stafan_b(self):
+        ''' backward assignment of STAFAN observability for unodes of this node''' 
         raise NotImplementedError()
 
     # TODO: Saeed thinks many of these are redundant! 
@@ -266,16 +270,15 @@ class Node:
             print("{}\t".format(str(self.CC0).zfill(3)), end="")
             print("{}\t".format(str(self.CC1).zfill(3)), end="")
             print("{}\t".format(str(self.CO).zfill(3)), end="")
-            # print("{:.2f}\t".format(self.C0), end="")
-            # print("{:.2f}\t".format(self.C1), end="")
-            # print("{:.2f}\t".format(self.S), end="")
-            # print("{:.2f}\t".format(self.B0), end="")
-            # print("{:.2f}\t".format(self.B1), end="")
-            # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
-            # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
-            # print("{:.2f}\t".format(self.D0_p), end="")
-            # print("{:.2f}\t".format(self.D1_p))
-            print()
+            print("{:.2f}\t".format(self.C0), end="")
+            print("{:.2f}\t".format(self.C1), end="")
+            print("{:.2f}\t".format(self.S), end="")
+            print("{:.2f}\t".format(self.B0), end="")
+            print("{:.2f}\t".format(self.B1), end="")
+            print("{}\t".format(str(self.D0_count).zfill(4)), end="")
+            print("{}\t".format(str(self.D1_count).zfill(4)), end="")
+            print("{:.2f}\t".format(self.D0_p), end="")
+            print("{:.2f}\t".format(self.D1_p))
     
 
 # class NAND(Node):
@@ -284,6 +287,27 @@ class Node:
 #     
 #     def imply(self):
 #         self.value = 1 if (0 in self.unodes_val()) else 0
+
+
+class NOT(Node):
+    """ This gate is yet not tested""" 
+    def __init__(self, n_type, g_type, num):
+        raise NameError("NOT gate, still not fully checked!")
+        # Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 1 if (self.unode[0] == 0) else 0
+
+    def eval_CC(self):
+        self.CC0 = 1 + self.unode[0].CC1
+        self.CC1 = 1 + self.unode[0].CC0
+    
+    def eval_CO(self):
+        self.unode.CO = self.CO + 1
+    
+    def stafan_b(self):
+        self.unodes[0].B1 = self.B0
+        self.unodes[0].B0 = self.B1
 
 
 
@@ -301,6 +325,13 @@ class OR(Node):
     def eval_CO(self):
         for unode in self.unodes:
             unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
+    
+    def stafan_b(self):
+        if (self.C1 == 0) or (self.C0 == 0):
+            raise NameError("OR gate, C0 or C1 is zero")
+        for unode in self.unodes:
+            unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
+            unode.B0 = self.B0 * self.C0 / unode.C0
 
 
 class NOR(Node):
@@ -318,6 +349,13 @@ class NOR(Node):
         for unode in self.unodes:
             unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
 
+    def stafan_b(self):
+        if (self.C1 == 0) or (self.C0 == 0):
+            raise NameError("NOR gate, C0 or C1 is zero")
+        for unode in self.unodes:
+            unode.B1 = self.BO * (unode.S - self.C1) / unode.C1
+            unode.B0 = self.B1 * self.C1 / unode.C0
+
 
 class AND(Node):
     def __init__(self, n_type, g_type, num):
@@ -334,6 +372,13 @@ class AND(Node):
         for unode in self.unodes:
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
 
+    def stafan_b(self):
+        if (self.C1 == 0) or (self.C0 == 0):
+            raise NameError("AND gate, C0 or C1 is zero")
+        for unode in self.unodes:
+            unode.B1 = self.B1 * self.C1 / unode.C1
+            unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
+ 
 
 class NAND(Node):
     def __init__(self, n_type, g_type, num):
@@ -349,6 +394,14 @@ class NAND(Node):
     def eval_CO(self):
         for unode in self.unodes:
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
+    
+    def stafan_b(self):
+        if (self.C1 == 0) or (self.C0 == 0):
+            raise NameError("NAND gate, C0 or C1 is zero")
+        for unode in self.unodes:
+            unode.B1 = self.B0 * self.C0 / unode.C1
+            # Formula in the original paper has a typo
+            unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
 
 
 class XOR(Node):
@@ -372,9 +425,13 @@ class XOR(Node):
     def eval_CO(self):
         if len(self.unodes) != 2:
             raise NameError('XOR with more than 2 inputs not implemented')
-
         self.unodes[0].CO = min(self.unodes[1].CC0, self.unodes[1].CC1) + self.CO + 1
         self.unodes[1].CO = min(self.unodes[0].CC0, self.unodes[0].CC1) + self.CO + 1
+    
+    def stafan_b(self):
+        for unode in self.unodes:
+            unode.B1 = self.B0
+            unode.B0 = self.B1
 
 
 class IPT(Node):
@@ -389,6 +446,9 @@ class IPT(Node):
         self.CC1 = 0
 
     def eval_CO(self):
+        return 
+
+    def stafan_b(self):
         return 
 
 
@@ -408,6 +468,15 @@ class BRCH(Node):
         # This causes redundant computation, but OK! 
         self.unodes[0].CO = min([node.CO for node in self.unodes[0].dnodes])
 
+    def stafan_b(self):
+        # STAFAN-B measurement for a stem had redundancy, similar to SCOAP-CO
+        # We currently do not consider more than 3 branches per stem
+        # TODO: fix the issue of 3 branches limitation 
+        brch = self.unodes[0].dnodes
+        if len(brch) != 2:
+            raise NameError("Stem with other than 2 branches, not covered yet")
+        self.unodes[0].B1 = brch[0].B1 + brch[1].B1 - (brch[0].B1 * brch[1].B1)
+        self.unodes[0].B0 = brch[0].B0 + brch[1].B0 - (brch[0].B0 * brch[1].B0)
 
 
 class podem_node_5val():

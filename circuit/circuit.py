@@ -304,43 +304,49 @@ class Circuit:
         initial test showed when 10**7 in 4G patterns, 16M replacements
         random.choice is very inefficient
         '''
-        inputnum = len(self.input_num_list)
-        limit = [0, pow(2, inputnum)-1] if limit==None else limit
+        limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
         # patterns = np.random.choice(limit[1]-limit[0], num_pattern, replace=False)
         # patterns = [x+limit[0] for x in patterns]
 
         # for pattern in patterns:
-        for k in range(num_pattern):
-            # TODO: Read note about replacement
-            b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
-            list_to_logicsim = []
-            for j in range(inputnum):
-                list_to_logicsim.append(int(b[j]))
-            # list_to_logicsim = [1,1,1,1,1]
-            # print(b)
-            self.logic_sim(list_to_logicsim)
+        for t in range(num_pattern):
+            b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
+            test = [int(b[j]) for j in range(len(self.PI))]
+            self.logic_sim(test)
 
-            for i in self.nodes_lev:
+            for node in self.nodes_lev:
 
                 # counting values
-                i.one_count = i.one_count + 1 if i.value == 1 else i.one_count
-                i.zero_count = i.zero_count + 1 if i.value ==0 else i.zero_count
+                node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
+                node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
 
                 # sensitization
-                if i.is_sensible():
-                    i.sen_count += 1
+                if node.is_sensible():
+                    node.sen_count += 1
 
             for node in reversed(self.nodes_lev):
                 node.sense = node.is_sensible()
                 node.is_detectable()
 
         # calculate percentage/prob
-        for i in self.nodes_lev:
-            i.C1 = i.one_count / num_pattern
-            i.C0 = i.zero_count / num_pattern
-            i.S = i.sen_count / num_pattern
-            i.D0_p = i.D0_count / num_pattern
-            i.D1_p = i.D1_count / num_pattern
+        for node in self.nodes_lev:
+            node.C1 = node.one_count / num_pattern
+            node.C0 = node.zero_count / num_pattern
+            node.S = node.sen_count / num_pattern
+            node.D0_p = node.D0_count / num_pattern
+            node.D1_p = node.D1_count / num_pattern
+
+
+    def STAFAN_B(self):
+        # TODO: comment and also the issue of if C1==1
+        # calculate observability
+        for node in self.PO:
+            node.B1 = 1.0
+            node.B0 = 1.0
+        
+        for node in reversed(self.nodes_lev):
+            node.stafan_b()
+ 
 
     def dfs(self):
         """
@@ -989,78 +995,6 @@ class Circuit:
             
 
     
-
-    def STAFAN_B(self):
-        # TODO: comment and also the issue of if C1==1
-        # calculate observability
-        for i in reversed(self.nodes_lev):
-
-            if (i.ntype == 'PO'):
-                i.B1 = 1.0
-                i.B0 = 1.0
-
-            else:
-                if (i.dnodes[0].gtype == 'AND'):
-                    if (i.C1 == 0):
-                        # print("case 0")
-                        i.B1 = 1.0
-                    else :
-                        i.B1 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C1
-
-                    if (i.C0 == 0):
-                        # print("case 0")
-                        i.B0 = 1.0
-                    else :
-                        i.B0 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C0
-
-                elif(i.dnodes[0].gtype == 'NAND'):
-                    if (i.C1 == 0):
-                        # print("case 0")
-                        i.B1 = 1.0
-                    else :
-                        i.B1 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C1
-                    if (i.C0 == 0):
-                        # print("case 0")
-                        i.B0 = 1.0
-                    else :
-                        i.B0 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C0
-
-                elif(i.dnodes[0].gtype == 'OR'):
-                    if (i.C1 == 0):
-                        # print("case 0")
-                        i.B1 = 1.0
-                    else :
-                        i.B1 = i.dnodes[0].B1 * (i.S - i.dnodes[0].C0) / i.C1
-
-                    if (i.C0 == 0):
-                        # print("case 0")
-                        i.B0 = 1.0
-                    else :
-                        i.B0 = i.dnodes[0].B0 * i.dnodes[0].C0 / i.C0
-
-                elif(i.dnodes[0].gtype == 'NOR'):
-                    if (i.C1 == 0):
-                        # print("case 0")
-                        i.B1 = 1.0
-                    else :
-                        i.B1 = i.dnodes[0].B0 * (i.S - i.dnodes[0].C1) / i.C1
-                    if (i.C0 == 0):
-                        # print("case 0")
-                        i.B0 = 1.0
-                    else :
-                        i.B0 = i.dnodes[0].B1 * i.dnodes[0].C1 / i.C0
-
-                elif(i.dnodes[0].gtype == 'NOT'):
-                    i.B1 = i.dnodes[0].B0
-                    i.B0 = i.dnodes[0].B1
-
-                elif(i.dnodes[0].gtype == 'XOR'):
-                    i.B1 = i.dnodes[0].B0
-                    i.B0 = i.dnodes[0].B1
-
-                elif(i.dnodes[0].gtype == 'BRCH'):
-                    i.B1 = i.dnodes[0].B1 + i.dnodes[1].B1 - (i.dnodes[0].B1 * i.dnodes[1].B1)
-                    i.B0 = i.dnodes[0].B0 + i.dnodes[1].B0 - (i.dnodes[0].B0 * i.dnodes[1].B0)
 
 
     def control_thread(self, conn, c_name, i, total_T,num_proc):

@@ -72,31 +72,20 @@ def main():
 
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
-    # print(circuit)
     circuit.lev()
-    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+    
+    # Test Circuit LogicSim
+    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
     
-    # inputnum = len(circuit.input_num_list)
-    # limit = [0, pow(2, inputnum)-1]
-    # for i in range(100):
-    #     b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
-    #     list_to_logicsim = []
-    #     for j in range(inputnum):
-    #         list_to_logicsim.append(int(b[j]))
-    #     pdb.set_trace()
-    #     print(circuit.input_num_list)
-    #     print(list_to_logicsim)
-    #     circuit.logic_sim(list_to_logicsim)
-    #     print(b)
-    #     # print_nodes(circuit)
-
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    # circuit.co_ob_info()
+    circuit.STAFAN_CS(500)
+    circuit.STAFAN_B()
+    circuit.co_ob_info()
     exit()
-    # circuit.STAFAN_CS(100)
-    # circuit.STAFAN_B()
+
+
 
     circuit.STAFAN(args.tp, num_proc=args.cpu)
 
