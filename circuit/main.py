@@ -3,7 +3,7 @@
 
 import argparse
 import pdb
-import networkx as nx
+# import networkx as nx
 import math
 import time
 from random import randint

@@ -13,9 +13,10 @@ class ModelSim_Simulator():
         #create the gold folder
         self.input_file_name=input_file_name
         self.circuit_name=circuit.c_name
-        dir = './' + circuit.c_name + '/'
-        if os.path.exists(dir+'/gold') == False:
-            os.mkdir(dir+'/gold')
+        path = '../data/modelsim/' + circuit.c_name + '/'
+        print(path)
+        if os.path.exists(path+'/gold') == False:
+            os.mkdir(path + '/gold')
         #input file are stored in input folder
         #check number of input test patterns
         fr=open(input_file_name, mode='r')
@@ -23,7 +24,7 @@ class ModelSim_Simulator():
         number_of_test_patterns=len(line_list)-1
         fr.close()
 
-        fw = open(dir + str(circuit.c_name) + "_tb.v", mode='w')
+        fw = open(path + str(circuit.c_name) + "_tb.v", mode='w')
         fw.write("`timescale 1ns/1ns" + "\n")
         fw.write('module ' + str(circuit.c_name) + "_tb;" + '\n')
         fw.write("integer fi, fo;\n")
@@ -166,12 +167,12 @@ class ModelSim_Simulator():
         fw.write('endmodule\n')
         fw.close()
         #create run.sh
-        dir = './' + str(circuit.c_name) + '/'
-        fw = open(dir + "run.sh", mode='w')
+        # path = './' + str(circuit.c_name) + '/'
+        fw = open(path + "run.sh", mode='w')
         fw.write('vsim -c -do do_'+str(circuit.c_name)+'.do\n')
         fw.close()
         #create run.do
-        fw = open(dir + 'do_'+str(circuit.c_name)+'.do', mode='w')
+        fw = open(path + 'do_'+str(circuit.c_name)+'.do', mode='w')
         fw.write('vlib work\n')
         fw.write('vmap work work\n')
         fw.write('vlog -work work '+str(circuit.c_name)+'.v\n')
