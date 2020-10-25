@@ -127,9 +127,9 @@ class Circuit:
             self.PO.append(node)
         return node 
 
+    
     def connect_node(self, line):
         # As we move forward, find the upnodes and connects them
-
         
         attr = [int(x) for x in line.split()]
         ptr = self.nodes[attr[1]]
@@ -203,6 +203,7 @@ class Circuit:
     
         self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
     
+
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
@@ -213,140 +214,6 @@ class Circuit:
             res.append(str(node))
         return "\n".join(res)
     
-    
-    def read_circuit(self):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        path = "../data/ckt/{}.ckt".format(self.c_name)
-        f = open(path,'r')
-        indx = 0
-        nodedict = {}
-        fileList = []
-        # TODO: this is a big issue here, emergency to fix
-        # Referred to as size error
-        nodedict_list = [None] * 500 # (100*int(self.c_name[1:]))
-        temp_dict = {}
-        lines = f.readlines()
-
-        for line in lines:
-            if (line != "\n"):
-                fileList.append(line.split())
-        for i in fileList:
-            i[1] = int(i[1])
-        for line in fileList:
-            new_node = node()
-            new_node.ntype = ntype(int(line[0])).name
-            new_node.num = int(line[1])
-            if new_node.num not in self.node_ids:
-                self.node_ids.append(new_node.num)
-            new_node.gtype = gtype(int(line[2])).name
-
-            if (ntype(int(line[0])).value == 2):   #if BRCH --> unodes
-                new_node.add_unodes(nodedict_list[int(line[3])])
-                new_node.fout = 1
-            else:                                       #if not BRCH --> fout
-                new_node.fout = int(line[3])
-
-            if (ntype(int(line[0])).value != 2):
-                new_node.fin = int(line[4])
-                for i in range (int(line[4])):
-                    if (nodedict_list[int(line[5 + i])] == None):
-                        new_node_temp = node()
-                        new_node_temp.num = int(line[5 + i])
-                        nodedict.update({new_node_temp.num: new_node_temp})
-                        nodedict_list[new_node_temp.num] = new_node_temp
-                        new_node.add_unodes(nodedict_list[int(line[5 + i])])
-                        temp_dict.update({int(line[5 + i]): new_node.num})
-                    else:
-                        new_node.add_unodes(nodedict_list[int(line[5 + i])])
-            else:
-                new_node.fin = 1
-
-            if ((ntype(int(line[0])).value == 1) or (ntype(int(line[0])).value == 2)):
-                new_node.cpt = 1
-
-            new_node.index = indx
-            indx = indx + 1
-            self.nodes.append(new_node)
-            if (temp_dict.get(new_node.num) != None):
-                for i in self.nodes:
-                    if (i.num == temp_dict.get(new_node.num)):
-                        for j in i.unodes:
-                            if (j.num == new_node.num):
-                                i.unodes.remove(j)
-                                i.unodes.append(new_node)
-            nodedict_list[new_node.num] = new_node
-            nodedict.update({new_node.num: new_node})
-            #TODO:feedback only to one gate
-        f.close()
-        for i in range(len(self.nodes)):
-            if (self.nodes[i].ntype != 'PI'):
-                for j in range (self.nodes[i].fin):
-                    # TODO: debugging
-                    if self.nodes[i].unodes[j] == None:
-                        print(i, j, self.nodes[i].num)
-                        pdb.set_trace()
-                    self.nodes[i].unodes[j].add_dnodes(self.nodes[i])
-            else:
-                self.input_num_list.append(self.nodes[i].num)
-        
-        # TODO: done in July 9th 2020, 
-        # Saeed sorted self.input_num_list just after creating it. 
-        # Not sure if it will impact other functions
-        self.input_num_list.sort()
-
-        self.nodes_cnt = len(self.nodes)
-        self.input_cnt = len(self.input_num_list)
-        # return self.nodes
-
-    
-
-    def lev_2(self):
-        """
-        Levelization.
-        Based on gate type of the nodes and connection relationship between nodes,
-        give every node a level information. Primary inputs have the loweset level, i.e., 0
-        """
-        count = self.nodes_cnt
-        flag_changed = True
-        for i in self.nodes:
-            if i.gtype == 'IPT':
-                i.lev = 0
-                count -= 1
-            else:
-                i.lev = -1
-
-        while flag_changed:
-            flag_changed = False
-            for i in self.nodes:
-                if i.lev == -1:
-                    for k in range(0, i.fin):
-                        flag = 0
-                        if i.unodes[k].lev == -1:
-                            flag = 1
-                            break
-
-                    if flag == 0:
-                        flag_changed = True
-                        max_lvl = 0
-                        for j in range(0, i.fin):
-                            if i.unodes[j].lev >= max_lvl:
-                                max_lvl = i.unodes[j].lev
-                        i.lev = max_lvl + 1
-                        count -= 1
-        self.nodes_lev = sorted(self.nodes, key=lambda x: x.lev)
-
-        self.num_lvls = 0
-        for i in self.nodes_lev:
-            self.num_lvls = max(i.lev, self.num_lvls)
-
-        for j in range(self.num_lvls + 1):
-            self.lvls_list.append([])
-            for i in self.nodes_lev:
-                if i.lev == j:
-                    self.lvls_list[j].append(i)
-
 
     def get_random_input_pattern(self):
         """
@@ -371,51 +238,16 @@ class Circuit:
         """
         Logic simulation:
         Reads a given pattern and perform the logic simulation
-        For now, this is just for binary logic
-        TODO: the main issue is that input_value list should be with the same ... 
-         .... order as self.input_num_list
+        Currently just works with binary logic
         """
-        PI_num = [x.num for x in self.PI]
-        node_dict = dict(zip(PI_num, input_val_list))
-
-        # TODO Emergency: why did they make a copy
-        # self.nodes_sim = self.nodes_lev.copy()
+        node_dict = dict(zip([x.num for x in self.PI], input_val_list))
 
         for node in self.nodes_lev:
             if node.gtype == "IPT":
                 node.imply(node_dict[node.num])
             else:
                 node.imply()
-        """
-            # i.D1 = False # Saeed commented
-            # i.D2 = False # Saeed commented
 
-            unodes_val = [unode.value for unode in i.unodes]
-
-            if (i.gtype == 'IPT'):
-                i.value = node_dict[i.num]
-
-            elif (i.gtype == 'BRCH'):
-                i.value = i.unodes[0].value
-
-            elif (i.gtype == 'XOR'):
-                i.value = GXOR_m(unodes_val)
-
-            elif (i.gtype == 'OR'):
-                i.value = GOR_m(unodes_val)
-
-            elif (i.gtype == 'NOR'):
-                i.value = GNOR_m(unodes_val)
-
-            elif (i.gtype == 'NOT'):
-                i.value = GNOT(i.unodes[0].value)
-
-            elif (i.gtype == 'NAND'):
-                i.value = GNAND_m(unodes_val)
-
-            elif (i.gtype == 'AND'):
-                i.value = GAND_m(unodes_val)
-        """
 
     def golden_test(self, golden_io_filename):
         infile = open(golden_io_filename, "r")
@@ -425,9 +257,9 @@ class Circuit:
         print(PI_t_order)
         PI_num = [x.num for x in self.PI]
         print(PI_num)
-        print("Validating logic sim with golden IO file with {} patterns".format(int((len(lines)-2)/3)))
+        print("Logic-Sim validation with {} patterns".format(int((len(lines)-2)/3)))
         if PI_t_order != PI_num:
-            print("Orders don't match, code not covered yet")
+            print("Error: PI node order does not match! ")
             return False
         for t in range(int((len(lines)-2)/3)):
             test_in  = [int(x) for x in lines[(t+1)*3].strip().split(',')]
@@ -438,10 +270,77 @@ class Circuit:
                 out_node = PO_t_order[i]
                 out_node_golden = test_out[i]
                 if out_node_golden != logic_out["out"+str(out_node)]:
-                    print("ERROR")
+                    print("Error: PO node order does not match! ")
                     return False
-        print("Validation completed successfully")
+        print("Validation completed successfully - all correct")
         return True
+    
+    
+    def co_ob_info(self):
+        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
+        for node in self.nodes_lev:
+            node.print_info(print_labels=False)
+
+
+    def SCOAP_CC(self):
+        for node in self.nodes_lev:
+            node.eval_CC()
+    
+
+    def SCOAP_CO(self):
+
+        for node in self.PO:
+            node.CO = 0
+
+        for node in reversed(self.nodes_lev):
+            node.eval_CO()
+
+
+    ## TODO: What about inverter?
+    def STAFAN_CS(self, num_pattern, limit=None, detect=False):
+        ''' note:
+        we are generating random numbers with replacement
+        if u need to test all the patterns, add a new flag
+        initial test showed when 10**7 in 4G patterns, 16M replacements
+        random.choice is very inefficient
+        '''
+        inputnum = len(self.input_num_list)
+        limit = [0, pow(2, inputnum)-1] if limit==None else limit
+        # patterns = np.random.choice(limit[1]-limit[0], num_pattern, replace=False)
+        # patterns = [x+limit[0] for x in patterns]
+
+        # for pattern in patterns:
+        for k in range(num_pattern):
+            # TODO: Read note about replacement
+            b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
+            list_to_logicsim = []
+            for j in range(inputnum):
+                list_to_logicsim.append(int(b[j]))
+            # list_to_logicsim = [1,1,1,1,1]
+            # print(b)
+            self.logic_sim(list_to_logicsim)
+
+            for i in self.nodes_lev:
+
+                # counting values
+                i.one_count = i.one_count + 1 if i.value == 1 else i.one_count
+                i.zero_count = i.zero_count + 1 if i.value ==0 else i.zero_count
+
+                # sensitization
+                if i.is_sensible():
+                    i.sen_count += 1
+
+            for node in reversed(self.nodes_lev):
+                node.sense = node.is_sensible()
+                node.is_detectable()
+
+        # calculate percentage/prob
+        for i in self.nodes_lev:
+            i.C1 = i.one_count / num_pattern
+            i.C0 = i.zero_count / num_pattern
+            i.S = i.sen_count / num_pattern
+            i.D0_p = i.D0_count / num_pattern
+            i.D1_p = i.D1_count / num_pattern
 
     def dfs(self):
         """
@@ -1087,111 +986,9 @@ class Circuit:
         print(totaltime)
 
 
-    def co_ob_info(self):
-        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
-        for lvl in self.lvls_list:
-            for n in lvl:
-                n.print_info(print_labels=False)
+            
 
-
-    def SCOAP_CC(self):
-        for node in self.nodes_lev:
-            node.eval_CC()
     
-
-    def SCOAP_CO(self):
-
-        for i in self.lvls_list[-1]:
-            i.CO = 1
-
-        for lvl in range(self.num_lvls, -1, -1):
-            for j in self.lvls_list[lvl]:
-
-                unodes_CC0 = []
-                unodes_CC1 = []
-                for unode in j.unodes:
-                    unodes_CC0.append(unode.CC0)
-                    unodes_CC1.append(unode.CC1)
-
-                if j.gtype == "BRCH":
-                    dnodes_CO =  []
-                    for k in j.unodes[0].dnodes:
-                        dnodes_CO.append(k.CO)
-                    j.unodes[0].CO = min(dnodes_CO)
-
-                # TODO: Only works for XOR2
-                elif j.gtype == "XOR":
-                    j.unodes[0].CO = min(j.unodes[1].CC1, j.unodes[1].CC0)+ j.CO + 1
-                    j.unodes[1].CO = min(j.unodes[0].CC1, j.unodes[0].CC0)+ j.CO + 1
-
-                elif j.gtype == "NOT":
-                    j.unodes[0].CO = j.CO + 1
-
-                elif j.gtype == "OR":
-                    for k in j.unodes:
-                        k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
-
-                elif j.gtype == "NOR":
-                    for k in j.unodes:
-                        k.CO = sum(unodes_CC0) - k.CC0 + j.CO + 1
-
-                elif j.gtype == "NAND":
-                    for k in j.unodes:
-                        k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
-
-                elif j.gtype == "AND":
-                    for k in j.unodes:
-                        k.CO = sum(unodes_CC1) - k.CC1 + j.CO + 1
-
-
-
-
-    ## TODO: What about inverter?
-    def STAFAN_CS(self, num_pattern, limit=None, detect=False):
-        ''' note:
-        we are generating random numbers with replacement
-        if u need to test all the patterns, add a new flag
-        initial test showed when 10**7 in 4G patterns, 16M replacements
-        random.choice is very inefficient
-        '''
-        inputnum = len(self.input_num_list)
-        limit = [0, pow(2, inputnum)-1] if limit==None else limit
-        # patterns = np.random.choice(limit[1]-limit[0], num_pattern, replace=False)
-        # patterns = [x+limit[0] for x in patterns]
-
-        # for pattern in patterns:
-        for k in range(num_pattern):
-            # TODO: Read note about replacement
-            b = ('{:0%db}'%inputnum).format(randint(limit[0], limit[1]))
-            list_to_logicsim = []
-            for j in range(inputnum):
-                list_to_logicsim.append(int(b[j]))
-            # list_to_logicsim = [1,1,1,1,1]
-            # print(b)
-            self.logic_sim(list_to_logicsim)
-
-            for i in self.nodes_lev:
-
-                # counting values
-                i.one_count = i.one_count + 1 if i.value == 1 else i.one_count
-                i.zero_count = i.zero_count + 1 if i.value ==0 else i.zero_count
-
-                # sensitization
-                if i.is_sensible():
-                    i.sen_count += 1
-
-            for node in reversed(self.nodes_lev):
-                node.sense = node.is_sensible()
-                node.is_detectable()
-
-        # calculate percentage/prob
-        for i in self.nodes_lev:
-            i.C1 = i.one_count / num_pattern
-            i.C0 = i.zero_count / num_pattern
-            i.S = i.sen_count / num_pattern
-            i.D0_p = i.D0_count / num_pattern
-            i.D1_p = i.D1_count / num_pattern
-
 
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1

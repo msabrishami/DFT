@@ -74,7 +74,7 @@ def main():
     circuit.read_ckt()
     # print(circuit)
     circuit.lev()
-    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
     
     # inputnum = len(circuit.input_num_list)
@@ -92,13 +92,14 @@ def main():
     #     # print_nodes(circuit)
 
     circuit.SCOAP_CC()
-    # circuit.SCOAP_CO()
+    circuit.SCOAP_CO()
+    # circuit.co_ob_info()
     exit()
     # circuit.STAFAN_CS(100)
     # circuit.STAFAN_B()
 
     circuit.STAFAN(args.tp, num_proc=args.cpu)
-    # circuit.co_ob_info()
+
     graph = circuit.gen_graph()
     suffix = round(math.log10(args.tp))
     fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)

@@ -71,9 +71,9 @@ class Node:
         # self.d_value = []
 
         # SCOAP measures
-        # self.CC0 = 0            # INT value
-        # self.CC1 = 0            # INT value
-        # self.CO = 0             # INT value
+        self.CC0 = None
+        self.CC1 = None
+        self.CO = None
 
         # STAFAN measures
         self.one_count = 0      # count
@@ -250,15 +250,15 @@ class Node:
             print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
             print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
             print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
-            print("C0:{:.2f}\t".format(self.C0), end="")
-            print("C1:{:.2f}\t".format(self.C1), end="")
-            print("S:{:.2f}\t".format(self.S), end="")
-            print("B0:{:.2f}\t".format(self.B0), end="")
-            print("B1:{:.2f}\t".format(self.B1), end="")
-            print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
-            print("%D0:{:.2f}\t".format(self.D0_p), end="")
-            print("%D1:{:.2f}\t".format(self.D1_p))
+            # print("C0:{:.2f}\t".format(self.C0), end="")
+            # print("C1:{:.2f}\t".format(self.C1), end="")
+            # print("S:{:.2f}\t".format(self.S), end="")
+            # print("B0:{:.2f}\t".format(self.B0), end="")
+            # print("B1:{:.2f}\t".format(self.B1), end="")
+            # print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
+            # print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
+            # print("%D0:{:.2f}\t".format(self.D0_p), end="")
+            # print("%D1:{:.2f}\t".format(self.D1_p))
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -266,15 +266,16 @@ class Node:
             print("{}\t".format(str(self.CC0).zfill(3)), end="")
             print("{}\t".format(str(self.CC1).zfill(3)), end="")
             print("{}\t".format(str(self.CO).zfill(3)), end="")
-            print("{:.2f}\t".format(self.C0), end="")
-            print("{:.2f}\t".format(self.C1), end="")
-            print("{:.2f}\t".format(self.S), end="")
-            print("{:.2f}\t".format(self.B0), end="")
-            print("{:.2f}\t".format(self.B1), end="")
-            print("{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("{}\t".format(str(self.D1_count).zfill(4)), end="")
-            print("{:.2f}\t".format(self.D0_p), end="")
-            print("{:.2f}\t".format(self.D1_p))
+            # print("{:.2f}\t".format(self.C0), end="")
+            # print("{:.2f}\t".format(self.C1), end="")
+            # print("{:.2f}\t".format(self.S), end="")
+            # print("{:.2f}\t".format(self.B0), end="")
+            # print("{:.2f}\t".format(self.B1), end="")
+            # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
+            # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
+            # print("{:.2f}\t".format(self.D0_p), end="")
+            # print("{:.2f}\t".format(self.D1_p))
+            print()
     
 
 # class NAND(Node):
@@ -387,6 +388,9 @@ class IPT(Node):
         self.CC0 = 0 
         self.CC1 = 0
 
+    def eval_CO(self):
+        return 
+
 
 class BRCH(Node):
     def __init__(self, n_type, g_type, num):
@@ -398,6 +402,12 @@ class BRCH(Node):
     def eval_CC(self):
         self.CC0 = self.unodes[0].CC0 + 1 
         self.CC1 = self.unodes[0].CC1 + 1
+
+    def eval_CO(self): 
+        # CO measurement for a stem is done by it's branches
+        # This causes redundant computation, but OK! 
+        self.unodes[0].CO = min([node.CO for node in self.unodes[0].dnodes])
+
 
 
 class podem_node_5val():
