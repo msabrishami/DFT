@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from circuit import Circuit
-from atpg_v0 import ATPG
+
 import argparse
 import pdb
 import networkx as nx
@@ -9,15 +8,12 @@ import math
 import time
 from random import randint
 
+from circuit import Circuit
+from modelsim_simulator import ModelSim_Simulator
+
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 from c432_logic_sim import c432_sim
-
-def print_nodes(ckt):
-    for node in ckt.nodes_lev:
-        print(node.num, node.value)
-
-
 
 def check_gate_netlist(circuit, total_T=1):
 
@@ -40,24 +36,6 @@ def check_gate_netlist(circuit, total_T=1):
     print("all test patterns passed")
     return True
 
-def lab_parser(circuit):
-    print(circuit.c_name)
-    print("#PI: {}".format(len(circuit.input_num_list)))
-    PO_counter = 0
-    G_counter = 0
-    for node in circuit.nodes:
-        if node.ntype == 'PO':
-            PO_counter += 1
-            if node.gtype in ["XOR", "OR", "NOR", "NOT", "NAND", "AND"]:
-                G_counter += 1
-        elif node.ntype == "GATE":
-            G_counter += 1
-    print("#PO: {}".format(PO_counter))
-    print("#Nodes: {}".format(len(circuit.nodes)))
-    print("#Gates: {}".format(G_counter))
-    for node in circuit.nodes:
-        print(str(node.num) + " " + str(node.lev))
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -73,7 +51,10 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
     circuit.lev()
-    
+    circuit.gen_test_pattern_file(10, fname = "mytp.txt")
+    sim = ModelSim_Simulator()
+    sim.tb_gen(circuit, "./mytp.txt")
+    exit()
     # Test Circuit LogicSim
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
@@ -83,7 +64,7 @@ def main():
     circuit.STAFAN_CS(500)
     circuit.STAFAN_B()
     circuit.co_ob_info()
-    exit()
+
 
 
 

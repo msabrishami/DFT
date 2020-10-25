@@ -296,7 +296,11 @@ class NOT(Node):
         # Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 1 if (self.unode[0] == 0) else 0
+        if self.unode[0] == 2:
+            self.value = 2
+        else: 
+            self.value = 1 if (self.unode[0] == 0) else 0
+
 
     def eval_CC(self):
         self.CC0 = 1 + self.unode[0].CC1

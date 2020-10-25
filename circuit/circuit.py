@@ -5,19 +5,9 @@ import random
 from enum import Enum
 import math
 import sys
-# from classdef import Node
 from classdef import gtype
 from classdef import ntype
 from classdef import *
-# from gate import GAND_m, GOR_m, GXOR_m, GNOT
-# from gate import GNAND_m, GNOR_m# , GXNOR_m, GNOT
-# from faultdict_gen import faultdict_gen
-# from mini_faultlist_gen import mini_faultlist_gen
-# from equv_domain import equv_domain
-# from d_alg import D_alg
-# from classdef import five_value
-# from classdef import podem_node_5val
-# from podem import podem
 import networkx as nx
 import matplotlib.pyplot as plt
 from random import randint
@@ -25,12 +15,20 @@ import time
 import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
-# from podem_m import podem
-# from D_alg import imply_and_check
 
 # Note: the node-ID in ckt is just an integer number
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
-#TODO: Error "NoneType' object has no attribute 'add_dnodes" because of size error
+"""
+# Tasks for the DFT team:
+- Don't change my alreay written methods, if u need to change it let me know. 
+- What is the data structure of Node
+- Understand the flow of this current code, how we read ckt, 
+- How are doing the logic-simulation 
+- Adding a new py file, for testbench generation class (maybe call it ModelSim_Simulator
+- Add the read_verilog file
+- ADd the methods you have for creating a random test pattern file 
+- Check if we read a circuit using read_verilog, the current logicsim works fine
+"""
 
 
 class Circuit:
@@ -160,6 +158,9 @@ class Circuit:
         else:
             print("ERROR: not known!", ptr.num)
 
+    
+    def read_verilog(self):
+        raise NameError("Not implemented yet, DFT team is responsible")
 
     def read_ckt(self):
         """
@@ -225,6 +226,29 @@ class Circuit:
         for i in range(len(self.input_num_list)):
             rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
+    
+    def gen_test_pattern_file(self, test_count, fname=None, mode="b"):
+        """ create single file with multiple input patterns
+        mode b: generate values in {0, 1}
+        mode x: generate values in {0, 1, X}
+        """ 
+        if mode not in ["b", "x"]:
+            raise NameError("Mode is not acceptable")
+        fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
+        fname = fn if fname==None else fname
+        infile = open(fname, 'w')
+        infile.write(",".join([str(node.num) for node in self.PI]) + "\n")
+        
+        for t in range(test_count):
+            if mode == "b":
+                pat = [str(random.randint(0,1)) for x in range(len(self.PI))]
+            elif mode == "x":
+                pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
+                pat = ["X" if x=="2" else x for x in pat]
+            print(",".join(pat))
+            infile.write(",".join(pat) + "\n")
+        
+        infile.close()
 
 
     def read_PO(self):
