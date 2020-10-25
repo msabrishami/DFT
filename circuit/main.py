@@ -51,14 +51,15 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
     circuit.lev()
-    circuit.gen_test_pattern_file(10, fname = "mytp.txt")
-    sim = Modelsim()
+    # circuit.gen_test_pattern_file(10, fname = "mytp.txt")
+    # sim = Modelsim()
     # sim.tb_gen(circuit, "./mytp.txt")
-    exit()
+
     # Test Circuit LogicSim
-    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
     
+    exit()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
     circuit.STAFAN_CS(500)

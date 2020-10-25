@@ -44,13 +44,15 @@ class Circuit:
         fautl_name:         full fault list in string format
         fault_node_num:     node numbers in full fault list
         '''
-        #TODO: we need a list of PI nodes
-        #TODO: we need a list of PO nodes
-
-
-        # self.nodes = []           # has been changed to a dict
-        # self.input_num_list = []    # redundant
-        # self.nodes_cnt = None       # redundant
+        
+        # Saeed confirms using these attributes
+        self.c_name = c_name
+        self.nodes = {}     # dict of all nodes, key is now int node-num
+        self.nodes_lev = [] # list of all nodes, ordered by level
+        self.PI = [] # this should repalce input_num_list
+        self.PO = [] # this should be created to have a list of outputs
+        
+        # Saeed does not confirm using these attributes
         self.nodes_sim = None
         self.fault_name = []
         self.fault_node_num = []
@@ -68,12 +70,7 @@ class Circuit:
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
         # Saeed  
-        self.c_name = c_name
-        self.PI = [] # this should repalce input_num_list
-        self.PO = [] # this should be created to have a list of outputs
-        self.nodes = {}         # dict of all nodes, key is node-num
-        self.nodes_lev = []     # list of all nodes, ordered by level
-
+        
     
     def add_node(self, line):
         """ Create a node based on 1 line of ckt file
@@ -258,13 +255,15 @@ class Circuit:
         return res
 
 
-    def logic_sim(self, input_val_list):
+    def logic_sim(self, input_pattern):
         """
         Logic simulation:
         Reads a given pattern and perform the logic simulation
         Currently just works with binary logic
+        input_pattern is a list of values (currently int) in the ... 
+            ... same order as in self.PI
         """
-        node_dict = dict(zip([x.num for x in self.PI], input_val_list))
+        node_dict = dict(zip([x.num for x in self.PI], input_pattern))
 
         for node in self.nodes_lev:
             if node.gtype == "IPT":

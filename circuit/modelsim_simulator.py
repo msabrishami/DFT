@@ -189,13 +189,21 @@ class Modelsim():
     def modelsim_simulation():
         """ #TODO: What does this method do???
         How should someone who is using this know that the process
-        will run in the background? """ 
+        will run in the background? 
+        Output:
+            the golden IP file will be generated 
+        """ 
         if os.path.exists(self.path + '/gold') == False:
             os.mkdir(self.path + '/gold')
         subprocess.call(['sh', self.path + '/run.sh'], 
                 cwd = './'+ self.circuit_name)
 
     def check():
+        """ What does this method do Ting-Yu??? 
+        This method checks if the circuit.logicsim matches golden modelsim
+            results
+        """ 
+
         #output file created by our platform
         origin_output_file = open('./'+self.circuit_name+'/output/'+self.circuit_name + '_out.txt', "r+")
         #output file form ModelSim
