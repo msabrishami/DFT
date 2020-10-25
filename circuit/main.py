@@ -9,7 +9,7 @@ import time
 from random import randint
 
 from circuit import Circuit
-from modelsim_simulator import ModelSim_Simulator
+from modelsim_simulator import Modelsim
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -52,8 +52,8 @@ def main():
     circuit.read_ckt()
     circuit.lev()
     circuit.gen_test_pattern_file(10, fname = "mytp.txt")
-    sim = ModelSim_Simulator()
-    sim.tb_gen(circuit, "./mytp.txt")
+    sim = Modelsim()
+    # sim.tb_gen(circuit, "./mytp.txt")
     exit()
     # Test Circuit LogicSim
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")

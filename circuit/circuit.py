@@ -216,7 +216,7 @@ class Circuit:
         return "\n".join(res)
     
 
-    def get_random_input_pattern(self):
+    def gen_tp(self):
         """
         Randomly generate a test pattern for input nodes.
         Could be used to check the validity of logic simulation
@@ -227,7 +227,7 @@ class Circuit:
             rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
     
-    def gen_test_pattern_file(self, test_count, fname=None, mode="b"):
+    def gen_tp_file(self, test_count, fname=None, mode="b"):
         """ create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}

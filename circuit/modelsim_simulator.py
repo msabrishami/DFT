@@ -1,7 +1,7 @@
 import os
 import subprocess
 import circuit
-class ModelSim_Simulator():
+class Modelsim():
     def __init__(self):
         self.input_file_name=''
         self.circuit_name=''
@@ -9,14 +9,17 @@ class ModelSim_Simulator():
     def __del__(self):
         pass
 
-    def tb_gen(self, circuit, input_file_name):
-        #create the gold folder
-        self.input_file_name=input_file_name
+    def tb_gen(self, circuit, tp_count):
+        """ What does this method do Ting-Yu???
+        """ 
+        # First: generate a input test patter file inside this path 
+        #TODO the name of the test pattern file needs to be changed 
         self.circuit_name=circuit.c_name
         path = '../data/modelsim/' + circuit.c_name + '/'
-        print(path)
-        if os.path.exists(path+'/gold') == False:
-            os.mkdir(path + '/gold')
+        self.path = path
+        print("Generating a test pattern file in " + self.path)
+        circuit.gen_tp(tp_count, fname = path + "/mytp.txt")
+        print("Generating a Modelsim project folder in " + self.path)
         #input file are stored in input folder
         #check number of input test patterns
         fr=open(input_file_name, mode='r')
@@ -182,8 +185,15 @@ class ModelSim_Simulator():
         fw.write('run -all\n')
         fw.close()
 
+
     def modelsim_simulation():
-        subprocess.call(['sh', './run.sh'], cwd = './'+ self.circuit_name)
+        """ #TODO: What does this method do???
+        How should someone who is using this know that the process
+        will run in the background? """ 
+        if os.path.exists(self.path + '/gold') == False:
+            os.mkdir(self.path + '/gold')
+        subprocess.call(['sh', self.path + '/run.sh'], 
+                cwd = './'+ self.circuit_name)
 
     def check():
         #output file created by our platform
