@@ -288,12 +288,25 @@ class Node:
             print("{:.2f}\t".format(self.D1_p))
     
 
-# class NAND(Node):
-#     def __init__(self, n_type, g_type, num):
-#         Node.__init__(self, ntype, g_type, num)
-#     
-#     def imply(self):
-#         self.value = 1 if (0 in self.unodes_val()) else 0
+class BUFF(Node):
+    """ This gate is yet not tested""" 
+    def __init__(self, n_type, g_type, num):
+        raise NameError("BUFF gate, still not fully checked!")
+        # Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = self.unode[0].value
+
+    def eval_CC(self):
+        self.CC0 = 1 + self.unode[0].CC0
+        self.CC1 = 1 + self.unode[0].CC1
+    
+    def eval_CO(self):
+        self.unode.CO = self.CO + 1
+    
+    def stafan_b(self):
+        self.unodes[0].B1 = self.B1
+        self.unodes[0].B0 = self.B0
 
 
 class NOT(Node):
