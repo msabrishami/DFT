@@ -242,7 +242,7 @@ class Circuit:
             elif mode == "x":
                 pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
                 pat = ["X" if x=="2" else x for x in pat]
-            print(",".join(pat))
+            # print(",".join(pat))
             infile.write(",".join(pat) + "\n")
         
         infile.close()
@@ -318,7 +318,22 @@ class Circuit:
         for node in reversed(self.nodes_lev):
             node.eval_CO()
 
+    def STAFAN_reset_counts(self):
+        for node in self.nodes_lev:
+            node.one_count = 0
+            node.zero_count = 0
+            node.D1_count = 0
+            node.D0_count = 0
+            node.sen_count = 0
 
+
+    def STAFAN_reset_flags(self):
+        for node in self.nodes_lev:
+            node.sense = False
+            node.D1 = False
+            node.D0 = False
+    
+    
     ## TODO: What about inverter?
     def STAFAN_CS(self, num_pattern, limit=None, detect=False):
         ''' note:
@@ -327,29 +342,29 @@ class Circuit:
         initial test showed when 10**7 in 4G patterns, 16M replacements
         random.choice is very inefficient
         '''
+        
+        # We need to resent the circuit
+        self.STAFAN_reset_counts()
+        
         limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
-        # patterns = np.random.choice(limit[1]-limit[0], num_pattern, replace=False)
-        # patterns = [x+limit[0] for x in patterns]
-
-        # for pattern in patterns:
         for t in range(num_pattern):
             b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
             test = [int(b[j]) for j in range(len(self.PI))]
+            
             self.logic_sim(test)
-
+            self.STAFAN_reset_flags()
+            
             for node in self.nodes_lev:
-
-                # counting values
                 node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
                 node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
 
                 # sensitization
                 if node.is_sensible():
+                    node.sense = True
                     node.sen_count += 1
 
             for node in reversed(self.nodes_lev):
-                node.sense = node.is_sensible()
-                node.is_detectable()
+                node.semi_detect()
 
         # calculate percentage/prob
         for node in self.nodes_lev:

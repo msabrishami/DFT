@@ -53,19 +53,17 @@ def main():
     circuit.lev()
     # circuit.gen_test_pattern_file(10, fname = "mytp.txt")
     # sim = Modelsim()
-    # sim.tb_gen(circuit, "./mytp.txt")
-
+    # sim.tb_gen(circuit, 100)
     # Test Circuit LogicSim
-    circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
+    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
     
-    exit()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.STAFAN_CS(500)
+    circuit.STAFAN_CS(10000)
     circuit.STAFAN_B()
     circuit.co_ob_info()
-
+    exit()
 
 
 

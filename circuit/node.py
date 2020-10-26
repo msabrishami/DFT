@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from numpy import uint64
 from enum import Enum
+import pdb
+import math 
 
 class five_value(Enum):
    ZERO = 0
@@ -55,12 +57,11 @@ class Node:
         self.value = None
         self.unodes = []
         self.dnodes = []
-        self.scoap = {}
 
         # Saeed does not confirm
-        self.cpt = 0
-        self.sa0 = 0
-        self.sa1 = 0
+        # self.cpt = 0
+        # self.sa0 = 0
+        # self.sa1 = 0
         # self.index = 0 # should be removed
         # self.faultlist_dfs = []
         # self.parallel_value = 0
@@ -71,24 +72,31 @@ class Node:
         self.CC1 = None
         self.CO = None
 
-        # STAFAN measures
+        # STAFAN for all test measures
         self.one_count = 0      # count
         self.zero_count = 0     # count
-
         self.sen_count = 0      # count
-        self.S = 0.0            # prob
-        self.C1 = 0.0           # prob
-        self.C0 = 0.0           # prob
-        self.B1 = None          # prob
-        self.B0 = None          # prob
-
-        # GNN-CAD (our work)
-        self.sense = True       # Boolean, maybe redundant
-        self.D1 = False         # Boolean
-        self.D0 = False         # Boolean
         self.D1_count = 0       # Count
         self.D0_count = 0       # Count
-    
+        
+        # STAFAN for every test measures
+        self.sense = False      # Boolean, maybe redundant
+        self.D1 = False         # Boolean
+        self.D0 = False         # Boolean
+
+        
+        # STAFAN will calculate these
+        # Forward: 
+        self.S = None           # prob
+        self.C1 = None          # prob
+        self.C0 = None          # prob
+        self.D0_p = None        # prob
+        self.D1_p = None        # prob
+        # Backward
+        self.B1 = None          # prob
+        self.B0 = None          # prob
+        
+                    
     def __str__(self):
         return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
             str(len(self.unodes)), str(len(self.dnodes))]))
@@ -172,13 +180,16 @@ class Node:
             print("Error: Not implemented yet")
 
 
-    def is_detectable(self):
+    def semi_detect(self):
         ''' checks if a node is detectable with current values
         logic-sim and sense should be pre-calculated
         updates D0/D1 flag and D0/D1 count
         D_count is set to 0 when circuit is initilized
-        D0:
-        D1:
+        semi_detect means if all signals of all nodes (including this node) 
+         .... are independent (so no reconvergence and etc.), 
+         .... the fault on this node can propagate to PO. 
+        D0: this test semi-detects SS@1 for this node
+        D1: this test semi-detects SS@0 for this node
         '''
         # Jiayi please check this method,
         self.D1 = False
@@ -292,10 +303,7 @@ class NOT(Node):
         # Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        if self.unode[0] == 2:
-            self.value = 2
-        else: 
-            self.value = 1 if (self.unode[0] == 0) else 0
+        self.value = 1 if (self.unode[0] == 0) else 0
 
 
     def eval_CC(self):
@@ -353,7 +361,7 @@ class NOR(Node):
         if (self.C1 == 0) or (self.C0 == 0):
             raise NameError("NOR gate, C0 or C1 is zero")
         for unode in self.unodes:
-            unode.B1 = self.BO * (unode.S - self.C1) / unode.C1
+            unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
 
 
@@ -469,14 +477,20 @@ class BRCH(Node):
         self.unodes[0].CO = min([node.CO for node in self.unodes[0].dnodes])
 
     def stafan_b(self):
-        # STAFAN-B measurement for a stem had redundancy, similar to SCOAP-CO
-        # We currently do not consider more than 3 branches per stem
-        # TODO: fix the issue of 3 branches limitation 
-        brch = self.unodes[0].dnodes
-        if len(brch) != 2:
-            raise NameError("Stem with other than 2 branches, not covered yet")
-        self.unodes[0].B1 = brch[0].B1 + brch[1].B1 - (brch[0].B1 * brch[1].B1)
-        self.unodes[0].B0 = brch[0].B0 + brch[1].B0 - (brch[0].B0 * brch[1].B0)
+        # STAFAN-B measurement for a stem has redundancy, similar to SCOAP-CO
+        # This calculation is VERY approximate, read STAFAN paper
+        brchs = self.unodes[0].dnodes
+        brchs_B1_c = [(1-brch.B1) for brch in brchs]
+        brchs_B0_c = [(1-brch.B0) for brch in brchs]
+        self.unodes[0].B1 = 1 - mul_list(brchs_B1_c)
+        self.unodes[0].B0 = 1 - mul_list(brchs_B0_c)
+
+
+def mul_list(arr):
+    res = 1
+    for a in arr:
+        res  = res*a
+    return res
 
 
 class podem_node_5val():
