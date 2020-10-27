@@ -294,33 +294,3 @@ class Modelsim():
         origin_output_file.close()
         new_output_file.close()
 
-    def logicsim(self,circuit): 
-        """
-        This method do the logic simulation in our platform
-        First: generate a output folder in ../data/modelsim/circuit_name/ directory
-        Second: read a input file in input folder
-        Third: generate a output file in output folder by using logic_sim() function
-        """
-        if os.path.exists(self.path + 'output/') == False:
-            os.mkdir(self.path + 'output/')
-        fr=open(self.input_file_name, mode='r')
-        fw=open(self.path+'output/'+self.circuit_name + '_out.txt',mode='w')
-        fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in circuit.PI]) + "\n")
-        fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in circuit.PO]) + "\n")
-        line=fr.readline()
-        i=1
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            circuit.logic_sim(line_split)
-            fw.write('Test # = '+str(i)+'\n')
-            fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in circuit.PO]) + "\n")
-            i+=1
-        fw.close()
-
-        

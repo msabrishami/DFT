@@ -56,7 +56,8 @@ def main():
     sim.project(circuit)
     tp_fname = sim.gen_rand_tp(tp_count=200, tp_fname="sample-200.txt")
     sim.gen_tb(tp_fname)
-    sim.simulation()
+    # sim.simulation()
+    circuit.logic_sim_file(in_fname=tp_fname, out_fname="temp-output.log")
     exit()
     # Test Circuit LogicSim
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")

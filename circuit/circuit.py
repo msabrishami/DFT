@@ -273,6 +273,33 @@ class Circuit:
             else:
                 node.imply()
 
+    
+    def logic_sim_file(self, in_fname, out_fname): 
+        """
+        This method does the logic simulation in our platform
+        First: generate a output folder in ../data/modelsim/circuit_name/ directory
+        Second: read a input file in input folder
+        Third: generate a output file in output folder by using logic_sim() function
+        """
+        fr = open(in_fname, mode='r')
+        fw = open(out_fname, mode='w')
+        fw.write('Inputs: ')
+        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
+        fw.write('Outputs: ')
+        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
+        line=fr.readline()
+        i=1
+        for line in fr.readlines():
+            line=line.rstrip('\n')
+            line_split=line.split(',')
+            for x in range(len(line_split)):
+                line_split[x]=int(line_split[x])
+            self.logic_sim(line_split)
+            fw.write('Test # = '+str(i)+'\n')
+            fw.write(line+'\n')
+            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
+            i+=1
+        fw.close()
 
     def golden_test(self, golden_io_filename):
         infile = open(golden_io_filename, "r")
