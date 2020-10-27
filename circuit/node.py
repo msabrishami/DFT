@@ -95,6 +95,12 @@ class Node:
         # Backward
         self.B1 = None          # prob
         self.B0 = None          # prob
+        self.CB1 = None          # prob
+        self.CB0 = None          # prob
+        self.B = None          # prob
+
+        # Test Point Insertion Measurements
+        self.seen = False
         
                     
     def __str__(self):
@@ -120,6 +126,9 @@ class Node:
         ''' backward assignment of STAFAN observability for unodes of this node''' 
         raise NotImplementedError()
 
+    def IMOP_nvidia_lev():
+        return 2
+    
     # TODO: Saeed thinks many of these are redundant! 
     '''
     def add_unodes(self, unode):
@@ -152,7 +161,7 @@ class Node:
         return [n.value for n in res] if value else res
 
     # TODO Move to children later
-    def is_sensible(self):
+    def is_sensible(self, count=True):
         ''' calculates if this node can propagate the gate infront of it.
         i.e. if current value changes, down-node (output gate) value will change.
         '''
@@ -191,7 +200,6 @@ class Node:
         D0: this test semi-detects SS@1 for this node
         D1: this test semi-detects SS@0 for this node
         '''
-        # Jiayi please check this method,
         self.D1 = False
         self.D0 = False
 
@@ -253,7 +261,7 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "D0#", "D1#", "D0%", "D1%"]
+                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -282,6 +290,9 @@ class Node:
             print("{:.2f}\t".format(self.S), end="")
             print("{:.2f}\t".format(self.B0), end="")
             print("{:.2f}\t".format(self.B1), end="")
+            print("{:.2f}\t".format(self.CB0), end="")
+            print("{:.2f}\t".format(self.CB1), end="")
+            print("{:.2f}\t".format(self.B), end="")
             print("{}\t".format(str(self.D0_count).zfill(4)), end="")
             print("{}\t".format(str(self.D1_count).zfill(4)), end="")
             print("{:.2f}\t".format(self.D0_p), end="")

@@ -60,9 +60,10 @@ def main():
     
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.STAFAN_CS(10000)
+    circuit.STAFAN_CS(20000)
     circuit.STAFAN_B()
     circuit.co_ob_info()
+    print(circuit)
     exit()
 
 

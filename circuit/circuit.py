@@ -205,11 +205,13 @@ class Circuit:
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
-        res.append("#PI: " + str(len(self.PI)))
-        res.append("#PP: " + str(len(self.PO)))
+        res.append("#PI: " + str(len(self.PI)) + " >> ")
+        res.append(str([x.num for x in self.PI]))
+        res.append("#PO: " + str(len(self.PO)) + " >> ")
+        res.append(str([x.num for x in self.PO]))
 
-        for num, node in self.nodes.items():
-            res.append(str(node))
+        # for num, node in self.nodes.items():
+        #     res.append(str(node))
         return "\n".join(res)
     
 
@@ -318,6 +320,7 @@ class Circuit:
         for node in reversed(self.nodes_lev):
             node.eval_CO()
 
+
     def STAFAN_reset_counts(self):
         for node in self.nodes_lev:
             node.one_count = 0
@@ -375,6 +378,14 @@ class Circuit:
             node.D1_p = node.D1_count / num_pattern
 
 
+    def IMOP_nvidia(self, target):
+        for node in self.nodes_lev:
+            node.seen = False
+
+        res = target.IMOP_nvidia_lev(level=5, HTO_th=0.1)
+    
+    
+    
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
         # calculate observability
@@ -384,7 +395,9 @@ class Circuit:
         
         for node in reversed(self.nodes_lev):
             node.stafan_b()
- 
+            node.CB1 = node.C1 * node.B1
+            node.CB0 = node.C0 * node.B0
+            node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
     def dfs(self):
         """
