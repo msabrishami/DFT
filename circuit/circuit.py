@@ -16,7 +16,6 @@ import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
 
-# Note: the node-ID in ckt is just an integer number
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 """
 # Tasks for the DFT team:
@@ -47,7 +46,7 @@ class Circuit:
         
         # Saeed confirms using these attributes
         self.c_name = c_name
-        self.nodes = {}     # dict of all nodes, key is now int node-num
+        self.nodes = {}     # dict of all nodes, key is now string node-num
         self.nodes_lev = [] # list of all nodes, ordered by level
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
@@ -80,9 +79,9 @@ class Circuit:
         if len(line) < 6:
             return 
         
-        attr = [int(x) for x in line.split()]
-        n_type = ntype(attr[0]).name
-        g_type = gtype(attr[2]).name
+        attr = line.split()
+        n_type = ntype(int(attr[0])).name
+        g_type = gtype(int(attr[2])).name
         num = attr[1]
         
         if n_type == "PI" and g_type=="IPT":
@@ -126,7 +125,7 @@ class Circuit:
     def connect_node(self, line):
         # As we move forward, find the upnodes and connects them
         
-        attr = [int(x) for x in line.split()]
+        attr = line.split()
         ptr = self.nodes[attr[1]]
         
         # ntype=PI and gtype=IPT: good
@@ -302,10 +301,12 @@ class Circuit:
         fw.close()
 
     def golden_test(self, golden_io_filename):
+        # compares the results of logic-sim of this circuit, 
+        #  ... provided a golden input/output file
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
-        PI_t_order  = [int(x[1:]) for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [int(x[1:]) for x in lines[1][8:].strip().split(',')]
+        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
         print(PI_t_order)
         PI_num = [x.num for x in self.PI]
         print(PI_num)

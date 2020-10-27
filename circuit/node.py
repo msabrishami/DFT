@@ -33,7 +33,7 @@ class Node:
     A node also represents the upnode gate, as it is always unique.
     Difference of node type and gate type important, refer to ckt document.
     value:      value on the node, currently only accepting 2-value logic
-    num:        the node number as in ckt format
+    num:        the node number as in ckt format, type is string
     lev:        level of the node in circuit
     gtype:      the upnode gate type
                 supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND
