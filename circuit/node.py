@@ -20,6 +20,8 @@ class gtype(Enum):
     NOT = 5
     NAND = 6
     AND = 7
+    XNOR = 8
+    BUFF = 9
 
 class ntype(Enum):
     GATE = 0
@@ -457,6 +459,36 @@ class XOR(Node):
     def eval_CO(self):
         if len(self.unodes) != 2:
             raise NameError('XOR with more than 2 inputs not implemented')
+        self.unodes[0].CO = min(self.unodes[1].CC0, self.unodes[1].CC1) + self.CO + 1
+        self.unodes[1].CO = min(self.unodes[0].CC0, self.unodes[0].CC1) + self.CO + 1
+    
+    def stafan_b(self):
+        for unode in self.unodes:
+            unode.B1 = self.B0
+            unode.B0 = self.B1
+
+
+class XOR(Node):
+    def __init__(self, n_type, g_type, num):
+        Node.__init__(self, ntype, g_type, num)
+
+    def imply(self):
+        self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
+
+    def eval_CC(self):
+        #TODO: only 2 inputs supported for now, we can later add multiple inputs
+        if len(self.unodes) != 2:
+            raise NameError('XOR with more than 2 inputs not implemented')
+        # u_CC1 = [unode.CC1 for unode in self.unodes]
+        # u_CC0 = [unode.CC0 for unode in self.unodes]
+        self.CC1 = 1 + min(self.unodes[0].CC0+self.unodes[1].CC0, 
+                self.unodes[0].CC1+self.unodes[1].CC1)
+        self.CC0 = 1 + min(self.unodes[0].CC0+self.unodes[1].CC1, 
+                self.unodes[0].CC1+self.unodes[1].CC0)
+
+    def eval_CO(self):
+        if len(self.unodes) != 2:
+            raise NameError('XNOR with more than 2 inputs not implemented')
         self.unodes[0].CO = min(self.unodes[1].CC0, self.unodes[1].CC1) + self.CO + 1
         self.unodes[1].CO = min(self.unodes[0].CC0, self.unodes[0].CC1) + self.CO + 1
     
