@@ -52,8 +52,12 @@ def main():
     circuit.read_ckt()
     circuit.lev()
     # circuit.gen_test_pattern_file(10, fname = "mytp.txt")
-    # sim = Modelsim()
-    # sim.tb_gen(circuit, 100)
+    sim = Modelsim()
+    sim.project(circuit)
+    tp_fname = sim.gen_rand_tp(tp_count=200, tp_fname="sample-200.txt")
+    sim.gen_tb(tp_fname)
+    sim.simulation()
+    exit()
     # Test Circuit LogicSim
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432

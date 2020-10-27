@@ -1,42 +1,89 @@
+
 import os
 import subprocess
 import circuit
+import config
+from shutil import copyfile
+
+#TODO: add this comment to documentation: 
+# Objet can be re-used for different circuits
+# Each circuit is referred to as a project
 class Modelsim():
     def __init__(self):
-        self.input_file_name=''
-        self.circuit_name=''
-        self.path=''
+
+        self.circuit_name=None
+        self.input_file_name=None
+        self.path=None  # this is project path, for a specific netlist
+
+        if os.path.exists(config.MODELSIM_DIR): 
+            print("Modelsim project folder exists: {}".format(config.MODELSIM_DIR))
+        else:
+            print("Creating a Modelsim project: {}".format(config.MODELSIM_DIR))
+            os.mkdir(config.MODELSIM_DIR)
 
     def __del__(self):
         pass
+    
+    def project(self, circuit):
+        if self.circuit_name != None:
+            print("Overwriting a previous project, are u sure?")
+            raise NameError("Overwriting a project not implemented yet!")
+        self.circuit_name = circuit.c_name  #TODO redundant, remove
+        self.circuit = circuit
+        self.path = os.path.join(config.MODELSIM_DIR, circuit.c_name)
+        self.path_in = os.path.join(self.path, config.MODELSIM_INPUT_DIR)
+        self.path_gold = os.path.join(self.path, config.MODELSIM_GOLD_DIR)
+        self.path_out = os.path.join(self.path, config.MODELSIM_OUTPUT_DIR)
+        if os.path.exists(self.path): 
+            print("Modelsim project folder for circuit {} alread exists in {}".format(
+                self.circuit_name, self.path))
+        else: 
+            print("Creating a Modelsim project folder for circuit {} in {}".format(
+                self.circuit_name, self.path))
+            os.mkdir(self.path)
+        
+        if not os.path.exists(self.path_in):
+            os.mkdir(self.path_in)
+        
+        if not os.path.exists(self.path_gold):
+            os.mkdir(self.path_gold)
+        
+        if not os.path.exists(self.path_out):
+            os.mkdir(self.path_out)
 
-    def tb_gen(self, circuit, tp_count):
-        """ What does this method do Ting-Yu???
+        return 
+    
+    def gen_rand_tp(self, tp_count, tp_fname=None):
+        # generates a random test patter file for this circuit
+        # returns the path to the file
+        print("Generating a test pattern file in {}".format(self.path_in))
+        if tp_fname is None:
+            tp_fname = os.path.join(self.path_in, 
+                    self.circuit_name + "_" + str(tp_count) + "_tp_b.txt")
+        else:
+            tp_fname = os.path.join(self.path_in, tp_fname)
+        
+        self.circuit.gen_tp_file(tp_count, fname=tp_fname)
+        return tp_fname 
+
+    def gen_tb(self, tp_fname):
         """ 
-        # First: generate a input test patter file inside this path 
-        #TODO the name of the test pattern file needs to be changed 
-        print("Generating a Modelsim project folder in ../data")
-        if os.path.exists('../data/modelsim') == False:
-            os.mkdir('../data/modelsim')
-        self.circuit_name=circuit.c_name
-        path = '../data/modelsim/' + circuit.c_name + '/'
-        self.path = path
-        print("Generating a Modelsim project folder for circuit " + self.circuit_name +' in ' + self.path)
-        if os.path.exists(path) == False:
-            os.mkdir(path)
-        if os.path.exists(path+'input') == False:
-            os.mkdir(path+'input')
-        print("Generating a test pattern file in " + self.path +'input/')
-        circuit.gen_tp_file(tp_count, fname=path+ 'input/'  + self.circuit_name + "_" + str(tp_count) + "_tp_" + "b" + ".txt")
-        self.input_file_name=path + 'input/' + self.circuit_name + "_" + str(tp_count) + "_tp_" + "b" + ".txt"
+        Third: generate test_bench.v, run.sh, run.do for the specific circuit 
+           in the directory MODELSIM_DIR/circuit_name/
+        """ 
+        # TODO: we only have one tb verilog file at one time and that's cname_tb.v 
+        tb_fname = os.path.join(self.path, self.circuit_name + "_tb.v")
+        
+        # TODO: I ma cheating here, please fix
+        circuit = self.circuit
+        
         #check number of input test patterns
-        #print(self.input_file_name)
-        fr=open(self.input_file_name, mode='r')
-        line_list=fr.readlines()
-        number_of_test_patterns=len(line_list)-1
+        fr = open(tp_fname, mode='r')
+        line_list = fr.readlines()
+        tp_count = len(line_list)-1
         fr.close()
-
-        fw = open(path + str(circuit.c_name) + "_tb.v", mode='w')
+        
+        fw = open(tb_fname, mode='w')
         fw.write("`timescale 1ns/1ns" + "\n")
         fw.write('module ' + str(circuit.c_name) + "_tb;" + '\n')
         fw.write("integer fi, fo;\n")
@@ -61,7 +108,7 @@ class Modelsim():
                 fw.write(');\n')
 
         fw.write('initial begin\n')
-        fw.write('\tfi = $fopen("'+ 'input/'  + self.circuit_name + "_" + str(tp_count) + "_tp_" + "b" + ".txt"+'","r");\n')
+        fw.write('\tfi = $fopen("'+ './input/'  + self.circuit_name + "_" + str(tp_count) + "_tp_" + "b" + ".txt"+'","r");\n')
         fw.write('\tstatusI = $fscanf(fi,"')
         for j in range(len(circuit.PI)):
             fw.write('%s')
@@ -97,7 +144,7 @@ class Modelsim():
                 out_index += 1
             else:
                 fw.write('\\n");\n')
-        for i in range(number_of_test_patterns):
+        for i in range(tp_count):
             fw.write('\t//test pattern' + str(i) + '\n')
             fw.write('\tstatusI = $fscanf(fi,"')
             for j in range(len(circuit.PI)):
@@ -178,13 +225,14 @@ class Modelsim():
         fw.write('end\n')
         fw.write('endmodule\n')
         fw.close()
+        
         #create run.sh
-        # path = './' + str(circuit.c_name) + '/'
-        fw = open(path + "run.sh", mode='w')
+        fw = open(os.path.join(self.path, "run.sh"), mode='w')
         fw.write('vsim -c -do do_'+str(circuit.c_name)+'.do\n')
         fw.close()
+        
         #create run.do
-        fw = open(path + 'do_'+str(circuit.c_name)+'.do', mode='w')
+        fw = open(os.path.join(self.path, 'do_'+str(circuit.c_name)+'.do'), mode='w')
         fw.write('vlib work\n')
         fw.write('vmap work work\n')
         fw.write('vlog -work work '+str(circuit.c_name)+'.v\n')
@@ -195,26 +243,25 @@ class Modelsim():
         fw.close()
 
 
-    def modelsim_simulation(self):
-        """ #TODO: What does this method do???
-        How should someone who is using this know that the process
-        will run in the background? 
-        Output:
-            the golden IP file will be generated 
+    def simulation(self):
+        # TODO: please fix the paths and other things just like what Saeed did
         """ 
-        if os.path.exists(self.path + '/gold') == False:
-            os.mkdir(self.path + '/gold')
-        #print(self.path)
+        First: copy verilog file from ../data/ckt to ../data/modelsim/circuit_name/
+        Second: This function will call a subprocess which will run the ModelSim in the background(No GUI pop up). After it finishes, ModelSim will close automatically.
+        Third: ModelSim will generate the golden IP file in gold folder
+        Fourth: After ModelSim finishes, the function will end
+        """ 
+        copyfile(os.path.join(config.VERILOG_DIR, self.circuit_name + ".v"), 
+                os.path.join(self.path, self.circuit_name+'.v'))
         subprocess.call(['sh','run.sh'], cwd = self.path)
-        #print('modelsim end')
+
 
     def check(self):
-        """ What does this method do Ting-Yu??? 
+        """
         This method checks if the circuit.logicsim matches golden modelsim
-            results
+        First: read output files from our platfrom and ModelSim
+        Second: check if two files are the same
         """ 
-
-        #do the simulation on our platform first
         #output file created by our platform
         origin_output_file = open(self.path+'output/'+self.circuit_name + '_out.txt', "r+")
         #output file form ModelSim
@@ -247,7 +294,13 @@ class Modelsim():
         origin_output_file.close()
         new_output_file.close()
 
-    def logicsim(self,circuit):   
+    def logicsim(self,circuit): 
+        """
+        This method do the logic simulation in our platform
+        First: generate a output folder in ../data/modelsim/circuit_name/ directory
+        Second: read a input file in input folder
+        Third: generate a output file in output folder by using logic_sim() function
+        """
         if os.path.exists(self.path + 'output/') == False:
             os.mkdir(self.path + 'output/')
         fr=open(self.input_file_name, mode='r')
@@ -263,14 +316,10 @@ class Modelsim():
             line_split=line.split(',')
             for x in range(len(line_split)):
                 line_split[x]=int(line_split[x])
-            #print(line_split)
             circuit.logic_sim(line_split)
             fw.write('Test # = '+str(i)+'\n')
             fw.write(line+'\n')
             fw.write(",".join([str(node.value) for node in circuit.PO]) + "\n")
-            #for node in circuit.nodes_lev:
-                #print(str(node.value),end=" ")
-            #print('\n')
             i+=1
         fw.close()
 
