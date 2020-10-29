@@ -120,8 +120,39 @@ class Circuit:
         elif node.ntype == "PO":
             self.PO.append(node)
         return node 
-
     
+    def make_PO(self, target):
+        """ connects this target node to a PO using a branch 
+        """
+        if target.ntype == "PO":
+            return 
+        # target becomes stem, create new branches:
+        new_brch = BRCH("PO", "BRCH", target.num+"-IPO") 
+        old_brch = BRCH("FB", "BRCH", target.num+"-OLD")
+
+        # fixing unodes for new branches
+        new_brch.unodes.append(target)
+        old_brch.unodes.append(target)
+        old_brch.dnodes = target.dnodes
+        
+        # fixing unodes for target.dnodes
+        # if target was stem:
+        if len(target.dnodes) > 1:
+            for dnode in target.dnodes:
+                dnode.unodes = [old_brch]
+        # if target was a gate
+        else:
+            new_unodes = []
+            for unode in target.dnodes[0].unodes:
+                if unode.num != target.num:
+                    new_unodes.append(unode)
+            new_unodes.append(old_brch)
+            target.dnodes[0].unodes = new_unodes
+
+        self.PO.append(new_brch)
+        self.nodes[new_brch.num] = new_brch
+
+
     def connect_node(self, line):
         # As we move forward, find the upnodes and connects them
         
@@ -405,28 +436,103 @@ class Circuit:
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
 
+    def TPI_stat(self, HTO_th, HTC_th):
+        """ this is a simple division of nodes, 
+        the element C*B can also be used. 
+        """
+        for node in self.nodes_lev:
+            if (node.B0 >= HTO_th) and (node.C0 >= HTC_th):
+                node.stat["SS@1"] = "ETD"
+            elif (node.B0 >= HTO_th) and (node.C0 < HTC_th):
+                node.stat["SS@1"] = "HTC"
+            elif (node.B0 < HTO_th) and (node.C0 >= HTC_th):
+                node.stat["SS@1"] = "HTO"
+            else: 
+                node.stat["SS@1"] = "HTD"
 
-    def IMOP_nvidia(self, target):
+            if (node.B1 >= HTO_th) and (node.C1 >= HTC_th):
+                node.stat["SS@0"] = "ETD"
+            elif (node.B1 >= HTO_th) and (node.C1 < HTC_th):
+                node.stat["SS@0"] = "HTC"
+            elif (node.B1 < HTO_th) and (node.C1 >= HTC_th):
+                node.stat["SS@0"] = "HTO"
+            else:
+                node.stat["SS@0"] = "HTD"
+
+    
+    """
+    def experiment_1(self):
+        for node in self.nodes_lev:
+            node.stat{"B0_old"} = node.B0
+            node.stat{"B1_old"} = node.B1
+        
+        for node in self.nodes_lev:
+            node.ntype="PO"
+            self.STAFAN_B()
+            for node in self.nodes_lev = 
+    """ 
+
+    def NVIDIA_count(self, op, HTO_th, HTC_th):
+        """ count the number of nodes that change from HTO to ETO 
+        by making node an observation point """ 
+        self.STAFAN_B()
+        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
+        HTO_old = set()
+        for node in self.nodes_lev: 
+            if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
+                HTO_old.add(node.num)
+        orig_ntype = op.ntype
+        self.PO.append(op)
+        op.ntype = "PO"
+        self.STAFAN_B()
+        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
+        HTO_new = set()
+        count = 0
+        for node in self.nodes_lev:
+            if node.num in HTO_old:
+                if (node.stat["SS@0"] != "HTO") and (node.stat["SS@1"] != "HTO"):
+                    # print("\t{} was HTO, but now became ETO".format(node.num))
+                    count = count + 1
+        op.ntype = orig_ntype
+        self.PO = self.PO[:-1]
+        return count
+
+    """
+    def IMOP_1(self, node):
+        # Sum of all the observations of the fan-in cone, only if lower than HTO
+        # if target becomes OP, how many node pass the threshold
+        if node.seen:
+            return 0
+        delta_B0 = node.B0 / node.stat{"B0_old"}
+        delta_B1 = node.B1 / node.stat{"B1_old"}
+        elif delta_B0 < 2 and delta_B1 < 2:
+            # no significant change
+            return 
         for node in self.nodes_lev:
             node.seen = False
 
-        res = target.IMOP_nvidia_lev(level=5, HTO_th=0.1)
-    
-    
+    """
     
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
         # calculate observability
-        for node in self.PO:
-            node.B1 = 1.0
-            node.B0 = 1.0
+        # for node in self.PO:
+        #     print(">>", node.num)
+        #     node.B1 = 1.0
+        #     node.B0 = 1.0
         
         for node in reversed(self.nodes_lev):
+            # with checking node==PO we can add one node in the 
+            # .... middle of the circuit as PO, and stefan is still correct
+            if node in self.PO:
+                node.B0 = 1.0
+                node.B1 = 1.0
             node.stafan_b()
             node.CB1 = node.C1 * node.B1
             node.CB0 = node.C0 * node.B0
             node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
+    
     def dfs(self):
         """
         Deductive fault simulation:

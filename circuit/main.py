@@ -14,6 +14,7 @@ from modelsim_simulator import Modelsim
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 from c432_logic_sim import c432_sim
+import config
 
 def check_gate_netlist(circuit, total_T=1):
 
@@ -46,6 +47,7 @@ def main():
 
     print("\n======================================================")
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
+    print("======================================================\n")
     # start_time = time.time()
 
     circuit = Circuit(args.ckt)
@@ -61,14 +63,32 @@ def main():
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
 
-    exit()
-
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.STAFAN_CS(100)
+    circuit.STAFAN_CS(args.tp)
     circuit.STAFAN_B()
-    circuit.co_ob_info()
-    print(circuit)
+    circuit.TPI_stat(HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
+    
+    nodes_HTO = []
+    for node in circuit.nodes_lev:
+        if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):
+            nodes_HTO.append(node)
+
+    for target in nodes_HTO: 
+
+        print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
+            target.num, target.B1, target.B0, 
+            circuit.NVIDIA_count(target, 0.05, 0.05))
+            )
+            
+    """
+    for num, node in circuit.nodes.items():
+        print("========================")
+        print("Node {} became OP".format(node))
+        circuit.NVIDIA_count(node, HTO_th=0.05, HTC_th=0.05)
+    """
+
+    # print(circuit)
     exit()
 
 

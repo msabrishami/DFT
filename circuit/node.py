@@ -60,6 +60,10 @@ class Node:
         self.unodes = []
         self.dnodes = []
 
+        # For PFS:
+        self.value_p = None # This is a Word
+        self.mask = None # This is a Word
+
         # Saeed does not confirm
         # self.cpt = 0
         # self.sa0 = 0
@@ -102,8 +106,7 @@ class Node:
         self.B = None          # prob
 
         # Test Point Insertion Measurements
-        self.seen = False
-        
+        self.stat = {}
                     
     def __str__(self):
         return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
@@ -113,6 +116,14 @@ class Node:
         ''' forward implication for a logic gate ''' 
         raise NotImplementedError()
     
+    def imply_p(self):
+        ''' forward parallel implication for a logic gate ''' 
+        raise NotImplementedError()
+
+    def imply_pfs(self, fault_pos):
+        self.imply_p()
+        self.value_p = (~self.mask & self.value_p) | (self.mask & fault_pos)
+
     def unodes_val(self):
         return [unode.value for unode in self.unodes]
     
@@ -128,8 +139,6 @@ class Node:
         ''' backward assignment of STAFAN observability for unodes of this node''' 
         raise NotImplementedError()
 
-    def IMOP_nvidia_lev():
-        return 2
     
     # TODO: Saeed thinks many of these are redundant! 
     '''
@@ -263,7 +272,8 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%"]
+                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%",
+                    "SS@0", "SS@1"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -295,10 +305,12 @@ class Node:
             print("{:.2f}\t".format(self.CB0), end="")
             print("{:.2f}\t".format(self.CB1), end="")
             print("{:.2f}\t".format(self.B), end="")
-            print("{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("{}\t".format(str(self.D1_count).zfill(4)), end="")
+            # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
+            # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
             print("{:.2f}\t".format(self.D0_p), end="")
-            print("{:.2f}\t".format(self.D1_p))
+            print("{:.2f}\t".format(self.D1_p), end="")
+            print("{}\t".format(self.stat["SS@0"]), end="")
+            print("{}\t".format(self.stat["SS@1"]))
     
 
 class BUFF(Node):
@@ -374,6 +386,11 @@ class NOR(Node):
 
     def imply(self):
         self.value = 0 if (1 in self.unodes_val()) else 1
+    
+    def imply_p(self):
+        self.value_p = self.unodes[0].value_p
+        for unode in self.unodes[1:]:
+            self.value_p = ~ (self.value_p | unode.value_p)
 
     def eval_CC(self):
         self.CC1 = 1 + sum([unode.CC0 for unode in self.unodes])
@@ -468,7 +485,7 @@ class XOR(Node):
             unode.B0 = self.B1
 
 
-class XOR(Node):
+class XNOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, ntype, g_type, num)
 
