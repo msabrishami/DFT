@@ -21,7 +21,7 @@ The package was first developed by a group of University of Southern California 
 <cite>[Amir Erfan Eshratifar][19]</cite>  <br />
 
 
-[comment]: # **Graduate students who worked with this platform during their EE658 course** *(equal contribution):* <br /> 
+[comment]: # (**Graduate students who worked with this platform during their EE658 course** *(equal contribution):* <br /> )
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
 Yang Shen  <cite>[LinkedIn][14]</cite> <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
