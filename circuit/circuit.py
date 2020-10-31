@@ -187,7 +187,118 @@ class Circuit:
 
     
     def read_verilog(self):
-        raise NameError("Not implemented yet, DFT team is responsible")
+        """
+        Read circuit from .v file, each node as an object
+        """
+        path = "../data/verilog/{}.v".format(self.c_name)
+
+        ## Read the file and Deal with comment and ; issues
+        infile = open(path, 'r')
+        eff_line = ''
+        lines = infile.readlines()
+        new_lines=[]
+        for line in lines:
+            # eliminate comment first
+            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
+            if line_syntax:
+                line = line[:line.index('//')]
+
+            # considering ';' issues
+            if ';' not in line and 'endmodule' not in line:
+                eff_line = eff_line + line.rstrip()
+                continue
+            line = eff_line + line.rstrip()
+            eff_line = ''
+            new_lines.append(line)
+        infile.close()
+
+        ## 1st time Parsing: Creating all nodes
+        # Because the ntype and gtype information are separate, we need to use Dict to collect all information
+        # Key: num
+        # Value: num, ntype and gtype
+        Dict = {}
+        for line in new_lines:
+            if line != "":
+                # Wire
+                line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+                if line_syntax:
+                    for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
+                        Dict[n[1:]] = {'num': n[1:], 'n_type':ntype(0).name, 'g_type':None}
+
+                # PI: n_type = 0 g_type = 0
+                line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+                if line_syntax:
+                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
+                        new_node = self.node_generation({'num': n[1:], 'n_type': ntype(1).name, 'g_type': self.gtype_translator('ipt')})
+                        self.nodes[new_node.num] = new_node
+                        self.PI.append(new_node)
+
+                # PO n_type = 3 but g_type has an issue
+                line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+                if line_syntax:
+                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
+                        Dict[n[1:]] = {'num': n[1:], 'n_type': ntype(3).name, 'g_type': None}
+
+                # Gate reading and Making Connection of nodes
+                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+                if line_syntax:
+                    if line_syntax.group(1) != 'module':
+                        node_order = line_syntax.group(3).replace(' ', '').split(',')
+                        # Nodes Generation
+                        Dict[node_order[0][1:]]['g_type'] = self.gtype_translator(line_syntax.group(1))
+                        new_node = self.node_generation(Dict[node_order[0][1:]])
+                        self.nodes[new_node.num] = new_node
+                        if new_node.ntype == 'PO':
+                            self.PO.append(new_node)
+
+        # 2nd time Parsing: Making All Connections
+        for line in new_lines:
+            if line != "":
+                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+                if line_syntax:
+                    if line_syntax.group(1) != 'module':
+                        node_order = line_syntax.group(3).replace(' ', '').split(',')
+                        for i in range(1, len(node_order)):
+                            # Making connections
+                            self.nodes[node_order[0][1:]].unodes.append(self.nodes[node_order[i][1:]])
+                            self.nodes[node_order[i][1:]].dnodes.append(self.nodes[node_order[0][1:]])
+
+        ###### Branch Generation ######
+        # The basic way is looking for those nodes with more-than-1 fan-out nodes
+        # Creating a new FB node
+        # Inserting FB node back into the circuit
+        # We cannot change the dictionary size while in its for loop,
+        # so we create a new dictionary and integrate it back to nodes at the end
+        B_Dict = {}
+        for node in self.nodes.values():
+            if len(node.dnodes) > 1:
+                for index in range(len(node.dnodes)):
+                    ## New BNCH
+                    FB_node = self.node_generation({'num': node.num + '-' + str(index+1), 'n_type':ntype(2).name, 'g_type':gtype(1).name})
+                    B_Dict[FB_node.num] = FB_node
+                    self.insert_node(node, node.dnodes[0], FB_node)
+        self.nodes.update(B_Dict)
+
+    def read_ckt(self):
+        """
+        Read circuit from .ckt file, each node as an object
+        """
+        path = "../data/ckt/{}.ckt".format(self.c_name)
+        infile = open(path, 'r')
+        lines = infile.readlines()
+        self.nodes= {}
+
+        # First time over the netlist
+        for line in lines:
+            new_node = self.add_node(line.strip())
+            self.nodes[new_node.num] = new_node
+            
+        for line in lines:
+            self.connect_node(line.strip())
+
+
+
+
 
     def read_ckt(self):
         """
