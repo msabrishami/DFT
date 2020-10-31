@@ -186,6 +186,81 @@ class Circuit:
             print("ERROR: not known!", ptr.num)
 
     
+    ## Inputs: Verilog gate input formats
+    ## Outputs: gtype corresponding gate name
+    def gtype_translator(self, gate_type):
+        if gate_type == 'ipt':
+            return gtype(0).name
+        elif gate_type == 'xor':
+            return gtype(2).name
+        elif gate_type == 'or':
+            return gtype(3).name
+        elif gate_type == 'nor':
+            return gtype(4).name
+        elif gate_type == 'not':
+            return gtype(5).name
+        elif gate_type == 'nand':
+            return gtype(6).name
+        elif gate_type == 'and':
+            return gtype(7).name
+        ## new node type
+        elif gate_type == 'xnor':
+            return gtype(8).name
+        elif gate_type == 'buf':
+            return gtype(9).name
+
+
+    ## This function is used for inserting the BRCH node
+    ## u_node and d_node are connected originally
+    ## i_node is the node be inserted between u_node and d_node
+    def insert_node(self, u_node, d_node, i_node):
+        u_node.dnodes.remove(d_node)
+        u_node.dnodes.append(i_node)
+        d_node.unodes.remove(u_node)
+        d_node.unodes.append(i_node)
+        i_node.unodes.append(u_node)
+        i_node.dnodes.append(d_node)
+
+    ## According to the Dict, this function will return the specific node
+    ## It is similar to part of add_node()
+    def node_generation(self, Dict):
+        if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
+            node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+        elif Dict['n_type'] == "FB" and Dict['g_type'] == "BRCH":
+            node = BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+        elif Dict['n_type'] == "GATE" and Dict['g_type'] == "BRCH":
+            raise NotImplementedError()
+
+        elif Dict['n_type'] == "GATE" or Dict['n_type'] == "PO":
+            if Dict['g_type'] == 'XOR':
+                node = XOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'OR':
+                node = OR(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'NOR':
+                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'NOT':
+                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'NAND':
+                node = NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'AND':
+                node = AND(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'BUFF':
+                node = BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            # elif Dict['g_type'] == 'XNOR':
+            #     node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+        else:
+            raise NotImplementedError()
+        return node
+
     def read_verilog(self):
         """
         Read circuit from .v file, each node as an object
