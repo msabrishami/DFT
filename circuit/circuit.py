@@ -751,7 +751,8 @@ class Circuit:
         if os.path.exists(output_path) == False:
             os.mkdir(output_path)
         fr = open(input_path + fname, mode='r')
-        fw = open(output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt',mode='w')
+        output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
+        fw = open(output_path, mode='w')
         # drop the first row of input names
         line = fr.readline()
         # obtain a multiple test patterns list from the input file
@@ -762,23 +763,24 @@ class Circuit:
             for x in range(len(line_split)):
                 line_split[x]=int(line_split[x])
             pattern_list.append(line_split)
-        print(pattern_list)
+        # print(pattern_list)
         for sub_pattern in pattern_list:
-            print("hello pattern list")
+            # print("hello pattern list")
             fault_subset = set(self.dfs_single(sub_pattern))
             fault_sublist = list(fault_subset)
             fault_sublist.sort()
             # print(fault_sublist)
             pattern_str = map(str,sub_pattern)
             pattern_str = ",".join(pattern_str)
-            print(pattern_str)
+            # print(pattern_str)
             fw.write(pattern_str + '\n')
             for fault in fault_sublist:
                 fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-                print(str(fault[0]) + '@' + str(fault[1]) + '\n')
+                # print(str(fault[0]) + '@' + str(fault[1]) + '\n')
             fw.write('\n')
         fr.close()
         fw.close()
+        print("DFS-Separate completed. \nLog file saved in {}".format(output_path))
 
 
     def dfs_multiple(self, fname=None, mode="b"):
@@ -800,7 +802,8 @@ class Circuit:
         if os.path.exists(output_path) == False:
             os.mkdir(output_path)
         fr=open(input_path + fname, mode='r')
-        fw=open(output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt',mode='w')
+        output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
+        fw=open(output_path, mode='w')
         # drop the first row of input names
         line=fr.readline()
         # obtain a multiple test patterns list from the input file
@@ -811,23 +814,23 @@ class Circuit:
             for x in range(len(line_split)):
                 line_split[x]=int(line_split[x])
             pattern_list.append(line_split)
-        print(pattern_list)
+        # print(pattern_list)
         fault_set = set()
         for sub_pattern in pattern_list:
-            print("hello pattern list")
+            # print("hello pattern list")
             fault_subset = set(self.dfs_single(sub_pattern))
             fault_set = fault_set.union(fault_subset)
         # generate output file
         fault_list = list(fault_set)
-        print(fault_list)
+        # print(fault_list)
         fault_list.sort()
         # fault is a tuple like: (1,0): node 1 ss@0
         for fault in fault_list:
              fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-             print(str(fault[0]) + '@' + str(fault[1]) + '\n')
+             # print(str(fault[0]) + '@' + str(fault[1]) + '\n')
         fr.close()
         fw.close()
-     
+        print("DFS-Multiple completed. \nLog file saved in {}".format(output_path))
 
     def get_full_fault_list(self):
         """
