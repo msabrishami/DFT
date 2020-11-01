@@ -6,6 +6,7 @@
 # Saeed:
 **.swp
 data/modelsim/
+data/fault_sim/
 # **.graphml
 **.png
 # python cache file

@@ -53,7 +53,11 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
     circuit.lev()
-    
+   
+    """ Testing PFS """
+    circuit.get_full_fault_list()
+    circuit.pfs_multiple(fname="c17_full_tp_b.txt", mode="b")
+    exit()
 
     """ Testing DFS for single pattern """
     # test1 = circuit.gen_tp()

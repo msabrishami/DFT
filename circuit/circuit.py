@@ -845,164 +845,145 @@ class Circuit:
             self.fault_node_num.append(node.num)
             self.fault_type.append(1)
 
-
-
-    def pfs(self,input_val):
+    
+    def pfs_single(self, input_pattern):
         """
         Parallel Fault Simulation:
-        For a given test pattern,
+        For a given test pattern
+        faults in self.fault_node_num 
         PFS simulates a set of faults detected by the test pattern.
         """
         faultnum = len(self.fault_node_num)
         n = sys.maxsize
         bitlen = int(math.log2(n))+1
 
-        output_num = list()
-        for i in self.nodes_lev:
-            if i.ntype == 'PO':
-                output_num.append(i.num)
+        pass_tot = math.ceil(float(faultnum) / float(bitlen-1))
 
-        node_num = []
-        node_val = []
-
-        node_num = self.input_num_list
-        node_val = input_val
-        # hash map
-        node_input_dict = dict(zip(node_num, node_val))
-
-        # hash map: node_num is key, object of node is value
-        node_all_num = list()
-        for i in self.nodes_lev:
-            node_all_num.append(i.num)
-        node_dict = dict(zip(node_all_num, self.nodes_lev))
-        for i in range(len(node_all_num)):
-            node_dict[node_all_num[i]].parallel_value = 0
-
-        # cal iter
-        if faultnum % (bitlen-1) == 0:
-            iter = int(faultnum / (bitlen - 1))
-        else:
-            iter = int(faultnum / (bitlen - 1))+1
-        #print("the value of iter: %d"%(iter))
-
-        # write result
-        detected_node = []
-        detected_node_value = []
-
-        output_empty = 0
+        # full fault list
         pfs_fault_val = []
         pfs_fault_num = []
+        # pfs_fault_num = self.fault_node_num.copy()
         for n in self.fault_node_num:
             pfs_fault_num.append(n)
         for t in self.fault_type:
             pfs_fault_val.append(t)
-        while (iter != 0):
+
+        detected_fault_num = []
+        detected_fault_value = []
+
+        while (pass_tot != 0):
+            pass_tot -= 1
+            pfs_stuck_values = 0
+            read_fault_ind = 0
+
+            # fault list for one pass
             fault_num = []
             fault_val = []
-            for i in self.nodes_lev:
-                i.sa0 = 0
-                i.sa1 = 0
-            read_fault_ind = 0
-        #print("begin to while")
+            mask_dict = {}  # {key: fault_num, value: mask}
 
             # save bitlen -1 fault
             while(1):
-                content1 = len(pfs_fault_num)
-                if content1==0:
+                if len(pfs_fault_num)==0:
                     break
 
                 fault_val.append(pfs_fault_val.pop())
                 fault_num.append(pfs_fault_num.pop())
 
-
                 read_fault_ind = read_fault_ind + 1
                 if read_fault_ind == bitlen - 1:
                     break
-            for i in range(len(fault_num)):
-                if fault_val[i] == 1:
-                    node_dict[fault_num[i]
-                            ].sa1 = node_dict[fault_num[i]].sa1 + 2**(i+1)
+            
+            # calculate stuck values of faults in this pass of PFS, and mask for each fault_num
+            for i in range(len(fault_val)):
+                pfs_stuck_values = pfs_stuck_values + fault_val[i]*2**i
+
+                if fault_num[i] in mask_dict:
+                    mask_dict[fault_num[i]] = mask_dict[fault_num[i]] + 2**i
                 else:
-                    node_dict[fault_num[i]
-                            ].sa0 = node_dict[fault_num[i]].sa0 + 2**(i+1)
+                    mask_dict[fault_num[i]] = 2**i
+            
+            #for k in range(len(fault_num)):
+                #print(fault_num[k], "@",fault_val[k], "bit ",k)
+            
+            # pfs for one pass
+            node_dict = dict(zip([x.num for x in self.PI], input_pattern))
+            for node in self.nodes_lev:
+                node.pfs_I = 0
+                node.pfs_S = pfs_stuck_values
 
+                # if fault should be inserted in this node
+                if node.num in mask_dict:
+                    node.pfs_I = mask_dict[node.num]
+
+                if node.gtype == "IPT":
+                    node.imply_p(node_dict[node.num])
+                else:
+                    node.imply_p()
+                node.insert_f()
+            
+            # output result
             for i in self.nodes_lev:
-                if i.gtype == 'IPT':
-                    if i.num in node_num:
-                        i.parallel_value = 0
-                        for j in range(bitlen):
-                            i.parallel_value = i.parallel_value + \
-                                (int(node_input_dict[i.num]) << j)
-                        i.parallel_value = ((~i.sa0) & i.parallel_value) | i.sa1
-                elif i.gtype == 'BRCH':
-                    i.parallel_value = ((~i.sa0) & (
-                        i.unodes[0].parallel_value)) | i.sa1
+                if i.ntype == 'PO':
+                    # if some faults can be detected
+                    if (i.pfs_V != 0) and (i.pfs_V != 2**bitlen-1):
+                        pfs_V_str = format(i.pfs_V,"b").zfill(bitlen)
+                        msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
+                        for j in range(bitlen-1):
+                            if j == len(fault_num):
+                                break
+                            if pfs_V_str[bitlen-1-j] != msb_pfs_V:
+                                detected_fault_num.append(fault_num[j])
+                                detected_fault_value.append(fault_val[j])
 
-                elif i.gtype == 'XOR':
-                    for j in range(0, i.fin):
-                        if j == 0:
-                            temp_value = i.unodes[j].parallel_value
-                        else:
-                            temp_value = temp_value ^ i.unodes[j].parallel_value
-                    i.parallel_value = ((~i.sa0) & temp_value) | i.sa1
-                elif i.gtype == 'OR':
-                    for j in range(0, i.fin):
-                        if j == 0:
-                            temp_value = i.unodes[j].parallel_value
-                        else:
-                            temp_value = temp_value | i.unodes[j].parallel_value
-                    i.parallel_value = ((~i.sa0) & temp_value) | i.sa1
-                elif i.gtype == 'NOR':
-                    for j in range(0, i.fin):
-                        if j == 0:
-                            temp_value = i.unodes[j].parallel_value
-                        else:
-                            temp_value = temp_value | i.unodes[j].parallel_value
-                    i.parallel_value = ((~i.sa0) & (~temp_value)) | i.sa1
-                elif i.gtype == 'NOT':
-                    i.parallel_value = ((~i.sa0) & (
-                        ~i.unodes[0].parallel_value)) | i.sa1
-                elif i.gtype == 'NAND':
-                    for j in range(0, i.fin):
-                        if j == 0:
-                            temp_value = i.unodes[j].parallel_value
-                        else:
-                            temp_value = temp_value & i.unodes[j].parallel_value
-                    i.parallel_value = ((~i.sa0) & (~temp_value)) | i.sa1
-                elif i.gtype == 'AND':
-                    for j in range(0, i.fin):
-                        if j == 0:
-                            temp_value = i.unodes[j].parallel_value
-                        else:
-                            temp_value = temp_value & i.unodes[j].parallel_value
-                    i.parallel_value = ((~i.sa0) & temp_value) | i.sa1
-            iter -= 1
+        fault_set = set()
+        for k in range(len(detected_fault_num)):
+            fault_set = fault_set.union({(int(detected_fault_num[k]),detected_fault_value[k])})
 
-            for i in range(read_fault_ind):
-                for j in output_num:
-                    temp = node_dict[j].parallel_value
-                    # t0 is to choose the value responding to the specific fault node in output
-                    # t1 is to move the value to most significant bit
-                    t0 = (temp & (1 << (i+1)))
-                    t1 = t0 << (bitlen-i-2)
-                    t2 = 1 << (bitlen-1)
-                    t3 = t1 & t2
-                    # t4 is to calculate most least bit which is fault free bit
-                    t4 = (temp & 1) << (bitlen-1)
-                    if t3 != t4:
-                        if fault_num[i] not in detected_node:
-                            detected_node.append(fault_num[i])
-                            detected_node_value.append(fault_val[i])
-                            # print(j,fault_num[i],fault_val[i])
-            # output is a set of tuple
-            if output_empty == 0:
-                output = {(detected_node[0], detected_node_value[0])}
-                output_empty += 1
-            for i in range(len(detected_node)):
-                output.add((detected_node[i], detected_node_value[i]))
+        #print("pvs value of each node")
+        #for pvs_node in self.nodes_lev:
+            #print(pvs_node.num, format(pvs_node.pfs_V,"b").zfill(64))    
+        return fault_set
 
-        return output
 
+    def pfs_multiple(self, fname=None, mode="b"):
+        """ prallel fault simulation (pfs) for multiple test patterns
+        the pattern list is obtained as a list consists of sublists of each pattern:
+            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
+        fault_list should be like the following format: (int(node_num), int(fault type))
+            fault_list = [(1,0),(1,1),(8,0),(5,1),(6,1)]
+        """
+        if mode not in ["b", "x"]:
+            raise NameError("Mode is not acceptable")
+        if os.path.exists('../data/fault_sim/') == False:
+            os.mkdir('../data/fault_sim/')
+        input_path = '../data/modelsim/' + self.c_name + '/input/'
+        fr=open(input_path + fname, mode='r')
+        output_path = '../data/fault_sim/'+ fname.rstrip('_tp_b.txt') + '_pfs_out.txt'
+        fw=open(output_path, mode='w')
+        # drop the first row of input names
+        line=fr.readline()
+        # obtain a multiple test patterns list from the input file
+        pattern_list = []
+        for line in fr.readlines():
+            line=line.rstrip('\n')
+            line_split=line.split(',')
+            for x in range(len(line_split)):
+                line_split[x]=int(line_split[x])
+            pattern_list.append(line_split)
+        
+        # output: detected fault list for each input pattern
+        fault_list = []
+        for sub_pattern in pattern_list:
+            fw.write(",".join([str(elem) for elem in sub_pattern]) + '\n')
+            fault_list = list(self.pfs_single(sub_pattern))
+            fault_list.sort()
+            for fault in fault_list:
+                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
+            fw.write('\n')
+        fr.close()
+        fw.close()
+        print("PFS completed. \nLog file saved in {}".format(output_path))
+   
 
     def gen_fault_dic(self):
         """
