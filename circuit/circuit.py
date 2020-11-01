@@ -15,6 +15,7 @@ import time
 import pdb
 from multiprocessing import Process, Pipe
 import numpy as np
+import os
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 """
@@ -438,7 +439,7 @@ class Circuit:
         and deductive fault simulation.
         """
         rand_input_val_list = []
-        for i in range(len(self.input_num_list)):
+        for i in range(len(self.PI)):
             rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
     
@@ -719,78 +720,114 @@ class Circuit:
             node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
     
-    def dfs(self):
+    def dfs_single(self, input_pattern):
+        """ running deductive fault simulation on the circuit 
+        needs to make sure the levelization is updated """ 
+        self.logic_sim(input_pattern)
+        fault_set = set()
+        for node in self.nodes_lev:
+            node.dfs()
+        for node in self.PO:
+            fault_set = fault_set.union(node.faultlist_dfs)
+        # return a fault list / set??????????
+        return list(fault_set)
+   
+    def dfs_multiple_separate(self, fname=None, mode="b"):
+        """ 
+        new dfs for multiple input patterns
+        the pattern list is obtained as a list consists of sublists of each pattern like:
+            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
+        fault_list should be like the following format: (string in the tuples)
+            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
         """
-        Deductive fault simulation:
-        For a given test pattern,
-        DFS simulates a set of faults detected by the test pattern.
-        Validate the test pattern return by D or Podem
+        if mode not in ["b", "x"]:
+            raise NameError("Mode is not acceptable")
+        if os.path.exists('../data/fault_sim/') == False:
+            os.mkdir('../data/fault_sim/')
+        input_path = '../data/modelsim/' + self.c_name + '/input/'
+        if os.path.exists(input_path) == False:
+            os.mkdir(input_path)
+        output_path = '../data/fault_sim/' + self.c_name + '/'
+        if os.path.exists(output_path) == False:
+            os.mkdir(output_path)
+        fr = open(input_path + fname, mode='r')
+        fw = open(output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt',mode='w')
+        # drop the first row of input names
+        line = fr.readline()
+        # obtain a multiple test patterns list from the input file
+        pattern_list = []
+        for line in fr.readlines():
+            line=line.rstrip('\n')
+            line_split=line.split(',')
+            for x in range(len(line_split)):
+                line_split[x]=int(line_split[x])
+            pattern_list.append(line_split)
+        print(pattern_list)
+        for sub_pattern in pattern_list:
+            print("hello pattern list")
+            fault_subset = set(self.dfs_single(sub_pattern))
+            fault_sublist = list(fault_subset)
+            fault_sublist.sort()
+            # print(fault_sublist)
+            pattern_str = map(str,sub_pattern)
+            pattern_str = ",".join(pattern_str)
+            print(pattern_str)
+            fw.write(pattern_str + '\n')
+            for fault in fault_sublist:
+                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
+                print(str(fault[0]) + '@' + str(fault[1]) + '\n')
+            fw.write('\n')
+        fr.close()
+        fw.close()
+
+
+    def dfs_multiple(self, fname=None, mode="b"):
+        """ 
+        new dfs for multiple input patterns
+        the pattern list is obtained as a list consists of sublists of each pattern like:
+            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
+        fault_list should be like the following format: (string in the tuples)
+            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
         """
-        control = {'AND':0, 'NAND':0, 'OR':1, 'NOR':1}
-        c_list = []
-        nc_list = []
-        fault_list = set()
-        for item in self.nodes_sim:
-            if item.gtype == 'IPT':
-                item.add_faultlist((item.num, GNOT(item.value)))
-                # print(item.num, item.faultlist_dfs)
-            elif item.gtype == 'BRCH':
-                item.faultlist_dfs = item.unodes[0].faultlist_dfs.copy()
-                item.add_faultlist((item.num, GNOT(item.value)))
-            elif item.gtype == 'XOR':
-                s = set()
-                for i in item.unodes:
-                    s = s.symmetric_difference(set(i.faultlist_dfs))
-                s.add((item.num, GNOT(item.value)))
-                item.faultlist_dfs = list(s)
-                if item.ntype == 'PO':
-                    fault_list = fault_list.union(set(item.faultlist_dfs))
-            elif item.gtype == 'NOT':
-                item.faultlist_dfs = item.unodes[0].faultlist_dfs.copy()
-                item.add_faultlist((item.num, GNOT(item.value)))
-                if item.ntype == 'PO':
-                    fault_list = fault_list.union(set(item.faultlist_dfs))
-            else :  #gtype = gate beside xor
-                flag = 0
-                # find if input has control value
-                for i in item.unodes:
-                    c = control[item.gtype]
-                    # print(item.num,i.num)
-                    if i.value == c:
-                        flag = 1
-                        c_list.append(i)
-                    else :
-                        nc_list.append(i)
-                # all input is no controlling value
-                if flag == 0:
-                    s = set()
-                    for j in nc_list:
-                        s = s.union(set(j.faultlist_dfs))
-                    item.faultlist_dfs.clear()
-                    item.faultlist_dfs = list(s)
-                    item.add_faultlist((item.num, GNOT(item.value)))
-                # input has control value
-                else :
-                    s_control = set(c_list[0].faultlist_dfs)
-                    for j in c_list:
-                        s_control = s_control.intersection(set(j.faultlist_dfs))
-                    if nc_list == []:
-                        s_ncontrol = set()
-                    else:
-                        s_ncontrol = set(nc_list[0].faultlist_dfs)
-                        for j in nc_list:
-                            s_ncontrol = s_ncontrol.union(set(j.faultlist_dfs))
-                    s_control.difference(s_ncontrol)
-                    item.faultlist_dfs.clear()
-                    item.faultlist_dfs = list(s_control)
-                    item.add_faultlist((item.num, GNOT(item.value)))
-                c_list.clear()
-                nc_list.clear()
-                if item.ntype == 'PO':
-                    fault_list = fault_list.union(set(item.faultlist_dfs))
-
-        return fault_list
-
+        if mode not in ["b", "x"]:
+            raise NameError("Mode is not acceptable")
+        if os.path.exists('../data/fault_sim/') == False:
+            os.mkdir('../data/fault_sim/')
+        input_path = '../data/modelsim/' + self.c_name + '/input/'
+        if os.path.exists(input_path) == False:
+            os.mkdir(input_path)
+        output_path = '../data/fault_sim/' + self.c_name + '/'
+        if os.path.exists(output_path) == False:
+            os.mkdir(output_path)
+        fr=open(input_path + fname, mode='r')
+        fw=open(output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt',mode='w')
+        # drop the first row of input names
+        line=fr.readline()
+        # obtain a multiple test patterns list from the input file
+        pattern_list = []
+        for line in fr.readlines():
+            line=line.rstrip('\n')
+            line_split=line.split(',')
+            for x in range(len(line_split)):
+                line_split[x]=int(line_split[x])
+            pattern_list.append(line_split)
+        print(pattern_list)
+        fault_set = set()
+        for sub_pattern in pattern_list:
+            print("hello pattern list")
+            fault_subset = set(self.dfs_single(sub_pattern))
+            fault_set = fault_set.union(fault_subset)
+        # generate output file
+        fault_list = list(fault_set)
+        print(fault_list)
+        fault_list.sort()
+        # fault is a tuple like: (1,0): node 1 ss@0
+        for fault in fault_list:
+             fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
+             print(str(fault[0]) + '@' + str(fault[1]) + '\n')
+        fr.close()
+        fw.close()
+     
 
     def get_full_fault_list(self):
         """

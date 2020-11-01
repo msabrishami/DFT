@@ -4,6 +4,10 @@ from enum import Enum
 import pdb
 import math 
 
+
+# We are using GNOT, etc. as we may later use X values
+
+
 class five_value(Enum):
    ZERO = 0
    ONE = 15
@@ -69,7 +73,7 @@ class Node:
         # self.sa0 = 0
         # self.sa1 = 0
         # self.index = 0 # should be removed
-        # self.faultlist_dfs = []
+        self.faultlist_dfs = set() # will be aset
         # self.parallel_value = 0
         # self.d_value = []
 
@@ -138,6 +142,11 @@ class Node:
     def stafan_b(self):
         ''' backward assignment of STAFAN observability for unodes of this node''' 
         raise NotImplementedError()
+
+    def dfs(self):
+        ''' deductive fault simulation (dfs) using unodes ''' 
+        raise NotImplementedError()
+
 
     
     # TODO: Saeed thinks many of these are redundant! 
@@ -332,6 +341,11 @@ class BUFF(Node):
     def stafan_b(self):
         self.unodes[0].B1 = self.B1
         self.unodes[0].B0 = self.B0
+    
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
+        self.faultlist_dfs.add((self.num, GNOT(self.value)))
 
 
 class NOT(Node):
@@ -355,6 +369,10 @@ class NOT(Node):
         self.unodes[0].B1 = self.B0
         self.unodes[0].B0 = self.B1
 
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
+        self.faultlist_dfs.add((self.num, GNOT(self.value)))
 
 
 class OR(Node):
@@ -378,6 +396,10 @@ class OR(Node):
         for unode in self.unodes:
             unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             unode.B0 = self.B0 * self.C0 / unode.C0
+
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        dfs_general(self, 1)
 
 
 class NOR(Node):
@@ -407,6 +429,11 @@ class NOR(Node):
             unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
 
+    def dfs(self):
+        # the controling value of NOR is 1
+        self.faultlist_dfs.clear()
+        dfs_general(self, 1)
+
 
 class AND(Node):
     def __init__(self, n_type, g_type, num):
@@ -430,6 +457,11 @@ class AND(Node):
             unode.B1 = self.B1 * self.C1 / unode.C1
             unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
  
+    def dfs(self):
+        # the controling value of AND is 0
+        self.faultlist_dfs.clear()
+        dfs_general(self, 0)
+
 
 class NAND(Node):
     def __init__(self, n_type, g_type, num):
@@ -454,6 +486,11 @@ class NAND(Node):
             # Formula in the original paper has a typo
             unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
 
+    def dfs(self):
+        # the controling value of NAND is 0
+        self.faultlist_dfs.clear()
+        dfs_general(self, 0)
+ 
 
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
@@ -483,6 +520,14 @@ class XOR(Node):
         for unode in self.unodes:
             unode.B1 = self.B0
             unode.B0 = self.B1
+
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        xor_FL_set = set()
+        for unode in self.unodes:
+            xor_FL_set = xor_FL_set.symmetric_difference(unode.faultlist_dfs)
+        xor_FL_set.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs = xor_FL_set
 
 
 class XNOR(Node):
@@ -514,6 +559,14 @@ class XNOR(Node):
             unode.B1 = self.B0
             unode.B0 = self.B1
 
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        xnor_FL_set = set()
+        for unode in self.unodes:
+            xnor_FL_set = xnor_FL_set.symmetric_difference(unide.faultlist_dfs)
+        xnor_FL_set.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs = xnor_FL_set
+
 
 class IPT(Node):
     def __init__(self, n_type, g_type, num):
@@ -531,6 +584,10 @@ class IPT(Node):
 
     def stafan_b(self):
         return 
+
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        self.faultlist_dfs.add((self.num, GNOT(self.value)))
 
 
 class BRCH(Node):
@@ -558,12 +615,85 @@ class BRCH(Node):
         self.unodes[0].B1 = 1 - mul_list(brchs_B1_c)
         self.unodes[0].B0 = 1 - mul_list(brchs_B0_c)
 
+    def dfs(self):
+        self.faultlist_dfs.clear()
+        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
+        self.faultlist_dfs.add((self.num, GNOT(self.value)))
+
 
 def mul_list(arr):
+    """ helper function
+    returns multiplication of values in a list"""
     res = 1
     for a in arr:
         res  = res*a
     return res
+
+
+
+def dfs_general(node, c_val):
+    """
+    Helper function; it doesn't belong to any node class
+    The general dfs algorithm is suitable for (gates with controlling),
+        such as AND, NAND, OR, NOR, etc., and does not include XOR, XNOR, INV, etc.
+    node: an object from class Node
+    c_val: controlling value for this node
+    functionality: 
+    Making changes on node.faultlist_dfs, based on the fault list of node.unodes
+    For PI nodes, faultlist_dfs is fault list on itself
+    """
+    # the fault list of the gate output
+    fault_set = set()
+    # intersection set of all faults implied by controling inputs
+    c_FL_set = set()
+    # union set of all faults implied by non-controling inputs
+    nc_FL_set = set()
+    # imply if there is any control value amoung the inputs
+    flag_c = 0
+    first_c = 1
+    for unode in node.unodes:
+        if unode.value == c_val :
+            flag_c = 1
+            # for the first controling value, use its FL as initialization
+            if first_c == 1:
+                c_FL_set = unode.faultlist_dfs.copy()
+                # print("Here is 1st c val!!!!!!!!!")
+                # print(c_FL_set)
+                first_c = 0
+            else:
+                c_FL_set = c_FL_set.intersection(unode.faultlist_dfs)
+                # print("Here is following c val!!!!!!!!!")
+                # print(c_FL_set)        
+        else :
+            nc_FL_set = nc_FL_set.union(unode.faultlist_dfs)
+            # print("No c val!!!!!!!!!")
+            # print(nc_FL_set)
+    
+    # none of the inputs are controlling value
+    if flag_c == 0:
+        node.faultlist_dfs.clear()
+        nc_FL_set.add((node.num, GNOT(node.value)))
+        # print(list(nc_FL_set))
+        node.faultlist_dfs = nc_FL_set.copy()
+    
+    # there is a controlling value on inputs 
+    else :
+        node.faultlist_dfs.clear()
+        node.faultlist_dfs = c_FL_set.difference(nc_FL_set)
+        node.faultlist_dfs.add((node.num, GNOT(node.value)))
+    c_FL_set.clear()
+    nc_FL_set.clear()
+    #TODO: clear this return, if it is correct, document it
+    return fault_set
+
+
+def GNOT(a):
+    '''NOT gate'''
+    if a == 1:
+        out = 0
+    elif a == 0:
+        out = 1
+    return out
 
 
 class podem_node_5val():

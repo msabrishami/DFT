@@ -53,6 +53,18 @@ def main():
     circuit = Circuit(args.ckt)
     circuit.read_ckt()
     circuit.lev()
+    
+
+    """ Testing DFS for single pattern """
+    # test1 = circuit.gen_tp()
+    # print(test1)
+    # temp = circuit.dfs_single(test1)
+    # print("------------------------")
+    # print(temp) 
+    circuit.dfs_multiple_separate(fname = "c17_full_tp_b.txt", mode = 'b')
+
+    exit()
+
     # sim = Modelsim()
     # sim.project(circuit)
     # tp_fname = sim.gen_rand_tp(tp_count=200, tp_fname="sample-200.txt")
@@ -63,11 +75,12 @@ def main():
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
 
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp)
-    circuit.STAFAN_B()
-    circuit.TPI_stat(HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
+    """ observation point insertion 
+    # circuit.SCOAP_CC()
+    # circuit.SCOAP_CO()
+    # circuit.STAFAN_CS(args.tp)
+    # circuit.STAFAN_B()
+    # circuit.TPI_stat(HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
     
     nodes_HTO = []
     for node in circuit.nodes_lev:
@@ -80,7 +93,9 @@ def main():
             target.num, target.B1, target.B0, 
             circuit.NVIDIA_count(target, 0.05, 0.05))
             )
-            
+      
+    """
+
     """
     for num, node in circuit.nodes.items():
         print("========================")
