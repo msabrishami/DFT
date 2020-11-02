@@ -5,7 +5,7 @@ from circuit import *
 from modelsim_simulator import *
 
 class Checker():
-    def __init__(self, c_name, tp):
+    def __init__(self):
         """ create a circuit and a modelsim simulation
         we have two types of inputs: "gate-level-circuit" and a "verilog"
         verilog can be anything, gate level, behavioral, etc. 
@@ -19,54 +19,32 @@ class Checker():
         - Check if the PI/PO of the files are the same -- raise error if not match
         - etc. 
         """
-        self.c_name = c_name
-        self.tp = tp
-   
-
-    # Generate random inputs patterns for circuit
-    # Simulate the random input patterns with modelsim, using Modelsim class
-    # Store the golden results in correct locations
-    # This is simply a wrapper around class Modelsim
     def run(self, ckt_name, tp_count):
         '''
         Given the circuit name and test pattern count, it will do the logic_sim on our platform and the simulation on ModelSim
         Return the check result between logic_sim and ModelSim
-        We use read_verilog() here
+        #We use read_verilog() here
         '''
+        Fault_List = []
         circuit = Circuit(ckt_name)
         circuit.read_verilog()
         circuit.lev()
         sim = Modelsim()
         sim.project(circuit)
+        #sim.gen_tb(sim.gen_rand_tp(tp_count= tp_count))
         sim.gen_rand_tp(tp_count= tp_count)
         sim.gen_tb()
         sim.simulation()
         self.tp_path = os.path.join(sim.path_gold, 'golden_' + circuit.c_name + '_'+ str(tp_count)+ '_b.txt')
-        return # self.check_IO_golden(circuit, self.tp_path)
+        return self.check_IO_golden(circuit, self.tp_path)
 
-    
-    def run_check(self, tp_count):
-        """ """
-        for r, d, f in os.walk(config.CKT_DIR):
-            for file in f:
-                if self.circuit.c_name+'.ckt' in file:
-                    if self.run(self.circuit.c_name, tp_count) == False:
-                        print('same!')
-                    else:
-                        print('not same!')
-
-
-    
-    
-    # Here we check if circuit.logicsim works ok for ckt formats
-    # We check circuit.logicsim results with our golden-IO
     def run_ckt(self, ckt_name, tp_count):
+
         circuit2 = Circuit(ckt_name)
         circuit2.read_ckt()
         circuit2.lev()
         #tp_path = os.path.join(sim.path_gold, 'golden_' + circuit.c_name + '_'+ str(tp_count)+ '_b.txt')
         return self.check_IO_golden(circuit2, self.tp_path)
-
 
     def run_all(self, tp_count):
         '''
@@ -129,7 +107,7 @@ class Checker():
         eff_line = ''
         #get the PI number and PO number in .ckt file
         for line in fr_ckt:
-            line_split = line.split(' ')
+            line_split = line.split()
             if line[0] == '1':
                 PI_ckt.append(line_split[1])
             if line[0] == '3':
@@ -168,7 +146,8 @@ class Checker():
         else:
             print('{} and {} are not the same!'.format(fname_ckt, fname_verilog))
 
-    def check_PI_PO_all(self):
+
+    def run_check_PI_PO(self):
         '''
         check all of .ckt and .v files automatically by using function check_PI_PO()
         '''
@@ -192,13 +171,10 @@ class Checker():
             self.check_PI_PO(file + '.ckt', file + '.v')
 
 
-     
-    def check_logicsim(self, ckt_format):
-        """ We already generated golden-results 
-        Now we just want to check if circuit.logicsim of ckt or verilog matches
-        """ 
-        # We already have golden_test() in circuit
-
+    def check_IO_golden(self, circuit, golden_io_filename):
+        #we have golden_test() in circuit
+        #compares the results of logic-sim of this circuit,
+        #... provided a golden input/output file
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
         PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]

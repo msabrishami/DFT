@@ -261,7 +261,7 @@ class Modelsim():
         if fname_sh == None:
             fname_sh = self.circuit.c_name + "_" + str(self.tp_count) + "_run.sh"
         #run ModelSim in subprocess
-        subprocess.call(['sh',fname_sh], cwd = self.path)
+        subprocess.call(['sh', fname_sh, "> temp.log"], cwd = self.path)
         #end of subprocess
         #return to main function
 

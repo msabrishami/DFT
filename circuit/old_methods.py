@@ -226,4 +226,64 @@ def pfs(self,input_val):
 
         return output
 
+    def FD_new_generator(self):
+        """
+        Creat a new FD in excel using dfs results
+        """
+        # output golden file
+        fw_path = os.path.join(config.FAULT_DICT_DIR, self.c_name)
+        if not os.path.exists(config.FAULT_DICT_DIR):
+            print("Creating fault dictionary directory in {}".format(config.FAULT_DICT_DIR))
+            os.mkdir(config.FAULT_DICT_DIR)
+        if not os.path.exists(fw_path):
+            print("Creating fault dictionary directory for circuit {} in {}".format(
+                self.c_name, fw_path))
+            os.mkdir(fw_path)
+        fr_path = '../data/fault_sim/' + self.c_name + '/'
+        fr = open(fr_path + self.c_name + '_full_dfs_out.txt','r')
+        # To create Workbook
+        workbook = xlwt.Workbook()   
+        sheet = workbook.add_sheet("Sheet Name")  
+        # Specifying style 
+        # style = xlwt.easyxf('font: bold 1')     
+        # Specifying column 
+        PI_string = ""
+        for node in self.PI:
+            PI_string = PI_string + node.num + ','
+        PI_string = PI_string[:-1]
+        print(PI_string)
+        # print(self.nodes)
+        sheet.write(0, 0, PI_string)
+        i = 1
+        fault_mapping = {}
+        for node in self.nodes_lev:
+            sheet.write(0, i, node.num + '@' + '0')
+            fault_mapping[node.num + '@' + '0'] = i
+            sheet.write(0, i+1, node.num + '@' + '1')
+            fault_mapping[node.num + '@' + '1'] = i+1
+            print(0, i, node.num + '@' + '0')
+            print(0, i+1, node.num + '@' + '1')
+            i = i + 2
+        j = 1
+        sheet.write(j, 0, fr.readline()) 
+        for line in fr.readlines():
+            if line == '\n':
+                j = j + 1
+            elif '@' in line:
+                sheet.write(j, fault_mapping[line[:-1]], 'X')
+            else:
+                sheet.write(j, 0, line)
+                
+            
+        # sheet.write(0, 0, 'SAMPLE')
+        # for line in fr.readlines():
+        # sheet.write(0, 0, 'SAMPLE') 
+        # sheet.write(1, 0, 'ISBT DEHRADUN') 
+        # sheet.write(2, 0, 'SHASTRADHARA') 
+        # sheet.write(3, 0, 'CLEMEN TOWN') 
+        # sheet.write(4, 0, 'RAJPUR ROAD') 
+        # sheet.write(5, 0, 'CLOCK TOWER') 
+        workbook.save(os.path.join(fw_path, self.c_name + '_FD_new.xls'))
+
+
 

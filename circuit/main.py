@@ -3,7 +3,7 @@
 
 import argparse
 import pdb
-import networkx as nx
+# import networkx as nx
 import math
 import time
 from random import randint
@@ -65,10 +65,10 @@ def main():
     # Test Circuit LogicSim
     # check_gate_netlist(circuit, 3000) # c432
     """ Testing with Modelsim Results """ 
-    checker = Checker()
-    checker.run_check_PI_PO()
-    checker.run_all(args.tp)
-    exit() 
+    for c in ["c17", "c432", "c499"]:
+        checker = Checker()
+        checker.run(c, args.tp)
+        checker.run_check(args.tp)
     # sim = Modelsim()
     # sim.project(circuit)
     # tp_fname = sim.gen_rand_tp(tp_count=args.tp, tp_fname="tp-input-" + str(args.tp) + ".log")
