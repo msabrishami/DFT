@@ -1,3 +1,4 @@
+
 import dgl
 import dgl.function as fn
 import torch
@@ -14,12 +15,14 @@ gcn_reduce = fn.mean(msg='m', out='h')
 def max_reduce(nodes):
     return {'h': torch.max(nodes.mailbox['m'], dim=1)[0]}
 
+
 def max_norm_reduce(nodes):
     batch_size, incoming_count, weight_dim = nodes.mailbox['m'].shape
     norms = torch.norm(nodes.mailbox['m'], p=2, dim=2)
     ind_max = torch.max(norms, dim=1)[1] #.repeat(weight_dim).view(batch_size, weight_dim)
     reduced = nodes.mailbox['m'][range(batch_size), ind_max]
     return {'h': reduced}
+
 
 class GCNLayer(nn.Module):
     def __init__(self, in_feats, out_feats):
@@ -34,6 +37,7 @@ class GCNLayer(nn.Module):
             x = torch.cat((h, feature), dim=1)
 
             return self.linear(x)
+
 
 class GCNLSTMLayer(nn.Module):
     def __init__(self, weight_dim, num_layers=3, rev=False):
@@ -64,6 +68,7 @@ class GCNLSTMLayer(nn.Module):
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(self.num_layers, batch_size, self.weight_dim)),
                 Variable(torch.zeros(self.num_layers, batch_size, self.weight_dim)))
+
 
 class LSTMGCN(nn.Module):
     def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10, rev=False):

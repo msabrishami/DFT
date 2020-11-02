@@ -10,6 +10,7 @@ import numpy as np
 gcn_msg = fn.copy_src(src='h', out='m')
 gcn_reduce = fn.mean(msg='m', out='h')
 
+
 class GCNLayer(nn.Module):
     def __init__(self, in_feats, out_feats):
         super(GCNLayer, self).__init__()
@@ -31,7 +32,9 @@ class GCNLayer(nn.Module):
         # added g_rev in the output because dgl.Sequentional doesn't provide g_rev for the next layer
         return F.relu(self.linear(x)), g_rev
 
+
 class VanillaGCN(nn.Module):
+    
     def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10, rev=False):
         super(VanillaGCN, self).__init__()
         self.input_layer = nn.Linear(feature_dim, weight_dim)
