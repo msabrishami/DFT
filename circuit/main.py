@@ -50,9 +50,26 @@ def main():
     print("======================================================\n")
 
     circuit = Circuit(args.ckt)
-    circuit.read_ckt()
+    circuit.read_verilog()
+    # circuit.read_ckt()
     circuit.lev()
-   
+
+    """ Testing Read Verilog """ 
+    tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
+    tp_out_fname = circuit.c_name + "-tp-output-" + str(args.tp) + ".log"
+    tp_stil_fname = circuit.c_name + "-tp-" + str(args.tp) + "-stil.log"
+    circuit.gen_tp_file(args.tp, fname=tp_in_fname)
+    circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
+    # Test Circuit LogicSim
+    # check_gate_netlist(circuit, 3000) # c432
+    """ Testing with Modelsim Results """ 
+    sim = Modelsim()
+    sim.project(circuit)
+    # tp_fname = sim.gen_rand_tp(tp_count=args.tp, tp_fname="tp-input-" + str(args.tp) + ".log")
+    # sim.gen_tb(tp_fname)
+    # sim.simulation()
+
+
     """ Testing PFS """
     # circuit.get_full_fault_list()
     # circuit.pfs_multiple(fname="c17_full_tp_b.txt", mode="b")
@@ -64,36 +81,24 @@ def main():
     # print("------------------------")
     # print(temp) 
 
+    """ Testing DFS for all faults with all patterns """ 
     # Here we need a helper function to create a pattern for full test of a circuit
-    tp_fname = circuit.c_name + "-tp-" + str(args.tp) + ".log"
-    report_fname = circuit.c_name + "-tp-" + str(args.tp) + "-fault-sim.log"
+    # tp_fname = circuit.c_name + "-tp-" + str(args.tp) + ".log"
+    # report_fname = circuit.c_name + "-tp-" + str(args.tp) + "-fault-sim.log"
 
-    circuit.gen_tp_file(
-            args.tp, 
-            fname=tp_fname,
-            mode = "b")
-    circuit.dfs_multiple_separate(
-            # fname_tp="../data/modelsim/c17/input/c17_full_tp_b.txt",
-            fname_tp = tp_fname,
-            # fname_log="./c17_all_dfs.log",
-            fname_log=report_fname,
-            mode='b')
+    # circuit.gen_tp_file(
+    #         args.tp, 
+    #         fname=tp_fname,
+    #         mode = "b")
+    # circuit.dfs_multiple_separate(
+    #         # fname_tp="../data/modelsim/c17/input/c17_full_tp_b.txt",
+    #         fname_tp = tp_fname,
+    #         # fname_log="./c17_all_dfs.log",
+    #         fname_log=report_fname,
+    #         mode='b')
     # circuit.FD_new_generator()
-    exit()
+    # exit()
 
-    # sim = Modelsim()
-    # sim.project(circuit)
-    # tp_fname = sim.gen_rand_tp(tp_count=args.tp, tp_fname="tp-input-" + str(args.tp) + ".log")
-    # sim.gen_tb(tp_fname)
-    # sim.simulation()
-    tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
-    tp_out_fname = circuit.c_name + "-tp-output-" + str(args.tp) + ".log"
-    tp_stil_fname = circuit.c_name + "-tp-" + str(args.tp) + "-stil.log"
-    circuit.gen_tp_file(args.tp, fname=tp_in_fname)
-    circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
-    # Test Circuit LogicSim
-    # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
-    # check_gate_netlist(circuit, 3000) # c432
     exit()
     """ Observation Point Insertion """  
     circuit.SCOAP_CC()
@@ -101,7 +106,6 @@ def main():
     circuit.STAFAN_CS(args.tp)
     circuit.STAFAN_B()
     circuit.TPI_stat(HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
-
 
     print("\n\n")
     circuit.co_ob_info()

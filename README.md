@@ -1,4 +1,4 @@
-# Circuit Test Package
+# Circuit Test and GNN 
 This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *design for test* (DFT) operations, including: 
 - Gate level logical simulation
 - Fault simulation (PFS, DFS)

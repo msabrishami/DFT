@@ -2,7 +2,7 @@ import sys
 from collections import OrderedDict
 import re
 import numpy as np
-
+import pdb
 
 def M1(E, A):
     Ab = np.invert(A)
@@ -78,6 +78,7 @@ def M5(I):
 
 
 def c432_sim(in_vec_dict):
+    pdb.set_trace()
     # Create the input and output variables (top level)
     E = np.array(
         [in_vec_dict['in4'], in_vec_dict['in17'], in_vec_dict['in30'], in_vec_dict['in43'], in_vec_dict['in56'],
