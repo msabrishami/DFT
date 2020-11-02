@@ -21,35 +21,10 @@ from models.vanilla_gcn import VanillaGCN
 from models.lstm_gcn import LSTMGCN
 import seaborn as sns; sns.set()
 
-# Constant values
 EPS = 1e-6
 
 torch.manual_seed(0)
 np.random.seed(0)
-
-parser = OptionParser()
-parser.add_option('-w', '--weight-dim', dest='weight_dim', default=512, type='int',
-                  help='weight dimension (default: 512)')
-parser.add_option('-d', '--depth', dest='depth', default=20, type='int',
-                  help='number of hops explored in the graph (default: 20)')
-parser.add_option('-o', '--objective', dest='objective', default="lev", type='str',
-                  help='learning objective (default: level)')
-parser.add_option('-m', '--model', dest='model', default="LSTMGCN", type='str',
-                  help='model architecture (default: LSTMGCN)')
-parser.add_option('--train-circuit', dest='circuit_train', default="c1355", type='str',
-                  help='circuit name (default: c1355)')
-parser.add_option('--test-circuit', dest='circuit_test', default="c432", type='str',
-                  help='circuit name (default: c432)')
-parser.add_option('-p', '--problem', dest='problem', default="classification", type='str',
-                  help='classification or regression? (default: classification)')
-parser.add_option('-l', '--loss', dest='loss', default="CE", type='str',
-                  help='loss function (default: cross entropy)')
-parser.add_option('-b', '--bidirectional', dest='bidirectional', action="store_true",
-                  help='make the graph uni-directional or bi-directional')
-parser.add_option('-s', '--sigmoid', dest='sigmoid', action="store_true",
-                  help='Sigmoid function applied to the logits')
-parser.add_option('-f','--features',  dest='features', type='str', help='What features are given to the nodes', default=None)
-(options, args) = parser.parse_args()
 
 def load_data_with_model():
     """
@@ -240,37 +215,67 @@ def evaluate(net, g, features, labels, mask, loss_function, g_rev=None):
         plt.close()
         return accuracy, loss
 
-g_train, g_test, g_train_rev, g_test_rev, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
+def main():
+    parser = OptionParser()
+    parser.add_option('-w', '--weight-dim', dest='weight_dim', default=512, type='int',
+                      help='weight dimension (default: 512)')
+    parser.add_option('-d', '--depth', dest='depth', default=20, type='int',
+                      help='number of hops explored in the graph (default: 20)')
+    parser.add_option('-o', '--objective', dest='objective', default="lev", type='str',
+                      help='learning objective (default: level)')
+    parser.add_option('-m', '--model', dest='model', default="LSTMGCN", type='str',
+                      help='model architecture (default: LSTMGCN)')
+    parser.add_option('--train-circuit', dest='circuit_train', default="c1355", type='str',
+                      help='circuit name (default: c1355)')
+    parser.add_option('--test-circuit', dest='circuit_test', default="c432", type='str',
+                      help='circuit name (default: c432)')
+    parser.add_option('-p', '--problem', dest='problem', default="classification", type='str',
+                      help='classification or regression? (default: classification)')
+    parser.add_option('-l', '--loss', dest='loss', default="CE", type='str',
+                      help='loss function (default: cross entropy)')
+    parser.add_option('-b', '--bidirectional', dest='bidirectional', action="store_true",
+                      help='make the graph uni-directional or bi-directional')
+    parser.add_option('-s', '--sigmoid', dest='sigmoid', action="store_true",
+                      help='Sigmoid function applied to the logits')
+    parser.add_option('-f','--features',  dest='features', type='str', help='What features are given to the nodes', default=None)
+    (options, args) = parser.parse_args()
 
-#g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
-optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)
-dur = []
+    g_train, g_test, g_train_rev, g_test_rev, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
+    
+    #g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)
+    dur = []
+    
+    # Gradient clipping for avoiding gradient explosion
+    #for p in net.parameters():
+    #    p.register_hook(lambda grad: torch.clamp(grad, -0.1, 0.1))
+    
+    for epoch in range(50000):
+        random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
+        train_mask = torch.BoolTensor(random_bools).cuda()
+        test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
+    
+        t0 = time.time()
+        net.train()
+        logits = net(g_train, features_train, g_train_rev)
+        logits = logits.squeeze()
+        if options.sigmoid:
+            logits = torch.sigmoid(logits)
+        loss = loss_function(logits[train_mask], labels_train[train_mask])
+    
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+        dur.append(time.time() - t0)
+    
+        test_accuracy_ctr, test_loss_ctr = evaluate(net, g_train, features_train, labels_train, test_mask, loss_function, g_rev=g_train_rev)
+        test_accuracy_cte, test_loss_cte = evaluate(net, g_test, features_test, labels_test, [True]*len(labels_test), loss_function, g_rev=g_test_rev)
+    
+        print("Epoch {:05d} | Train Loss {:.4f} | Source Circuit's Test Loss {:.4f} | Source Circuit's Test Acc {:.4f} | Target Circuit's Test Loss {:.4f} | Target Circuit's Test Acc {:.4f} | Time(s) {:.4f}".format(
+                epoch, loss.item(), test_loss_ctr, test_accuracy_ctr, test_loss_cte, test_accuracy_cte, np.mean(dur)))
+        
 
-# Gradient clipping for avoiding gradient explosion
-#for p in net.parameters():
-#    p.register_hook(lambda grad: torch.clamp(grad, -0.1, 0.1))
 
-for epoch in range(50000):
-    random_bools = np.random.choice(a=[False, True], size=(len(g_train.nodes())), p=[0.2, 0.8])
-    train_mask = torch.BoolTensor(random_bools).cuda()
-    test_mask = torch.BoolTensor(np.invert(random_bools)).cuda()
-
-    t0 = time.time()
-    net.train()
-    logits = net(g_train, features_train, g_train_rev)
-    logits = logits.squeeze()
-    if options.sigmoid:
-        logits = torch.sigmoid(logits)
-    loss = loss_function(logits[train_mask], labels_train[train_mask])
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    dur.append(time.time() - t0)
-
-    test_accuracy_ctr, test_loss_ctr = evaluate(net, g_train, features_train, labels_train, test_mask, loss_function, g_rev=g_train_rev)
-    test_accuracy_cte, test_loss_cte = evaluate(net, g_test, features_test, labels_test, [True]*len(labels_test), loss_function, g_rev=g_test_rev)
-
-    print("Epoch {:05d} | Train Loss {:.4f} | Source Circuit's Test Loss {:.4f} | Source Circuit's Test Acc {:.4f} | Target Circuit's Test Loss {:.4f} | Target Circuit's Test Acc {:.4f} | Time(s) {:.4f}".format(
-            epoch, loss.item(), test_loss_ctr, test_accuracy_ctr, test_loss_cte, test_accuracy_cte, np.mean(dur)))
+if __name__ == "__main__":
+    main()
