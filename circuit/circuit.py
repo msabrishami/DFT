@@ -100,6 +100,9 @@ class Circuit:
             if g_type == 'XOR':
                 node = XOR(n_type, g_type, num)
 
+            elif g_type == "XNOR":
+                node = XNOR(n_type, g_type, num)
+
             elif g_type == 'OR':
                 node = OR(n_type, g_type, num)
 
@@ -124,6 +127,7 @@ class Circuit:
             self.PO.append(node)
         return node 
     
+
     def make_PO(self, target):
         """ connects this target node to a PO using a branch 
         """
@@ -224,6 +228,7 @@ class Circuit:
         i_node.unodes.append(u_node)
         i_node.dnodes.append(d_node)
 
+    
     ## According to the Dict, this function will return the specific node
     ## It is similar to part of add_node()
     def node_generation(self, Dict):
@@ -328,6 +333,7 @@ class Circuit:
                         self.nodes[new_node.num] = new_node
                         if new_node.ntype == 'PO':
                             self.PO.append(new_node)
+                            # Dict[node_order[0][1:]]
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
@@ -445,6 +451,7 @@ class Circuit:
             rand_input_val_list.append(random.randint(0,1))
         return rand_input_val_list
     
+
     def gen_tp_file(self, test_count, fname=None, mode="b"):
         """ create single file with multiple input patterns
         mode b: generate values in {0, 1}
