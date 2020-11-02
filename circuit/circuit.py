@@ -8,7 +8,7 @@ import sys
 from node import gtype
 from node import ntype
 from node import *
-# import networkx as nx
+import networkx as nx
 import matplotlib.pyplot as plt
 from random import randint
 import time
@@ -491,7 +491,7 @@ class Circuit:
                 node.imply()
 
     
-    def logic_sim_file(self, in_fname, out_fname): 
+    def logic_sim_file(self, in_fname, out_fname, stil=False): 
         """
         This method does the logic simulation in our platform
         First: generate a output folder in ../data/modelsim/circuit_name/ directory
@@ -504,7 +504,7 @@ class Circuit:
         fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
         fw.write('Outputs: ')
         fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
-        line=fr.readline()
+        temp = fr.readline()
         i=1
         for line in fr.readlines():
             line=line.rstrip('\n')
@@ -517,6 +517,33 @@ class Circuit:
             fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
             i+=1
         fw.close()
+        fr.close()
+        
+        
+        if stil:
+            infile = open(in_fname, "r")
+            lines = infile.readlines()
+            outfile = open("temp-res.log", "w")
+            outfile.write("PI:")
+            outfile.write(",".join([node.num for node in self.PI]) + "\n")
+            outfile.write("PO:")
+            outfile.write(",".join([node.num for node in self.PO]) + "\n")
+            for line in lines[1:]:
+                tp=line.rstrip('\n').split(",")
+                # for x in range(len(line_split)):
+                #    line_split[x]=int(line_split[x])
+                # self.logic_sim(line_split)
+                self.logic_sim(tp)
+
+                outfile.write("\"_pi\"=")
+                outfile.write("".join(line.strip().split(",")))
+                outfile.write(";\n")
+                outfile.write("      \"_po\"=")
+                for node in self.PO:
+                    val = "H" if node.value==1 else "L"
+                    outfile.write(val)
+                outfile.write(";\n")
+            outfile.close()
 
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
@@ -1456,34 +1483,35 @@ class Circuit:
         print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
     
-    # def gen_graph(self):
-    #     """
-    #     Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
-    #     """
-    #     G = nx.DiGraph()
-    #     for n in self.nodes_lev:
-    #         n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
-    #         G.add_node(n_num_normal)
-    #         G.nodes[n_num_normal]['lev'] = n.lev
-    #         G.nodes[n_num_normal]['gtype'] = n.gtype
-    #         G.nodes[n_num_normal]['ntype'] = n.ntype
-    #         G.nodes[n_num_normal]['CC0'] = n.CC0
-    #         G.nodes[n_num_normal]['CC1'] = n.CC1
-    #         G.nodes[n_num_normal]['CO'] = n.CO
-    #         G.nodes[n_num_normal]['C0'] = n.C0
-    #         G.nodes[n_num_normal]['C1'] = n.C1
-    #         G.nodes[n_num_normal]['S'] = n.S
-    #         G.nodes[n_num_normal]['B0'] = n.B0
-    #         G.nodes[n_num_normal]['B1'] = n.B1
-    #         G.nodes[n_num_normal]['D0_p'] = n.D0_p
-    #         G.nodes[n_num_normal]['D1_p'] = n.D1_p
-    #         G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
-    #         if n.gtype != 'IPT':
-    #             for unode in n.unodes:
-    #                 G.add_edge(self.node_ids.index(unode.num), n_num_normal)
-    #         else:
-    #             pass
-    #     return G
+    def gen_graph(self):
+        """
+        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
+        """
+        G = nx.DiGraph()
+        for n in self.nodes_lev:
+            # n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
+            n_num_normal = n.num
+            G.add_node(n_num_normal)
+            G.nodes[n_num_normal]['lev'] = n.lev
+            G.nodes[n_num_normal]['gtype'] = n.gtype
+            G.nodes[n_num_normal]['ntype'] = n.ntype
+            G.nodes[n_num_normal]['CC0'] = n.CC0
+            G.nodes[n_num_normal]['CC1'] = n.CC1
+            G.nodes[n_num_normal]['CO'] = n.CO
+            G.nodes[n_num_normal]['C0'] = n.C0
+            G.nodes[n_num_normal]['C1'] = n.C1
+            G.nodes[n_num_normal]['S'] = n.S
+            G.nodes[n_num_normal]['B0'] = n.B0
+            G.nodes[n_num_normal]['B1'] = n.B1
+            G.nodes[n_num_normal]['D0_p'] = n.D0_p
+            G.nodes[n_num_normal]['D1_p'] = n.D1_p
+            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
+            if n.gtype != 'IPT':
+                for unode in n.unodes:
+                    G.add_edge(unode.num, n_num_normal)
+            else:
+                pass
+        return G
 
     def get_node_attr(self, node_attr):
         data = []
