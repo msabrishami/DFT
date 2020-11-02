@@ -132,7 +132,7 @@ class Node:
         self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & self.pfs_S)         
 
     def unodes_val(self):
-        return [unode.value for unode in self.unodes]
+        return [int(unode.value) for unode in self.unodes]
     
     def eval_CC(self):
         ''' forward assignment of SCOAP-CC for this node based on unodes''' 
@@ -548,7 +548,11 @@ class XOR(Node):
         Node.__init__(self, ntype, g_type, num)
 
     def imply(self):
-        self.value = 1 if (sum(self.unodes_val())%2 == 1) else 0
+        try:
+            self.value = 1 if (sum(self.unodes_val())%2 == 1) else 0
+        except:
+            print("issue")
+            pdb.set_trace()
     
     def imply_p(self):
         self.pfs_V = self.unodes[0].pfs_V

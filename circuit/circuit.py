@@ -523,7 +523,7 @@ class Circuit:
         if stil:
             infile = open(in_fname, "r")
             lines = infile.readlines()
-            outfile = open("temp-res.log", "w")
+            outfile = open(out_fname, "w")
             outfile.write("PI:")
             outfile.write(",".join([node.num for node in self.PI]) + "\n")
             outfile.write("PO:")

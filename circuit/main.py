@@ -72,8 +72,9 @@ def main():
     # sim.simulation()
     tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
     tp_out_fname = circuit.c_name + "-tp-output-" + str(args.tp) + ".log"
+    tp_stil_fname = circuit.c_name + "-tp-" + str(args.tp) + "-stil.log"
     circuit.gen_tp_file(args.tp, fname=tp_in_fname)
-    circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_out_fname, stil=True)
+    circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
     # Test Circuit LogicSim
     # circuit.golden_test("../data/golden_IO/c499_golden_IO.txt")
     # check_gate_netlist(circuit, 3000) # c432
