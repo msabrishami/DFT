@@ -63,7 +63,23 @@ def main():
     # temp = circuit.dfs_single(test1)
     # print("------------------------")
     # print(temp) 
-    # circuit.dfs_multiple_separate(fname = "c17_full_tp_b.txt", mode = 'b')
+
+    # Here we need a helper function to create a pattern for full test of a circuit
+    tp_fname = circuit.c_name + "-tp-" + str(args.tp) + ".log"
+    report_fname = circuit.c_name + "-tp-" + str(args.tp) + "-fault-sim.log"
+
+    circuit.gen_tp_file(
+            args.tp, 
+            fname=tp_fname,
+            mode = "b")
+    circuit.dfs_multiple_separate(
+            # fname_tp="../data/modelsim/c17/input/c17_full_tp_b.txt",
+            fname_tp = tp_fname,
+            # fname_log="./c17_all_dfs.log",
+            fname_log=report_fname,
+            mode='b')
+    # circuit.FD_new_generator()
+    exit()
 
     # sim = Modelsim()
     # sim.project(circuit)

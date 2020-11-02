@@ -17,6 +17,8 @@ from multiprocessing import Process, Pipe
 import numpy as np
 import os
 
+import config
+import xlwt
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 """
 # Tasks for the DFT team:
@@ -528,13 +530,13 @@ class Circuit:
             outfile.write(",".join([node.num for node in self.PI]) + "\n")
             outfile.write("PO:")
             outfile.write(",".join([node.num for node in self.PO]) + "\n")
-            for line in lines[1:]:
+            for idx, line in enumerate(lines[1:]):
                 tp=line.rstrip('\n').split(",")
                 # for x in range(len(line_split)):
                 #    line_split[x]=int(line_split[x])
                 # self.logic_sim(line_split)
                 self.logic_sim(tp)
-
+                outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
                 outfile.write("\"_pi\"=")
                 outfile.write("".join(line.strip().split(",")))
                 outfile.write(";\n")
@@ -542,7 +544,7 @@ class Circuit:
                 for node in self.PO:
                     val = "H" if node.value==1 else "L"
                     outfile.write(val)
-                outfile.write(";\n")
+                outfile.write("; } \n")
             outfile.close()
 
     def golden_test(self, golden_io_filename):
@@ -759,7 +761,8 @@ class Circuit:
         # return a fault list / set??????????
         return list(fault_set)
    
-    def dfs_multiple_separate(self, fname=None, mode="b"):
+
+    def dfs_multiple_separate(self, fname_tp, fname_log, mode="b"):
         """ 
         new dfs for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
@@ -769,48 +772,44 @@ class Circuit:
         """
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
-        if os.path.exists('../data/fault_sim/') == False:
-            os.mkdir('../data/fault_sim/')
-        input_path = '../data/modelsim/' + self.c_name + '/input/'
-        if os.path.exists(input_path) == False:
-            os.mkdir(input_path)
-        output_path = '../data/fault_sim/' + self.c_name + '/'
-        if os.path.exists(output_path) == False:
-            os.mkdir(output_path)
-        fr = open(input_path + fname, mode='r')
-        output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw = open(output_path, mode='w')
-        # drop the first row of input names
-        line = fr.readline()
+        # if os.path.exists('../data/fault_sim/') == False:
+        #     os.mkdir('../data/fault_sim/')
+        # input_path = '../data/modelsim/' + self.c_name + '/input/'
+        # if os.path.exists(input_path) == False:
+        #     os.mkdir(input_path)
+        # output_path = '../data/fault_sim/' + self.c_name + '/'
+        # if os.path.exists(output_path) == False:
+        #     os.mkdir(output_path)
+        fr = open(fname_tp, mode='r')
+        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
+        fw = open(fname_log, mode='w')
+        
+        lines = fr.readlines()
         # obtain a multiple test patterns list from the input file
         pattern_list = []
-        for line in fr.readlines():
+        for line in lines[1:]:
             line=line.rstrip('\n')
             line_split=line.split(',')
             for x in range(len(line_split)):
                 line_split[x]=int(line_split[x])
             pattern_list.append(line_split)
-        # print(pattern_list)
         for sub_pattern in pattern_list:
             # print("hello pattern list")
-            fault_subset = set(self.dfs_single(sub_pattern))
+            fault_subset = self.dfs_single(sub_pattern)
             fault_sublist = list(fault_subset)
-            fault_sublist.sort()
-            # print(fault_sublist)
+            fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1])))
             pattern_str = map(str,sub_pattern)
             pattern_str = ",".join(pattern_str)
-            # print(pattern_str)
             fw.write(pattern_str + '\n')
             for fault in fault_sublist:
                 fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-                # print(str(fault[0]) + '@' + str(fault[1]) + '\n')
             fw.write('\n')
         fr.close()
         fw.close()
-        print("DFS-Separate completed. \nLog file saved in {}".format(output_path))
+        print("DFS-Separate completed. \nLog file saved in {}".format(fname_log))
 
 
-    def dfs_multiple(self, fname=None, mode="b"):
+    def dfs_multiple(self, fname_tp, fname_log, mode="b"):
         """ 
         new dfs for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
@@ -818,21 +817,21 @@ class Circuit:
         fault_list should be like the following format: (string in the tuples)
             fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
         """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-        if os.path.exists('../data/fault_sim/') == False:
-            os.mkdir('../data/fault_sim/')
-        input_path = '../data/modelsim/' + self.c_name + '/input/'
-        if os.path.exists(input_path) == False:
-            os.mkdir(input_path)
-        output_path = '../data/fault_sim/' + self.c_name + '/'
-        if os.path.exists(output_path) == False:
-            os.mkdir(output_path)
-        fr=open(input_path + fname, mode='r')
-        output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw=open(output_path, mode='w')
+        # if mode not in ["b", "x"]:
+        #     raise NameError("Mode is not acceptable")
+        # if os.path.exists(config.FAULT_SIM_DIR) == False:
+        #     os.mkdir(config.FAULT_SIM_DIR)
+        # input_path = '../data/modelsim/' + self.c_name + '/input/'
+        # if os.path.exists(input_path) == False:
+        #     os.mkdir(input_path)
+        # output_path = '../data/fault_sim/' + self.c_name + '/'
+        # if os.path.exists(output_path) == False:
+        #     os.mkdir(output_path)
+        fr = open(fname_tp, mode='r')
+        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
+        fw = open(fname_log, mode='w')
         # drop the first row of input names
-        line=fr.readline()
+        line = fr.readline()
         # obtain a multiple test patterns list from the input file
         pattern_list = []
         for line in fr.readlines():
@@ -845,19 +844,82 @@ class Circuit:
         fault_set = set()
         for sub_pattern in pattern_list:
             # print("hello pattern list")
-            fault_subset = set(self.dfs_single(sub_pattern))
+            fault_subset = self.dfs_single(sub_pattern)
             fault_set = fault_set.union(fault_subset)
         # generate output file
         fault_list = list(fault_set)
         # print(fault_list)
-        fault_list.sort()
+        fault_list.sort(key=lambda x: (int(x[0]), int(x[1])))
         # fault is a tuple like: (1,0): node 1 ss@0
         for fault in fault_list:
              fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
              # print(str(fault[0]) + '@' + str(fault[1]) + '\n')
         fr.close()
         fw.close()
-        print("DFS-Multiple completed. \nLog file saved in {}".format(output_path))
+        print("DFS-Multiple completed. \nLog file saved in {}".format(fname_log))
+
+
+    def FD_new_generator(self):
+        """
+        Creat a new FD in excel using dfs results
+        """
+        # output golden file
+        fw_path = os.path.join(config.FAULT_DICT_DIR, self.c_name)
+        if not os.path.exists(config.FAULT_DICT_DIR):
+            print("Creating fault dictionary directory in {}".format(config.FAULT_DICT_DIR))
+            os.mkdir(config.FAULT_DICT_DIR)
+        if not os.path.exists(fw_path):
+            print("Creating fault dictionary directory for circuit {} in {}".format(
+                self.c_name, fw_path))
+            os.mkdir(fw_path)
+        fr_path = '../data/fault_sim/' + self.c_name + '/'
+        fr = open(fr_path + self.c_name + '_full_dfs_out.txt','r')
+        # To create Workbook
+        workbook = xlwt.Workbook()   
+        sheet = workbook.add_sheet("Sheet Name")  
+        # Specifying style 
+        # style = xlwt.easyxf('font: bold 1')     
+        # Specifying column 
+        PI_string = ""
+        for node in self.PI:
+            PI_string = PI_string + node.num + ','
+        PI_string = PI_string[:-1]
+        print(PI_string)
+        # print(self.nodes)
+        sheet.write(0, 0, PI_string)
+        i = 1
+        fault_mapping = {}
+        for node in self.nodes_lev:
+            sheet.write(0, i, node.num + '@' + '0')
+            fault_mapping[node.num + '@' + '0'] = i
+            sheet.write(0, i+1, node.num + '@' + '1')
+            fault_mapping[node.num + '@' + '1'] = i+1
+            print(0, i, node.num + '@' + '0')
+            print(0, i+1, node.num + '@' + '1')
+            i = i + 2
+        j = 1
+        sheet.write(j, 0, fr.readline()) 
+        for line in fr.readlines():
+            if line == '\n':
+                j = j + 1
+            elif '@' in line:
+                sheet.write(j, fault_mapping[line[:-1]], 'X')
+            else:
+                sheet.write(j, 0, line)
+                
+            
+        # sheet.write(0, 0, 'SAMPLE')
+        # for line in fr.readlines():
+        # sheet.write(0, 0, 'SAMPLE') 
+        # sheet.write(1, 0, 'ISBT DEHRADUN') 
+        # sheet.write(2, 0, 'SHASTRADHARA') 
+        # sheet.write(3, 0, 'CLEMEN TOWN') 
+        # sheet.write(4, 0, 'RAJPUR ROAD') 
+        # sheet.write(5, 0, 'CLOCK TOWER') 
+        workbook.save(os.path.join(fw_path, self.c_name + '_FD_new.xls'))
+
+
+
 
     def get_full_fault_list(self):
         """
