@@ -1,12 +1,17 @@
 # git ignore
-# Erfan
-**.png
-**.log
 
 # Saeed:
 **.swp
 data/modelsim/
 data/fault_sim/
+data/verilog/
+
+# Erfan
+**.png
+**.log
+
+
+
 # **.graphml
 **.png
 # python cache file

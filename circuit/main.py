@@ -11,10 +11,12 @@ from random import randint
 from circuit import Circuit
 from modelsim_simulator import Modelsim
 
+
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 from c432_logic_sim import c432_sim
 import config
+from checker_logicsim import Checker
 
 def check_gate_netlist(circuit, total_T=1):
 
@@ -49,22 +51,26 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
-    circuit = Circuit(args.ckt)
-    circuit.read_verilog()
+    # circuit = Circuit(args.ckt)
+    # circuit.read_verilog()
     # circuit.read_ckt()
-    circuit.lev()
+    # circuit.lev()
 
     """ Testing Read Verilog """ 
-    tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
-    tp_out_fname = circuit.c_name + "-tp-output-" + str(args.tp) + ".log"
-    tp_stil_fname = circuit.c_name + "-tp-" + str(args.tp) + "-stil.log"
-    circuit.gen_tp_file(args.tp, fname=tp_in_fname)
-    circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
+    # tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
+    # tp_out_fname = circuit.c_name + "-tp-output-" + str(args.tp) + ".log"
+    # tp_stil_fname = circuit.c_name + "-tp-" + str(args.tp) + "-stil.log"
+    # circuit.gen_tp_file(args.tp, fname=tp_in_fname)
+    # circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
     # Test Circuit LogicSim
     # check_gate_netlist(circuit, 3000) # c432
     """ Testing with Modelsim Results """ 
-    sim = Modelsim()
-    sim.project(circuit)
+    checker = Checker()
+    checker.run_check_PI_PO()
+    checker.run_all(args.tp)
+    exit() 
+    # sim = Modelsim()
+    # sim.project(circuit)
     # tp_fname = sim.gen_rand_tp(tp_count=args.tp, tp_fname="tp-input-" + str(args.tp) + ".log")
     # sim.gen_tb(tp_fname)
     # sim.simulation()

@@ -25,23 +25,33 @@ class Checker():
         Return the check result between logic_sim and ModelSim
         #We use read_verilog() here
         '''
+        Fault_List = []
         circuit = Circuit(ckt_name)
         circuit.read_verilog()
         circuit.lev()
         sim = Modelsim()
         sim.project(circuit)
+        #sim.gen_tb(sim.gen_rand_tp(tp_count= tp_count))
         sim.gen_rand_tp(tp_count= tp_count)
         sim.gen_tb()
         sim.simulation()
-        tp_path = os.path.join(sim.path_gold, 'golden_' + circuit.c_name + '_'+ str(tp_count)+ '_tp_b.txt')
-        return self.check_IO_golden(circuit, tp_path)
+        self.tp_path = os.path.join(sim.path_gold, 'golden_' + circuit.c_name + '_'+ str(tp_count)+ '_b.txt')
+        return self.check_IO_golden(circuit, self.tp_path)
 
+    def run_ckt(self, ckt_name, tp_count):
+
+        circuit2 = Circuit(ckt_name)
+        circuit2.read_ckt()
+        circuit2.lev()
+        #tp_path = os.path.join(sim.path_gold, 'golden_' + circuit.c_name + '_'+ str(tp_count)+ '_b.txt')
+        return self.check_IO_golden(circuit2, self.tp_path)
 
     def run_all(self, tp_count):
         '''
         It will run all of .v files in VERILOG_DIR and compare results between ModelSim and our Simulator
         '''
         file_names = []
+        file_names_ckt = []
         #r=root, d=directories, f = files
         #find all .v files in the VERILOG_DIR
         for r, d, f in os.walk(config.VERILOG_DIR):
@@ -49,10 +59,30 @@ class Checker():
                 if '.v' in file:
                     file_names.append(os.path.splitext(file)[0])
         #check the result by using function run()
+        for r, d, f in os.walk(config.CKT_DIR):
+            for file in f:
+                if '.ckt' in file:
+                    file_names_ckt.append(os.path.splitext(file)[0])
+        print(file_names_ckt)
+        print(file_names)
+        Fault_v_name = []
+        Fault_ckt_name = []
         for c_name in file_names:
             if self.run(c_name, tp_count) == False:
-                print('Test: {} fails !'.format(c_name))
-                return False
+                Fault_v_name.append(c_name)
+            if c_name in file_names_ckt:
+                print('###################################################' + c_name)
+                if self.run_ckt(c_name, tp_count) == False:
+                    Fault_ckt_name.append(c_name)
+            
+        if len(Fault_v_name) != 0:
+            for cname in Fault_v_name:
+                print('Verilog Test: {} fails !'.format(cname))
+        
+        if len(Fault_ckt_name) != 0:
+            for cname in Fault_ckt_name:
+                print('CKT Test: {} fails !'.format(cname))
+                return False 
         print('#########################################################')
         print('############## All Circuits Tests Pass ! ################')
         print('#########################################################')
@@ -77,7 +107,7 @@ class Checker():
         eff_line = ''
         #get the PI number and PO number in .ckt file
         for line in fr_ckt:
-            line_split = line.split(' ')
+            line_split = line.split()
             if line[0] == '1':
                 PI_ckt.append(line_split[1])
             if line[0] == '3':
@@ -115,6 +145,7 @@ class Checker():
             print('{} and {} are the same!'.format(fname_ckt, fname_verilog))
         else:
             print('{} and {} are not the same!'.format(fname_ckt, fname_verilog))
+
 
     def run_check_PI_PO(self):
         '''
