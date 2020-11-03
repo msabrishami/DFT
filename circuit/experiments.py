@@ -24,6 +24,7 @@ def exp_1(args):
 
     exp1_res_arit = {}
     exp1_res_geom = {}
+
     for node in circuit.nodes_lev:
         if node.lev < 5:
             continue
@@ -41,6 +42,8 @@ def exp_1(args):
         print("Node num: {}\tNode Lev: {}\nArithmetic:\t {}\t\tGeometric: \t {}".format(
             node.num, node.lev, 
             [round(x, 3) for x in a_tot], [round(x, 3) for x in g_tot]))
+        exp1_res_arit[node.num] = a_tot[2]
+        exp1_res_geom[node.num] = g_tot[2]
         for idx in range(len(a_all)):
             if a_all[idx][2] < 0.001:
                 continue
@@ -58,6 +61,6 @@ def exp_1(args):
     for target in nodes_HTO: 
         print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
             target.num, target.B1, target.B0, 
-            NVIDIA_count(circuit, target, 0.05, 0.05))
-            )
-     
+            NVIDIA_count(circuit, target, 0.05, 0.05)))
+    
+    return (exp1_res_arit, exp1_res_geom)

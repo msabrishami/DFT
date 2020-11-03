@@ -19,6 +19,8 @@ import config
 from checker_logicsim import Checker
 from observation import *
 from experiments import exp_1
+
+
 def check_gate_netlist(circuit, total_T=1):
 
     for t in range(total_T):
@@ -52,7 +54,10 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
-    exp_1(args)
+    exp1_res_arit, exp1_res_geom = exp_1(args)
+    res_a = {k: v for k, v in sorted(exp1_res_arit.items(), key=lambda item: item[1])}
+    for k, v in res_a.items():
+        print(k,"\t", v)
     exit()
     circuit = Circuit(args.ckt)
     circuit.read_verilog()
