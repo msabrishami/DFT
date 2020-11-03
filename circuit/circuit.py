@@ -18,7 +18,9 @@ import numpy as np
 import os
 
 import config
+
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
+
 """
 # Tasks for the DFT team:
 - Don't change my alreay written methods, if u need to change it let me know. 
@@ -617,8 +619,8 @@ class Circuit:
             node.D1 = False
             node.D0 = False
     
-    
-    ## TODO: What about inverter?
+    #TODO: there shoul be a seed for random numbers
+    # seed should be given in config file
     def STAFAN_CS(self, num_pattern, limit=None, detect=False):
         ''' note:
         we are generating random numbers with replacement
@@ -658,83 +660,7 @@ class Circuit:
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
 
-    def TPI_stat(self, HTO_th, HTC_th):
-        """ this is a simple division of nodes, 
-        the element C*B can also be used. 
-        """
-        for node in self.nodes_lev:
-            if (node.B0 >= HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "ETD"
-            elif (node.B0 >= HTO_th) and (node.C0 < HTC_th):
-                node.stat["SS@1"] = "HTC"
-            elif (node.B0 < HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "HTO"
-            else: 
-                node.stat["SS@1"] = "HTD"
-
-            if (node.B1 >= HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "ETD"
-            elif (node.B1 >= HTO_th) and (node.C1 < HTC_th):
-                node.stat["SS@0"] = "HTC"
-            elif (node.B1 < HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "HTO"
-            else:
-                node.stat["SS@0"] = "HTD"
-
-    
-    """
-    def experiment_1(self):
-        for node in self.nodes_lev:
-            node.stat{"B0_old"} = node.B0
-            node.stat{"B1_old"} = node.B1
         
-        for node in self.nodes_lev:
-            node.ntype="PO"
-            self.STAFAN_B()
-            for node in self.nodes_lev = 
-    """ 
-
-    def NVIDIA_count(self, op, HTO_th, HTC_th):
-        """ count the number of nodes that change from HTO to ETO 
-        by making node an observation point """ 
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_old = set()
-        for node in self.nodes_lev: 
-            if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
-                HTO_old.add(node.num)
-        orig_ntype = op.ntype
-        self.PO.append(op)
-        op.ntype = "PO"
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_new = set()
-        count = 0
-        for node in self.nodes_lev:
-            if node.num in HTO_old:
-                if (node.stat["SS@0"] != "HTO") and (node.stat["SS@1"] != "HTO"):
-                    # print("\t{} was HTO, but now became ETO".format(node.num))
-                    count = count + 1
-        op.ntype = orig_ntype
-        self.PO = self.PO[:-1]
-        return count
-
-    """
-    def IMOP_1(self, node):
-        # Sum of all the observations of the fan-in cone, only if lower than HTO
-        # if target becomes OP, how many node pass the threshold
-        if node.seen:
-            return 0
-        delta_B0 = node.B0 / node.stat{"B0_old"}
-        delta_B1 = node.B1 / node.stat{"B1_old"}
-        elif delta_B0 < 2 and delta_B1 < 2:
-            # no significant change
-            return 
-        for node in self.nodes_lev:
-            node.seen = False
-
-    """
-    
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
         # calculate observability
@@ -865,8 +791,6 @@ class Circuit:
         print("DFS-Multiple completed. \nLog file saved in {}".format(fname_log))
 
 
-
-
     def get_full_fault_list(self):
         """
         Generate a list of all SSAFs in the circuit.
@@ -977,9 +901,6 @@ class Circuit:
         for k in range(len(detected_fault_num)):
             fault_set = fault_set.union({(int(detected_fault_num[k]),detected_fault_value[k])})
 
-        #print("pvs value of each node")
-        #for pvs_node in self.nodes_lev:
-            #print(pvs_node.num, format(pvs_node.pfs_V,"b").zfill(64))    
         return fault_set
 
 
@@ -1072,364 +993,17 @@ class Circuit:
             fault_dict_result.write('\n')
 
         fault_dict_result.close()
-
-
-    def gen_fault_dic_multithreading(self, thread_cnt, idx):
-        """
-        Create threads to generate fault dictionaries.
-        Speed up the fault dictionary generation process.
-        """
-        fault_dict = {}
-        total_pattern = pow(2, self.input_cnt)
-        pattern_per_thread = int(total_pattern / thread_cnt)
-
-        for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-            #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = ('{:0%db}'%self.input_cnt).format(i)
-            list_to_pfs = []
-            for j in range(self.input_cnt):
-                list_to_pfs.append(int(b[j]))
-        #do pfs based on the prodeuced input files
-            result = []
-            result = self.pfs(list_to_pfs)
-            fault = []
-            #print(result)
-            for i in result:
-                fault.append("%d@%d" % (i[0], i[1]))
-
-            fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
-            fault_dict.update({b: fault})
-
-        with open ("../fault_dic/{}_{}.fd".format(self.c_name, idx), "w") as fo:
-            for i in range(self.input_cnt):
-                if (i < self.input_cnt - 1):
-                    fo.write('%d->' % self.input_num_list[i])
-                else:
-                    fo.write('%d' % self.input_num_list[i])
-            fo.write(' as sequence of inputs')
-            fo.write('\n')
-            fo.write('input_patterns\t\t\tdetected_faults\n')
-            for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-                b = ('{:0%db}'%self.input_cnt).format(i)
-                fo.write('%s\t\t\t\t' % b)
-                for i in range(len(fault_dict.get(b))):
-                    fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
-                fo.write('\n')
-        print("thread #{} of {} threads finished".format(idx, thread_cnt))
-
-    def get_reduced_fault_list(self):
-        """
-        Using checkpoint theorem,
-        generate reduced fault list
-        """
-        faults_fanout = []
-        for i in range(len(self.nodes)):
-            if (self.nodes[i].cpt == 1):
-                #print self.nodes[i].num
-                for j in range(self.nodes[i].fout):
-                    faults_fanout.append(self.nodes[i].dnodes[j].index)
-                self.nodes[i].sa0 = 1
-                self.nodes[i].sa1 = 1
-        # uniquefanout = sorted(set(faults_fanout))
-        # print uniquefanout
-        for i in range(len(faults_fanout)):
-            cptflag = 0
-            if ((self.nodes[faults_fanout[i]].gtype == 'NOR') or (self.nodes[faults_fanout[i]].gtype == 'OR')):
-                for j in range(self.nodes[faults_fanout[i]].fin):
-                    if self.nodes[faults_fanout[i]].unodes[j].cpt == 1:
-                        if cptflag == 0:
-                            cptflag = 1
-                        else: self.nodes[faults_fanout[i]].unodes[j].sa1 = 0
-            elif ((self.nodes[faults_fanout[i]].gtype == 'NAND') or (self.nodes[faults_fanout[i]].gtype == 'AND')):
-                for j in range(self.nodes[faults_fanout[i]].fin):
-                    if self.nodes[faults_fanout[i]].unodes[j].cpt == 1:
-                        if cptflag == 0:
-                            cptflag = 1
-                        else: self.nodes[faults_fanout[i]].unodes[j].sa0 = 0
-        for i in range(len(self.nodes)):
-            if self.nodes[i].sa0 == 1:
-                self.rfl_node.append(self.nodes[i].num)
-                self.rfl_ftype.append(0)
-            if self.nodes[i].sa1 == 1:
-                self.rfl_node.append(self.nodes[i].num)
-                self.rfl_ftype.append(1)
-
-    #to be continued
-    def equvalenceAndDominance(self):
-        return
-
-    def D_alg(self, fault_index, imply_counter):
-        """
-        Given a fault, returns whether it can be detected,
-        if can, returns a test pattern.
-        """
-        res = D_alg(self.nodes, fault_index, imply_counter)
-        return res
-    #to be continued
-    def podem(self, i):
-        """
-        Given a fault, returns whether it can be detected,
-        if can, returns a test pattern.
-        """
-        res = podem(self.fault_node_num[i], self.fault_type[i], self.nodes, self.nodes_lev)
-        return res
-
-    def read_fault_dict(self):
-        """read already generated fault dictionary"""
-        fd = open("../fault_dic/{}.fd".format(self.c_name),"r")
-        self.fd_data = fd.read()
-        fd.close()
-
-    def get_patterns(self, test_pattern):
-        """
-        Given a test pattern with "X"s,
-        generate all possible patterns represent by that pattern.
-        """
-        xidx = []
-        xcnt = 0
-        for i in range(len(test_pattern)):
-            if test_pattern[i] == 'X':
-                xidx.append(i)
-                xcnt += 1
-
-        fmt_str = '{0:0%db}'%(xcnt)
-        bit = []
-
-        plist = []
-        for i in range(2 ** (xcnt)):
-            bit = [int(j) for j in fmt_str.format(i)]
-            plist.append(bit)
-
-        search = []
-        for p in plist:
-            binary_patterns = test_pattern
-            for i in range(xcnt):
-                binary_patterns[xidx[i]] = p[i]
-            search.append(''. join(map(str, binary_patterns)))
-        return search
-
-
-    def check_failure(self, fault_name):
-        """
-        Check if the fault is undetected by searching the fault dictionary
-        called for small circuit with fault fictionary only.
-        """
-        srch_str = '\s{}'.format(fault_name)
-        if re.findall(srch_str, self.fd_data):
-            return False
-        else:
-            return True
-
-    def check_success(self, fault_name, search_patterns):
-        """
-        Check if the returned pattern can detected the given fault
-        by searching the fault dictionary.
-        called for small circuit with fault fictionary only.
-        """
-        pattern_found = 0
-        for p in search_patterns:
-            srch_str = '{}.*?\s{}'.format(p, fault_name)
-            # print (srch_str)
-            res = re.findall(srch_str, self.fd_data)
-            if res:
-                pattern_found = 1
-            else:
-                pattern_found = 0
-        if pattern_found:
-            return True
-        else:
-            return False
-
-    def get_Xless_pattern(self, pattern):
-        """
-        For big circuit with too many Xs,
-        randomly assign 1 or 0 to each X and returns a pattern.
-        """
-        pattern_Xless = []
-        for v in pattern:
-            if v == 'X':
-                entry = random.getrandbits(1)
-            else:
-                entry = v
-            pattern_Xless.append(entry)
-        return pattern_Xless
-
-    def get_d_correctness(self):
-        """
-        Check correctness of D algorithm for both detected and undetected faults.
-        Called for small circuit.
-        """
-        self.read_fault_dict()
-        d_error_cnt = 0
-        # run the faults in full fault list
-        for j in range(len(self.fault_node_num)):
-            fault_index = -1
-            for i in range(len(self.nodes_lev)):
-                self.nodes_lev[i].value = five_value.X.value
-                if self.nodes_lev[i].num == self.fault_node_num[j]:
-                    # stuck at 0
-                    if self.fault_type[j] == 0:
-                        self.nodes_lev[i].value = five_value.D.value
-                        fault_index = i
-                    # stuck at 1
-                    elif self.fault_type[j] == 1:
-                        self.nodes_lev[i].value = five_value.D_BAR.value
-                        fault_index = i
-                    else:
-                        print("operator error")
-            imply_counter = Imply_counter(8000)
-            res = self.D_alg(fault_index, imply_counter)
-
-            # If the fault is detectable in
-            if res.result == 1:
-                # print("D_alg SUCCESS")
-                search_patterns = self.get_patterns(res.pattern)
-                pattern_found = self.check_success(self.fault_name[j], search_patterns)
-                if pattern_found == 0:
-                    print("D algorithm Error at fault {}, type SUCCESS".format(self.fault_name[j]))
-                    d_error_cnt += 1
-                else:
-                    pass
-
-            else:
-                # print("D_alg FAILURE")
-                error_not_found = self.check_failure(self.fault_name[j])
-                if error_not_found == 0:
-                    print("D algorithm Error at fault {}, type FAILURE".format(self.fault_name[j]))
-                    d_error_cnt += 1
-                else:
-                    pass
-        self.d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / len(self.fault_node_num)) * 100
-        print ("D algorithm correctness rate: {}%".format(self.d_correctness_rate))
-
-    def get_d_coverage(self):
-        """
-        Count the percentage of faults in the full fault list D algorithm claimed as detected.
-        Further revise the coverage by passing the test pattern returned by D to DFS to see
-        if the given fault is in the detected fault set.
-        called for big circuits
-        """
-        failure_fault_list = []
-        check_cnt = 0
-        self.pass_cnt = 0
-
-        for j in range(len(self.fault_node_num)):
-            fault_index = -1
-            for i in range(len(self.nodes)):
-                if self.nodes[i].num == self.fault_node_num[j]:
-                    # stuck at 0
-                    if self.fault_type[j] == 0:
-                        self.nodes[i].d_value.append(five_value.D.value)
-                        fault_index = i
-                    # stuck at 1
-                    elif self.fault_type[j] == 1:
-                        self.nodes[i].d_value.append(five_value.D_BAR.value)
-                        fault_index = i
-                    else:
-                        print("operator error")
-                else:
-                    self.nodes[i].d_value.append(five_value.X.value)
-            imply_counter = Imply_counter(8000)
-            res = self.D_alg(fault_index, imply_counter)
-
-            if res.result == 1:
-                self.pass_cnt += 1
-
-            else:
-                failure_fault_list.append(self.fault_name[j])
-
-
-            check_cnt += 1
-            print ("check_cnt={}".format(check_cnt))
-        self.d_coverage = (self.pass_cnt / len(self.fault_node_num)) * 100
-        print ("D algorithm fault coverage: {}".format(self.d_coverage))
-        self.pass_cnt = 0
-        return failure_fault_list
-
-    def get_podem_correctness(self):
-        """
-        Check correctness of Podem for both detected and undetected faults.
-        Called for small circuit.
-        """
-        self.read_fault_dict()
-        pd_error_cnt = 0
-        for i in range(len(self.fault_node_num)):
-            res = self.podem(i)
-            if res.result == 1:
-                search_patterns = self.get_patterns(res.pattern)
-                pattern_found = self.check_success(self.fault_name[i], search_patterns)
-                if pattern_found == 0:
-                    print("Podem algorithm Error at fault {}, type SUCCESS".format(self.fault_name[i]))
-                    pd_error_cnt += 1
-                else:
-                    pass
-            else:
-                # print("Podem_alg FAILURE")
-                error_not_found = self.check_failure(self.fault_name[i])
-                if error_not_found == 0:
-                    print("Podem algorithm Error at fault {}, type FAILURE".format(self.fault_name[i]))
-                    pd_error_cnt += 1
-                else:
-                    pass
-        self.pd_correctness_rate = ((len(self.fault_node_num) - pd_error_cnt) / len(self.fault_node_num)) * 100
-        print ("Podem algorithm correctness rate: {}%".format(self.pd_correctness_rate))
-
-    def get_podem_coverage(self):
-        """
-        Count the percentage of faults in the full fault list Podem claimed as detected.
-        Further revise the coverage by passing the test pattern returned by Podem to DFS to see
-        if the given fault is in the detected fault set.
-        called for big circuits
-        """
-        self.pass_cnt = 0
-        for i in range(len(self.fault_node_num)):
-            res = self.podem(i)
-            if res.result == 1:
-                self.pass_cnt += 1
-                pattern = res.pattern
-                input_pattern = self.get_Xless_pattern(pattern)
-                # print(input_pattern)
-                self.logic_sim(input_pattern)
-                fault_set = self.dfs()
-                fault = (self.fault_node_num[i],self.fault_type[i])
-                if fault in fault_set:
-                    pass
-                else:
-                    self.pass_cnt -= 1
-                    print("Test Pattern error for Podem at fault {}".format(fault))
-            else:
-                pass
-        self.pd_coverage = self.pass_cnt / len(self.fault_node_num) * 100
-        self.pass_cnt = 0
-        print ("Podem algorithm fault coverage: {}%".format(self.pd_coverage))
-
-
-    def podem_single_test(self, fault_node_num, fault_type):
-        res = podem(fault_node_num, fault_type, self.nodes, self.nodes_lev)
-        return res
-
-
-    def time_for_podem(self):
-        totaltime = 0
-        for i in range(len(self.fault_node_num)):
-            starttime = time.time()
-            res = self.podem_single_test(self.fault_node_num[i], self.fault_type[i])
-            endtime = time.time()
-            totaltime = totaltime + (endtime - starttime)
-        print(totaltime)
-
-
-            
-
-    
-
+   
 
     def control_thread(self, conn, c_name, i, total_T,num_proc):
         circuit = Circuit(c_name)
         circuit.read_circuit()
         circuit.lev()
         inputnum = len(circuit.input_num_list)
-        circuit.STAFAN_CS(int(total_T/num_proc), [int(pow(2, inputnum)/num_proc)*i,int(pow(2, inputnum)/num_proc)*(i+1)-1])
+        circuit.STAFAN_CS(int(total_T/num_proc), 
+                [int(pow(2, inputnum)/num_proc)*i, 
+                    int(pow(2, inputnum)/num_proc)*(i+1)-1])
+        
         circuit.nodes_lev.sort(key=lambda x: x.num)
         one_count_list = []
         zero_count_list = []
@@ -1447,6 +1021,7 @@ class Circuit:
         conn.close()
 
 
+
     def STAFAN(self, total_T, num_proc=1):
         start_time = time.time()
         # thread_cnt = 1
@@ -1454,7 +1029,8 @@ class Circuit:
         for i in range(num_proc):
         # for idx in process_list:
             parent_conn, child_conn = Pipe()
-            p = Process(target = self.control_thread, args =(child_conn, self.c_name, i, total_T,num_proc, ))
+            p = Process(target = self.control_thread, 
+                    args =(child_conn, self.c_name, i, total_T,num_proc, ))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -1474,6 +1050,7 @@ class Circuit:
                 D1_count_list[i] += tup[4][i]
             p.join()
         self.nodes_lev.sort(key=lambda x: x.num)
+        
         for i in range(len(self.nodes_lev)):
             self.nodes_lev[i].C1 = one_count_list[i] / total_T
             self.nodes_lev[i].C0 = zero_count_list[i] / total_T
@@ -1483,7 +1060,6 @@ class Circuit:
             self.nodes_lev[i].D0_p = D0_count_list[i] / total_T
             self.nodes_lev[i].D1_p = D1_count_list[i] / total_T
 
-        #print (self.nodes_lev[i].num, self.nodes_lev[i].one_control, self.nodes_lev[i].zero_control,self.nodes_lev[i].sen_p)
         self.nodes_lev.sort(key=lambda x: x.lev)
         self.STAFAN_B()
         end_time = time.time()
@@ -1491,13 +1067,14 @@ class Circuit:
         print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
     
+
     def gen_graph(self):
         """
-        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
+        Generate directed graph of the circuit, 
+        each node has attributes: CC0, CC1, CO, lev
         """
         G = nx.DiGraph()
         for n in self.nodes_lev:
-            # n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
             n_num_normal = n.num
             G.add_node(n_num_normal)
             G.nodes[n_num_normal]['lev'] = n.lev
@@ -1521,6 +1098,7 @@ class Circuit:
                 pass
         return G
 
+
     def get_node_attr(self, node_attr):
         data = []
         for node in self.nodes_lev:
@@ -1540,15 +1118,5 @@ class Circuit:
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
-
-# prevent D algorithm deadlock. For debug purposes only
-class Imply_counter:
-    def __init__(self, abort_cnt):
-        self.cnt = 0
-        self.abort_cnt = abort_cnt
-    def increment(self):
-        self.cnt += 1
-    def initialize(self):
-        self.cnt = 0
 
 

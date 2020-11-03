@@ -14,4 +14,5 @@ FAULT_SIM_DIR = "../data/fault_sim"
 CKT_DIR = "../data/ckt"
 # TEST POINT INSERTION PROBLEM:
 HTO_TH = 0.05
-HTC_TH = 0.05
+HTC_TH = 0.1
+STAFAN_B_MIN = 0.0001
