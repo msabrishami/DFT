@@ -195,21 +195,9 @@ class Circuit:
 
     
     
-    ## This function is used for inserting the BRCH node
-    ## u_node and d_node are connected originally
-    ## i_node is the node be inserted between u_node and d_node
-    def insert_node(self, u_node, d_node, i_node):
-        u_node.dnodes.remove(d_node)
-        u_node.dnodes.append(i_node)
-        d_node.unodes.remove(u_node)
-        d_node.unodes.append(i_node)
-        i_node.unodes.append(u_node)
-        i_node.dnodes.append(d_node)
-
-    
-    ## According to the Dict, this function will return the specific node
-    ## It is similar to part of add_node()
+        
     def add_node_v(self, Dict):
+
         if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
             node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
@@ -230,7 +218,7 @@ class Circuit:
                 node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NOT':
-                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                node = NOT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NAND':
                 node = NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
@@ -245,63 +233,45 @@ class Circuit:
             #     node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
         else:
             raise NotImplementedError()
+        
         return node
-
-
-
 
     def read_verilog(self):
         """
         Read circuit from .v file, each node as an object
         """
         path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
-
-        ## Read the file and deal with comment and ; issues
         infile = open(path, 'r')
         eff_line = ''
         lines = infile.readlines()
         new_lines=[]
         
         for line in lines:
-            
-            # Ignore the empty lines
             if line == "":
-                print("empty line")
                 continue
 
-            # Find if this line has a comment ('//')
-            # Remove the comment part of the line
+            # Remove comment in lines 
             line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
-            if line_syntax:
-                line = line[:line.index('//')]
+            line = line[:line.index('//')] if line_syntax else line
 
             # If there is no ";" or "endmodule" it means the line is continued
             # Stack the contniuous lines to each other
-            if ';' not in line and 'endmodule' not in line:
+            if ';' not in line or 'endmodule' not in line:
                 eff_line = eff_line + line.rstrip()
                 continue
                         
             line = eff_line + line.rstrip()
             eff_line = ''
             new_lines.append(line)
+
         infile.close()
 
         ## 1st time Parsing: Creating all nodes
-        # Because the ntype and gtype information are separate, 
-        # we need to use Dict to collect all information
-        # Key: num
-        # Value: num, ntype and gtype
-
-
-
-        ### REGULAR EXPRESSION LESSON: 
-        # line_syntax.group(0) is the actual content of this line, including wire
-        # line_syntax.group(0) is the actual content of this line, including wire
+        # we need to use _nodes dict to collect all information
         _nodes = {}
         for line in new_lines:
 
             x_type, nets = read_verilog_syntax(line)
-
 
             if x_type == "module":
                 continue
@@ -311,25 +281,20 @@ class Circuit:
                 for wire in nets:
                     _nodes[wire] = {'num':wire, 'n_type':"GATE", 'g_type':None}
 
-            # PI: n_type=PI, g_type=IPT
-            # Node will be added! 
+            # PI: n_type=PI, g_type=IPT, Node will be added! 
             if x_type == "PI":
                 for pi in nets:
                     new_node = self.add_node_v({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
                     self.nodes[new_node.num] = new_node
                     self.PI.append(new_node)
 
-            # PO: n_type=PO, g_type=unknown
-            # Node will NOT be added
+            # PO: n_type=PO, g_type=unknown, Node will NOT be added
             if x_type == "PO":
                 for po in nets:
                     _nodes[po] = {'num': po, 'n_type':"PO", 'g_type': None}
 
-            # Check if it is similar to a line for defining a gate
-            # line format is similar to "module" line
-            # This is a Gate, n_type is either PO or GATE 
-            # We have seen the nodes before either in wire or in input/output
-            # Node will be added
+            # GATE, n_type = PO or GATE
+            # Node was seen before, in wire or in input/output, node will be added
             if x_type == "GATE":
                 gtype, nets = nets
                 _nodes[nets[0]]['g_type'] = gtype 
@@ -340,31 +305,30 @@ class Circuit:
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
-            line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-            if line_syntax:
-                if line_syntax.group(1) != 'module':
-                    node_order = line_syntax.group(3).replace(' ', '').split(',')
-                    for i in range(1, len(node_order)):
-                        # Making connections
-                        self.nodes[node_order[0]].unodes.append(self.nodes[node_order[i]])
-                        self.nodes[node_order[i]].dnodes.append(self.nodes[node_order[0]])
+            x_type, nets = read_verilog_syntax(line)
+            if x_type == "GATE":
+                gtype, nets = nets
+                for net in nets[1:]:
+                    self.nodes[nets[0]].unodes.append(self.nodes[net])
+                    self.nodes[net].dnodes.append(self.nodes[nets[0]])
 
-        ###### Branch Generation ######
-        # The basic way is looking for those nodes with more-than-1 fan-out nodes
-        # Creating a new FB node
+
+        # Branch modification 
         # Inserting FB node back into the circuit
-        # We cannot change the dictionary size while in its for loop,
-        # so we create a new dictionary and integrate it back to nodes at the end
-        B_Dict = {}
+        branches = {}
         for node in self.nodes.values():
             if len(node.dnodes) > 1:
-                for index in range(len(node.dnodes)):
+                for idx, dnode in enumerate(node.dnodes):
                     ## New BNCH
-                    FB_node = self.add_node_v({'num': node.num + '-' + str(index+1), 'n_type':ntype(2).name, 'g_type':gtype(1).name})
-                    B_Dict[FB_node.num] = FB_node
-                    self.insert_node(node, node.dnodes[0], FB_node)
-        self.nodes.update(B_Dict)
+                    branch = self.add_node_v({'num': node.num + '-' + str(idx+1), 
+                        'n_type':"FB", 'g_type':"BRCH"})
+                    branches[branch.num] = branch
+                    insert_branch(node, node.dnodes[0], branch)
+        self.nodes.update(branches)
 
+        print("Loading verilog file is done")
+
+    
     def read_ckt(self):
         """
         Read circuit from .ckt file, each node as an object
@@ -660,117 +624,6 @@ class Circuit:
             node.CB0 = node.C0 * node.B0
             node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
-    
-    def dfs_single(self, input_pattern):
-        """ running deductive fault simulation on the circuit 
-        needs to make sure the levelization is updated """ 
-        self.logic_sim(input_pattern)
-        fault_set = set()
-        for node in self.nodes_lev:
-            node.dfs()
-        for node in self.PO:
-            fault_set = fault_set.union(node.faultlist_dfs)
-        # return a fault list / set??????????
-        return list(fault_set)
-   
-
-    def dfs_multiple_separate(self, fname_tp, fname_log, mode="b"):
-        """ 
-        new dfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-        # if os.path.exists('../data/fault_sim/') == False:
-        #     os.mkdir('../data/fault_sim/')
-        # input_path = '../data/modelsim/' + self.c_name + '/input/'
-        # if os.path.exists(input_path) == False:
-        #     os.mkdir(input_path)
-        # output_path = '../data/fault_sim/' + self.c_name + '/'
-        # if os.path.exists(output_path) == False:
-        #     os.mkdir(output_path)
-        fr = open(fname_tp, mode='r')
-        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw = open(fname_log, mode='w')
-        
-        lines = fr.readlines()
-        # obtain a multiple test patterns list from the input file
-        pattern_list = []
-        for line in lines[1:]:
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        for sub_pattern in pattern_list:
-            # print("hello pattern list")
-            fault_subset = self.dfs_single(sub_pattern)
-            fault_sublist = list(fault_subset)
-            fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1])))
-            pattern_str = map(str,sub_pattern)
-            pattern_str = ",".join(pattern_str)
-            fw.write(pattern_str + '\n')
-            for fault in fault_sublist:
-                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-            fw.write('\n')
-        fr.close()
-        fw.close()
-        print("DFS-Separate completed. \nLog file saved in {}".format(fname_log))
-
-
-    def dfs_multiple(self, fname_tp, fname_log, mode="b"):
-        """ 
-        new dfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
-        """
-        # if mode not in ["b", "x"]:
-        #     raise NameError("Mode is not acceptable")
-        # if os.path.exists(config.FAULT_SIM_DIR) == False:
-        #     os.mkdir(config.FAULT_SIM_DIR)
-        # input_path = '../data/modelsim/' + self.c_name + '/input/'
-        # if os.path.exists(input_path) == False:
-        #     os.mkdir(input_path)
-        # output_path = '../data/fault_sim/' + self.c_name + '/'
-        # if os.path.exists(output_path) == False:
-        #     os.mkdir(output_path)
-        fr = open(fname_tp, mode='r')
-        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw = open(fname_log, mode='w')
-        # drop the first row of input names
-        line = fr.readline()
-        # obtain a multiple test patterns list from the input file
-        pattern_list = []
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        # print(pattern_list)
-        fault_set = set()
-        for sub_pattern in pattern_list:
-            # print("hello pattern list")
-            fault_subset = self.dfs_single(sub_pattern)
-            fault_set = fault_set.union(fault_subset)
-        # generate output file
-        fault_list = list(fault_set)
-        # print(fault_list)
-        fault_list.sort(key=lambda x: (int(x[0]), int(x[1])))
-        # fault is a tuple like: (1,0): node 1 ss@0
-        for fault in fault_list:
-             fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-             # print(str(fault[0]) + '@' + str(fault[1]) + '\n')
-        fr.close()
-        fw.close()
-        print("DFS-Multiple completed. \nLog file saved in {}".format(fname_log))
-
-
     def get_full_fault_list(self):
         """
         Generate a list of all SSAFs in the circuit.
@@ -787,142 +640,6 @@ class Circuit:
             self.fault_node_num.append(node.num)
             self.fault_type.append(1)
 
-    
-    def pfs_single(self, input_pattern):
-        """
-        Parallel Fault Simulation:
-        For a given test pattern
-        faults in self.fault_node_num 
-        PFS simulates a set of faults detected by the test pattern.
-        """
-        faultnum = len(self.fault_node_num)
-        n = sys.maxsize
-        bitlen = int(math.log2(n))+1
-
-        pass_tot = math.ceil(float(faultnum) / float(bitlen-1))
-
-        # full fault list
-        pfs_fault_val = []
-        pfs_fault_num = []
-        # pfs_fault_num = self.fault_node_num.copy()
-        for n in self.fault_node_num:
-            pfs_fault_num.append(n)
-        for t in self.fault_type:
-            pfs_fault_val.append(t)
-
-        detected_fault_num = []
-        detected_fault_value = []
-
-        while (pass_tot != 0):
-            pass_tot -= 1
-            pfs_stuck_values = 0
-            read_fault_ind = 0
-
-            # fault list for one pass
-            fault_num = []
-            fault_val = []
-            mask_dict = {}  # {key: fault_num, value: mask}
-
-            # save bitlen -1 fault
-            while(1):
-                if len(pfs_fault_num)==0:
-                    break
-
-                fault_val.append(pfs_fault_val.pop())
-                fault_num.append(pfs_fault_num.pop())
-
-                read_fault_ind = read_fault_ind + 1
-                if read_fault_ind == bitlen - 1:
-                    break
-            
-            # calculate stuck values of faults in this pass of PFS, and mask for each fault_num
-            for i in range(len(fault_val)):
-                pfs_stuck_values = pfs_stuck_values + fault_val[i]*2**i
-
-                if fault_num[i] in mask_dict:
-                    mask_dict[fault_num[i]] = mask_dict[fault_num[i]] + 2**i
-                else:
-                    mask_dict[fault_num[i]] = 2**i
-            
-            #for k in range(len(fault_num)):
-                #print(fault_num[k], "@",fault_val[k], "bit ",k)
-            
-            # pfs for one pass
-            node_dict = dict(zip([x.num for x in self.PI], input_pattern))
-            for node in self.nodes_lev:
-                node.pfs_I = 0
-                node.pfs_S = pfs_stuck_values
-
-                # if fault should be inserted in this node
-                if node.num in mask_dict:
-                    node.pfs_I = mask_dict[node.num]
-
-                if node.gtype == "IPT":
-                    node.imply_p(node_dict[node.num])
-                else:
-                    node.imply_p()
-                node.insert_f()
-            
-            # output result
-            for i in self.nodes_lev:
-                if i.ntype == 'PO':
-                    # if some faults can be detected
-                    if (i.pfs_V != 0) and (i.pfs_V != 2**bitlen-1):
-                        pfs_V_str = format(i.pfs_V,"b").zfill(bitlen)
-                        msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
-                        for j in range(bitlen-1):
-                            if j == len(fault_num):
-                                break
-                            if pfs_V_str[bitlen-1-j] != msb_pfs_V:
-                                detected_fault_num.append(fault_num[j])
-                                detected_fault_value.append(fault_val[j])
-
-        fault_set = set()
-        for k in range(len(detected_fault_num)):
-            fault_set = fault_set.union({(int(detected_fault_num[k]),detected_fault_value[k])})
-
-        return fault_set
-
-
-    def pfs_multiple(self, fname=None, mode="b"):
-        """ prallel fault simulation (pfs) for multiple test patterns
-        the pattern list is obtained as a list consists of sublists of each pattern:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (int(node_num), int(fault type))
-            fault_list = [(1,0),(1,1),(8,0),(5,1),(6,1)]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-        if os.path.exists('../data/fault_sim/') == False:
-            os.mkdir('../data/fault_sim/')
-        input_path = '../data/modelsim/' + self.c_name + '/input/'
-        fr=open(input_path + fname, mode='r')
-        output_path = '../data/fault_sim/'+ fname.rstrip('_tp_b.txt') + '_pfs_out.txt'
-        fw=open(output_path, mode='w')
-        # drop the first row of input names
-        line=fr.readline()
-        # obtain a multiple test patterns list from the input file
-        pattern_list = []
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        
-        # output: detected fault list for each input pattern
-        fault_list = []
-        for sub_pattern in pattern_list:
-            fw.write(",".join([str(elem) for elem in sub_pattern]) + '\n')
-            fault_list = list(self.pfs_single(sub_pattern))
-            fault_list.sort()
-            for fault in fault_list:
-                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-            fw.write('\n')
-        fr.close()
-        fw.close()
-        print("PFS completed. \nLog file saved in {}".format(output_path))
-   
 
     def gen_fault_dic(self):
         """
@@ -1099,62 +816,4 @@ class Circuit:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
 
-def read_verilog_syntax(line):
-    
-    # If there is a "wire" in this line:
-    line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
-        return ("wire", nets)
-     
-    # PI: 
-    line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
-        return ("PI", nets)
-    
-    # PO 
-    line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
-        return ("PO", nets)
-
-    # Gate
-    line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-    if line_syntax:
-        if line_syntax.group(1) == "module":
-            return ("module", None)
-        
-        gtype = cell2gate(line_syntax.group(1))
-        #we may not use gname for now. 
-        gname = line_syntax.group(2)
-
-        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
-        if pin_format:
-            #TODO: for now, we considered PO as the last pin
-            if "Z" not in pin_format[-1][0]:
-                raise NameError("Order of pins in verilog does not match")
-            nets = [pin_format[-1][1]]
-            for x in pin_format[:-1]:
-                nets.append(x[1])
-        else:
-            # verilog with no pin format
-            nets = line_syntax.group(3).replace(' ', '').split(',')
-
-        return ("GATE", (gtype, nets) )
-
-
-
-
-def verilog_version_gate(line):
-
-    return {"gate type":"gate", "input-list":[], "output-list":[]}
-
-
-## Inputs: Verilog gate input formats
-## Outputs: gtype corresponding gate name
-def cell2gate(cell_name):
-    for gname, cell_names in config.CELL_NAMES.items():
-        if cell_name in cell_names:
-            return gname
 

@@ -38,7 +38,6 @@ def main():
     experiments.exp_read_v2()
     exit()
 
-
     exp1_res_arit, exp1_res_geom = exp_1(args)
     res_a = {k: v for k, v in sorted(exp1_res_arit.items(), key=lambda item: item[1])}
     for k, v in res_a.items():

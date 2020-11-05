@@ -13,7 +13,7 @@ class LoadCircuit:
         elif mode == 'v':
             self.read_verilog(circuit)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("Circuit format {} is not supported!".format(mode))
 
 
     def add_node(self, circuit,  line):
@@ -100,44 +100,8 @@ class LoadCircuit:
             print("ERROR: not known!", ptr.num)
 
     
-    ## Inputs: Verilog gate input formats
-    ## Outputs: gtype corresponding gate name
-    def gtype_translator(self, gate_type):
-        if gate_type == 'ipt':
-            return gtype(0).name
-        elif gate_type == 'xor':
-            return gtype(2).name
-        elif gate_type == 'or':
-            return gtype(3).name
-        elif gate_type == 'nor':
-            return gtype(4).name
-        elif gate_type == 'not':
-            return gtype(5).name
-        elif gate_type == 'nand':
-            return gtype(6).name
-        elif gate_type == 'and':
-            return gtype(7).name
-        ## new node type
-        elif gate_type == 'xnor':
-            return gtype(8).name
-        elif gate_type == 'buf':
-            return gtype(9).name
-
-
-    ## This function is used for inserting the BRCH node
-    ## u_node and d_node are connected originally
-    ## i_node is the node be inserted between u_node and d_node
-    def insert_node(self, u_node, d_node, i_node):
-        u_node.dnodes.remove(d_node)
-        u_node.dnodes.append(i_node)
-        d_node.unodes.remove(u_node)
-        d_node.unodes.append(i_node)
-        i_node.unodes.append(u_node)
-        i_node.dnodes.append(d_node)
-
-    ## According to the Dict, this function will return the specific node
-    ## It is similar to part of add_node()
-    def node_generation(self, Dict):
+    def add_node_v(self, Dict):
+        
         if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
             node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
@@ -158,7 +122,7 @@ class LoadCircuit:
                 node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NOT':
-                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                node = NOT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NAND':
                 node = NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
@@ -168,11 +132,12 @@ class LoadCircuit:
 
             elif Dict['g_type'] == 'BUFF':
                 node = BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
-            #TODO
-            # elif Dict['g_type'] == 'XNOR':
-            #     node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+
+            elif Dict['g_type'] == 'XNOR':
+                node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
         else:
             raise NotImplementedError()
+        
         return node
 
 
@@ -180,111 +145,94 @@ class LoadCircuit:
         """
         Read circuit from .v file, each node as an object
         """
-        path = os.path.join(config.VERILOG_DIR, self.c_name + '.v')
-
-        ## Read the file and Deal with comment and ; issues
+        path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
         infile = open(path, 'r')
         eff_line = ''
         lines = infile.readlines()
         new_lines=[]
+        
         for line in lines:
-            # eliminate comment first
-            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
-            if line_syntax:
-                line = line[:line.index('//')]
+            if line == "":
+                continue
 
-            # considering ';' issues
-            if ';' not in line and 'endmodule' not in line:
+            # Remove comment in lines 
+            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
+            line = line[:line.index('//')] if line_syntax else line
+
+            # If there is no ";" or "endmodule" it means the line is continued
+            # Stack the contniuous lines to each other
+            if ';' not in line or 'endmodule' not in line:
                 eff_line = eff_line + line.rstrip()
                 continue
+                        
             line = eff_line + line.rstrip()
             eff_line = ''
             new_lines.append(line)
+
         infile.close()
 
         ## 1st time Parsing: Creating all nodes
-        # Because the ntype and gtype information are separate, we need to use Dict to collect all information
-        # Key: num
-        # Value: num, ntype and gtype
-        Dict = {}
+        # we need to use _nodes dict to collect all information
+        _nodes = {}
         for line in new_lines:
-            if line != "":
-                # Wire
-                line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n] = {'num': n, 'n_type': 'GATE', 'g_type':None}
 
-                # PI: n_type = 0 g_type = 0
-                line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        new_node = self.node_generation({'num': n, 'n_type': 'PI', 'g_type': 'IPT'})
-                        circuit.nodes[new_node.num] = new_node
-                        circuit.PI.append(new_node)
+            x_type, nets = read_verilog_syntax(line)
 
-                # PO n_type = 3 but g_type has an issue
-                line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n] = {'num': n, 'n_type': 'PO', 'g_type': None}
+            if x_type == "module":
+                continue
+             
+            # Wire: n_type=GATE, gtype=unknown
+            if x_type == "wire":
+                for wire in nets:
+                    _nodes[wire] = {'num':wire, 'n_type':"GATE", 'g_type':None}
 
-                # Gate reading and Making Connection of nodes
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) == 'module':
-                        continue
+            # PI: n_type=PI, g_type=IPT, Node will be added! 
+            if x_type == "PI":
+                for pi in nets:
+                    new_node = self.add_node_v({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
+                    self.nodes[new_node.num] = new_node
+                    self.PI.append(new_node)
 
-                    # detect if gate is introduced with or without pin IDs.
-                    # e.g. AND2_X1 C1031 ( .A1(a_0_), .A2(b_0_), .Z(n389) );
-                    # regex for detecting paranthesis inside the paranthesis
-                    input_pattern = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
-                    if input_pattern != []:
-                        for set in input_pattern:
-                            print(set)
-                            pdb.set_trace()
+            # PO: n_type=PO, g_type=unknown, Node will NOT be added
+            if x_type == "PO":
+                for po in nets:
+                    _nodes[po] = {'num': po, 'n_type':"PO", 'g_type': None}
 
-                            # set[0] --> A1, A2, Z
-                            # set[1] --> a_0_, b_0_, n389
-                        # TODO: Acquire the input/output order of the gate and create the nodes
-
-                    else:
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        # Nodes Generation
-                        Dict[node_order[0]]['g_type'] = self.gtype_translator(line_syntax.group(1))
-                        new_node = self.node_generation(Dict[node_order[0]])
-                        circuit.nodes[new_node.num] = new_node
-                        if new_node.ntype == 'PO':
-                            circuit.PO.append(new_node)
+            # GATE, n_type = PO or GATE
+            # Node was seen before, in wire or in input/output, node will be added
+            if x_type == "GATE":
+                gtype, nets = nets
+                _nodes[nets[0]]['g_type'] = gtype 
+                new_node = self.add_node_v(_nodes[nets[0]])
+                self.nodes[new_node.num] = new_node
+                if new_node.ntype == 'PO':
+                    self.PO.append(new_node)
 
         # 2nd time Parsing: Making All Connections
-        # we have to change this part according to the input/output order of the gate
         for line in new_lines:
-            if line != "":
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) != 'module':
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        for i in range(1, len(node_order)):
-                            # Making connections
-                            circuit.nodes[node_order[0]].unodes.append(circuit.nodes[node_order[i]])
-                            circuit.nodes[node_order[i]].dnodes.append(circuit.nodes[node_order[0]])
+            x_type, nets = read_verilog_syntax(line)
+            if x_type == "GATE":
+                gtype, nets = nets
+                for net in nets[1:]:
+                    self.nodes[nets[0]].unodes.append(self.nodes[net])
+                    self.nodes[net].dnodes.append(self.nodes[nets[0]])
 
-        ###### Branch Generation ######
-        # The basic way is looking for those nodes with more-than-1 fan-out nodes
-        # Creating a new FB node
+
+        # Branch modification 
         # Inserting FB node back into the circuit
-        # We cannot change the dictionary size while in its for loop,
-        # so we create a new dictionary and integrate it back to nodes at the end
-        B_Dict = {}
-        for node in circuit.nodes.values():
+        branches = {}
+        for node in self.nodes.values():
             if len(node.dnodes) > 1:
-                for index in range(len(node.dnodes)):
+                for idx, dnode in enumerate(node.dnodes):
                     ## New BNCH
-                    FB_node = self.node_generation({'num': node.num + '-' + str(index+1), 'n_type':'FB', 'g_type':'BRCH'})
-                    B_Dict[FB_node.num] = FB_node
-                    circuit.insert_node(node, node.dnodes[0], FB_node)
-        circuit.nodes.update(B_Dict)
+                    branch = self.add_node_v({'num': node.num + '-' + str(idx+1), 
+                        'n_type':"FB", 'g_type':"BRCH"})
+                    branches[branch.num] = branch
+                    insert_branch(node, node.dnodes[0], branch)
+        self.nodes.update(branches)
+
+        print("Loading verilog file is done")
+
 
     def read_ckt(self, circuit):
         """
@@ -303,6 +251,82 @@ class LoadCircuit:
             self.connect_node(circuit, line.strip())
         
 
+def verilog_version_gate(line):
+    return {"gate type":"gate", "input-list":[], "output-list":[]}
+
+
+def cell2gate(cell_name):
+    ## Inputs: Verilog gate input formats
+    ## Outputs: gtype corresponding gate name
+    for gname, cell_names in config.CELL_NAMES.items():
+        if cell_name in cell_names:
+            return gname
+    raise NameError("Cell type {} was not found".format(cell_name))
+
+
+def insert_branch(u_node, d_node, i_node):
+    """ This function is used for inserting the BRCH node
+    u_node and d_node are connected originally
+    i_node is the node be inserted between u_node and d_node """ 
+    u_node.dnodes.remove(d_node)
+    u_node.dnodes.append(i_node)
+    d_node.unodes.remove(u_node)
+    d_node.unodes.append(i_node)
+    i_node.unodes.append(u_node)
+    i_node.dnodes.append(d_node)
+
+
+def read_verilog_syntax(line):
+    
+    
+    if line.strip() == "endmodule":
+        return ("module", None)
+
+    # If there is a "wire" in this line:
+    line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
+        return ("wire", nets)
+     
+    # PI: 
+    line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PI", nets)
+    
+    # PO 
+    line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PO", nets)
+
+    # Gate
+    line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+    if line_syntax:
+        if line_syntax.group(1) == "module":
+            return ("module", None)
+        
+        gtype = cell2gate(line_syntax.group(1))
+        #we may not use gname for now. 
+        gname = line_syntax.group(2)
+
+        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+        if pin_format:
+            #TODO: for now, we considered PO as the last pin
+            if "Z" not in pin_format[-1][0]:
+                raise NameError("Order of pins in verilog does not match")
+            nets = [pin_format[-1][1]]
+            for x in pin_format[:-1]:
+                nets.append(x[1])
+        else:
+            # verilog with no pin format
+            nets = line_syntax.group(3).replace(' ', '').split(',')
+
+        return ("GATE", (gtype, nets) )
+    
+    raise NameError("No suggestion for \n>{}<\n was found".format(line))
+
+
 
 try:
     circuit = Circuit('c17')
@@ -311,5 +335,9 @@ try:
     circuit.lev()
     print(circuit)
 
+
 except IOError:
     print("error in the code")
+
+
+
