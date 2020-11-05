@@ -150,18 +150,14 @@ class LoadCircuit:
         eff_line = ''
         lines = infile.readlines()
         new_lines=[]
-        
         for line in lines:
-            if line == "":
-                continue
-
             # Remove comment in lines 
             line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
             line = line[:line.index('//')] if line_syntax else line
 
             # If there is no ";" or "endmodule" it means the line is continued
             # Stack the contniuous lines to each other
-            if ';' not in line or 'endmodule' not in line:
+            if ';' not in line and 'endmodule' not in line:
                 eff_line = eff_line + line.rstrip()
                 continue
                         
@@ -190,8 +186,8 @@ class LoadCircuit:
             if x_type == "PI":
                 for pi in nets:
                     new_node = self.add_node_v({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
-                    self.nodes[new_node.num] = new_node
-                    self.PI.append(new_node)
+                    circuit.nodes[new_node.num] = new_node
+                    circuit.PI.append(new_node)
 
             # PO: n_type=PO, g_type=unknown, Node will NOT be added
             if x_type == "PO":
@@ -204,9 +200,9 @@ class LoadCircuit:
                 gtype, nets = nets
                 _nodes[nets[0]]['g_type'] = gtype 
                 new_node = self.add_node_v(_nodes[nets[0]])
-                self.nodes[new_node.num] = new_node
+                circuit.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
-                    self.PO.append(new_node)
+                    circuit.PO.append(new_node)
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
@@ -214,14 +210,14 @@ class LoadCircuit:
             if x_type == "GATE":
                 gtype, nets = nets
                 for net in nets[1:]:
-                    self.nodes[nets[0]].unodes.append(self.nodes[net])
-                    self.nodes[net].dnodes.append(self.nodes[nets[0]])
+                    circuit.nodes[nets[0]].unodes.append(circuit.nodes[net])
+                    circuit.nodes[net].dnodes.append(circuit.nodes[nets[0]])
 
 
         # Branch modification 
         # Inserting FB node back into the circuit
         branches = {}
-        for node in self.nodes.values():
+        for node in circuit.nodes.values():
             if len(node.dnodes) > 1:
                 for idx, dnode in enumerate(node.dnodes):
                     ## New BNCH
@@ -229,7 +225,7 @@ class LoadCircuit:
                         'n_type':"FB", 'g_type':"BRCH"})
                     branches[branch.num] = branch
                     insert_branch(node, node.dnodes[0], branch)
-        self.nodes.update(branches)
+        circuit.nodes.update(branches)
 
         print("Loading verilog file is done")
 
@@ -277,8 +273,6 @@ def insert_branch(u_node, d_node, i_node):
 
 
 def read_verilog_syntax(line):
-    
-    
     if line.strip() == "endmodule":
         return ("module", None)
 
@@ -334,7 +328,6 @@ try:
     LoadCircuit(circuit, mode= 'v')
     circuit.lev()
     print(circuit)
-    print('hsucheng makes some changes')
 
 except IOError:
     print("error in the code")
