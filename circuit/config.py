@@ -4,8 +4,8 @@ MODELSIM_DIR = "../data/modelsim"
 MODELSIM_INPUT_DIR = "input" 
 MODELSIM_GOLD_DIR = "gold" 
 MODELSIM_OUTPUT_DIR = "output" 
-VERILOG_DIR = "../data/verilog"
-# VERILOG_DIR = "../data/EPFL"
+# VERILOG_DIR = "../data/verilog"
+VERILOG_DIR = "../data/EPFL"
 PATTERN_DIR ="../data/pattern"
 # in each modelsim prj directory where inputs will be stored
 ## TODO for Ting-Yu: read a good description for these constants
@@ -17,3 +17,17 @@ CKT_DIR = "../data/ckt"
 HTO_TH = 0.05
 HTC_TH = 0.1
 STAFAN_B_MIN = 0.0001
+
+
+
+# LOGIC LIBRARY RELATED:
+CELL_NAMES = {
+        "XOR": ["xor", "XOR2"],
+        "XNOR": ["xnor", "XNOR2"],
+        "OR": ["or", "OR2", "OR2_X1"],
+        "NOR": ["nor", "NOR2", "NOR2_X1"],
+        "AND": ["and", "AND2", "AND2_X1"],
+        "NAND": ["nand", "NAND2"],
+        "NOT": ["not", "inv", "NOT"],
+        "BUFF": ["buff"]
+        }

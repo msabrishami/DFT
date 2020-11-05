@@ -194,30 +194,7 @@ class Circuit:
             print("ERROR: not known!", ptr.num)
 
     
-    ## Inputs: Verilog gate input formats
-    ## Outputs: gtype corresponding gate name
-    def gtype_translator(self, gate_type):
-        if gate_type == 'ipt':
-            return gtype(0).name
-        elif gate_type == 'xor':
-            return gtype(2).name
-        elif gate_type == 'or':
-            return gtype(3).name
-        elif gate_type == 'nor':
-            return gtype(4).name
-        elif gate_type == 'not':
-            return gtype(5).name
-        elif gate_type == 'nand':
-            return gtype(6).name
-        elif gate_type == 'and':
-            return gtype(7).name
-        ## new node type
-        elif gate_type == 'xnor':
-            return gtype(8).name
-        elif gate_type == 'buf':
-            return gtype(9).name
-
-
+    
     ## This function is used for inserting the BRCH node
     ## u_node and d_node are connected originally
     ## i_node is the node be inserted between u_node and d_node
@@ -271,6 +248,8 @@ class Circuit:
         return node
 
 
+
+
     def read_verilog(self):
         """
         Read circuit from .v file, each node as an object
@@ -318,49 +297,58 @@ class Circuit:
         ### REGULAR EXPRESSION LESSON: 
         # line_syntax.group(0) is the actual content of this line, including wire
         # line_syntax.group(0) is the actual content of this line, including wire
-        Dict = {}
+        _nodes = {}
         for line in new_lines:
-            
-            # If there is a "wire" in this line:
-            # ntype is know: GATE, gtype is not yet known
-            # Node will not be added! 
-            line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-            if line_syntax:
-                for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
-                    Dict[n] = {'num':n, 'n_type':ntype(0).name, 'g_type':None}
 
-            # PI: n_type = 0 g_type = 0, both are known
+            x_type, nets = read_verilog_syntax(line)
+
+
+            if x_type == "module":
+                continue
+             
+            # Wire: n_type=GATE, gtype=unknown
+            if x_type == "wire":
+                for wire in nets:
+                    _nodes[wire] = {'num':wire, 'n_type':"GATE", 'g_type':None}
+
+            # PI: n_type=PI, g_type=IPT
             # Node will be added! 
-            line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-            if line_syntax:
-                for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                    new_node = self.add_node_v({'num': n, 'n_type': "PI", 'g_type': "IPT"})
+            if x_type == "PI":
+                for pi in nets:
+                    new_node = self.add_node_v({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
                     self.nodes[new_node.num] = new_node
                     self.PI.append(new_node)
 
-            # PO n_type = 3 but g_type is not yet know. 
+            # PO: n_type=PO, g_type=unknown
             # Node will NOT be added
-            line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-            if line_syntax:
-                for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                    Dict[n] = {'num': n, 'n_type':"PO", 'g_type': None}
+            if x_type == "PO":
+                for po in nets:
+                    _nodes[po] = {'num': po, 'n_type':"PO", 'g_type': None}
 
             # Check if it is similar to a line for defining a gate
             # line format is similar to "module" line
             # This is a Gate, n_type is either PO or GATE 
             # We have seen the nodes before either in wire or in input/output
             # Node will be added
-            line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-            if line_syntax:
-                if line_syntax.group(1) == 'module':
-                    continue
-                node_order = line_syntax.group(3).replace(' ', '').split(',')
-                Dict[node_order[0]]['g_type'] = self.gtype_translator(line_syntax.group(1))
+            if x_type == "GATE":
+                _nodes[nets[0]]['g_type'] = self.gtype_translator(line_syntax.group(1))
                 new_node = self.add_node_v(Dict[node_order[0]])
                 self.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
                     self.PO.append(new_node)
 
+                # input_pattern = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+                # if input_pattern != []:
+                #     for set in input_pattern:
+                #         print(set)
+                #         pdb.set_trace()
+
+                #         # set[0] --> A1, A2, Z
+                #         # set[1] --> a_0_, b_0_, n389
+                #     # TODO: Acquire the input/output order of the gate and create the nodes
+
+
+                    
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
             if line == "":
@@ -1124,4 +1112,46 @@ class Circuit:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
 
+def read_verilog_syntax(line):
+    
+    # If there is a "wire" in this line:
+    line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
+        return ("wire", nets)
+     
+    # PI: 
+    line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PI", nets)
+    
+    # PO 
+    line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PO", nets)
+
+    # Gate
+    line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+    if line_syntax:
+        if line_syntax.group(1) == "module":
+            return ("module", None)
+        nets = line_syntax.group(3).replace(' ', '').split(',')
+        return ("GATE", nets)
+
+
+
+
+def verilog_version_gate(line):
+
+    return {"gate type":"gate", "input-list":[], "output-list":[]}
+
+
+## Inputs: Verilog gate input formats
+## Outputs: gtype corresponding gate name
+def cell2gate(self, cell_name):
+    for gname, cell_names in config.CELL_NAMES:
+        if cell_name in cell_names:
+            return gname
 

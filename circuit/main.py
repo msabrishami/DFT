@@ -33,8 +33,9 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
-    experiments.exp_check_ckt()
-    experiments.exp_check_verilog()
+    # experiments.exp_check_ckt()
+    # experiments.exp_check_verilog()
+    experiments.exp_read_v2()
     exit()
 
 

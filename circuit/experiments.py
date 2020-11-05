@@ -53,6 +53,14 @@ def exp_check_verilog():
     check_c432_logicsim(circuit, 1000, mode="verilog")
 
 
+
+def exp_read_v2():
+    circuit = Circuit("adder_syn")
+    circuit.read_verilog()
+    circuit.lev()
+    return 
+
+
 def exp_1(args):
     
     # circuit = Circuit(args.ckt)
