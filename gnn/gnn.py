@@ -1,4 +1,6 @@
+
 import sys
+import os
 sys.path.insert(1, '../circuit/')
 
 import dgl
@@ -7,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dgl import DGLGraph
-from dgl.nn.pytorch import Sequential
+from dgl.nn.pytorch.utils import Sequential
 import numpy as np
 import time
 import copy
@@ -21,6 +23,9 @@ from models.vanilla_gcn import VanillaGCN
 from models.lstm_gcn import LSTMGCN
 import seaborn as sns; sns.set()
 
+
+import config
+
 EPS = 1e-6
 
 torch.manual_seed(0)
@@ -28,17 +33,21 @@ np.random.seed(0)
 
 def load_data_with_model():
     """
-    This function loads the circuit graph, then returns the features, labels, model, split train/test sets
+    loads the circuit graph, 
+    returns: features, labels, model, split train/test sets
     """
     # Read the train circuit
-    graph_train = nx.readwrite.graphml.read_graphml('../data/graph/'+options.circuit_train+'_10e4.graphml')
+    path = os.path.join(config.GRAPH_DIR, options.circuit_train +"_10e4.graphml")
+    graph_train = nx.readwrite.graphml.read_graphml(path)
     # Read the test circuit
-    graph_test = nx.readwrite.graphml.read_graphml('../data/graph/'+options.circuit_test+'_10e4.graphml')
+    path = os.path.join(config.GRAPH_DIR, options.circuit_test +"_10e4.graphml")
+    graph_test = nx.readwrite.graphml.read_graphml(path)
 
     # Create a reverse graph in which the direction of the edges are reversed
     g_train_rev = None
     g_test_rev = None
     if options.bidirectional:
+        raise NameError("Bidirectional graph not supported")
         edges = copy.deepcopy(graph_train.edges())
         graph_train_rev = copy.deepcopy(graph_train)
         for edge in edges:
@@ -61,6 +70,7 @@ def load_data_with_model():
     all_types = []
     all_ids_train = list(graph_train.nodes.keys())
     all_ids_test = list(graph_test.nodes.keys())
+    pdb.set_trace()
 
     for node_id in graph_train.nodes:
         if graph_train.nodes[node_id]['gtype'] not in all_types:
@@ -167,13 +177,13 @@ def evaluate(net, g, features, labels, mask, loss_function, g_rev=None):
         labels = labels[mask]
 
         if options.problem == "regression":
-#            if torch.max(labels) <= 1: #The range will be 0-1
+            # if torch.max(labels) <= 1: #The range will be 0-1
             n_digits = 1
             logits_rounded = torch.round(logits.squeeze() * 10**n_digits) / (10**n_digits)
             labels_rounded = torch.round(labels * 10**n_digits) / (10**n_digits)
             correct = torch.sum(logits_rounded == labels_rounded)
-#            else:
-#                correct = torch.sum(torch.round(logits.squeeze()) == labels)
+            # else:
+            #     correct = torch.sum(torch.round(logits.squeeze()) == labels)
 
             accuracy = correct.item() * 1.0 / len(labels)
             loss = loss_function(logits.squeeze(), labels)
