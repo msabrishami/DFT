@@ -331,28 +331,15 @@ class Circuit:
             # We have seen the nodes before either in wire or in input/output
             # Node will be added
             if x_type == "GATE":
-                _nodes[nets[0]]['g_type'] = self.gtype_translator(line_syntax.group(1))
-                new_node = self.add_node_v(Dict[node_order[0]])
+                gtype, nets = nets
+                _nodes[nets[0]]['g_type'] = gtype 
+                new_node = self.add_node_v(_nodes[nets[0]])
                 self.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
                     self.PO.append(new_node)
 
-                # input_pattern = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
-                # if input_pattern != []:
-                #     for set in input_pattern:
-                #         print(set)
-                #         pdb.set_trace()
-
-                #         # set[0] --> A1, A2, Z
-                #         # set[1] --> a_0_, b_0_, n389
-                #     # TODO: Acquire the input/output order of the gate and create the nodes
-
-
-                    
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
-            if line == "":
-                continue
             line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
             if line_syntax:
                 if line_syntax.group(1) != 'module':
@@ -1137,8 +1124,24 @@ def read_verilog_syntax(line):
     if line_syntax:
         if line_syntax.group(1) == "module":
             return ("module", None)
-        nets = line_syntax.group(3).replace(' ', '').split(',')
-        return ("GATE", nets)
+        
+        gtype = cell2gate(line_syntax.group(1))
+        #we may not use gname for now. 
+        gname = line_syntax.group(2)
+
+        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+        if pin_format:
+            #TODO: for now, we considered PO as the last pin
+            if "Z" not in pin_format[-1][0]:
+                raise NameError("Order of pins in verilog does not match")
+            nets = [pin_format[-1][1]]
+            for x in pin_format[:-1]:
+                nets.append(x[1])
+        else:
+            # verilog with no pin format
+            nets = line_syntax.group(3).replace(' ', '').split(',')
+
+        return ("GATE", (gtype, nets) )
 
 
 
@@ -1150,8 +1153,8 @@ def verilog_version_gate(line):
 
 ## Inputs: Verilog gate input formats
 ## Outputs: gtype corresponding gate name
-def cell2gate(self, cell_name):
-    for gname, cell_names in config.CELL_NAMES:
+def cell2gate(cell_name):
+    for gname, cell_names in config.CELL_NAMES.items():
         if cell_name in cell_names:
             return gname
 
