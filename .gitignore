@@ -5,8 +5,7 @@
 data/modelsim/
 data/fault_sim/
 data/verilog/
-
-# Erfan
+data/EPFL/
 **.png
 **.log
 
@@ -32,6 +31,7 @@ __pycache__/:
 __pycache__/
 *.py[cod]
 *$py.class
+circuit/main_personal.py
 
 # C extensions
 *.so

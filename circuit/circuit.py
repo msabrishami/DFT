@@ -232,7 +232,7 @@ class Circuit:
     
     ## According to the Dict, this function will return the specific node
     ## It is similar to part of add_node()
-    def node_generation(self, Dict):
+    def add_node_v(self, Dict):
         if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
             node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
@@ -270,83 +270,109 @@ class Circuit:
             raise NotImplementedError()
         return node
 
+
     def read_verilog(self):
         """
         Read circuit from .v file, each node as an object
         """
-        path = "../data/verilog/{}.v".format(self.c_name)
+        path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
 
-        ## Read the file and Deal with comment and ; issues
+        ## Read the file and deal with comment and ; issues
         infile = open(path, 'r')
         eff_line = ''
         lines = infile.readlines()
         new_lines=[]
+        
         for line in lines:
-            # eliminate comment first
+            
+            # Ignore the empty lines
+            if line == "":
+                print("empty line")
+                continue
+
+            # Find if this line has a comment ('//')
+            # Remove the comment part of the line
             line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
             if line_syntax:
                 line = line[:line.index('//')]
 
-            # considering ';' issues
+            # If there is no ";" or "endmodule" it means the line is continued
+            # Stack the contniuous lines to each other
             if ';' not in line and 'endmodule' not in line:
                 eff_line = eff_line + line.rstrip()
                 continue
+                        
             line = eff_line + line.rstrip()
             eff_line = ''
             new_lines.append(line)
         infile.close()
 
         ## 1st time Parsing: Creating all nodes
-        # Because the ntype and gtype information are separate, we need to use Dict to collect all information
+        # Because the ntype and gtype information are separate, 
+        # we need to use Dict to collect all information
         # Key: num
         # Value: num, ntype and gtype
+
+
+
+        ### REGULAR EXPRESSION LESSON: 
+        # line_syntax.group(0) is the actual content of this line, including wire
+        # line_syntax.group(0) is the actual content of this line, including wire
         Dict = {}
         for line in new_lines:
-            if line != "":
-                # Wire
-                line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n[1:]] = {'num': n[1:], 'n_type':ntype(0).name, 'g_type':None}
+            
+            # If there is a "wire" in this line:
+            # ntype is know: GATE, gtype is not yet known
+            # Node will not be added! 
+            line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+            if line_syntax:
+                for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
+                    Dict[n] = {'num':n, 'n_type':ntype(0).name, 'g_type':None}
 
-                # PI: n_type = 0 g_type = 0
-                line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        new_node = self.node_generation({'num': n[1:], 'n_type': ntype(1).name, 'g_type': self.gtype_translator('ipt')})
-                        self.nodes[new_node.num] = new_node
-                        self.PI.append(new_node)
+            # PI: n_type = 0 g_type = 0, both are known
+            # Node will be added! 
+            line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+            if line_syntax:
+                for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
+                    new_node = self.add_node_v({'num': n, 'n_type': "PI", 'g_type': "IPT"})
+                    self.nodes[new_node.num] = new_node
+                    self.PI.append(new_node)
 
-                # PO n_type = 3 but g_type has an issue
-                line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n[1:]] = {'num': n[1:], 'n_type': ntype(3).name, 'g_type': None}
+            # PO n_type = 3 but g_type is not yet know. 
+            # Node will NOT be added
+            line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+            if line_syntax:
+                for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
+                    Dict[n] = {'num': n, 'n_type':"PO", 'g_type': None}
 
-                # Gate reading and Making Connection of nodes
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) != 'module':
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        # Nodes Generation
-                        Dict[node_order[0][1:]]['g_type'] = self.gtype_translator(line_syntax.group(1))
-                        new_node = self.node_generation(Dict[node_order[0][1:]])
-                        self.nodes[new_node.num] = new_node
-                        if new_node.ntype == 'PO':
-                            self.PO.append(new_node)
-                            # Dict[node_order[0][1:]]
+            # Check if it is similar to a line for defining a gate
+            # line format is similar to "module" line
+            # This is a Gate, n_type is either PO or GATE 
+            # We have seen the nodes before either in wire or in input/output
+            # Node will be added
+            line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+            if line_syntax:
+                if line_syntax.group(1) == 'module':
+                    continue
+                node_order = line_syntax.group(3).replace(' ', '').split(',')
+                Dict[node_order[0]]['g_type'] = self.gtype_translator(line_syntax.group(1))
+                new_node = self.add_node_v(Dict[node_order[0]])
+                self.nodes[new_node.num] = new_node
+                if new_node.ntype == 'PO':
+                    self.PO.append(new_node)
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
-            if line != "":
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) != 'module':
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        for i in range(1, len(node_order)):
-                            # Making connections
-                            self.nodes[node_order[0][1:]].unodes.append(self.nodes[node_order[i][1:]])
-                            self.nodes[node_order[i][1:]].dnodes.append(self.nodes[node_order[0][1:]])
+            if line == "":
+                continue
+            line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+            if line_syntax:
+                if line_syntax.group(1) != 'module':
+                    node_order = line_syntax.group(3).replace(' ', '').split(',')
+                    for i in range(1, len(node_order)):
+                        # Making connections
+                        self.nodes[node_order[0]].unodes.append(self.nodes[node_order[i]])
+                        self.nodes[node_order[i]].dnodes.append(self.nodes[node_order[0]])
 
         ###### Branch Generation ######
         # The basic way is looking for those nodes with more-than-1 fan-out nodes
@@ -359,7 +385,7 @@ class Circuit:
             if len(node.dnodes) > 1:
                 for index in range(len(node.dnodes)):
                     ## New BNCH
-                    FB_node = self.node_generation({'num': node.num + '-' + str(index+1), 'n_type':ntype(2).name, 'g_type':gtype(1).name})
+                    FB_node = self.add_node_v({'num': node.num + '-' + str(index+1), 'n_type':ntype(2).name, 'g_type':gtype(1).name})
                     B_Dict[FB_node.num] = FB_node
                     self.insert_node(node, node.dnodes[0], FB_node)
         self.nodes.update(B_Dict)
@@ -368,7 +394,7 @@ class Circuit:
         """
         Read circuit from .ckt file, each node as an object
         """
-        path = "../data/ckt/{}.ckt".format(self.c_name)
+        path = os.path.join(config.CKT_DIR, "{}.ckt".format(self.c_name))
         infile = open(path, 'r')
         lines = infile.readlines()
         self.nodes= {}
@@ -381,27 +407,6 @@ class Circuit:
         for line in lines:
             self.connect_node(line.strip())
 
-
-
-
-
-    def read_ckt(self):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        path = "../data/ckt/{}.ckt".format(self.c_name)
-        infile = open(path, 'r')
-        lines = infile.readlines()
-        self.nodes= {}
-
-        # First time over the netlist
-        for line in lines:
-            new_node = self.add_node(line.strip())
-            self.nodes[new_node.num] = new_node
-            
-        for line in lines:
-            self.connect_node(line.strip())
-                    
     
     def lev(self):
         """
@@ -480,7 +485,7 @@ class Circuit:
     def read_PO(self):
         res = {}
         for node in self.PO:
-            res["out" + str(node.num)] = node.value
+            res[node.num] = node.value
         return res
 
 

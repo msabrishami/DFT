@@ -6,7 +6,7 @@ import pdb
 # import networkx as nx
 import math
 import time
-from random import randint
+
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
@@ -18,29 +18,8 @@ from c432_logic_sim import c432_sim
 import config
 from checker_logicsim import Checker
 from observation import *
-from experiments import exp_1
+import experiments 
 
-
-def check_gate_netlist(circuit, total_T=1):
-
-    for t in range(total_T):
-        PI_dict = dict()
-        PI_list = []
-        
-        PI_num = [x.num for x in circuit.PI]
-        for pi in PI_num:
-            val = randint(0,1)
-            PI_dict["in" + str(pi)] = val
-            PI_list.append(val)
-
-        res_beh = c432_sim(PI_dict)
-        circuit.logic_sim(PI_list)
-        res_ckt = circuit.read_PO()
-        if res_beh != res_ckt:
-            print("Wrong")
-            return False
-    print("all test patterns passed")
-    return True
 
 
 def main():
@@ -54,6 +33,11 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
+    experiments.exp_check_ckt()
+    experiments.exp_check_verilog()
+    exit()
+
+
     exp1_res_arit, exp1_res_geom = exp_1(args)
     res_a = {k: v for k, v in sorted(exp1_res_arit.items(), key=lambda item: item[1])}
     for k, v in res_a.items():
@@ -63,6 +47,7 @@ def main():
     circuit.read_verilog()
     # circuit.read_ckt()
     circuit.lev()
+    exit()
 
     """ Testing Read Verilog """ 
     # tp_in_fname  = circuit.c_name + "-tp-input-"  + str(args.tp) + ".log"
@@ -71,7 +56,7 @@ def main():
     # circuit.gen_tp_file(args.tp, fname=tp_in_fname)
     # circuit.logic_sim_file(in_fname=tp_in_fname, out_fname=tp_stil_fname, stil=True)
     # Test Circuit LogicSim
-    # check_gate_netlist(circuit, 3000) # c432
+    # check_c432_logicsim(circuit, 3000) # c432
     
     """ Testing with Modelsim Results """ 
     # for c in ["c17", "c432", "c499"]:

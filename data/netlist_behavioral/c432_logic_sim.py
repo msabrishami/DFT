@@ -78,20 +78,19 @@ def M5(I):
 
 
 def c432_sim(in_vec_dict):
-    pdb.set_trace()
     # Create the input and output variables (top level)
     E = np.array(
-        [in_vec_dict['in4'], in_vec_dict['in17'], in_vec_dict['in30'], in_vec_dict['in43'], in_vec_dict['in56'],
-         in_vec_dict['in69'], in_vec_dict['in82'], in_vec_dict['in95'], in_vec_dict['in108']], dtype=bool)
+        [in_vec_dict['4'], in_vec_dict['17'], in_vec_dict['30'], in_vec_dict['43'], in_vec_dict['56'],
+         in_vec_dict['69'], in_vec_dict['82'], in_vec_dict['95'], in_vec_dict['108']], dtype=bool)
     A = np.array(
-        [in_vec_dict['in1'], in_vec_dict['in11'], in_vec_dict['in24'], in_vec_dict['in37'], in_vec_dict['in50'],
-         in_vec_dict['in63'], in_vec_dict['in76'], in_vec_dict['in89'], in_vec_dict['in102']], dtype=bool)
+        [in_vec_dict['1'], in_vec_dict['11'], in_vec_dict['24'], in_vec_dict['37'], in_vec_dict['50'],
+         in_vec_dict['63'], in_vec_dict['76'], in_vec_dict['89'], in_vec_dict['102']], dtype=bool)
     B = np.array(
-        [in_vec_dict['in8'], in_vec_dict['in21'], in_vec_dict['in34'], in_vec_dict['in47'], in_vec_dict['in60'],
-         in_vec_dict['in73'], in_vec_dict['in86'], in_vec_dict['in99'], in_vec_dict['in112']], dtype=bool)
+        [in_vec_dict['8'], in_vec_dict['21'], in_vec_dict['34'], in_vec_dict['47'], in_vec_dict['60'],
+         in_vec_dict['73'], in_vec_dict['86'], in_vec_dict['99'], in_vec_dict['112']], dtype=bool)
     C = np.array(
-        [in_vec_dict['in14'], in_vec_dict['in27'], in_vec_dict['in40'], in_vec_dict['in53'], in_vec_dict['in66'],
-         in_vec_dict['in79'], in_vec_dict['in92'], in_vec_dict['in105'], in_vec_dict['in115']], dtype=bool)
+        [in_vec_dict['14'], in_vec_dict['27'], in_vec_dict['40'], in_vec_dict['53'], in_vec_dict['66'],
+         in_vec_dict['79'], in_vec_dict['92'], in_vec_dict['105'], in_vec_dict['115']], dtype=bool)
 
     # Call the modules in order
     PA, X1 = M1(E, A)
@@ -102,13 +101,13 @@ def c432_sim(in_vec_dict):
 
     # Get the output dictionary
     out_vec_dict = OrderedDict()
-    out_vec_dict['out223'] = PA.astype(int)
-    out_vec_dict['out329'] = PB.astype(int)
-    out_vec_dict['out370'] = PC.astype(int)
-    out_vec_dict['out421'] = Chan[3].astype(int)
-    out_vec_dict['out430'] = Chan[2].astype(int)
-    out_vec_dict['out431'] = Chan[1].astype(int)
-    out_vec_dict['out432'] = Chan[0].astype(int)
+    out_vec_dict['223'] = PA.astype(int)
+    out_vec_dict['329'] = PB.astype(int)
+    out_vec_dict['370'] = PC.astype(int)
+    out_vec_dict['421'] = Chan[3].astype(int)
+    out_vec_dict['430'] = Chan[2].astype(int)
+    out_vec_dict['431'] = Chan[1].astype(int)
+    out_vec_dict['432'] = Chan[0].astype(int)
 
     return out_vec_dict
 
