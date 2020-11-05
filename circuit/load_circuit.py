@@ -219,7 +219,7 @@ class LoadCircuit:
         branches = {}
         for node in circuit.nodes.values():
             if len(node.dnodes) > 1:
-                for idx, dnode in enumerate(node.dnodes):
+                for idx in range(len(node.dnodes)):
                     ## New BNCH
                     branch = self.add_node_v({'num': node.num + '-' + str(idx+1), 
                         'n_type':"FB", 'g_type':"BRCH"})
