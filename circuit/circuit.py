@@ -315,14 +315,14 @@ class Circuit:
                     self.nodes[net].dnodes.append(self.nodes[nets[0]])
 
 
-        # Branch modification 
+        # Branch modification
         # Inserting FB node back into the circuit
         branches = {}
         for node in self.nodes.values():
             if len(node.dnodes) > 1:
-                for idx, dnode in enumerate(node.dnodes):
+                for idx in range(len(node.dnodes)):
                     ## New BNCH
-                    branch = self.add_node_v({'num': node.num + '-' + str(idx+1), 
+                    branch = self.add_node_v({'num': node.num + '-' + str(idx+1),
                         'n_type':"FB", 'g_type':"BRCH"})
                     branches[branch.num] = branch
                     insert_branch(node, node.dnodes[0], branch)
@@ -506,11 +506,11 @@ class Circuit:
         #  ... provided a golden input/output file
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
-        PI_t_order  = [x for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [x for x in lines[1][8:].strip().split(',')]
-        # print(PI_t_order)
+        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
+        print(PI_t_order)
         PI_num = [x.num for x in self.PI]
-        # print(PI_num)
+        print(PI_num)
 
         print(PO_t_order)
         PO_num = [x.num for x in self.PO]
