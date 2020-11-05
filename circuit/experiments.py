@@ -16,6 +16,7 @@ def check_c432_logicsim(circuit, total_T=1, mode="ckt"):
     for t in range(total_T):
         PI_dict = dict()
         PI_list = []
+
         
         PI_num = [x.num for x in circuit.PI]
         PI_num = [x[1:] for x in PI_num] if mode=="verilog" else PI_num 
@@ -34,7 +35,9 @@ def check_c432_logicsim(circuit, total_T=1, mode="ckt"):
             res_ckt = res_ckt_2
         if res_beh != res_ckt:
             print("Wrong")
+            pdb.set_trace()
             return False
+        print("True")
     print("Logicsim matches behavioral simulation for {}, with {} test patterns ".format(
         circuit.c_name, total_T))
     return True
@@ -63,8 +66,8 @@ def exp_read_v2():
 
 def exp_1(args):
     
-    # circuit = Circuit(args.ckt)
-    circuit.read_verilog()
+    circuit = Circuit(args.ckt)
+    # circuit.read_verilog()
     # circuit.read_ckt()
     circuit.lev()
     

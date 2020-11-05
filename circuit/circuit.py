@@ -5,9 +5,6 @@ import random
 from enum import Enum
 import math
 import sys
-from node import gtype
-from node import ntype
-from node import *
 # import networkx as nx
 # import matplotlib.pyplot as plt
 from random import randint
@@ -18,6 +15,10 @@ import numpy as np
 import os
 
 import config
+from node import gtype
+from node import ntype
+from node import *
+
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 
@@ -241,6 +242,7 @@ class Circuit:
         Read circuit from .v file, each node as an object
         """
         path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
+        print("Reading verilog file in {}".format(path))
         infile = open(path, 'r')
         eff_line = ''
         lines = infile.readlines()
@@ -256,7 +258,7 @@ class Circuit:
 
             # If there is no ";" or "endmodule" it means the line is continued
             # Stack the contniuous lines to each other
-            if ';' not in line or 'endmodule' not in line:
+            if (';' not in line) and ('endmodule' not in line):
                 eff_line = eff_line + line.rstrip()
                 continue
                         
@@ -380,8 +382,8 @@ class Circuit:
         res.append("#PO: " + str(len(self.PO)) + " >> ")
         res.append(str([x.num for x in self.PO]))
 
-        # for num, node in self.nodes.items():
-        #     res.append(str(node))
+        for node in self.nodes_lev:
+            res.append(str(node))
         return "\n".join(res)
     
 
@@ -504,11 +506,16 @@ class Circuit:
         #  ... provided a golden input/output file
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
-        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
-        print(PI_t_order)
+        PI_t_order  = [x for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [x for x in lines[1][8:].strip().split(',')]
+        # print(PI_t_order)
         PI_num = [x.num for x in self.PI]
-        print(PI_num)
+        # print(PI_num)
+
+        print(PO_t_order)
+        PO_num = [x.num for x in self.PO]
+        print(PO_num)
+
         print("Logic-Sim validation with {} patterns".format(int((len(lines)-2)/3)))
         if PI_t_order != PI_num:
             print("Error: PI node order does not match! ")
@@ -518,11 +525,12 @@ class Circuit:
             test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
             self.logic_sim(test_in)
             logic_out = self.read_PO()
+
             for i in range(len(PO_t_order)):
                 out_node = PO_t_order[i]
                 out_node_golden = test_out[i]
-                if out_node_golden != logic_out["out"+str(out_node)]:
-                    print("Error: PO node order does not match! ")
+                if out_node_golden != logic_out[out_node]:
+                    print("Error: PO node values do not match! ")
                     return False
         print("Validation completed successfully - all correct")
         return True
@@ -815,5 +823,80 @@ class Circuit:
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
+
+def verilog_version_gate(line):
+    return {"gate type":"gate", "input-list":[], "output-list":[]}
+
+
+def cell2gate(cell_name):
+    ## Inputs: Verilog gate input formats
+    ## Outputs: gtype corresponding gate name
+    for gname, cell_names in config.CELL_NAMES.items():
+        if cell_name in cell_names:
+            return gname
+    raise NameError("Cell type {} was not found".format(cell_name))
+
+
+def insert_branch(u_node, d_node, i_node):
+    """ This function is used for inserting the BRCH node
+    u_node and d_node are connected originally
+    i_node is the node be inserted between u_node and d_node """ 
+    u_node.dnodes.remove(d_node)
+    u_node.dnodes.append(i_node)
+    d_node.unodes.remove(u_node)
+    d_node.unodes.append(i_node)
+    i_node.unodes.append(u_node)
+    i_node.dnodes.append(d_node)
+
+
+def read_verilog_syntax(line):
+    
+    
+    if line.strip() == "endmodule":
+        return ("module", None)
+
+    # If there is a "wire" in this line:
+    line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
+        return ("wire", nets)
+     
+    # PI: 
+    line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PI", nets)
+    
+    # PO 
+    line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+    if line_syntax:
+        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+        return ("PO", nets)
+
+    # Gate
+    line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+    if line_syntax:
+        if line_syntax.group(1) == "module":
+            return ("module", None)
+        
+        gtype = cell2gate(line_syntax.group(1))
+        #we may not use gname for now. 
+        gname = line_syntax.group(2)
+
+        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+        if pin_format:
+            #TODO: for now, we considered PO as the last pin
+            if "Z" not in pin_format[-1][0]:
+                raise NameError("Order of pins in verilog does not match")
+            nets = [pin_format[-1][1]]
+            for x in pin_format[:-1]:
+                nets.append(x[1])
+        else:
+            # verilog with no pin format
+            nets = line_syntax.group(3).replace(' ', '').split(',')
+
+        return ("GATE", (gtype, nets) )
+    
+    raise NameError("No suggestion for \n>{}<\n was found".format(line))
 
 

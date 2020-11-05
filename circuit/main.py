@@ -35,7 +35,22 @@ def main():
 
     # experiments.exp_check_ckt()
     # experiments.exp_check_verilog()
-    experiments.exp_read_v2()
+    # experiments.exp_read_v2()
+    circuit = Circuit(args.ckt)
+    circuit.read_verilog()
+    circuit.lev()
+    tp = circuit.gen_tp() 
+    circuit.logic_sim(tp)
+    for node in circuit.nodes_lev:
+        print(str(node), ">>\t", node.value)
+    exit()
+    pdb.set_trace()
+    print(circuit)
+    exit()
+    circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_10_b.txt")
+    circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_100_b.txt")
+    exit()
+
     exit()
 
     exp1_res_arit, exp1_res_geom = exp_1(args)

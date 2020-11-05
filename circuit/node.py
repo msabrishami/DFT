@@ -114,8 +114,12 @@ class Node:
         self.stat = {}
                     
     def __str__(self):
-        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
-            str(len(self.unodes)), str(len(self.dnodes))]))
+        unodes_num = [(x.num, x.value) for x in self.unodes]
+        dnodes_num = [(x.num, x.value) for x in self.dnodes]
+        return(", ".join([str(self.num), self.ntype, self.gtype, "Lev:" + str(self.lev), 
+            # str(len(self.unodes)), str(len(self.dnodes))]))
+            "Unodes:", str(unodes_num),
+            "Dnodes:", str(dnodes_num)]))
     
     def imply(self):
         ''' forward implication for a logic gate ''' 
