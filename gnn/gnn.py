@@ -31,13 +31,14 @@ EPS = 1e-6
 torch.manual_seed(0)
 np.random.seed(0)
 
-def load_data_with_model():
+def load_data_with_model(options):
     """
     loads the circuit graph, 
     returns: features, labels, model, split train/test sets
     """
     # Read the train circuit
     path = os.path.join(config.GRAPH_DIR, options.circuit_train +"_10e4.graphml")
+    print(path)
     graph_train = nx.readwrite.graphml.read_graphml(path)
     # Read the test circuit
     path = os.path.join(config.GRAPH_DIR, options.circuit_test +"_10e4.graphml")
@@ -250,7 +251,7 @@ def main():
     parser.add_option('-f','--features',  dest='features', type='str', help='What features are given to the nodes', default=None)
     (options, args) = parser.parse_args()
 
-    g_train, g_test, g_train_rev, g_test_rev, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model()
+    g_train, g_test, g_train_rev, g_test_rev, features_train, labels_train, train_mask, test_mask, features_test, labels_test, net, loss_function = load_data_with_model(options)
     
     #g, features, labels, train_mask, test_mask, net, loss_function = load_data_with_model()
     optimizer = torch.optim.Adam(net.parameters(), lr=1e-2)

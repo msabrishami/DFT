@@ -19,7 +19,7 @@ from node import gtype
 from node import ntype
 from node import *
 
-
+from load_circuit import LoadCircuit
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 
 """
@@ -238,6 +238,9 @@ class Circuit:
         return node
 
     def read_verilog(self):
+        LoadCircuit(self, "v")
+
+    def read_verilog_old(self):
         """
         Read circuit from .v file, each node as an object
         """
@@ -341,6 +344,9 @@ class Circuit:
 
     
     def read_ckt(self):
+        LoadCircuit(self, "ckt")
+    
+    def read_ckt_old(self):
         """
         Read circuit from .ckt file, each node as an object
         """
@@ -517,6 +523,7 @@ class Circuit:
         lines = infile.readlines()
         PI_t_order  = [x for x in lines[0][8:].strip().split(',')]
         PO_t_order = [x for x in lines[1][8:].strip().split(',')]
+        
         # print("PI-test-order: ", PI_t_order)
         PI_num = [x.num for x in self.PI]
         # print("PI-ckt-order:", PI_num)
