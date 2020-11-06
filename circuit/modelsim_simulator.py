@@ -262,14 +262,17 @@ class Modelsim():
         """ 
         #copy .v file to the ModelSim project folder
         filepath=os.path.join(self.path, self.circuit.c_name+'.v')
-        if os.path.isfile(filepath):
-            pass
+        if os.path.exists(filepath):
+            os.remove(filepath)
         else:
-            copyfile(os.path.join(config.VERILOG_DIR, self.circuit.c_name + ".v"), filepath)
+            pass
+        copyfile(os.path.join(config.VERILOG_DIR, self.circuit.c_name + ".v"), filepath)
             
         if 'syn' in self.circuit.c_name:
             fr = open(filepath,mode='r')
             w_lines = []
+            w_lines.append('`include "NanGate_15nm_OCL_conditional.v"')
+            w_lines.append('`timescale 1ns / 1ns')
             lines = fr.readlines()
             for line in lines:
                 if 'top' in line:

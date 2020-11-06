@@ -319,16 +319,3 @@ def read_verilog_syntax(line):
         return ("GATE", (gtype, nets) )
     
     raise NameError("No suggestion for \n>{}<\n was found".format(line))
-
-
-"""
-try:
-    circuit = Circuit('c17')
-    #LoadCircuit(circuit)
-    LoadCircuit(circuit, mode= 'v')
-    circuit.lev()
-    print(circuit)
-
-except IOError:
-    print("error in the code")
-"""
