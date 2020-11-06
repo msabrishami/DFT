@@ -40,6 +40,8 @@ class Modelsim():
         else: 
             #print("Creating a Modelsim project folder for circuit {} in {}".format(self.circuit.c_name, self.path))
             os.mkdir(self.path)
+        if 'syn' in self.circuit.c_name:
+            copyfile(os.path.join(config.MODELSIM_DIR, 'NanGate_15nm_OCL_conditional.v'), os.path.join(self.path, 'NanGate_15nm_OCL_conditional.v'))
         
         if not os.path.exists(self.path_in):
             os.mkdir(self.path_in)
@@ -97,11 +99,11 @@ class Modelsim():
         fw.write(str(self.circuit.c_name) + ' u_' + str(self.circuit.c_name) + ' (')
         in_index = 0
         for pi in self.circuit.PI:
-            fw.write('.N' + str(pi.num) + '(in[' + str(in_index) + ']),')
+            fw.write('.' + str(pi.num) + '(in[' + str(in_index) + ']),')
             in_index += 1
         out_index = 0
         for po in self.circuit.PO:
-            fw.write('.N' + str(po.num) + '(out[' + str(out_index) + '])')
+            fw.write('.' + str(po.num) + '(out[' + str(out_index) + '])')
             if out_index != len(self.circuit.PO)-1:
                 fw.write(',')
                 out_index += 1
@@ -130,7 +132,7 @@ class Modelsim():
         fw.write('\t$fwrite(fo,"Inputs: ')
         in_index = 0
         for pi in self.circuit.PI:
-            fw.write("N" + str(pi.num))
+            fw.write( str(pi.num))
             if in_index != len(self.circuit.PI) - 1:
                 fw.write(',')
                 in_index += 1
@@ -139,7 +141,7 @@ class Modelsim():
         fw.write('\t$fwrite(fo,"Outputs: ')
         out_index = 0
         for pi in self.circuit.PO:
-            fw.write("N" + str(pi.num))
+            fw.write( str(pi.num))
             if out_index != len(self.circuit.PO) - 1:
                 fw.write(',')
                 out_index += 1
@@ -180,7 +182,7 @@ class Modelsim():
             fw.write('\t$display("')
             out_index = 0
             for po in self.circuit.PO:
-                fw.write("N" + str(po.num) + '=%h')
+                fw.write( str(po.num) + '=%h')
                 if out_index != len(self.circuit.PO) - 1:
                     fw.write(',')
                     out_index += 1
@@ -240,6 +242,8 @@ class Modelsim():
         fw = open(os.path.join(self.path, self.circuit.c_name + "_" + str(tp_count) +'_b.do'), mode='w')
         fw.write('vlib work\n')
         fw.write('vmap work work\n')
+        if 'syn' in self.circuit.c_name:
+            fw.write('vlog -work work NanGate_15nm_OCL_conditional.v\n')
         fw.write('vlog -work work '+str(self.circuit.c_name)+'.v\n')
         fw.write('vlog -work work '+str(self.circuit.c_name)+ "_" + str(tp_count) + '_b_tb.v\n')
         fw.write('onerror {resume}\n')
@@ -262,6 +266,21 @@ class Modelsim():
             pass
         else:
             copyfile(os.path.join(config.VERILOG_DIR, self.circuit.c_name + ".v"), filepath)
+            
+        if 'syn' in self.circuit.c_name:
+            fr = open(filepath,mode='r')
+            w_lines = []
+            lines = fr.readlines()
+            for line in lines:
+                if 'top' in line:
+                    line = line.replace('top', self.circuit.c_name)
+                w_lines.append(line)
+            fr.close()
+            fw = open(filepath,mode='w')
+            for line in w_lines:
+                fw.write(line+'\n')
+            fw.close()
+
         #get the shell file name which will run the ModelSim for different circuit with different pattern count
         if fname_sh == None:
             fname_sh = self.circuit.c_name + "_" + str(self.tp_count) + "_run.sh"

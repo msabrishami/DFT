@@ -104,23 +104,30 @@ class Checker():
         #Now we just want to check if circuit.logicsim of ckt or verilog matches
         infile = open(self.tp_path, "r")
         lines = infile.readlines()
-        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
-        PI_num = [x.num for x in circuit.PI]
+        PI_t_order  = [x.lstrip('N') for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [x.lstrip('N') for x in lines[1][8:].strip().split(',')]
+        PI_num = [x.num.lstrip('N') for x in circuit.PI]
+        PO_num = [x.num.lstrip('N') for x in circuit.PO]
+        
         #print("Logic-Sim validation with {} patterns".format(int((len(lines)-2)/3)))
         if PI_t_order != PI_num:
             print("Error:{} PI node order does not match! ".format(circuit.c_name))
+            return False
+        if PO_t_order != PO_num:
+            print("Error:{} PO node order does not match! ".format(circuit.c_name))
             return False
         for t in range(int((len(lines)-2)/3)):
             test_in  = [int(x) for x in lines[(t+1)*3].strip().split(',')]
             test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
             circuit.logic_sim(test_in)
             logic_out = circuit.read_PO()
+
+            logic_out = { k.replace('N', ''): v for k, v in logic_out.items() }
             for i in range(len(PO_t_order)):
                 out_node = PO_t_order[i]
                 out_node_golden = test_out[i]
-                if out_node_golden != logic_out["out"+str(out_node)]:
-                    print("Error:{} PO node order does not match! ".format(circuit.c_name))
+                if out_node_golden != logic_out[out_node]:
+                    print("Error:{} PO values do not match! ".format(circuit.c_name))
                     return False
         #print("Validation completed successfully - all correct")
         return True
