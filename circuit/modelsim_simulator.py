@@ -72,7 +72,7 @@ class Modelsim():
         Generate test_bench.v, run.sh, run.do for the specific circuit 
            in the circuit project folder
         """ 
-        print(self.tp_fname)
+        #print(self.tp_fname)
 
         #check number of input test patterns
         fr = open(self.tp_fname, mode='r')
@@ -161,6 +161,7 @@ class Modelsim():
                 else:
                     fw.write(');\n')
             fw.write('\t#1\n')
+            '''
             fw.write('\t$display("')
             for j in range(len(self.circuit.PI)):
                 fw.write('%h')
@@ -174,6 +175,8 @@ class Modelsim():
                     fw.write(',')
                 else:
                     fw.write(');\n')
+                    '''
+            '''
             fw.write('\t$display("')
             out_index = 0
             for po in self.circuit.PO:
@@ -190,6 +193,7 @@ class Modelsim():
                             out_index += 1
                         else:
                             fw.write(');\n')
+                            '''
             fw.write('\t$fwrite(fo, "Test # = ' + str(i+1) + '\\n");\n')
             fw.write('\t$fwrite(fo,"')
             for j in range(len(self.circuit.PI)):
@@ -244,6 +248,7 @@ class Modelsim():
         fw.close()
 
 
+
     def simulation(self, fname_sh=None):
         """ 
         First: copy verilog file from ./data/verilog to the project folder
@@ -261,7 +266,7 @@ class Modelsim():
         if fname_sh == None:
             fname_sh = self.circuit.c_name + "_" + str(self.tp_count) + "_run.sh"
         #run ModelSim in subprocess
-        subprocess.call(['sh', fname_sh, "> temp.log"], cwd = self.path)
+        subprocess.call(['sh',fname_sh], cwd = self.path)
         #end of subprocess
         #return to main function
 
