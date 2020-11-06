@@ -44,9 +44,6 @@ def main():
     for node in circuit.nodes_lev:
         print(str(node), ">>\t", node.value)
     exit()
-    pdb.set_trace()
-    print(circuit)
-    exit()
     circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_10_b.txt")
     circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_100_b.txt")
     exit()

@@ -506,11 +506,11 @@ class Circuit:
         #  ... provided a golden input/output file
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
-        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
-        print(PI_t_order)
+        PI_t_order  = [x for x in lines[0][8:].strip().split(',')]
+        PO_t_order = [x for x in lines[1][8:].strip().split(',')]
+        print("PI-test-order: ", PI_t_order)
         PI_num = [x.num for x in self.PI]
-        print(PI_num)
+        print("PI-ckt-order:", PI_num)
 
         print(PO_t_order)
         PO_num = [x.num for x in self.PO]
@@ -531,6 +531,7 @@ class Circuit:
                 out_node_golden = test_out[i]
                 if out_node_golden != logic_out[out_node]:
                     print("Error: PO node values do not match! ")
+                    print(out_node_golden, logic_out[out_node])
                     return False
         print("Validation completed successfully - all correct")
         return True
