@@ -33,11 +33,26 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
-    experiments.exp_check_c432_behavioral(mode="ckt", tp=100)
-    experiments.exp_check_c432_behavioral(mode="v", tp=100)
-    experiments.exp_check_verilog_modelsim()
+    # experiments.exp_check_ckt()
+    # experiments.exp_check_verilog()
+    # experiments.exp_read_v2()
+
+    for ckt in ["c17", "c432", "c499", "c880", "c1908"]:
+        circuit = Circuit(ckt)
+        LoadCircuit(circuit, "v")
+    
+        # circuit.read_verilog()
+        circuit.lev()
+        tp = circuit.gen_tp() 
+        circuit.logic_sim(tp)
+        # for node in circuit.nodes_lev:
+        #     print(str(node), ">>\t", node.value)
+        path = "../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
+        circuit.golden_test(path)
+        # circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_100_b.txt")
     exit()
 
+    exit()
 
     exp1_res_arit, exp1_res_geom = exp_1(args)
     res_a = {k: v for k, v in sorted(exp1_res_arit.items(), key=lambda item: item[1])}
