@@ -197,7 +197,7 @@ class Node:
         if self.ntype == 'PO':
             return True
 
-        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH']:
+        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH', "BUFF"]:
             return True
 
         elif self.dnodes[0].gtype in ['AND', 'NAND']:
@@ -213,7 +213,7 @@ class Node:
                 return True
 
         else:
-            print("Error: Not implemented yet")
+            raise NameError("Error: is_sensible is not implemented for this node")
 
 
     def semi_detect(self):
@@ -237,8 +237,13 @@ class Node:
         elif self.sense:
 
             dn = self.dnodes[0]
+            
+            if dn.gtype == 'BUFF':
+                # TODO: Double check this
+                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
+                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
 
-            if dn.gtype == 'AND':
+            elif dn.gtype == 'AND':
                 self.D1 = True if ((self.value == 1) & (dn.D1)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D0)) else False
 
@@ -278,8 +283,7 @@ class Node:
                             self.D0 = True
                             break
             else:
-                print("gate type is {}".format(self.gtype))
-                print("This gate is not supported yet")
+                raise NameError("Error: semi_detect is not implemented for this gate")
 
         self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count

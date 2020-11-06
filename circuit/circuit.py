@@ -5,7 +5,7 @@ import random
 from enum import Enum
 import math
 import sys
-# import networkx as nx
+import networkx as nx
 # import matplotlib.pyplot as plt
 from random import randint
 import time
@@ -96,6 +96,7 @@ class Circuit:
             node = BRCH(n_type, g_type, num)
         
         elif n_type == "GATE" and g_type=="BRCH":
+            pdb.set_trace()
             raise NotImplementedError()
 
         elif n_type == "GATE" or n_type == "PO":
@@ -206,6 +207,7 @@ class Circuit:
             node = BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
 
         elif Dict['n_type'] == "GATE" and Dict['g_type'] == "BRCH":
+            pdb.set_trace()
             raise NotImplementedError()
 
         elif Dict['n_type'] == "GATE" or Dict['n_type'] == "PO":
@@ -233,6 +235,7 @@ class Circuit:
             # elif Dict['g_type'] == 'XNOR':
             #     node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
         else:
+            pdb.set_trace()
             raise NotImplementedError()
         
         return node
@@ -240,129 +243,8 @@ class Circuit:
     def read_verilog(self):
         LoadCircuit(self, "v")
 
-    def read_verilog_old(self):
-        """
-        Read circuit from .v file, each node as an object
-        """
-        path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
-        print("Reading verilog file in {}".format(path))
-        infile = open(path, 'r')
-        eff_line = ''
-        lines = infile.readlines()
-        new_lines=[]
-        
-        for line in lines:
-            if line == "":
-                continue
-
-            # Remove comment in lines 
-            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
-            line = line[:line.index('//')] if line_syntax else line
-
-            # If there is no ";" or "endmodule" it means the line is continued
-            # Stack the contniuous lines to each other
-            if (';' not in line) and ('endmodule' not in line):
-                eff_line = eff_line + line.rstrip()
-                continue
-                        
-            line = eff_line + line.rstrip()
-            eff_line = ''
-            new_lines.append(line)
-
-        infile.close()
-
-        ## 1st time Parsing: Creating all nodes
-        # we need to use _nodes dict to collect all information
-        _nodes = {}
-        for line in new_lines:
-
-            x_type, nets = read_verilog_syntax(line)
-
-            if x_type == "module":
-                continue
-             
-            # Wire: n_type=GATE, gtype=unknown
-            if x_type == "wire":
-                for wire in nets:
-                    _nodes[wire] = {'num':wire, 'n_type':"GATE", 'g_type':None}
-
-            # PI: n_type=PI, g_type=IPT, Node will be added! 
-            if x_type == "PI":
-                for pi in nets:
-                    new_node = self.add_node_v({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
-                    self.nodes[new_node.num] = new_node
-                    self.PI.append(new_node)
-
-            # PO: n_type=PO, g_type=unknown, Node will NOT be added
-            if x_type == "PO":
-                for po in nets:
-                    _nodes[po] = {'num': po, 'n_type':"PO", 'g_type': None}
-
-            # GATE, n_type = PO or GATE
-            # Node was seen before, in wire or in input/output, node will be added
-            if x_type == "GATE":
-                gtype, nets = nets
-                _nodes[nets[0]]['g_type'] = gtype 
-                new_node = self.add_node_v(_nodes[nets[0]])
-                self.nodes[new_node.num] = new_node
-                if new_node.ntype == 'PO':
-                    self.PO.append(new_node)
-
-        # 2nd time Parsing: Making All Connections
-        for line in new_lines:
-            x_type, nets = read_verilog_syntax(line)
-            if x_type == "GATE":
-                gtype, nets = nets
-                for net in nets[1:]:
-                    self.nodes[nets[0]].unodes.append(self.nodes[net])
-                    self.nodes[net].dnodes.append(self.nodes[nets[0]])
-
-
-        # Branch modification
-        # Inserting FB node back into the circuit
-        all_branches = {}
-        for node in self.nodes.values():
-            if len(node.dnodes) > 1:
-                node_branches = []
-                for idx, dnode in enumerate(node.dnodes):
-                    ## New BNCH
-                    branch = self.add_node_v({'num': node.num + '-' + str(idx+1),
-                        'n_type':"FB", 'g_type':"BRCH"})
-                    node_branches.append(branch)
-                    all_branches[branch.num] = branch
-                    # insert_branch(node, node.dnodes[0], branch)
-                    branch.unodes.append(node)
-                    branch.dnodes.append(dnode)
-                    dnode.unode = [branch]
-                node.dnodes = []
-                for b in node_branches:
-                    node.dnodes.append(b)
-        
-        self.nodes.update(all_branches)
-
-        print("Loading verilog file is done")
-
-    
     def read_ckt(self):
         LoadCircuit(self, "ckt")
-    
-    def read_ckt_old(self):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        path = os.path.join(config.CKT_DIR, "{}.ckt".format(self.c_name))
-        infile = open(path, 'r')
-        lines = infile.readlines()
-        self.nodes= {}
-
-        # First time over the netlist
-        for line in lines:
-            new_node = self.add_node(line.strip())
-            self.nodes[new_node.num] = new_node
-            
-        for line in lines:
-            self.connect_node(line.strip())
-
     
     def lev(self):
         """
@@ -797,25 +679,25 @@ class Circuit:
         """
         G = nx.DiGraph()
         for n in self.nodes_lev:
-            n_num_normal = n.num
-            G.add_node(n_num_normal)
-            G.nodes[n_num_normal]['lev'] = n.lev
-            G.nodes[n_num_normal]['gtype'] = n.gtype
-            G.nodes[n_num_normal]['ntype'] = n.ntype
-            G.nodes[n_num_normal]['CC0'] = n.CC0
-            G.nodes[n_num_normal]['CC1'] = n.CC1
-            G.nodes[n_num_normal]['CO'] = n.CO
-            G.nodes[n_num_normal]['C0'] = n.C0
-            G.nodes[n_num_normal]['C1'] = n.C1
-            G.nodes[n_num_normal]['S'] = n.S
-            G.nodes[n_num_normal]['B0'] = n.B0
-            G.nodes[n_num_normal]['B1'] = n.B1
-            G.nodes[n_num_normal]['D0_p'] = n.D0_p
-            G.nodes[n_num_normal]['D1_p'] = n.D1_p
-            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
+            G.add_node(n.num)
+            G.nodes[n.num]['lev'] = n.lev
+            G.nodes[n.num]['lev'] = n.lev
+            G.nodes[n.num]['gtype'] = n.gtype
+            G.nodes[n.num]['ntype'] = n.ntype
+            G.nodes[n.num]['CC0'] = n.CC0
+            G.nodes[n.num]['CC1'] = n.CC1
+            G.nodes[n.num]['CO'] = n.CO
+            G.nodes[n.num]['C0'] = n.C0
+            G.nodes[n.num]['C1'] = n.C1
+            G.nodes[n.num]['S'] = n.S
+            G.nodes[n.num]['B0'] = n.B0
+            G.nodes[n.num]['B1'] = n.B1
+            G.nodes[n.num]['D0_p'] = n.D0_p
+            G.nodes[n.num]['D1_p'] = n.D1_p
+            G.nodes[n.num]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
-                    G.add_edge(unode.num, n_num_normal)
+                    G.add_edge(unode.num, n.num)
             else:
                 pass
         return G
