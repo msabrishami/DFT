@@ -24,9 +24,9 @@ STAFAN_B_MIN = 0.0001
 CELL_NAMES = {
         "XOR": ["xor", "XOR2"],
         "XNOR": ["xnor", "XNOR2"],
-        "OR": ["or", "OR2", "OR2_X1"],
+        "OR": ["or", "OR2", "OR2_X1", "OR"],
         "NOR": ["nor", "NOR2", "NOR2_X1"],
-        "AND": ["and", "AND2", "AND2_X1"],
+        "AND": ["and", "AND2", "AND2_X1", "AND"],
         "NAND": ["nand", "NAND2"],
         "NOT": ["not", "inv", "NOT", "INV_X1", "INV_X2"],
         "BUFF": ["buff", "buf"]
