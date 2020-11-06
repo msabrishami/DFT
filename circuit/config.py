@@ -29,5 +29,5 @@ CELL_NAMES = {
         "AND": ["and", "AND2", "AND2_X1"],
         "NAND": ["nand", "NAND2"],
         "NOT": ["not", "inv", "NOT", "INV_X1", "INV_X2"],
-        "BUFF": ["buff"]
+        "BUFF": ["buff", "buf"]
         }

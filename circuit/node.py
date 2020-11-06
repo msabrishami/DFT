@@ -364,7 +364,7 @@ class NOT(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
-        self.value = 1 if (self.unodes[0] == 0) else 0
+        self.value = 1 if (self.unodes[0].value == 0) else 0
 
     def imply_p(self):
         bitlen = int(math.log2(sys.maxsize))+1  # bit-width of processor

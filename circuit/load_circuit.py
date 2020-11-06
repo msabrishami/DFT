@@ -321,7 +321,7 @@ def read_verilog_syntax(line):
     raise NameError("No suggestion for \n>{}<\n was found".format(line))
 
 
-
+"""
 try:
     circuit = Circuit('c17')
     #LoadCircuit(circuit)
@@ -331,6 +331,4 @@ try:
 
 except IOError:
     print("error in the code")
-
-
-
+"""

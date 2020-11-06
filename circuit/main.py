@@ -10,7 +10,7 @@ import time
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
-
+from load_circuit import LoadCircuit
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -36,16 +36,20 @@ def main():
     # experiments.exp_check_ckt()
     # experiments.exp_check_verilog()
     # experiments.exp_read_v2()
-    circuit = Circuit(args.ckt)
-    circuit.read_verilog()
-    circuit.lev()
-    tp = circuit.gen_tp() 
-    circuit.logic_sim(tp)
-    for node in circuit.nodes_lev:
-        print(str(node), ">>\t", node.value)
-    exit()
-    circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_10_b.txt")
-    circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_100_b.txt")
+
+    for ckt in ["c17", "c432", "c499", "c880", "c1908"]:
+        circuit = Circuit(ckt)
+        LoadCircuit(circuit, "v")
+    
+        # circuit.read_verilog()
+        circuit.lev()
+        tp = circuit.gen_tp() 
+        circuit.logic_sim(tp)
+        # for node in circuit.nodes_lev:
+        #     print(str(node), ">>\t", node.value)
+        path = "../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
+        circuit.golden_test(path)
+        # circuit.golden_test("../data/modelsim/golden_IO_from_verilog/golden_c432_100_b.txt")
     exit()
 
     exit()

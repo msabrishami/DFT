@@ -112,7 +112,7 @@ class Circuit:
                 node = NOR(n_type, g_type, num)
 
             elif g_type == 'NOT':
-                node = NOR(n_type, g_type, num)
+                node = NOT(n_type, g_type, num)
 
             elif g_type == 'NAND':
                 node = NAND(n_type, g_type, num)
@@ -317,16 +317,25 @@ class Circuit:
 
         # Branch modification
         # Inserting FB node back into the circuit
-        branches = {}
+        all_branches = {}
         for node in self.nodes.values():
             if len(node.dnodes) > 1:
-                for idx in range(len(node.dnodes)):
+                node_branches = []
+                for idx, dnode in enumerate(node.dnodes):
                     ## New BNCH
                     branch = self.add_node_v({'num': node.num + '-' + str(idx+1),
                         'n_type':"FB", 'g_type':"BRCH"})
-                    branches[branch.num] = branch
-                    insert_branch(node, node.dnodes[0], branch)
-        self.nodes.update(branches)
+                    node_branches.append(branch)
+                    all_branches[branch.num] = branch
+                    # insert_branch(node, node.dnodes[0], branch)
+                    branch.unodes.append(node)
+                    branch.dnodes.append(dnode)
+                    dnode.unode = [branch]
+                node.dnodes = []
+                for b in node_branches:
+                    node.dnodes.append(b)
+        
+        self.nodes.update(all_branches)
 
         print("Loading verilog file is done")
 
@@ -508,13 +517,13 @@ class Circuit:
         lines = infile.readlines()
         PI_t_order  = [x for x in lines[0][8:].strip().split(',')]
         PO_t_order = [x for x in lines[1][8:].strip().split(',')]
-        print("PI-test-order: ", PI_t_order)
+        # print("PI-test-order: ", PI_t_order)
         PI_num = [x.num for x in self.PI]
-        print("PI-ckt-order:", PI_num)
+        # print("PI-ckt-order:", PI_num)
 
-        print(PO_t_order)
+        # print(PO_t_order)
         PO_num = [x.num for x in self.PO]
-        print(PO_num)
+        # print(PO_num)
 
         print("Logic-Sim validation with {} patterns".format(int((len(lines)-2)/3)))
         if PI_t_order != PI_num:
