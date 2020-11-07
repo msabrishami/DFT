@@ -514,12 +514,11 @@ class Circuit:
         
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
-        # calculate observability
-        # for node in self.PO:
-        #     print(">>", node.num)
-        #     node.B1 = 1.0
-        #     node.B0 = 1.0
-        
+
+        for node in self.nodes_lev:
+            adjust_STAFAN_C(node)
+            
+                
         for node in reversed(self.nodes_lev):
             # with checking node==PO we can add one node in the 
             # .... middle of the circuit as PO, and stefan is still correct
@@ -678,10 +677,9 @@ class Circuit:
         each node has attributes: CC0, CC1, CO, lev
         """
         G = nx.DiGraph()
-        for n in self.nodes_lev:
+        for idx, n in enumerate(self.nodes_lev):
             G.add_node(n.num)
-            G.nodes[n.num]['lev'] = n.lev
-            G.nodes[n.num]['lev'] = n.lev
+            G.nodes[n.num]['lev'] = int(n.lev)
             G.nodes[n.num]['gtype'] = n.gtype
             G.nodes[n.num]['ntype'] = n.ntype
             G.nodes[n.num]['CC0'] = n.CC0

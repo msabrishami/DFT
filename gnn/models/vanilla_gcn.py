@@ -33,6 +33,45 @@ class GCNLayer(nn.Module):
         return F.relu(self.linear(x)), g_rev
 
 
+
+class GCNLayerF(nn.Module):
+    def __init__(self, in_feats, out_feats):
+        super(GCNLayerF, self).__init__()
+        self.linear = nn.Linear(in_feats, out_feats)
+
+    def forward(self, g, feature, g_rev=None):
+        # with g.local_scope():
+        #     g.ndata['h'] = feature
+        #     g.update_all(gcn_msg, gcn_reduce)
+        #     h_in = g.ndata['h']
+
+        # if g_rev:
+        #     with g_rev.local_scope():
+        #         g_rev.ndata['h'] = feature
+        #         g_rev.update_all(gcn_msg, gcn_reduce)
+        #         h_out = g_rev.ndata['h']
+        #     x = torch.cat((h_in, h_out, feature), dim=1)
+        # else:
+        #     x = torch.cat((h_in, feature), dim=1)
+        x = feature
+        return F.relu(self.linear(x)), g_rev
+
+
+class FakeGCN(nn.Module):
+
+    def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10, rev=False):
+        super(FakeGCN, self).__init__()
+        self.input_layer = nn.Linear(feature_dim, weight_dim)
+        self.hidden_layers = Sequential(*[GCNLayerF(weight_dim, weight_dim) for i in range(depth)])
+        self.output_layer = nn.Linear(weight_dim, output_dim)
+    
+    def forward(self, g, features, g_rev=None):
+        x = F.relu(self.input_layer(features))
+        x, _ = self.hidden_layers(g, x, g_rev)
+        x = self.output_layer(x)
+        return x
+
+
 class VanillaGCN(nn.Module):
     
     def __init__(self, feature_dim=6, output_dim=1, weight_dim=512, depth=10, rev=False):
