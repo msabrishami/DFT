@@ -46,6 +46,7 @@ def main():
     circuit.STAFAN_CS(args.tp) 
     circuit.STAFAN_B() 
     graph = circuit.gen_graph()
+    pdb.set_trace()
 
 
 
@@ -56,6 +57,8 @@ def main():
     nx.write_graphml(graph, fname)
     print("Saved!")
     print()
+    # print(circuit)
+    # pdb.set_trace()
     # exit() 
     # temp = nx.read_graphml("./g_noon.graphml")
 

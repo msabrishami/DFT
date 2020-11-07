@@ -4,7 +4,7 @@ from enum import Enum
 import pdb
 import math 
 import sys
-
+import config 
 # We are using GNOT, etc. as we may later use X values
 
 
@@ -417,7 +417,9 @@ class OR(Node):
     
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("OR gate, C0 or C1 is zero")
+            # adjust_STAFAN_C(self)
+            pass
+            # raise NameError("OR gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             unode.B0 = self.B0 * self.C0 / unode.C0
@@ -460,7 +462,8 @@ class NOR(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("NOR gate, C0 or C1 is zero")
+            # adjust_STAFAN_C(self)
+            pass
         for unode in self.unodes:
             unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
@@ -498,7 +501,8 @@ class AND(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("AND gate, C0 or C1 is zero")
+            # adjust_STAFAN_C(self)
+            pass
         for unode in self.unodes:
             unode.B1 = self.B1 * self.C1 / unode.C1
             unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
@@ -538,7 +542,8 @@ class NAND(Node):
     
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("NAND gate, C0 or C1 is zero")
+            # adjust_STAFAN_C(self)
+            pass
         for unode in self.unodes:
             unode.B1 = self.B0 * self.C0 / unode.C1
             # Formula in the original paper has a typo
@@ -874,4 +879,14 @@ class podem_node_5val():
         val.x = self.x
         return val
 
+
+def adjust_STAFAN_C(node):
+    if node.C0 == 0:
+        print("WARNING: node {} , C0 is zero, ".format(node.num), end="")
+        print("replaced with {}".format(config.STAFAN_C_MIN))
+        node.C0 = config.STAFAN_C_MIN
+    if node.C1 == 0:
+        print("WARNING: node {} , C1 is zero, ".format(node.num), end="")
+        print("replaced with {}".format(config.STAFAN_C_MIN))
+        node.C1 = config.STAFAN_C_MIN     
 
