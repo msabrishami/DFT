@@ -39,7 +39,7 @@
 //   * Export `celldefine      : false
 //   * Export `timescale       : -
 // 
-//`timescale 1ns/1ns
+`timescale 1ns/1ns
 module AND2_X1 (A1, A2, Z);
   input A1;
   input A2;
