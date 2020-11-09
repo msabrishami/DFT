@@ -24,6 +24,19 @@ def TPI_stat(circuit, HTO_th, HTC_th):
         else:
             node.stat["SS@0"] = "HTD"
 
+def stat_HTO(circuit, HTO_th, HTC_th):
+    TPI_stat(circuit, HTO_th, HTC_th)
+    for node in circuit.nodes_lev:
+        node.eval_HTO()
+
+    count = 0 
+    for node in circuit.nodes_lev:
+        if node.HTO:
+            count += 1
+    print("Number of HTO nodes are {}".format(count))
+
+
+
 def NVIDIA_count(circuit, op, HTO_th, HTC_th):
     """ count the number of nodes that change from HTO to ETO 
     by making node an observation point """ 

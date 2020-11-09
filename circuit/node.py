@@ -154,6 +154,14 @@ class Node:
         ''' deductive fault simulation (dfs) using unodes ''' 
         raise NotImplementedError()
 
+    def eval_HTO(self):
+        if len(self.stat) == 0:
+            raise NameError("No statistical analysis yet been done!")
+        if self.stat["SS@0"] == "HTO" or self.stat["SS@1"] == "HTO":
+            self.HTO = 1
+        else:
+            self.HTO = 0
+
 
     
     # TODO: Saeed thinks many of these are redundant! 
@@ -292,8 +300,8 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%",
-                    "SS@0", "SS@1"]
+                    "C1", "S", "B0", "B1", "BC0", "BC1", "B"] 
+            # "D0%", "D1%", "SS@0", "SS@1"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")

@@ -37,7 +37,6 @@ def main():
     # experiments.exp_check_c432_behavioral(mode="v", tp=100)
     # experiments.exp_check_verilog_modelsim()
 
-
     circuit = Circuit(args.ckt)
     circuit.read_verilog()
     circuit.lev()
@@ -45,9 +44,12 @@ def main():
     circuit.SCOAP_CO()
     circuit.STAFAN_CS(args.tp) 
     circuit.STAFAN_B() 
+    # circuit.co_ob_info()
+    
+
+    
     graph = circuit.gen_graph()
     pdb.set_trace()
-
 
 
     suffix = round(math.log10(args.tp))

@@ -9,7 +9,8 @@ data/verilog/
 data/EPFL/
 **.png
 **.log
-
+gnn/notes.txt
+gnn/TEMP_func.py
 
 
 # **.graphml

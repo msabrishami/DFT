@@ -687,12 +687,15 @@ class Circuit:
             G.nodes[n.num]['CO'] = n.CO
             G.nodes[n.num]['C0'] = n.C0
             G.nodes[n.num]['C1'] = n.C1
-            G.nodes[n.num]['S'] = n.S
             G.nodes[n.num]['B0'] = n.B0
             G.nodes[n.num]['B1'] = n.B1
-            G.nodes[n.num]['D0_p'] = n.D0_p
-            G.nodes[n.num]['D1_p'] = n.D1_p
-            G.nodes[n.num]['D_p'] = n.D0_p + n.D1_p
+            G.nodes[n.num]['S'] = n.S
+            G.nodes[n.num]['CB0'] = n.CB0
+            G.nodes[n.num]['CB1'] = n.CB1
+            G.nodes[n.num]['B'] = n.B
+            G.nodes[n.num]['HTO'] = n.HTO
+            # G.nodes[n.num]['D1_p'] = n.D1_p
+            # G.nodes[n.num]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(unode.num, n.num)
