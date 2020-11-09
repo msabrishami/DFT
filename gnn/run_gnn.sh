@@ -28,11 +28,6 @@
 
 
 
-
-
-
-
-
 # Regression problem with limited features, output not input
 # python gnn.py --weight-dim=64 --depth=3 --objective=B --features=C0,C1,B0,B1,CO,CC0,CC1 --model=FakeGCN --train-circuit=c6288 --test-circuit=c432 --problem=regression --loss=L2 --sigmoid
 

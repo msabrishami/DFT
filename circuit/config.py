@@ -14,7 +14,7 @@ FAULT_DICT_DIR = "../data/fault_dict_new"
 FAULT_SIM_DIR = "../data/fault_sim"
 CKT_DIR = "../data/ckt"
 # TEST POINT INSERTION PROBLEM:
-HTO_TH = 0.02
+HTO_TH = 0.05
 HTC_TH = 0.05
 STAFAN_B_MIN = 0.0001
 STAFAN_C_MIN = 0.001

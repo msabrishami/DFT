@@ -73,12 +73,11 @@ def exp_read_v2():
 
 
 def exp_1(args):
+    """ measuring the change made in the fan-in cone nodes if made PO """
     
     circuit = Circuit(args.ckt)
-    # circuit.read_verilog()
-    # circuit.read_ckt()
+    LoadCircuit(circuit, "v")
     circuit.lev()
-    
     
     """ Observation Point Insertion """  
     circuit.SCOAP_CC()
@@ -87,12 +86,11 @@ def exp_1(args):
     circuit.STAFAN_B()
     circuit.co_ob_info() 
 
-
     exp1_res_arit = {}
     exp1_res_geom = {}
 
     for node in circuit.nodes_lev:
-        if node.lev < 5:
+        if node.lev < 4:
             continue
 
         print("================================")
@@ -101,23 +99,32 @@ def exp_1(args):
             print(node.num, "SKIPPED")
             continue
 
-        print(node.num, node.B)
-        a_all, g_all, a_tot, g_tot = approach_1(circuit, node)
-        # stat_arithmetic = [round(x, 2) for x in stat_arithmetic]
-        # stat_geometric = [round(x, 2) for x in stat_geometric]
-        print("Node num: {}\tNode Lev: {}\nArithmetic:\t {}\t\tGeometric: \t {}".format(
+        print(node.num, round(node.B,3))
+        a_all, g_all, a_agg, g_agg = approach_1(circuit, node)
+
+        exp1_res_arit[node.num] = a_agg
+        exp1_res_geom[node.num] = g_agg
+        print("Node num:  {}\tNode Lev: {} is now OP! \nArithmetic AGG:\t\t {}\t\tGeometric AGG: \t {}".format(
             node.num, node.lev, 
-            [round(x, 3) for x in a_tot], [round(x, 3) for x in g_tot]))
-        exp1_res_arit[node.num] = a_tot[2]
-        exp1_res_geom[node.num] = g_tot[2]
+            [round(x, 3) for x in a_agg], [round(x, 3) for x in g_agg]))
+
+        # exp1_res_arit[node.num] = a_agg[2]
+        # exp1_res_geom[node.num] = g_agg[2]
         for idx in range(len(a_all)):
             if a_all[idx][2] < 0.001:
                 continue
-            print("{} {}".format(circuit.nodes_lev[idx].num, circuit.nodes_lev[idx].lev), end="")
+            print("{} \t{}".format(circuit.nodes_lev[idx].num, 
+                circuit.nodes_lev[idx].lev), end="")
             print("\t\t", [round(x, 3) for x in a_all[idx]], end="\t\t")
             print("\t\t", [round(x, 3) for x in g_all[idx]])
-    TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
+    
+    print("\n\n=============clean format==============\n\n")
+    for node in circuit.nodes_lev:
+        if node.num in exp1_res_arit:
+            print(node.num, exp1_res_arit[node.num], exp1_res_geom[node.num])
+    print("\n\n=============clean format==============\n\n")
 
+    TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
     nodes_HTO = []
     for node in circuit.nodes_lev:
         if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):
@@ -128,5 +135,6 @@ def exp_1(args):
         print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
             target.num, target.B1, target.B0, 
             NVIDIA_count(circuit, target, 0.05, 0.05)))
+
     
     return (exp1_res_arit, exp1_res_geom)

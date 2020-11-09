@@ -64,44 +64,46 @@ def NVIDIA_count(circuit, op, HTO_th, HTC_th):
 
 
 def approach_1(circuit, op):
-    """ count the number of nodes that change from HTO to ETO 
-    by making node an observation point """ 
+    """ count the number of nodes that change from HTO to ETO when op is made observation point 
+    returns:
+    aggregated amount of change op's fan-in cone, arithmetic and geometeric
+    all amounts of change in the op's fan-in cone
+    """
     circuit.STAFAN_B()
     # TPI_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
     stat_arit_all = [] # [[1,1,1]] * len(circuit.nodes_lev)
     stat_geom_all = [] # [[0,0,0]] * len(circuit.nodes_lev)
-    stat_arit_agg = [0, 0, 0]
-    stat_geom_agg = [0, 0, 0]
+    stat_arit_agg = [0, 0, 0, 0, 0]
+    stat_geom_agg = [0, 0, 0, 0, 0]
     stat_init = []
 
     for node in circuit.nodes_lev: 
-        stat_init.append([node.B0, node.B1, node.B, node.num, node.lev])
-        stat_arit_all.append([0, 0, 0])
-        stat_geom_all.append([0, 0, 0])
+        stat_init.append([node.B0, node.B1, node.B, node.CB0, node.CB1, node.num, node.lev])
+        stat_arit_all.append([0, 0, 0, 0, 0])
+        stat_geom_all.append([0, 0, 0, 0, 0])
     
-    # circuit.co_ob_info()
-
+    # Make op as observation point, add it to circuit outputs, run STAFAN again
     orig_ntype = op.ntype
     circuit.PO.append(op)
     op.ntype = "PO"
-
     circuit.STAFAN_B()
 
-    # circuit.co_ob_info()
-
     for idx, node in enumerate(circuit.nodes_lev):
-        temp = [node.B0, node.B1, node.B]
-        for x in range(3):
-            # issue of division by 0
-            if stat_init[idx][x] == 0 and temp[x]==0:
+        changed = [node.B0, node.B1, node.B, node.CB0, node.CB1]
+        for x in range(5):
+            
+            # if no change was made, and still node observation is zero! 
+            if stat_init[idx][x] == 0 and changed[x]==0:
+                # Both arithmetic and geometric are not changed 
                 continue
+            # if it changed, but initial value was zero
             elif stat_init[idx][x] == 0:
                 stat_init[idx][x] = config.STAFAN_B_MIN
 
-            stat_arit_all[idx][x] = temp[x]-stat_init[idx][x]
-            stat_geom_all[idx][x] = temp[x]/stat_init[idx][x]
-            stat_arit_agg[x] += (temp[x] - stat_init[idx][x])
-            stat_geom_agg[x] += ((temp[x] / stat_init[idx][x]) - 1)
+            stat_arit_all[idx][x] = changed[x] - stat_init[idx][x]
+            stat_geom_all[idx][x] = (changed[x] / stat_init[idx][x]) - 1
+            stat_arit_agg[x] += (changed[x] - stat_init[idx][x])
+            stat_geom_agg[x] += ((changed[x] / stat_init[idx][x]) - 1)
         # print("info:\t", idx, node.num, temp, stat_arit_all[idx])
 
     op.ntype = orig_ntype
