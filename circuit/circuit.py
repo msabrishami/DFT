@@ -260,6 +260,8 @@ class Circuit:
             flag_change = False
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
+                    if len(node.unodes) == 0:
+                        raise NameError("Node has no input! Maybe input is constant")
                     lev_u = [x.lev for x in node.unodes]
                     # print(num, lev_u)
                     if None in lev_u:
@@ -723,6 +725,33 @@ class Circuit:
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
+
+
+
+    def save_circuit(self, fname):
+        outfile = open(fname, "w")
+        for node in self.nodes_lev:
+            arr = [node.num,node.C0,node.C1,node.B0,node.B1,node.S,node.CB0,node.CB1, node.B] 
+            arr = [str(x) for x in arr]
+            ss = ",".join(arr)
+            outfile.write(ss + "\n")
+        outfile.close()
+    
+    def load_circuit(self, fname):
+        infile = open(fname)
+        for line in infile:
+            words = line.strip().split(",")
+            node = self.nodes[words[0]]
+            node.C0 =   float(words[1])  
+            node.C1 =   float(words[2]) 
+            node.B0 =   float(words[3]) 
+            node.B1 =   float(words[4]) 
+            node.S  =   float(words[5]) 
+            node.CB0 =  float(words[6]) 
+            node.CB1 =  float(words[7]) 
+            node.B =    float(words[8]) 
+        print("Circuit loaded!\n")
+            
 
 def verilog_version_gate(line):
     return {"gate type":"gate", "input-list":[], "output-list":[]}

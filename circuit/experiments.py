@@ -72,38 +72,35 @@ def exp_read_v2():
     return 
 
 
-def exp_1(args):
+def exp_1():
     """ measuring the change made in the fan-in cone nodes if made PO """
     
-    circuit = Circuit(args.ckt)
-    LoadCircuit(circuit, "v")
-    circuit.lev()
+    # circuit = Circuit(args.ckt)
+    # LoadCircuit(circuit, "v")
+    # circuit.lev()
     
     """ Observation Point Insertion """  
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp)
-    circuit.STAFAN_B()
-    circuit.co_ob_info() 
+    # circuit.SCOAP_CC()
+    # circuit.SCOAP_CO()
+    # circuit.STAFAN_CS(args.tp)
+    # circuit.STAFAN_B()
+    # circuit.co_ob_info() 
 
     exp1_res_arit = {}
     exp1_res_geom = {}
 
     for node in circuit.nodes_lev:
-        if node.lev < 4:
-            continue
-
-        print("================================")
 
         if node.B > 0.2:
-            print(node.num, "SKIPPED")
+            # print(node.num, "SKIPPED")
             continue
 
-        print(node.num, round(node.B,3))
+        print("\n===============================")
+        print(node.num, round(node.B0, 3), round(node.B1, 3), round(node.B,3))
         a_all, g_all, a_agg, g_agg = approach_1(circuit, node)
-
         exp1_res_arit[node.num] = a_agg
         exp1_res_geom[node.num] = g_agg
+
         print("Node num:  {}\tNode Lev: {} is now OP! \nArithmetic AGG:\t\t {}\t\tGeometric AGG: \t {}".format(
             node.num, node.lev, 
             [round(x, 3) for x in a_agg], [round(x, 3) for x in g_agg]))
@@ -121,7 +118,10 @@ def exp_1(args):
     print("\n\n=============clean format==============\n\n")
     for node in circuit.nodes_lev:
         if node.num in exp1_res_arit:
-            print(node.num, exp1_res_arit[node.num], exp1_res_geom[node.num])
+            msg = node.num + ","
+            msg = msg + ",".join([str(x) for x in exp1_res_arit[node.num]]) + "," 
+            msg = msg + ",".join([str(x) for x in exp1_res_geom[node.num]])
+            print(msg)
     print("\n\n=============clean format==============\n\n")
 
     TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
