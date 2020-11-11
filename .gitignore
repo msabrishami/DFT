@@ -11,7 +11,7 @@ data/EPFL/
 **.log
 gnn/notes.txt
 gnn/TEMP_func.py
-
+circuit/temp_results/
 
 # **.graphml
 **.png

@@ -65,76 +65,20 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     check_c432_logicsim(circuit, tp, mode)
 
 
-def exp_read_v2():
-    circuit = Circuit("adder_syn")
-    circuit.read_verilog()
-    circuit.lev()
-    return 
 
 
-def exp_1():
-    """ measuring the change made in the fan-in cone nodes if made PO """
-    
-    # circuit = Circuit(args.ckt)
-    # LoadCircuit(circuit, "v")
-    # circuit.lev()
-    
-    """ Observation Point Insertion """  
-    # circuit.SCOAP_CC()
-    # circuit.SCOAP_CO()
-    # circuit.STAFAN_CS(args.tp)
-    # circuit.STAFAN_B()
-    # circuit.co_ob_info() 
+def someOtherExp():
+    print("not now")
+    # TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
+    # nodes_HTO = []
+    # for node in circuit.nodes_lev:
+    #     if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):
+    #         nodes_HTO.append(node)
+    # print("Initial HTO count: {}".format(len(nodes_HTO)))
 
-    exp1_res_arit = {}
-    exp1_res_geom = {}
+    # for target in nodes_HTO: 
+    #     print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
+    #         target.num, target.B1, target.B0, 
+    #         NVIDIA_count(circuit, target, 0.05, 0.05)))
 
-    for node in circuit.nodes_lev:
 
-        if node.B > 0.2:
-            # print(node.num, "SKIPPED")
-            continue
-
-        print("\n===============================")
-        print(node.num, round(node.B0, 3), round(node.B1, 3), round(node.B,3))
-        a_all, g_all, a_agg, g_agg = approach_1(circuit, node)
-        exp1_res_arit[node.num] = a_agg
-        exp1_res_geom[node.num] = g_agg
-
-        print("Node num:  {}\tNode Lev: {} is now OP! \nArithmetic AGG:\t\t {}\t\tGeometric AGG: \t {}".format(
-            node.num, node.lev, 
-            [round(x, 3) for x in a_agg], [round(x, 3) for x in g_agg]))
-
-        # exp1_res_arit[node.num] = a_agg[2]
-        # exp1_res_geom[node.num] = g_agg[2]
-        for idx in range(len(a_all)):
-            if a_all[idx][2] < 0.001:
-                continue
-            print("{} \t{}".format(circuit.nodes_lev[idx].num, 
-                circuit.nodes_lev[idx].lev), end="")
-            print("\t\t", [round(x, 3) for x in a_all[idx]], end="\t\t")
-            print("\t\t", [round(x, 3) for x in g_all[idx]])
-    
-    print("\n\n=============clean format==============\n\n")
-    for node in circuit.nodes_lev:
-        if node.num in exp1_res_arit:
-            msg = node.num + ","
-            msg = msg + ",".join([str(x) for x in exp1_res_arit[node.num]]) + "," 
-            msg = msg + ",".join([str(x) for x in exp1_res_geom[node.num]])
-            print(msg)
-    print("\n\n=============clean format==============\n\n")
-
-    TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
-    nodes_HTO = []
-    for node in circuit.nodes_lev:
-        if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):
-            nodes_HTO.append(node)
-    print("Initial HTO count: {}".format(len(nodes_HTO)))
-
-    for target in nodes_HTO: 
-        print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
-            target.num, target.B1, target.B0, 
-            NVIDIA_count(circuit, target, 0.05, 0.05)))
-
-    
-    return (exp1_res_arit, exp1_res_geom)

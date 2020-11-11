@@ -750,7 +750,7 @@ class Circuit:
             node.CB0 =  float(words[6]) 
             node.CB1 =  float(words[7]) 
             node.B =    float(words[8]) 
-        print("Circuit loaded!\n")
+        print("Circuit loaded: " + fname)
             
 
 def verilog_version_gate(line):

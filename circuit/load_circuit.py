@@ -227,7 +227,7 @@ class LoadCircuit:
                     insert_branch(node, node.dnodes[0], branch)
         circuit.nodes.update(branches)
 
-        print("Loading verilog file is done")
+        # print("Loading verilog file is done")
 
 
     def read_ckt(self, circuit):

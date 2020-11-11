@@ -63,7 +63,15 @@ def NVIDIA_count(circuit, op, HTO_th, HTC_th):
     return count
 
 
-def approach_1(circuit, op):
+
+def make_OP(circuit, op):
+    """ adds an observation point, updates STAFAN_B """ 
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    circuit.STAFAN_B()
+
+
+def deltaP(circuit, op):
     """ count the number of nodes that change from HTO to ETO when op is made observation point 
     returns:
     aggregated amount of change op's fan-in cone, arithmetic and geometeric
@@ -110,6 +118,76 @@ def approach_1(circuit, op):
     circuit.PO = circuit.PO[:-1]
 
     return stat_arit_all, stat_geom_all, stat_arit_agg, stat_geom_agg
+
+
+def circuit_deltaP(circuit, B_th=0.1):
+    """ measuring the change made in the fan-in cone nodes if made PO 
+    Calculates this for all the nodes
+    returns a ranked list of nodes based on value of B
+    Note: we are not considering branch nodes 
+    """
+    
+    res_arit = {}
+    res_geom = {}
+
+    for node in circuit.nodes_lev:
+
+        if node.B > B_th:
+            # print(node.num, "SKIPPED")
+            continue
+
+        if node.ntype == "FB":
+            continue
+        # print("\n===============================")
+        # print(node.num, round(node.B0, 3), round(node.B1, 3), round(node.B,3))
+        a_all, g_all, a_agg, g_agg = deltaP(circuit, node)
+        res_arit[node.num] = a_agg
+        res_geom[node.num] = g_agg
+
+        # print("Num:{}\Lev:{} is OP! \nArit AGG:\t\t {}\t\tGeom AGG: \t {}".format(
+        #     node.num, node.lev, 
+        #     [round(x, 3) for x in a_agg], [round(x, 3) for x in g_agg]))
+
+        # printing the impact on all the nodes if node is made OP
+        # for idx in range(len(a_all)):
+        #     if a_all[idx][2] < 0.001:
+        #         continue
+        #     print("{} \t{}".format(circuit.nodes_lev[idx].num, 
+        #         circuit.nodes_lev[idx].lev), end="")
+        #     print("\t\t", [round(x, 3) for x in a_all[idx]], end="\t\t")
+        #     print("\t\t", [round(x, 3) for x in g_all[idx]])
+    guide = {"B0":0, "B1":1, "B":2, "CB0":3, "CB1":4}
+    # print("\n\n=============clean format==============")
+    # print("arit: B0,B1,B,CB0,CB1. geom: B0,B1,B,CB0,CB1")
+    # for node in circuit.nodes_lev:
+    #     if node.num in res_arit:
+    #         msg = node.num + ","
+    #         msg = msg + ",".join([str(x) for x in res_arit[node.num]]) + "," 
+    #         msg = msg + ",".join([str(x) for x in res_geom[node.num]])
+    #         print(msg)
+    # print("\n\n=============clean format==============\n\n")
+    
+    _arit = {}
+    _geom = {}
+    for key in res_arit.keys():
+        _arit[key] = res_arit[key][guide["B"]]
+        _geom[key] = res_geom[key][guide["B"]]
+    arit_ordered = {k: v for k,v in sorted(_arit.items(), key=lambda item: item[1], reverse=True)}
+    geom_ordered = {k: v for k,v in sorted(_geom.items(), key=lambda item: item[1], reverse=True)}
+    return (arit_ordered, geom_ordered)
+
+
+
+def OPI(circuit, alg, count_op=10):
+    """ runs the observation point insertion, with algorithm alg
+    for count_op number of observation points 
+    The circuit argument is considered to be fully loaded"""
+    if alg == "deltaP":
+        for x in range(count_op):
+            arit, geom = observation.circuit_deltaP(circuit)
+            new_op = list(arit)[0]
+
+
 
 
 """
