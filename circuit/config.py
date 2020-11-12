@@ -1,5 +1,5 @@
 
-
+LIB_CELLS_PATH = "../data/library"
 MODELSIM_DIR = "../data/modelsim"
 MODELSIM_INPUT_DIR = "input" 
 MODELSIM_GOLD_DIR = "gold" 
@@ -19,6 +19,8 @@ HTC_TH = 0.05
 STAFAN_B_MIN = 0.0001
 STAFAN_C_MIN = 0.001
 
+
+V_FORMATS = ["EPFL", "ISCAS85"]
 
 # LOGIC LIBRARY RELATED:
 CELL_NAMES = {

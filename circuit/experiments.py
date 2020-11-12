@@ -65,11 +65,9 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     check_c432_logicsim(circuit, tp, mode)
 
 
-
-
 def someOtherExp():
     print("not now")
-    # TPI_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
+    # fault_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
     # nodes_HTO = []
     # for node in circuit.nodes_lev:
     #     if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):

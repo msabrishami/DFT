@@ -3,7 +3,7 @@ import config
 import pdb
 
 
-def TPI_stat(circuit, HTO_th, HTC_th):
+def fault_stat(circuit, HTO_th, HTC_th):
     """ categorizes all the nodes in the circuit based on obs and ctrl
     this is a simple division of nodes, 
     the element C*B can also be used. 
@@ -29,7 +29,7 @@ def TPI_stat(circuit, HTO_th, HTC_th):
 
 
 def stat_HTO(circuit, HTO_th, HTC_th):
-    TPI_stat(circuit, HTO_th, HTC_th)
+    fault_stat(circuit, HTO_th, HTC_th)
     for node in circuit.nodes_lev:
         node.eval_HTO()
 
@@ -46,7 +46,7 @@ def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
     """ count the number of nodes that change from HTO to ETO 
     by making node an observation point """ 
     circuit.STAFAN_B()
-    TPI_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
+    fault_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
     HTO_old = set()
     for node in circuit.nodes_lev: 
         if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
@@ -55,7 +55,7 @@ def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
     circuit.PO.append(op)
     op.ntype = "PO"
     circuit.STAFAN_B()
-    TPI_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
+    fault_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
     HTO_new = set()
     count = 0
     for node in circuit.nodes_lev:
@@ -98,7 +98,7 @@ def deltaP(circuit, op):
     all amounts of change in the op's fan-in cone
     """
     circuit.STAFAN_B()
-    # TPI_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
+    # fault_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
     stat_arit_all = [] # [[1,1,1]] * len(circuit.nodes_lev)
     stat_geom_all = [] # [[0,0,0]] * len(circuit.nodes_lev)
     stat_arit_agg = [0, 0, 0, 0, 0]
@@ -229,7 +229,6 @@ def OPI(circuit, alg, count_op=10, B_th=0.2):
         raise NameError("Algorithm not defined")
    
     return res
-
 
 
 """
