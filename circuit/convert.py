@@ -103,14 +103,14 @@ def add_op_verilog(path_in, op,
         new_module_name = "top"
         path_out = path_in.split("/")[-1][:-2]+"_OP_"+op+".v" if path_out==None else path_out
         # buff buff-name (output, input)
-        lines[-1] = "buf {} ({},{});".format(new_buff, new_po, op)
+        lines[-1] = "BUF_X1 {} ( .I({}) , .Z({}) );".format(new_buff, op, new_po) 
     
     elif verilog_version == "ISCAS85":
         new_module_name = lines[0].split()[1] + "_OP_" + op
         # BUFF_X1 buff-name (.I (input-name), .Z(output-name))
-        lines[-1] = "BUF_X1 {} ( .I({}) , .Z({}) );".format(new_buff, op, new_po) 
         path_out = new_module_name + ".v" if path_out==None else path_out 
-    
+        lines[-1] = "buf {} ({},{});".format(new_buff, new_po, op)
+
     # add op-node to module
     lines[0] = lines[0].replace(lines[0].split()[1], new_module_name)
     ptr = lines[0].find(");")
