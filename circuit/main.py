@@ -37,12 +37,19 @@ def main():
     # experiments.exp_check_c432_behavioral(mode="v", tp=100)
     # experiments.exp_check_verilog_modelsim()
 
+
+    # path1 = "../data/modelsim/c17/input/c17_full_tp_b.txt"
+    path1 = "../data/modelsim/c432/input/tp-input-1000.log"
     circuit = Circuit(args.ckt)
-    circuit.read_verilog()
+    LoadCircuit(circuit, "v")
     circuit.lev()
+    circuit.logic_sim_file(in_fname = path1, out_fname = "c432-STIL.txt", out_format="STIL")
+    circuit.logic_sim_file(in_fname = path1, out_fname = "c432-658.txt", out_format="658")
+    exit()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp) 
+    circuit.STAFAN_CS(args.tp, tp_save_fname="tps-c17.log") 
+    exit()
     circuit.STAFAN_B() 
     # circuit.co_ob_info()
     

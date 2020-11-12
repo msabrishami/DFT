@@ -346,59 +346,53 @@ class Circuit:
                 node.imply()
 
     
-    def logic_sim_file(self, in_fname, out_fname, stil=False): 
+    def logic_sim_file(self, in_fname, out_fname, out_format): 
         """
-        This method does the logic simulation in our platform
-        First: generate a output folder in ../data/modelsim/circuit_name/ directory
-        Second: read a input file in input folder
-        Third: generate a output file in output folder by using logic_sim() function
+        Reads the input patterns from "in_fname" with 658 format
+        Does the logic simulation, stores the results in "out_fname" 
+        The output format can be 658 or STIL
         """
-        fr = open(in_fname, mode='r')
-        fw = open(out_fname, mode='w')
-        fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
-        fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
-        temp = fr.readline()
-        i=1
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            self.logic_sim(line_split)
-            fw.write('Test # = '+str(i)+'\n')
-            fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
-            i+=1
-        fw.close()
-        fr.close()
-        
-        
-        if stil:
-            infile = open(in_fname, "r")
-            lines = infile.readlines()
-            outfile = open(out_fname, "w")
+        assert out_format in ["658", "STIL"], "Output format {} not supported".format(out_format)
+        infile = open(in_fname, "r")
+        lines = infile.readlines()
+        outfile = open(out_fname, "w")
+
+        if out_format == "658":
+            outfile.write('Inputs: ')
+            outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
+            outfile.write('Outputs: ')
+            outfile.write(",".join([str(node.num) for node in self.PO]) + "\n")
+        if out_format == "STIL":
             outfile.write("PI:")
             outfile.write(",".join([node.num for node in self.PI]) + "\n")
             outfile.write("PO:")
             outfile.write(",".join([node.num for node in self.PO]) + "\n")
-            for idx, line in enumerate(lines[1:]):
-                tp=line.rstrip('\n').split(",")
-                # for x in range(len(line_split)):
-                #    line_split[x]=int(line_split[x])
-                # self.logic_sim(line_split)
-                self.logic_sim(tp)
+           
+            
+        for idx, line in enumerate(lines[1:]):
+            line = line.rstrip('\n').split(",")
+            tp = [int(x) for x in line]
+            self.logic_sim(tp)
+            out = [str(node.value) for node in self.PO]
+
+            if out_format == "658":
+                outfile.write('Test # = '+str(idx+1)+'\n')
+                outfile.write(",".join(line) + '\n')
+                outfile.write(",".join(out) + "\n")
+            
+            elif out_format == "STIL":
                 outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
                 outfile.write("\"_pi\"=")
-                outfile.write("".join(line.strip().split(",")))
+                outfile.write("".join(line))
                 outfile.write(";\n")
                 outfile.write("      \"_po\"=")
-                for node in self.PO:
-                    val = "H" if node.value==1 else "L"
+                for x in out:
+                    val = "H" if x=="1" else "L"
                     outfile.write(val)
                 outfile.write("; } \n")
-            outfile.close()
+       
+        infile.close()
+        outfile.close()
 
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
@@ -474,7 +468,7 @@ class Circuit:
     
     #TODO: there shoul be a seed for random numbers
     # seed should be given in config file
-    def STAFAN_CS(self, num_pattern, limit=None, detect=False):
+    def STAFAN_CS(self, num_pattern, limit=None, tp_save_fname=False):
         ''' note:
         we are generating random numbers with replacement
         if u need to test all the patterns, add a new flag
@@ -484,10 +478,14 @@ class Circuit:
         
         # We need to resent the circuit
         self.STAFAN_reset_counts()
+        if tp_save_fname:
+            tps = []
         
         limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
         for t in range(num_pattern):
             b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
+            if tp_save_fname:
+                tps.append(b)
             test = [int(b[j]) for j in range(len(self.PI))]
             
             self.logic_sim(test)
@@ -513,6 +511,11 @@ class Circuit:
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
 
+        if tp_save_fname:
+            outfile = open(tp_save_fname, "w")
+            outfile.write(",".join([x.num for x in self.PI]) + "\n")
+            for tp in tps:
+                outfile.write(",".join([b for b in tp]) + "\n")
         
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
