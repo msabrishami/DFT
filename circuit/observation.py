@@ -1,8 +1,11 @@
 
 import config
 import pdb
+
+
 def TPI_stat(circuit, HTO_th, HTC_th):
-    """ this is a simple division of nodes, 
+    """ categorizes all the nodes in the circuit based on obs and ctrl
+    this is a simple division of nodes, 
     the element C*B can also be used. 
     """
     for node in circuit.nodes_lev:
@@ -24,6 +27,7 @@ def TPI_stat(circuit, HTO_th, HTC_th):
         else:
             node.stat["SS@0"] = "HTD"
 
+
 def stat_HTO(circuit, HTO_th, HTC_th):
     TPI_stat(circuit, HTO_th, HTC_th)
     for node in circuit.nodes_lev:
@@ -34,10 +38,11 @@ def stat_HTO(circuit, HTO_th, HTC_th):
         if node.HTO:
             count += 1
     print("Number of HTO nodes are {}".format(count))
+    return count
 
 
 
-def NVIDIA_count(circuit, op, HTO_th, HTC_th):
+def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
     """ count the number of nodes that change from HTO to ETO 
     by making node an observation point """ 
     circuit.STAFAN_B()
@@ -63,6 +68,21 @@ def NVIDIA_count(circuit, op, HTO_th, HTC_th):
     return count
 
 
+def circuit_deltaHTO(circuit, B_th=0.1):
+    res = {}
+    
+    for node in circuit.nodes_lev:
+
+        if node.B > B_th:
+            continue
+        if node.ntype == "FB":
+            continue
+
+        count = deltaHTO(circuit, node)
+        res[node.num] = count
+
+    res = {k: v for k,v in sorted(res.items(), key=lambda item: item[1], reverse=True)}
+    return res
 
 def make_OP(circuit, op):
     """ adds an observation point, updates STAFAN_B """ 
@@ -177,16 +197,38 @@ def circuit_deltaP(circuit, B_th=0.1):
     return (arit_ordered, geom_ordered)
 
 
-
-def OPI(circuit, alg, count_op=10):
+def OPI(circuit, alg, count_op=10, B_th=0.2):
     """ runs the observation point insertion, with algorithm alg
     for count_op number of observation points 
-    The circuit argument is considered to be fully loaded"""
+    The circuit argument is considered to be fully loaded
+    Note: this function modifies the circuit
+    returns: a list of OP node numbers"""
+
+    res = [] 
     if alg == "deltaP":
         for x in range(count_op):
-            arit, geom = observation.circuit_deltaP(circuit)
-            new_op = list(arit)[0]
-
+            arit, geom = circuit_deltaP(circuit, B_th=B_th)
+            if len(arit) == 0:
+                print("No more points with B_th={}".format(B_th))
+                break
+            new_op = circuit.nodes[list(arit)[0]]
+            # print(new_op.num, arit[new_op.num])
+            res.append(new_op.num)
+            make_OP(circuit, new_op)
+    elif alg == "deltaHTO":
+        for x in range(count_op):
+            ops = circuit_deltaHTO(circuit, B_th=B_th)
+            if len(ops) == 0:
+                print("No more points with B_th={}".format(B_th))
+                break
+            new_op = circuit.nodes[list(ops)[0]]
+            # print(new_op.num, arit[new_op.num])
+            res.append(new_op.num)
+            make_OP(circuit, new_op)
+    else:
+        raise NameError("Algorithm not defined")
+   
+    return res
 
 
 
