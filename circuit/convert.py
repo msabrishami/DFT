@@ -86,7 +86,7 @@ class Converter:
             # Similar to ISCAS85 circuits
             # elif self.verilog_format == "ISCAS85":
             elif (");" in line) and ("(" in line) and not ("module" in line):
-                words = line.replace("(", "").replace(")","").replace(",", "").split()
+                words = line.replace("(", " ").replace(")"," ").replace(",", " ").split()
                 gate = words[1]
                 node = words[2] 
                 self.gate2node[gate] = node

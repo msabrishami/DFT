@@ -1,0 +1,3 @@
+set_test_point_element { NOR2_74/Y NAND4_7/Y NOT1_64/Y NOT1_55/Y NAND3_9/Y  } -type observe
+set_test_point_element { AND3_10/Y NAND2_33/Y NAND2_8/Y NOT1_275/Y NOT1_278/Y  } -type observe
+set_test_point_element { NAND2_283/Y  } -type observe

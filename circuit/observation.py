@@ -75,7 +75,7 @@ def circuit_deltaHTO(circuit, B_th=0.1):
 
         if node.B > B_th:
             continue
-        if node.ntype == "FB":
+        if node.ntype in ["FB", "PI"]:
             continue
 
         count = deltaHTO(circuit, node)
@@ -222,6 +222,8 @@ def OPI(circuit, alg, count_op=10, B_th=0.2):
                 print("No more points with B_th={}".format(B_th))
                 break
             new_op = circuit.nodes[list(ops)[0]]
+            if new_op.num == "N73":
+                pdb.set_trace()
             # print(new_op.num, arit[new_op.num])
             res.append(new_op.num)
             make_OP(circuit, new_op)

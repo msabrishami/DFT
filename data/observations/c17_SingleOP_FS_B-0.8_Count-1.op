@@ -1,0 +1,1 @@
+set_test_point_element { NAND2_1/Y  } -type observe

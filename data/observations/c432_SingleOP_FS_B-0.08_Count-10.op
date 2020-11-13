@@ -1,0 +1,2 @@
+set_test_point_element { XOR2_112/Y XOR2_106/Y XOR2_108/Y XOR2_110/Y XOR2_99/Y  } -type observe
+set_test_point_element { XOR2_100/Y XOR2_101/Y XOR2_102/Y XOR2_104/Y NOR2_33/Y  } -type observe
