@@ -109,7 +109,7 @@ def convert_opi_gate2node(verilog_path, opi_path, out_path):
         outfile.write(temp + "\t" + node + "\n")
 
 
-def add_op_verilog(path_in, op,  
+def add_OP_verilog(path_in, op,  
         verilog_version,
         path_out=None, 
         new_buff="RESEARCHBUFF", 

@@ -300,12 +300,13 @@ class Circuit:
 
     def gen_tp_file(self, test_count, fname=None, mode="b"):
         """ create single file with multiple input patterns
+        this is 658 test pattern format, first line PIs, then each row has values, csv style
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         """ 
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
-        fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
+        fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".tp"
         fname = fn if fname==None else fname
         infile = open(fname, 'w')
         infile.write(",".join([str(node.num) for node in self.PI]) + "\n")
@@ -394,6 +395,7 @@ class Circuit:
         infile.close()
         outfile.close()
 
+    
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
         #  ... provided a golden input/output file
