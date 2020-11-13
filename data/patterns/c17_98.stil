@@ -1,0 +1,296 @@
+PI:N1,N2,N3,N6,N7
+PO:N22,N23
+"pattern 0": Call "capture" {
+"_pi"=11100;
+      "_po"=HH; } 
+"pattern 1": Call "capture" {
+"_pi"=10100;
+      "_po"=HL; } 
+"pattern 2": Call "capture" {
+"_pi"=00001;
+      "_po"=LH; } 
+"pattern 3": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 4": Call "capture" {
+"_pi"=10101;
+      "_po"=HH; } 
+"pattern 5": Call "capture" {
+"_pi"=00000;
+      "_po"=LL; } 
+"pattern 6": Call "capture" {
+"_pi"=10110;
+      "_po"=HL; } 
+"pattern 7": Call "capture" {
+"_pi"=10000;
+      "_po"=LL; } 
+"pattern 8": Call "capture" {
+"_pi"=01111;
+      "_po"=LL; } 
+"pattern 9": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 10": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 11": Call "capture" {
+"_pi"=10010;
+      "_po"=LL; } 
+"pattern 12": Call "capture" {
+"_pi"=11010;
+      "_po"=HH; } 
+"pattern 13": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 
+"pattern 14": Call "capture" {
+"_pi"=00010;
+      "_po"=LL; } 
+"pattern 15": Call "capture" {
+"_pi"=10011;
+      "_po"=LH; } 
+"pattern 16": Call "capture" {
+"_pi"=10100;
+      "_po"=HL; } 
+"pattern 17": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 18": Call "capture" {
+"_pi"=00111;
+      "_po"=LL; } 
+"pattern 19": Call "capture" {
+"_pi"=10000;
+      "_po"=LL; } 
+"pattern 20": Call "capture" {
+"_pi"=00000;
+      "_po"=LL; } 
+"pattern 21": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 22": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 23": Call "capture" {
+"_pi"=00111;
+      "_po"=LL; } 
+"pattern 24": Call "capture" {
+"_pi"=11111;
+      "_po"=HL; } 
+"pattern 25": Call "capture" {
+"_pi"=00101;
+      "_po"=LH; } 
+"pattern 26": Call "capture" {
+"_pi"=01111;
+      "_po"=LL; } 
+"pattern 27": Call "capture" {
+"_pi"=00000;
+      "_po"=LL; } 
+"pattern 28": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 
+"pattern 29": Call "capture" {
+"_pi"=10010;
+      "_po"=LL; } 
+"pattern 30": Call "capture" {
+"_pi"=10111;
+      "_po"=HL; } 
+"pattern 31": Call "capture" {
+"_pi"=01000;
+      "_po"=HH; } 
+"pattern 32": Call "capture" {
+"_pi"=10100;
+      "_po"=HL; } 
+"pattern 33": Call "capture" {
+"_pi"=11100;
+      "_po"=HH; } 
+"pattern 34": Call "capture" {
+"_pi"=01100;
+      "_po"=HH; } 
+"pattern 35": Call "capture" {
+"_pi"=01100;
+      "_po"=HH; } 
+"pattern 36": Call "capture" {
+"_pi"=10101;
+      "_po"=HH; } 
+"pattern 37": Call "capture" {
+"_pi"=01000;
+      "_po"=HH; } 
+"pattern 38": Call "capture" {
+"_pi"=10110;
+      "_po"=HL; } 
+"pattern 39": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 
+"pattern 40": Call "capture" {
+"_pi"=01111;
+      "_po"=LL; } 
+"pattern 41": Call "capture" {
+"_pi"=11110;
+      "_po"=HL; } 
+"pattern 42": Call "capture" {
+"_pi"=01110;
+      "_po"=LL; } 
+"pattern 43": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 44": Call "capture" {
+"_pi"=11000;
+      "_po"=HH; } 
+"pattern 45": Call "capture" {
+"_pi"=00000;
+      "_po"=LL; } 
+"pattern 46": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 47": Call "capture" {
+"_pi"=10100;
+      "_po"=HL; } 
+"pattern 48": Call "capture" {
+"_pi"=10101;
+      "_po"=HH; } 
+"pattern 49": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 50": Call "capture" {
+"_pi"=10110;
+      "_po"=HL; } 
+"pattern 51": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 52": Call "capture" {
+"_pi"=01111;
+      "_po"=LL; } 
+"pattern 53": Call "capture" {
+"_pi"=11010;
+      "_po"=HH; } 
+"pattern 54": Call "capture" {
+"_pi"=11001;
+      "_po"=HH; } 
+"pattern 55": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 56": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 57": Call "capture" {
+"_pi"=01001;
+      "_po"=HH; } 
+"pattern 58": Call "capture" {
+"_pi"=10000;
+      "_po"=LL; } 
+"pattern 59": Call "capture" {
+"_pi"=11111;
+      "_po"=HL; } 
+"pattern 60": Call "capture" {
+"_pi"=10011;
+      "_po"=LH; } 
+"pattern 61": Call "capture" {
+"_pi"=01011;
+      "_po"=HH; } 
+"pattern 62": Call "capture" {
+"_pi"=01010;
+      "_po"=HH; } 
+"pattern 63": Call "capture" {
+"_pi"=11100;
+      "_po"=HH; } 
+"pattern 64": Call "capture" {
+"_pi"=00010;
+      "_po"=LL; } 
+"pattern 65": Call "capture" {
+"_pi"=11001;
+      "_po"=HH; } 
+"pattern 66": Call "capture" {
+"_pi"=11000;
+      "_po"=HH; } 
+"pattern 67": Call "capture" {
+"_pi"=01001;
+      "_po"=HH; } 
+"pattern 68": Call "capture" {
+"_pi"=10111;
+      "_po"=HL; } 
+"pattern 69": Call "capture" {
+"_pi"=10010;
+      "_po"=LL; } 
+"pattern 70": Call "capture" {
+"_pi"=11100;
+      "_po"=HH; } 
+"pattern 71": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 
+"pattern 72": Call "capture" {
+"_pi"=11101;
+      "_po"=HH; } 
+"pattern 73": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 
+"pattern 74": Call "capture" {
+"_pi"=10000;
+      "_po"=LL; } 
+"pattern 75": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 76": Call "capture" {
+"_pi"=01110;
+      "_po"=LL; } 
+"pattern 77": Call "capture" {
+"_pi"=00100;
+      "_po"=LL; } 
+"pattern 78": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 79": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 80": Call "capture" {
+"_pi"=11011;
+      "_po"=HH; } 
+"pattern 81": Call "capture" {
+"_pi"=10010;
+      "_po"=LL; } 
+"pattern 82": Call "capture" {
+"_pi"=01010;
+      "_po"=HH; } 
+"pattern 83": Call "capture" {
+"_pi"=00100;
+      "_po"=LL; } 
+"pattern 84": Call "capture" {
+"_pi"=01100;
+      "_po"=HH; } 
+"pattern 85": Call "capture" {
+"_pi"=00101;
+      "_po"=LH; } 
+"pattern 86": Call "capture" {
+"_pi"=10101;
+      "_po"=HH; } 
+"pattern 87": Call "capture" {
+"_pi"=10011;
+      "_po"=LH; } 
+"pattern 88": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 89": Call "capture" {
+"_pi"=00110;
+      "_po"=LL; } 
+"pattern 90": Call "capture" {
+"_pi"=11100;
+      "_po"=HH; } 
+"pattern 91": Call "capture" {
+"_pi"=00001;
+      "_po"=LH; } 
+"pattern 92": Call "capture" {
+"_pi"=00011;
+      "_po"=LH; } 
+"pattern 93": Call "capture" {
+"_pi"=01010;
+      "_po"=HH; } 
+"pattern 94": Call "capture" {
+"_pi"=11000;
+      "_po"=HH; } 
+"pattern 95": Call "capture" {
+"_pi"=01000;
+      "_po"=HH; } 
+"pattern 96": Call "capture" {
+"_pi"=00001;
+      "_po"=LH; } 
+"pattern 97": Call "capture" {
+"_pi"=01101;
+      "_po"=HH; } 

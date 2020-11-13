@@ -1,0 +1,296 @@
+PI:N1,N4,N8,N11,N14,N17,N21,N24,N27,N30,N34,N37,N40,N43,N47,N50,N53,N56,N60,N63,N66,N69,N73,N76,N79,N82,N86,N89,N92,N95,N99,N102,N105,N108,N112,N115
+PO:N223,N329,N370,N421,N430,N431,N432
+"pattern 0": Call "capture" {
+"_pi"=011010000101111000010111100001011101;
+      "_po"=HHLHHHL; } 
+"pattern 1": Call "capture" {
+"_pi"=010010010110101101000110010111110001;
+      "_po"=HHLLLHL; } 
+"pattern 2": Call "capture" {
+"_pi"=110011101110101101100010010111001010;
+      "_po"=HHLHLHL; } 
+"pattern 3": Call "capture" {
+"_pi"=111101000111100001001011001001011000;
+      "_po"=HHLHHLH; } 
+"pattern 4": Call "capture" {
+"_pi"=110010010100000011010110010100101110;
+      "_po"=HHHHHLL; } 
+"pattern 5": Call "capture" {
+"_pi"=011001010010000110001100000000011001;
+      "_po"=HHHHHHH; } 
+"pattern 6": Call "capture" {
+"_pi"=110010111101000110011111000101010011;
+      "_po"=LHHHHHL; } 
+"pattern 7": Call "capture" {
+"_pi"=101100100001100010001101011000011100;
+      "_po"=HHHHLHH; } 
+"pattern 8": Call "capture" {
+"_pi"=101100111100111000110011001100001000;
+      "_po"=HLHHHLH; } 
+"pattern 9": Call "capture" {
+"_pi"=000011000010011101101011001010101000;
+      "_po"=HHHHHHH; } 
+"pattern 10": Call "capture" {
+"_pi"=001010000100111010111111110110010010;
+      "_po"=HHLHHHL; } 
+"pattern 11": Call "capture" {
+"_pi"=101000001001011010010100110010110001;
+      "_po"=HHLHLHL; } 
+"pattern 12": Call "capture" {
+"_pi"=100011010011001010011000110110101111;
+      "_po"=HHHHHHH; } 
+"pattern 13": Call "capture" {
+"_pi"=100101010010110011010010000011111110;
+      "_po"=HHHHHLL; } 
+"pattern 14": Call "capture" {
+"_pi"=101101111001010001011010000000100000;
+      "_po"=HHLHHLL; } 
+"pattern 15": Call "capture" {
+"_pi"=110110100101001110111111000101001110;
+      "_po"=HHHHHHL; } 
+"pattern 16": Call "capture" {
+"_pi"=111110100001100100011101010010001000;
+      "_po"=LHHHLHH; } 
+"pattern 17": Call "capture" {
+"_pi"=000000111110111010000111100011011111;
+      "_po"=HHLHLLH; } 
+"pattern 18": Call "capture" {
+"_pi"=110010010010111011110111100100010010;
+      "_po"=HLHHHLL; } 
+"pattern 19": Call "capture" {
+"_pi"=111010101101110100011101100110110100;
+      "_po"=HHLHHHL; } 
+"pattern 20": Call "capture" {
+"_pi"=110010100101111001100111001110100011;
+      "_po"=HHLHHHL; } 
+"pattern 21": Call "capture" {
+"_pi"=110111110100011001000000011000010101;
+      "_po"=HHHHHLL; } 
+"pattern 22": Call "capture" {
+"_pi"=101100100010111011111110100010010000;
+      "_po"=HLLHHLH; } 
+"pattern 23": Call "capture" {
+"_pi"=110100101010011010111011001011111101;
+      "_po"=HLLHHLH; } 
+"pattern 24": Call "capture" {
+"_pi"=001110100011110111101100101101001010;
+      "_po"=HHLHLHH; } 
+"pattern 25": Call "capture" {
+"_pi"=101010111100010000010110101011111101;
+      "_po"=HHHHHLH; } 
+"pattern 26": Call "capture" {
+"_pi"=010001000000100110100011100101100001;
+      "_po"=HHHLHHH; } 
+"pattern 27": Call "capture" {
+"_pi"=010111010001001101010100101011101001;
+      "_po"=HHLLLLL; } 
+"pattern 28": Call "capture" {
+"_pi"=101010000101101110111011010011010011;
+      "_po"=HHHHLLH; } 
+"pattern 29": Call "capture" {
+"_pi"=000101100101010010010100011111000111;
+      "_po"=HHHHHHL; } 
+"pattern 30": Call "capture" {
+"_pi"=110100110111100110000011011100100101;
+      "_po"=HHLHLLL; } 
+"pattern 31": Call "capture" {
+"_pi"=011001011001000100100001110001000100;
+      "_po"=HHHHLLH; } 
+"pattern 32": Call "capture" {
+"_pi"=011000100100100100010100010011011010;
+      "_po"=HHLHHHL; } 
+"pattern 33": Call "capture" {
+"_pi"=001110011110110110110110101000111111;
+      "_po"=HHLHHLH; } 
+"pattern 34": Call "capture" {
+"_pi"=101100100101101100000110000010000111;
+      "_po"=HHLHHHL; } 
+"pattern 35": Call "capture" {
+"_pi"=101111110010011101110000111111101010;
+      "_po"=HLHHHLH; } 
+"pattern 36": Call "capture" {
+"_pi"=101001111101101011011111001000101110;
+      "_po"=HHLHHLL; } 
+"pattern 37": Call "capture" {
+"_pi"=011110110101101011000101000100101001;
+      "_po"=HHHHHLL; } 
+"pattern 38": Call "capture" {
+"_pi"=110111100100101110010111100111001101;
+      "_po"=HHLHHHL; } 
+"pattern 39": Call "capture" {
+"_pi"=110111101011110110011001001101111010;
+      "_po"=LHLLHLH; } 
+"pattern 40": Call "capture" {
+"_pi"=110000000010011101101101010110101001;
+      "_po"=HHHHLHH; } 
+"pattern 41": Call "capture" {
+"_pi"=001000000011000010110101110011101111;
+      "_po"=HLLHLLH; } 
+"pattern 42": Call "capture" {
+"_pi"=011110101110101100101110011001001110;
+      "_po"=HHLHLLH; } 
+"pattern 43": Call "capture" {
+"_pi"=010010001000111011111100001000000010;
+      "_po"=HHLLLLL; } 
+"pattern 44": Call "capture" {
+"_pi"=001010011001100010101111011111101101;
+      "_po"=HHLHLLL; } 
+"pattern 45": Call "capture" {
+"_pi"=001100100010110100110100010010000010;
+      "_po"=HHHHHLH; } 
+"pattern 46": Call "capture" {
+"_pi"=000100001101110111010100100010111111;
+      "_po"=HHLHHHL; } 
+"pattern 47": Call "capture" {
+"_pi"=101010011101111100001110101010010011;
+      "_po"=HLLHLHH; } 
+"pattern 48": Call "capture" {
+"_pi"=001101010010101001100110010100100011;
+      "_po"=HHHHLHL; } 
+"pattern 49": Call "capture" {
+"_pi"=001011001111111001001000010111111010;
+      "_po"=HHLHHHH; } 
+"pattern 50": Call "capture" {
+"_pi"=110010111111111010011000011011100010;
+      "_po"=HLHHLLH; } 
+"pattern 51": Call "capture" {
+"_pi"=100100101000110000001111101001011011;
+      "_po"=HHHHHLH; } 
+"pattern 52": Call "capture" {
+"_pi"=010100011100100111101001001000011110;
+      "_po"=HHHLLLL; } 
+"pattern 53": Call "capture" {
+"_pi"=000111000100011101001100010110011110;
+      "_po"=HHHHHHL; } 
+"pattern 54": Call "capture" {
+"_pi"=010000111100001011001001010101100100;
+      "_po"=HHHLLLL; } 
+"pattern 55": Call "capture" {
+"_pi"=100101001111101011010111111011110000;
+      "_po"=HHHHHLL; } 
+"pattern 56": Call "capture" {
+"_pi"=010011101011111100011000010011001010;
+      "_po"=HHLLLHL; } 
+"pattern 57": Call "capture" {
+"_pi"=011100110010011101001110010101110100;
+      "_po"=HHHHLHL; } 
+"pattern 58": Call "capture" {
+"_pi"=100010001110111111011001111101100001;
+      "_po"=HLLHHHL; } 
+"pattern 59": Call "capture" {
+"_pi"=011010011001000101001010011100001001;
+      "_po"=HLHHLHL; } 
+"pattern 60": Call "capture" {
+"_pi"=101001010111111011011111101101000100;
+      "_po"=HHHHHHH; } 
+"pattern 61": Call "capture" {
+"_pi"=011100101011010000010010011110011000;
+      "_po"=HLHLLLL; } 
+"pattern 62": Call "capture" {
+"_pi"=010101111000100111100001011001110000;
+      "_po"=HHHLLLL; } 
+"pattern 63": Call "capture" {
+"_pi"=000000111100010011011100011101100100;
+      "_po"=HHHHLLL; } 
+"pattern 64": Call "capture" {
+"_pi"=000000110111111011100100000100101111;
+      "_po"=HHHHLHH; } 
+"pattern 65": Call "capture" {
+"_pi"=110010001110110101010011111011101110;
+      "_po"=HHHHHLH; } 
+"pattern 66": Call "capture" {
+"_pi"=000110010000010010010000111100110001;
+      "_po"=HHLHHLH; } 
+"pattern 67": Call "capture" {
+"_pi"=001010101110011000101011101010011111;
+      "_po"=HLHHHHL; } 
+"pattern 68": Call "capture" {
+"_pi"=100111100011011101011010001010111011;
+      "_po"=LHLHHLL; } 
+"pattern 69": Call "capture" {
+"_pi"=000110011111011010101111001110100111;
+      "_po"=HLHHLHH; } 
+"pattern 70": Call "capture" {
+"_pi"=110010100111110111010101000111111111;
+      "_po"=HLLHHHL; } 
+"pattern 71": Call "capture" {
+"_pi"=001011001000111101010010000011111100;
+      "_po"=HHLHHHH; } 
+"pattern 72": Call "capture" {
+"_pi"=101001101011001011101100000100101101;
+      "_po"=HHHHLHH; } 
+"pattern 73": Call "capture" {
+"_pi"=011110001010101111101110000110011101;
+      "_po"=HLHHLHH; } 
+"pattern 74": Call "capture" {
+"_pi"=111001001111000111000011111101110010;
+      "_po"=HHLHHHH; } 
+"pattern 75": Call "capture" {
+"_pi"=011011001111000000000101001100110010;
+      "_po"=HHHHLHH; } 
+"pattern 76": Call "capture" {
+"_pi"=000100111111110110111111010010111101;
+      "_po"=LHLHHLH; } 
+"pattern 77": Call "capture" {
+"_pi"=110111001101110100100001101111110000;
+      "_po"=HHLHHHL; } 
+"pattern 78": Call "capture" {
+"_pi"=101111110001000101101111010111001110;
+      "_po"=HLHHLHH; } 
+"pattern 79": Call "capture" {
+"_pi"=110001100101100011110001111110000100;
+      "_po"=HHHHLLL; } 
+"pattern 80": Call "capture" {
+"_pi"=111001101001011011100001001100100010;
+      "_po"=HLHHHLL; } 
+"pattern 81": Call "capture" {
+"_pi"=001100011000110101001010011101111011;
+      "_po"=HHHHHLH; } 
+"pattern 82": Call "capture" {
+"_pi"=101110101110100110011111001010110100;
+      "_po"=HLLHHHL; } 
+"pattern 83": Call "capture" {
+"_pi"=100000010010110010100101000000001000;
+      "_po"=HHHHLHH; } 
+"pattern 84": Call "capture" {
+"_pi"=001001000011010111000011001101101000;
+      "_po"=HHHHHHH; } 
+"pattern 85": Call "capture" {
+"_pi"=100010100000111000001011010010011001;
+      "_po"=HLHHHLH; } 
+"pattern 86": Call "capture" {
+"_pi"=100001110110010010001101000111001011;
+      "_po"=HHHHLHH; } 
+"pattern 87": Call "capture" {
+"_pi"=000111010111110010011011001000001001;
+      "_po"=LHHHHHH; } 
+"pattern 88": Call "capture" {
+"_pi"=101101010010111101111010101100100100;
+      "_po"=HHHHLLL; } 
+"pattern 89": Call "capture" {
+"_pi"=110001100000100110010111000111010000;
+      "_po"=HLHHHHH; } 
+"pattern 90": Call "capture" {
+"_pi"=101011010101111001101100110011100111;
+      "_po"=HHHHHHH; } 
+"pattern 91": Call "capture" {
+"_pi"=001101010011011000100100011010111000;
+      "_po"=HHHHLHH; } 
+"pattern 92": Call "capture" {
+"_pi"=100110010011000101101001110110110001;
+      "_po"=LHLHLHL; } 
+"pattern 93": Call "capture" {
+"_pi"=110101011011111001110100100110000100;
+      "_po"=HHHHLLL; } 
+"pattern 94": Call "capture" {
+"_pi"=011111100101100100100010101101011011;
+      "_po"=HHLHHHL; } 
+"pattern 95": Call "capture" {
+"_pi"=010110001001110100010010011101101011;
+      "_po"=HHLLLLL; } 
+"pattern 96": Call "capture" {
+"_pi"=111101111010110101100111100100001100;
+      "_po"=HHHHHLH; } 
+"pattern 97": Call "capture" {
+"_pi"=011011100100111111010011101111000110;
+      "_po"=HHLHHHL; } 
