@@ -8,6 +8,7 @@ data/fault_sim/
 data/verilog/
 data/EPFL/
 data/patterns/
+data/observations/
 **.png
 **.log
 gnn/notes.txt

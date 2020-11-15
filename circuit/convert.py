@@ -50,7 +50,7 @@ class Converter:
                 buff = []
                 res += " } -type observe"
                 outfile.write(res + "\n")
-                print(res)
+                # print(res)
         
         outfile.close()
 
@@ -162,7 +162,7 @@ def add_OP_verilog(path_in, op,
     outfile = open(path_out, "w")
     outfile.write("\n".join(lines))
     outfile.close()
-    print("output file saved as {}".format(path_out))
+    # print("output file saved as {}".format(path_out))
 
 
 def read_verilog_lines(path):
