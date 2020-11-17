@@ -17,13 +17,17 @@ for ckt in netlists_ISCAS:
 #    all_netlists.append(ckt)
 
 
-tps = [100, 500, 1000, 2000, 5000]
-all_netlists = ["$$c3540"]
+tps = [50, 100, 200, 500, 1000, 2000, 5000] # , 10000]
+# all_netlists = ["$$c3540"]
+# all_netlists = netlists_ISCAS
 # script = "python3 main_personal.py -ckt $CKT$ -tp $TP$ -op writeInfo > ./temp_results/$CKT$_info_$TP$.log & "
-script = "python3 main_personal.py -ckt $CKT$ -tp $TP$ -op saveStat"
+script = "python3 main_saeed.py -ckt $CKT$ -tp $TP$ -func saveStat"
 
 for ckt in all_netlists:
     for tp in tps:
+        if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-" + str(tp) + ".log"):
+            # print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
+            continue
         if "$$" in ckt:
             sc = script.replace("$CKT$", ckt[2:]).replace("$TP$", str(tp))
         else:

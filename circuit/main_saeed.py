@@ -35,9 +35,9 @@ parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B thr
 parser.add_argument("-opCount", type=int, required=False, default=20, help="OP count")
 args = parser.parse_args()
 
-print("\n======================================================")
+print("======================================================")
 print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
-print("======================================================\n")
+# print("======================================================\n")
 
 # experiments.exp_check_c432_behavioral(mode="ckt", tp=100)
 # experiments.exp_check_c432_behavioral(mode="v", tp=100)
@@ -55,6 +55,7 @@ if args.func not in ["saveStat", "gen_Stil"]:
 
 
 if args.func == "saveStat":
+    config.STAFAN_C_MIN = 1.0/args.tp
     time_start = time.time()
     circuit = Circuit(args.ckt)
     LoadCircuit(circuit, "v")
@@ -63,14 +64,16 @@ if args.func == "saveStat":
     circuit.SCOAP_CO()
     circuit.STAFAN_CS(args.tp) 
     circuit.STAFAN_B() 
-    print(time.time() - time_start)
-    fname = "temp_results/" + args.ckt + "-stafan-" + str(args.tp) + ".log"
+    print("Zeros: \t{}".format(circuit.c_zero_count))
+    print("{:.3}".format(time.time() - time_start))
+    fname = "../data/stafan-data/" + args.ckt + "-stafan-" + str(args.tp) + ".log"
     print("Saving circuit with STAFAN values in " + fname)
     circuit.save_circuit(fname)
     exit()
 
 elif args.func == "writeInfo":
-    circuit.co_ob_info()
+    # circuit.co_ob_info()
+    circuit.write_ob_info("./ob_stat/" + args.ckt + "_" + str(args.tpLoad) + "_obInfo.log")
     exit()
 
 elif args.func == "ObHist":

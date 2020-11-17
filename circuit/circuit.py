@@ -74,6 +74,7 @@ class Circuit:
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
         # Saeed  
+        self.c_zero_count = 0
         
     
     def add_node(self, line):
@@ -437,7 +438,13 @@ class Circuit:
         print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
         for node in self.nodes_lev:
             node.print_info(print_labels=False)
-
+    
+    def write_ob_info(self, fname):
+        outfile = open(fname, "w")
+        outfile.write("Node.num\tNode.B")
+        for node in self.nodes_lev:
+            outfile.write("{}\t{}\n".format(node.num, node.B))
+        outfile.close()
 
     def SCOAP_CC(self):
         for node in self.nodes_lev:
@@ -523,7 +530,8 @@ class Circuit:
         # TODO: comment and also the issue of if C1==1
 
         for node in self.nodes_lev:
-            adjust_STAFAN_C(node)
+            if (adjust_STAFAN_C(node)):
+                self.c_zero_count += 1
             
                 
         for node in reversed(self.nodes_lev):

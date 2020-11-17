@@ -890,11 +890,13 @@ class podem_node_5val():
 
 def adjust_STAFAN_C(node):
     if node.C0 == 0:
-        print("WARNING: node {} , C0 is zero, ".format(node.num), end="")
-        print("replaced with {}".format(config.STAFAN_C_MIN))
+        # print("WARNING: node {} , C0 is zero, ".format(node.num), end="")
+        # print("replaced with {}".format(config.STAFAN_C_MIN))
         node.C0 = config.STAFAN_C_MIN
+        return True
     if node.C1 == 0:
-        print("WARNING: node {} , C1 is zero, ".format(node.num), end="")
-        print("replaced with {}".format(config.STAFAN_C_MIN))
-        node.C1 = config.STAFAN_C_MIN     
+        # print("WARNING: node {} , C1 is zero, ".format(node.num), end="")
+        # print("replaced with {}".format(config.STAFAN_C_MIN))
+        node.C1 = config.STAFAN_C_MIN
+        return True
 
