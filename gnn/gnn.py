@@ -26,7 +26,7 @@ from models.lstm_gcn import LSTMGCN
 import config
 from utils import get_options
 
-sys.path.insert(1, '../circuit/')
+sys.path.insert(1, "../circuit/")
 
 torch.manual_seed(0)
 np.random.seed(0)
