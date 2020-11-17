@@ -5,6 +5,7 @@ import config
 import os
 import re
 import sys
+import subprocess
 sys.path.insert(1, config.LIB_CELLS_PATH)
 import library_cells
 
@@ -111,7 +112,7 @@ def convert_opi_gate2node(verilog_path, opi_path, out_path):
 
 def add_OP_verilog(path_in, op,  
         verilog_version,
-        path_out=None, 
+        path_out, 
         new_buff="RESEARCHBUFF", 
         new_po="RESEARCHPO"):
     """ reads the verilog file in path_in
@@ -120,7 +121,8 @@ def add_OP_verilog(path_in, op,
     stores the new verilog file in path_out
     does NOT check if op is already a PO
     TODO: we could detect ourselves if this is EPFL or ISCAS by syntax!
-    Note: this function changes the top module name!
+    Note: within this method, the name of the  TOP module is the same as the .v file, 
+        in other words, path_out minus ".v" is the same top module name
     """
     if verilog_version not in ["ISCAS85", "EPFL"]:
         raise NameError("Verilog version {} not supported".format(verilog_version))
@@ -135,16 +137,17 @@ def add_OP_verilog(path_in, op,
     if not (c0 and c1 and c2 and c3 and c4):
         raise NameError("Cannot read this verilog file!")
     
+    new_module_name = "top"
+    # for epfl currently our tcl scripts only support top module name being "top"
     if verilog_version == "EPFL":
-        new_module_name = "top"
-        path_out = path_in.split("/")[-1][:-2]+"_OP_"+op+".v" if path_out==None else path_out
+
+        # path_out = path_in.split("/")[-1][:-2]+"_OP_"+op+".v" if path_out==None else path_out
         # buff buff-name (output, input)
         lines[-1] = "BUF_X1 {} ( .I({}) , .Z({}) );".format(new_buff, op, new_po) 
     
     elif verilog_version == "ISCAS85":
-        new_module_name = lines[0].split()[1] + "_OP_" + op
         # BUFF_X1 buff-name (.I (input-name), .Z(output-name))
-        path_out = new_module_name + ".v" if path_out==None else path_out 
+        # path_out = new_module_name + ".v" if path_out==None else path_out 
         lines[-1] = "buf {} ({},{});".format(new_buff, new_po, op)
 
     # add op-node to module
@@ -189,6 +192,8 @@ def read_verilog_lines(path):
 
     infile.close()
     return new_lines
+
+
 
 
 

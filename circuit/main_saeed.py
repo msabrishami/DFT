@@ -119,7 +119,7 @@ elif args.func == "gen_stil":
     print("Done stil gen, added in {}".format(stil_fname))
 
 
-elif args.func == "SingleOP_FS":
+elif args.func == "Single_OP_FS":
     """ For one circuit, generates OPs, based on args settings (B_th)
     For each OP, generate a new verilog file, with name as cname_OP_<OP-node>.v
     Use a predefined .tp file to simulate your new circuit 
@@ -153,7 +153,6 @@ elif args.func == "SingleOP_FS":
 
         print("New verilog file generated in \t\t\t{}".format(path_out))
 
-        
         ### Step 2: Logic sim and generate STIL file
         ckt_mod = Circuit(cname_mod)
         ckt_mod.lev()
@@ -162,7 +161,8 @@ elif args.func == "SingleOP_FS":
                 cname_mod + "_" + str(args.tp) + ".raw-stil")
         ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL") 
         print("STIL format file  generated in \t\t\t{}".format(stil_fname))
-    
+        # convert.replace_primitive2cell(path_out) 
+
     print("".join(["-"]*100))
 
 
@@ -195,7 +195,6 @@ elif args.func == "Multi_OP_FS":
         print("Original verilog netlist is: \t\t\t {}".format(path_in))
         
         ### Step 1: Continuously modifying a verilog file
-
         cname_mod = args.ckt + "_OP_" + args.OPIalg + "_B-" + str(args.Bth) + "_Acc" + str(idx+1)
         path_out = os.path.join(config.VERILOG_DIR, cname_mod + ".v")
         convert.add_OP_verilog(
@@ -216,6 +215,7 @@ elif args.func == "Multi_OP_FS":
         ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL") 
         print("STIL format file  generated in \t\t\t{}".format(stil_fname))
         path_in = path_out
+        # convert.replace_primitive2cell(path_out) 
     
     print("".join(["-"]*100))
 
