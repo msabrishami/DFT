@@ -3,8 +3,8 @@
 # Saeed:
 **.swp
 data/modelsim/
-data/graph/
-data/fault_sim/
+data/graph/*
+data/fault_sim/*
 data/verilog/
 data/EPFL/
 data/patterns/

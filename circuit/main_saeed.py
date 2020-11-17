@@ -76,6 +76,11 @@ elif args.func == "writeInfo":
     circuit.write_ob_info("./ob_stat/" + args.ckt + "_" + str(args.tpLoad) + "_obInfo.log")
     exit()
 
+elif args.func == "ObConverge":
+    print("salam")
+
+
+
 elif args.func == "ObHist":
     # Calculate the histogram of B0 for all nodes in log scale
     import numpy as np
