@@ -441,7 +441,7 @@ class Circuit:
     
     def write_ob_info(self, fname):
         outfile = open(fname, "w")
-        outfile.write("Node.num\tNode.B")
+        outfile.write("Node.num\tNode.B\n")
         for node in self.nodes_lev:
             outfile.write("{}\t{}\n".format(node.num, node.B))
         outfile.close()
@@ -477,7 +477,7 @@ class Circuit:
     
     #TODO: there shoul be a seed for random numbers
     # seed should be given in config file
-    def STAFAN_CS(self, num_pattern, limit=None, tp_save_fname=False):
+    def STAFAN_CS(self, num_pattern, limit=None, tp_save_fname=False, tp_fname=None):
         ''' note:
         we are generating random numbers with replacement
         if u need to test all the patterns, add a new flag
@@ -487,15 +487,24 @@ class Circuit:
         
         # We need to resent the circuit
         self.STAFAN_reset_counts()
+
         if tp_save_fname:
             tps = []
+
+        if tp_fname:
+            infile = open(tp_fname, "r")
+            lines = infile.readlines()[1:num_pattern+1]
         
         limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
         for t in range(num_pattern):
-            b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
-            if tp_save_fname:
-                tps.append(b)
-            test = [int(b[j]) for j in range(len(self.PI))]
+            
+            if tp_fname:
+                test = [int(x) for x in lines[t].strip().split(",")]
+            else:
+                b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
+                if tp_save_fname:
+                    tps.append(b)
+                test = [int(b[j]) for j in range(len(self.PI))]
             
             self.logic_sim(test)
             self.STAFAN_reset_flags()

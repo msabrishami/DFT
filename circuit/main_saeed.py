@@ -43,8 +43,8 @@ print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, 
 # experiments.exp_check_c432_behavioral(mode="v", tp=100)
 # experiments.exp_check_verilog_modelsim()
 
-if args.func not in ["saveStat", "gen_Stil"]:
-    fname = "../data/stafan-data/" + args.ckt + "-stafan-" + str(args.tpLoad) + ".log"
+if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"]:
+    fname = "../data/stafan-data/" + args.ckt + "-stafan-TP" + str(args.tpLoad) + ".log"
     print("Loading circuit with STAFAN values in " + fname)
     circuit = Circuit(args.ckt)
     LoadCircuit(circuit, "v")
@@ -54,7 +54,40 @@ if args.func not in ["saveStat", "gen_Stil"]:
     circuit.load_circuit(fname)
 
 
-if args.func == "saveStat":
+if args.func == "genTP":
+    """ generate original test pattern file, orig-TP  """
+    path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tp)
+    print("generating test patterns for {} with {} tps in {}".format(args.ckt, args.tp, path))
+    circuit = Circuit(args.ckt)
+    LoadCircuit(circuit, "v")
+    circuit.lev()
+    circuit.gen_tp_file(args.tp, path)
+
+
+elif args.func == "saveStatTP":
+    """ generate stafan stat file based on orig-TPs, and given tp """
+    tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
+    if not os.path.exists(tp_path):
+        print("no file found in {}".format(tp_path))
+        exit()
+    config.STAFAN_C_MIN = 1.0/args.tp
+    time_start = time.time()
+    circuit = Circuit(args.ckt)
+    LoadCircuit(circuit, "v")
+    circuit.lev()
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+    circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
+    circuit.STAFAN_B() 
+    print("Zeros: \t{}".format(circuit.c_zero_count))
+    print("Time: \t{:.3}".format(time.time() - time_start))
+    fname = "../data/stafan-data/" + args.ckt + "-stafan-TP" + str(args.tp) + ".log"
+    print("Saving circuit with STAFAN values in " + fname)
+    circuit.save_circuit(fname)
+    exit()
+
+
+elif args.func == "saveStatRandom":
     config.STAFAN_C_MIN = 1.0/args.tp
     time_start = time.time()
     circuit = Circuit(args.ckt)
@@ -71,13 +104,35 @@ if args.func == "saveStat":
     circuit.save_circuit(fname)
     exit()
 
-elif args.func == "writeInfo":
+elif args.func == "writeOB":
     # circuit.co_ob_info()
-    circuit.write_ob_info("./ob_stat/" + args.ckt + "_" + str(args.tpLoad) + "_obInfo.log")
+    path = "../data/ob_stat/{}_TP{}_OB.log".format(args.ckt, args.tpLoad)
+    print("Saving ob info in {}".format(path))
+    circuit.write_ob_info(path)
     exit()
 
-elif args.func == "ObConverge":
-    print("salam")
+
+
+
+
+elif args.func == "analysisOB":
+    TPs = [50, 100, 200, 500, 1000]
+    for ckt in config.ALL_ISCAS85:
+        report = open("../data/ob_stat/{}_OB_REPORT.log".format(ckt), "w")
+        data = []
+        for tp in TPs:
+            ob_fname = "../data/ob_stat/{}_TP{}_OB.log".format(ckt, tp)
+            print(ob_fname)
+            infile = open(ob_fname)
+            lines = infile.readlines()
+            data.append([(x.split()[1]) for x in lines[1:]])
+
+        for idx in range(len(data)):
+            report.write(str(TPs[idx]) + "," + ",".join(data[idx]) + "\n")
+
+
+
+
 
 
 

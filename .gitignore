@@ -14,6 +14,7 @@ data/observations/
 gnn/notes.txt
 gnn/TEMP_func.py
 circuit/temp_results/
+circuit/exp-results/
 
 # **.graphml
 **.png
