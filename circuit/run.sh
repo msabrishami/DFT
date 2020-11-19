@@ -1,726 +1,162 @@
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1355 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c2670 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	arbiter -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	multiplier -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	cavlc -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	max -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	50 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	100 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	200 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	500 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	1000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	2000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	5000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	10000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	20000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	50000 	-tpLoad 100000 -func saveStatTP & 
-python3 main_saeed.py -ckt 	voter -synv 	 synV2 	-tp 	100000 	-tpLoad 100000 -func saveStatTP & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c17 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c432 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c499 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c880 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c1908 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c3540 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c5315 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c6288 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	c7552 -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	arbiter -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	sin -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	bar -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	dec -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	int2float -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	multiplier -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	cavlc -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	adder -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	max -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	priority -synv 	 synV2 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV0 	-tpLoad 	200 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tpLoad 	50 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tpLoad 	100 	-func writeOB & 
+python3 main_saeed.py -ckt 	voter -synv 	 synV1 	-tpLoad 	200 	-func writeOB & 
