@@ -57,5 +57,5 @@ def download_syn(dataset_name, syn_version):
                 sc = script.replace("$$V$$", version)
                 sc = sc.replace("$$CKT$$", ckt_name)
                 print(sc)
-            #os.system(sc)
+            os.system(sc)
 
