@@ -7,6 +7,7 @@ import networkx as nx
 import math
 import time
 import os
+import numpy as np
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
@@ -26,6 +27,7 @@ import utils
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")
+parser.add_argument("-synv", type=str, required=False , help="syn ver")
 parser.add_argument("-tp", type=int, required=False, help="number of tp for random sim")
 parser.add_argument("-tpLoad", type=int, required=False, help="number tp used in loading STAFAN")
 parser.add_argument("-cpu", type=int, required=False, help="number of parallel CPUs")
@@ -35,23 +37,26 @@ parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B thr
 parser.add_argument("-opCount", type=int, required=False, default=20, help="OP count")
 args = parser.parse_args()
 
+ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
+print(ckt_name)
+
+
+
 print("======================================================")
-print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
+print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(ckt_name, args.tp, args.cpu))
 # print("======================================================\n")
 
-# experiments.exp_check_c432_behavioral(mode="ckt", tp=100)
-# experiments.exp_check_c432_behavioral(mode="v", tp=100)
-# experiments.exp_check_verilog_modelsim()
 
 if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"]:
-    fname = "../data/stafan-data/" + args.ckt + "-stafan-TP" + str(args.tpLoad) + ".log"
+    fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
-    circuit = Circuit(args.ckt)
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
     circuit.load_circuit(fname)
+
 
 
 if args.func == "genTP":
@@ -65,14 +70,15 @@ if args.func == "genTP":
 
 
 elif args.func == "saveStatTP":
-    """ generate stafan stat file based on orig-TPs, and given tp """
+    """ generate stafan stat file based on orig-TPs, and given tp 
+    The version must be added to the name of .stat file"""
+
     tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
     if not os.path.exists(tp_path):
-        print("no file found in {}".format(tp_path))
-        exit()
-    config.STAFAN_C_MIN = 1.0/args.tp
+        raise NameError("no file found in {}".format(tp_path))
+    config.STAFAN_C_MIN = 1.0/(10*args.tp)
     time_start = time.time()
-    circuit = Circuit(args.ckt)
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.SCOAP_CC()
@@ -81,86 +87,62 @@ elif args.func == "saveStatTP":
     circuit.STAFAN_B() 
     print("Zeros: \t{}".format(circuit.c_zero_count))
     print("Time: \t{:.3}".format(time.time() - time_start))
-    fname = "../data/stafan-data/" + args.ckt + "-stafan-TP" + str(args.tp) + ".log"
+    fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".stafan"
     print("Saving circuit with STAFAN values in " + fname)
     circuit.save_circuit(fname)
-    exit()
 
-
-elif args.func == "saveStatRandom":
-    config.STAFAN_C_MIN = 1.0/args.tp
-    time_start = time.time()
-    circuit = Circuit(args.ckt)
-    LoadCircuit(circuit, "v")
-    circuit.lev()
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp) 
-    circuit.STAFAN_B() 
-    print("Zeros: \t{}".format(circuit.c_zero_count))
-    print("{:.3}".format(time.time() - time_start))
-    fname = "../data/stafan-data/" + args.ckt + "-stafan-" + str(args.tp) + ".log"
-    print("Saving circuit with STAFAN values in " + fname)
-    circuit.save_circuit(fname)
-    exit()
 
 elif args.func == "writeOB":
     # circuit.co_ob_info()
-    path = "../data/ob_stat/{}_TP{}_OB.log".format(args.ckt, args.tpLoad)
+    path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)
     print("Saving ob info in {}".format(path))
     circuit.write_ob_info(path)
-    exit()
-
-
-
 
 
 elif args.func == "analysisOB":
-    TPs = [50, 100, 200, 500, 1000]
-    for ckt in config.ALL_ISCAS85:
-        report = open("../data/ob_stat/{}_OB_REPORT.log".format(ckt), "w")
-        data = []
-        for tp in TPs:
-            ob_fname = "../data/ob_stat/{}_TP{}_OB.log".format(ckt, tp)
-            print(ob_fname)
-            infile = open(ob_fname)
-            lines = infile.readlines()
-            data.append([(x.split()[1]) for x in lines[1:]])
+    TPs = [50, 100, 200] # , 500, 1000, 2000, 5000, 10000]
+    report_path = "../data/ob_stat/{}_REPORT.obsr".format(ckt_name)
+    report = open(report_path, "w")
+    data = []
+    for tp in TPs:
+        ob_fname = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, tp)
+        infile = open(ob_fname)
+        lines = infile.readlines()
+        data.append([(x.split()[1]) for x in lines[1:]])
 
-        for idx in range(len(data)):
-            report.write(str(TPs[idx]) + "," + ",".join(data[idx]) + "\n")
+    for idx in range(len(data)):
+        report.write(str(TPs[idx]) + "," + ",".join(data[idx]) + "\n")
 
-
-
+    print("Report file generated in {}".format(report_path))
 
 
+elif args.func == "histOB":
+    """ histogram of OB, reading from .stafan files"""
+    mybins = np.logspace(-6, 0, 13)
+    arr = []
+    for node in circuit.nodes_lev:
+        arr.append(node.B)
+    min_val = min(arr)
+    print(min_val)
+    if min_val < 0:
+        raise ValueError("min value is zero")
+    if min_val == 0:
+        print("Min value 0 spotted")
+        exit()
+    mybins = np.logspace(np.log10(min_val), 0, 11)
+    # res = np.histogram(arr, mybins)
+    res = np.histogram(arr, bins=mybins, density=False)
+    # print(np.sum(res[0]))
+    temp = [str(np.round(x, 3)) for x in res[0]]
+    log = "," + ",".join(["{:.1e}".format(x) for x in res[1]]) + "\n"
+    log += ckt_name +  "," + ",".join(temp)
+    print(log)
 
-
-elif args.func == "ObHist":
-    # Calculate the histogram of B0 for all nodes in log scale
-    import numpy as np
-    # for ckt in config.ALL_EPFL_EZ:
-    for ckt in config.ALL_ISCAS85:
-        args.ckt = ckt # + "_syn" 
-        fname = "temp_results/" + args.ckt + "-stafan-" + str(args.tp) + ".log"
-        # print("Loading circuit with STAFAN values in " + fname)
-        circuit = Circuit(args.ckt)
-        LoadCircuit(circuit, "v")
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        circuit.load_circuit(fname)
-        arr = []
-        for node in circuit.nodes_lev:
-            arr.append(node.B0)
-        mybins = np.logspace(-6, 0, 13)
-        res = np.histogram(arr, mybins)
-        print(ckt, "\t", res[0])
-
+# TODO: algorithms should not return PI
 elif args.func in  ["deltaP", "deltaHTO"]:
-    conv = Converter(args.ckt, "ISCAS85") 
+    conv = Converter(ckt_name, "EPFL") 
     ops = observation.OPI(circuit, args.func, count_op=args.opCount, B_th=args.Bth)
-    fname = "../data/observations/" + args.ckt + "_" + args.func + "_B-" + str(args.Bth) 
+    fname = "../data/observations/" + ckt_name + "_" + args.func + "_B-" + str(args.Bth) 
     fname += "_Count-" + str(args.opCount) + ".op"
     print(ops)
     conv.nodes2tmax_OP_file(ops, fname)
@@ -282,9 +264,24 @@ elif args.func == "Multi_OP_FS":
     
     print("".join(["-"]*100))
 
-
 else:
-    exit()
+    print("Function not found")
+
+"""
+bad_nodes = []
+for node in circuit.nodes_lev:
+    if node.B < 0:
+        bad_nodes.append(node.num)
+
+for node in bad_nodes[0:10]:
+    print(circuit.nodes[node])
+
+for num in bad_nodes[0:10]:
+    node = circuit.nodes[num]
+    print("{}\t{}\t{}\t{:.8f}\t{:.8f}".format(node.num, node.C0, node.C1, node.B0, node.B1))
+
+
+"""
 # observation.stat_HTO(circuit, config.HTO_TH, config.HTC_TH)
 # graph = circuit.gen_graph()
 

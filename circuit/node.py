@@ -117,6 +117,11 @@ class Node:
         unodes_num = [(x.num, x.value) for x in self.unodes]
         dnodes_num = [(x.num, x.value) for x in self.dnodes]
         return(", ".join([str(self.num), self.ntype, self.gtype, "Lev:" + str(self.lev), 
+            "C0>"+str(self.C0), 
+            "C1>"+str(self.C1), 
+            "B0>"+str(self.B0), 
+            "B1>"+str(self.B1),
+            "S>"+str(self.S),
             # str(len(self.unodes)), str(len(self.dnodes))]))
             "Unodes:", str(unodes_num),
             "Dnodes:", str(dnodes_num)]))
@@ -272,6 +277,15 @@ class Node:
                 self.D0 = True if ((self.value == 0) & (dn.D1)) else False
 
             elif dn.gtype == 'XOR':
+                if dn.value == 1:
+                    self.D1 = dn.D1
+                    self.D0 = dn.D1
+                elif dn.value == 0:
+                    self.D1 = dn.D0
+                    self.D0 = dn.D0
+            
+            # TODO: not sure if its correct!
+            elif dn.gtype == 'XNOR':
                 if dn.value == 1:
                     self.D1 = dn.D1
                     self.D0 = dn.D1
@@ -889,14 +903,23 @@ class podem_node_5val():
 
 
 def adjust_STAFAN_C(node):
+    flag = False
     if node.C0 == 0:
         # print("WARNING: node {} , C0 is zero, ".format(node.num), end="")
         # print("replaced with {}".format(config.STAFAN_C_MIN))
         node.C0 = config.STAFAN_C_MIN
-        return True
+        node.C1 = node.C1 - config.STAFAN_C_MIN
+        flag = True
     if node.C1 == 0:
         # print("WARNING: node {} , C1 is zero, ".format(node.num), end="")
         # print("replaced with {}".format(config.STAFAN_C_MIN))
         node.C1 = config.STAFAN_C_MIN
-        return True
+        node.C0 = node.C0 - config.STAFAN_C_MIN
+        flag = True
+
+    if node.S == 0:
+        node.S = config.STAFAN_C_MIN
+        flag = True
+
+    return flag
 

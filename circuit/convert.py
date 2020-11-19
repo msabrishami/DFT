@@ -70,10 +70,11 @@ class Converter:
         self.node2gate = dict()
         self.gate2cell = dict()
         for line in infile:
-    
+                
             # Similar to EPFL circuits
             # if self.verilog_format == "EPFL":
             if (", .ZN(" in line) or (", .Z(" in line):
+
                 words = line.split()
                 gate = words[1]
                 if ".ZN" in words[-2]:
@@ -87,6 +88,7 @@ class Converter:
             # Similar to ISCAS85 circuits
             # elif self.verilog_format == "ISCAS85":
             elif (");" in line) and ("(" in line) and not ("module" in line):
+
                 words = line.replace("(", " ").replace(")"," ").replace(",", " ").split()
                 gate = words[1]
                 node = words[2] 

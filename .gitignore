@@ -3,6 +3,7 @@
 # Saeed:
 **.swp
 data/modelsim/
+data/stafan-data/
 data/graph/*
 data/fault_sim/*
 data/verilog/
@@ -15,6 +16,7 @@ gnn/notes.txt
 gnn/TEMP_func.py
 circuit/temp_results/
 circuit/exp-results/
+data/ob_stat/
 
 # **.graphml
 **.png

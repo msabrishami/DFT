@@ -550,6 +550,8 @@ class Circuit:
                 node.B0 = 1.0
                 node.B1 = 1.0
             node.stafan_b()
+            # if node.B0 < 0 or node.B1 <0:
+            #     pdb.set_trace()
             node.CB1 = node.C1 * node.B1
             node.CB0 = node.C0 * node.B0
             node.B = (node.B0*node.C0) + (node.B1*node.C1)
@@ -772,7 +774,7 @@ class Circuit:
             node.CB0 =  float(words[6]) 
             node.CB1 =  float(words[7]) 
             node.B =    float(words[8]) 
-        print("Circuit loaded: " + fname)
+        # print("Circuit loaded: " + fname)
             
 
 def verilog_version_gate(line):

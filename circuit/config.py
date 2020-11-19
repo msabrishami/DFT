@@ -24,11 +24,11 @@ V_FORMATS = ["EPFL", "ISCAS85"]
 
 # LOGIC LIBRARY RELATED:
 CELL_NAMES = {
-        "XOR": ["xor", "XOR2"],
-        "XNOR": ["xnor", "XNOR2"],
+        "XOR": ["xor", "XOR2", "XOR2_X1"],
+        "XNOR": ["xnor", "XNOR2", "XNOR2_X1"],
         "OR": ["or", "OR2", "OR2_X1", "OR", "OR2_X2", "OR3_X1", "OR4_X1"],
         "NOR": ["nor", "NOR2", "NOR2_X1", "NOR2_X2", "NOR3_X1", "NOR4_X1"],
-        "AND": ["and", "AND2", "AND2_X1", "AND", "AND2_X2", "AND3_X1"],
+        "AND": ["and", "AND2", "AND2_X1", "AND", "AND2_X2", "AND3_X1", "AND4_X1"],
         "NAND": ["nand", "NAND2", "NAND3_X1", "NAND4_X1", "NAND2_X1"],
         "NOT": ["not", "inv", "NOT", "INV_X1", "INV_X2", "INV_X4"],
         "BUFF": ["buff", "buf", 

@@ -155,8 +155,11 @@ def circuit_deltaP(circuit, B_th=0.1):
         if node.B > B_th:
             # print(node.num, "SKIPPED")
             continue
-
+        
         if node.ntype == "FB":
+            continue
+        
+        if node.ntype == "PI":
             continue
         # print("\n===============================")
         # print(node.num, round(node.B0, 3), round(node.B1, 3), round(node.B,3))
