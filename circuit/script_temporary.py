@@ -9,23 +9,36 @@ netlists_EPFL_ALL = ["arbiter", "ctrl",  "i2c",  "mem_ctrl", "sin", "bar","dec",
 netlists_EPFL_EZ = ["arbiter", "sin", "bar","dec", "int2float", "multiplier", "cavlc", "adder", "max", "priority", "voter"]
 
 netlists_ISCAS = ["c17","c432","c499","c880","c1355","c1908","c2670","c3540","c5315","c6288","c7552"]
-netlists_ISCAS = ["c17","c432","c499","c880", "c1908","c3540","c5315","c6288","c7552"]
-netlists_ISCAS = ["c499","c880", "c1908","c3540","c5315","c6288","c7552"]
+# netlists_ISCAS = ["c17","c432","c499","c880", "c1908","c3540","c5315","c6288","c7552"]
 
 all_netlists = netlists_ISCAS
+all_netlists.extend(netlists_EPFL_EZ)
 
-tps = [50, 100, 200, 500, 1000]# , 2000, 5000, 10000]
-
+tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 
 #TODO: make this steps as arguments
 
 
 # STEP1: GENERATE GOLDEN TPs
-# script = "python3 main_saeed.py -ckt \t$CKT$ -tp $TP$ -func genTP"
+# all_netlists.extend([x+"_syn" for x in netlists_EPFL_EZ])
+# tps [100000]
+# script = "python3 main_saeed.py -ckt \t$CKT$ -tp $TP$ -func genTP \t&"
+# for ckt in all_netlists:
+#     for tp in tps:
+#         # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
+#         #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
+#         #     continue
+#         sc = script.replace("$CKT$", ckt)
+#         sc = sc.replace("$TP$", str(tp))
+#         print(sc)
+
+
+
+
 
 # STEP2: GENERATE STAFAN LOAD VALUES
-# script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 10000 -func saveStatTP & " 
+script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 100000 -func saveStatTP & " 
 
 # STEP3: LIST OBSERVATION (B) VALUES OF ALL NODES FOR SEPARATE TPs IN SEPERATE FILES
 # script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tpLoad \t$TP$ \t-func writeOB & "
@@ -39,9 +52,9 @@ tps = [50, 100, 200, 500, 1000]# , 2000, 5000, 10000]
 
 
 # STEP7: Find HTO points with deltaP
-script = "python3 main_saeed.py -func deltaP -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05"
+#script = "python3 main_saeed.py -func deltaP -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05"
 
-for ckt in all_netlists[0:2]:
+for ckt in all_netlists:
     for version in ["synV0", "synV1", "synV2"]:
         for tp in tps:
             # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):

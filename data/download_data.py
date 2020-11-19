@@ -1,5 +1,10 @@
 
 
+
+
+#TODO: if file already exists, it creates a new copy, 
+# like circuit.v.1 instead of overwriting on circuit.v
+
 import sys
 import os
 sys.path.insert(1, "../circuit/")
@@ -40,5 +45,8 @@ def load_syn(dataset_name, syn_version):
     for ckt in netlists:
         for version in syn_version:
             sc = script.replace("$$V$$", version)
-            sc = sc.replace("$$CKT$$", ckt + "_syn" + version + ".v")
+            if version == "VX":
+                sc = sc.replace("$$CKT$$", ckt + "_syn.v")
+            else:
+                sc = sc.replace("$$CKT$$", ckt + "_syn" + version + ".v")
             os.system(sc)
