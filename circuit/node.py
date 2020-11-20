@@ -109,7 +109,10 @@ class Node:
         self.CB1 = None          # prob
         self.CB0 = None          # prob
         self.B = None          # prob
+        
 
+        # recursive fanin-cone search
+        self.flag_seen = None
         # Test Point Insertion Measurements
         self.stat = {}
                     

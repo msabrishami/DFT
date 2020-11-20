@@ -49,7 +49,7 @@ def make_OP(circuit, op):
 
 
 
-def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
+def deltaHTO(circuit, op, HTO_th, HTC_th):
     """ count the number of nodes that change from HTO to ETO 
     by making node an observation point """ 
     #TODO: does not look at the fan-in cone, but all the circuit
@@ -74,28 +74,23 @@ def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
                 count = count + 1
     op.ntype = orig_ntype
     circuit.PO = circuit.PO[:-1]
-    print("{}|".format(count), end="")
     return count
 
 
-def circuit_deltaHTO(circuit, B_th=0.1, ops=None):
+def circuit_deltaHTO(circuit, B_th, ops, args):
     res = {}
     
     for op in ops:
         node = circuit.nodes[op]
 
-        if node.B > B_th:
-            continue
-        if node.ntype in ["FB", "PI"]:
+        if (node.B > B_th) or (node.ntype in ["FB", "PI"]):
             continue
 
-        count = deltaHTO(circuit, node)
+        count = deltaHTO(circuit, node, args.HTO_th, args.HTC_th)
         res[node.num] = count
 
     res = {k: v for k,v in sorted(res.items(), key=lambda item: item[1], reverse=True)}
-    print()
-    print(res)
-    pdb.set_trace()
+    # print(res)
     return res
 
 
@@ -181,7 +176,7 @@ def circuit_deltaP(circuit, B_th=0.1, ops=None):
     return arit_sort
 
 
-def OPI(circuit, alg, count_op=10, B_th=0.2):
+def OPI(circuit, alg, count_op, args):
     """ runs the observation point insertion, with algorithm alg
     for count_op number of observation points 
     The circuit argument is considered to be fully loaded
@@ -197,9 +192,9 @@ def OPI(circuit, alg, count_op=10, B_th=0.2):
         print("Candidates: {}".format(len(ops)))
 
         if alg == "deltaP":
-            ops = circuit_deltaP(circuit, B_th=B_th, ops=ops)
+            ops = circuit_deltaP(circuit, B_th=args.Bth, ops=ops)
         elif alg == "deltaHTO":
-            ops = circuit_deltaHTO(circuit, B_th=B_th, ops=ops)
+            ops = circuit_deltaHTO(circuit, B_th=args.Bth, ops=ops, args=args)
 
         if len(ops) == 0:
             print("Reached B_th={} limit".format(B_th))

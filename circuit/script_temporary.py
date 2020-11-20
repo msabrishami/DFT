@@ -88,10 +88,10 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 # STEP5: Get the histogram of B values in a circuit
 # script = "python3 main_saeed.py -func histOB -ckt $CKT$ -syn $VER$ -tpLoad $TP$"
 
+# STEP6: Find HTO points with deltaHTO
 all_netlists = ["c432"]
 tps = [10000]
-# STEP6: Find HTO points with deltaHTO
-script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05"
+script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05 -HTO_th 0.2 -HTC_th 0.2"
 for ckt in all_netlists:
     for version in ["synV0", "synV1", "synV2"]:
         for tp in tps:

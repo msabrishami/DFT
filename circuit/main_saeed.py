@@ -50,7 +50,17 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
 
 
 
-if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"]:
+
+if args.func == "test":
+    circuit = Circuit(args.ckt)
+    LoadCircuit(circuit, "v")
+    circuit.lev()
+    justNode = circuit.nodes_lev[3]
+    print(justNode)
+
+
+
+if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB", "test"]:
     fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
     circuit = Circuit(ckt_name)
@@ -157,7 +167,8 @@ elif args.func == "histOB":
 
 elif args.func in  ["deltaP", "deltaHTO"]:
     conv = Converter(ckt_name, "EPFL") 
-    ops = OPI(circuit, args.func, count_op=args.opCount, B_th=args.Bth)
+    # TODO: be cautious about passing args
+    ops = OPI(circuit, args.func, count_op=args.opCount, args=args)
     fname = "../data/observations/" + ckt_name + "_" + args.func + "_B-" + str(args.Bth) 
     fname += "_Count-" + str(args.opCount) + ".op"
 
