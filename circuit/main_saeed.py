@@ -36,7 +36,7 @@ parser.add_argument("-OPIalg", type=str, required=False, help="OPI Algorithm")
 parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B threshold for OPI")
 parser.add_argument("-HTO_th", type=float, required=False, default=None, help="HTO-threshold")
 parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
-parser.add_argument("-opCount", type=int, required=False, default=20, help="OP count")
+parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
@@ -172,14 +172,11 @@ elif args.func in  ["deltaP", "deltaHTO"]:
     fname = "../data/observations/" + ckt_name + "_" + args.func + "_B-" + str(args.Bth) 
     fname += "_Count-" + str(args.opCount) + ".op"
 
-    conv.nodes2tmax_OP_file(ops, fname)
+    conv.nodes2tmax_OP(ops, fname)
     print("Stored Synopsys readable results in {}".format(fname))
     print(ops)
     for op in ops:
         print(op + "\t" + conv.n2g(op)) 
-
-
-
 
 
 elif args.func == "gen_stil":
@@ -213,7 +210,7 @@ elif args.func == "Single_OP_FS":
 
     OPs_fname = "../data/observations/" + args.ckt + "_" + args.OPIalg + "_B-" + str(args.Bth) 
     OPs_fname += "_Count-" + str(args.opCount) + ".op"
-    conv.nodes2tmax_OP_file(ops, OPs_fname)
+    conv.nodes2tmax_OP(ops, OPs_fname)
     print("Stored Synopsys observation file in     \t{}".format(fname))
    
     for op in ops:
@@ -258,7 +255,7 @@ elif args.func == "Multi_OP_FS":
 
     OPs_fname = "../data/observations/" + args.ckt + "_" + args.OPIalg + "_B-" + str(args.Bth) 
     OPs_fname += "_Count-" + str(args.opCount) + ".op"
-    conv.nodes2tmax_OP_file(ops, OPs_fname)
+    conv.nodes2tmax_OP(ops, OPs_fname)
     print("Stored Synopsys observation file in     \t{}".format(fname))
     
     # The path to verilog file changes cumulitavely 
@@ -292,6 +289,73 @@ elif args.func == "Multi_OP_FS":
         print("STIL format file  generated in \t\t\t{}".format(stil_fname))
         path_in = path_out
         # convert.replace_primitive2cell(path_out) 
+    
+    print("".join(["-"]*100))
+
+
+
+elif args.func == "genV_TMAXOP":
+    """ input: the address to the TMAX op file 
+    output: verilog file with ops as PO to be sent to fault simulation """ 
+    # TODO: what should be the output file name? 
+
+    path_in = os.path.join(config.VERILOG_DIR, ckt_name + ".v")
+    print("the original circuit is {}".format(path_in))
+    v_orig = convert.read_verilog_lines(path_in)
+    
+    op_fname = "../data/observations/{}_TMAX.op".format(ckt_name)
+    print("reading op file from {}".format(op_fname))
+
+    conv = Converter(ckt_name, utils.ckt_type(args.ckt)) 
+    ops_gate = conv.tmax2nodes_OP(op_fname)
+    # ops_gate = []
+    print("Observation points are: ")
+    ops_node = []
+    args.opCount =  args.opCount if args.opCount else len(ops_gate)
+    for op in ops_gate[:args.opCount]:
+        op = op.split("/")[0]
+        ops_node.append(conv.g2n(op))
+        print(op + "\t" + conv.g2n(op)) 
+    
+    new_pos = ["MSAPO" + op for op in ops_node]
+
+    temp = "," + ", ".join(new_pos) + ");"
+    v_orig[0] = v_orig[0].replace(");", temp)
+
+    temp = "," + ", ".join(new_pos) + ";"
+    v_orig[2] = v_orig[2].replace(";", temp) 
+
+    cname_mod ="{}_TMAX_OP{}".format(ckt_name, args.opCount)
+    path_out = "../data/verilog/{}.v".format(cname_mod)
+    outfile = open(path_out, "w")
+    outfile.write(v_orig[0] + "\n")
+    outfile.write(v_orig[1] + "\n")
+    outfile.write(v_orig[2] + "\n")
+    outfile.write(v_orig[3] + "\n")
+    for line in v_orig[4:-1]:
+        outfile.write(line + "\n")
+
+    for idx, op in enumerate(ops_node):
+        new_buff = "MSABUFF" + op
+        new_po = "MSAPO" + op
+        outfile.write("BUF_X1 {} ( .I({}) , .Z({}) );\n".format(new_buff, op, new_po))
+    
+    outfile.write("endmodule\n")
+    outfile.close()
+    print("New verilog file generated in \t\t\t{}".format(path_out))
+    
+    
+    ### Step 2: Logic sim and generate STIL file
+    tp_fname = os.path.join(config.PATTERN_DIR, args.ckt + "_TP" + str(args.tpLoad) + ".tp")
+    print("Reading test patterns from \t\t\t{}".format(tp_fname))
+
+    ckt_mod = Circuit(cname_mod)
+    LoadCircuit(ckt_mod,"v") 
+    ckt_mod.lev()
+    stil_fname = os.path.join(config.PATTERN_DIR, 
+            cname_mod + "_" + str(args.tpLoad) + ".raw-stil")
+    ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL") 
+    print("STIL format file  generated in \t\t\t{}".format(stil_fname))
     
     print("".join(["-"]*100))
 

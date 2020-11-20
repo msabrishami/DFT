@@ -127,4 +127,6 @@ for ckt in all_netlists:
 #                   continue
 
 
-
+### STEP UNKNOWN:
+### CREATE VERILOG FILE BASED ON OPS OF TMAX
+# script = "python3 main_saeed.py -func genV_TMAXOP -ckt c432 -syn synV0 -tpLoad 10000"

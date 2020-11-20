@@ -33,7 +33,7 @@ class Converter:
             node=node.split("-")[0]
         return self.node2gate[node]
 
-    def nodes2tmax_OP_file(self, ops, output_fname):
+    def nodes2tmax_OP(self, ops, output_fname):
         """ converts a list of nodes in our own format to 
         Synopsys TestMax Observation Point format
         TODO: special case of EPFL""" 
@@ -54,6 +54,19 @@ class Converter:
                 # print(res)
         
         outfile.close()
+
+    def tmax2nodes_OP(self, tmax_fname):
+        """ reads a OP file in tmax format, 
+        returns a list of OP nodes """
+        mstr = re.compile(r"(?:(?:[A-Z]+\d*\_\d+)|(?:[A-Z]+\d+))\/[A-Z]+")
+        op_list= []
+        infile = open(tmax_fname)
+        lines = infile.readlines()
+        for l in lines:
+            mlist = re.findall(mstr, l)
+            op_list.extend(mlist)
+        infile.close()
+        return op_list
 
 
     def convert_gate_node(self, path):

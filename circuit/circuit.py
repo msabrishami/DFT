@@ -347,6 +347,7 @@ class Circuit:
             else:
                 node.imply()
 
+
     
     def logic_sim_file(self, in_fname, out_fname, out_format): 
         """
