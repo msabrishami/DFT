@@ -15,10 +15,10 @@ from modelsim_simulator import Modelsim
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
-from c432_logic_sim import c432_sim
 import config
 from checker_logicsim import Checker
 import observation
+from observation import OPI
 import experiments 
 from load_circuit import LoadCircuit
 from convert import Converter 
@@ -34,17 +34,20 @@ parser.add_argument("-cpu", type=int, required=False, help="number of parallel C
 parser.add_argument("-func", type=str, required=False, help="What operation you want to run")
 parser.add_argument("-OPIalg", type=str, required=False, help="OPI Algorithm")
 parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B threshold for OPI")
+parser.add_argument("-HTO_th", type=float, required=False, default=None, help="HTO-threshold")
+parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
 parser.add_argument("-opCount", type=int, required=False, default=20, help="OP count")
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
-print(ckt_name)
-
+config.HTO_TH = args.HTO_th if args.HTO_th else config.HTO_TH
+config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
 
 
 print("======================================================")
-print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(ckt_name, args.tp, args.cpu))
-# print("======================================================\n")
+print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
+    ckt_name, args.tp, args.tpLoad, args.cpu))
+
 
 
 if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"]:
@@ -67,6 +70,8 @@ if args.func == "genTP":
     LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.gen_tp_file(args.tp, path)
+
+
 
 
 elif args.func == "saveStatTP":
@@ -92,6 +97,8 @@ elif args.func == "saveStatTP":
     circuit.save_circuit(fname)
 
 
+
+
 elif args.func == "writeOB":
     # circuit.co_ob_info()
     path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)
@@ -99,13 +106,19 @@ elif args.func == "writeOB":
     circuit.write_ob_info(path)
 
 
+
+
 elif args.func == "analysisOB":
-    TPs = [50, 100, 200] # , 500, 1000, 2000, 5000, 10000]
+    TPs = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
     report_path = "../data/ob_stat/{}_REPORT.obsr".format(ckt_name)
     report = open(report_path, "w")
     data = []
     for tp in TPs:
         ob_fname = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, tp)
+        # print(ob_fname)
+        if not os.path.exists(ob_fname):
+            # print("SKIPPED", ob_fname)
+            continue
         infile = open(ob_fname)
         lines = infile.readlines()
         data.append([(x.split()[1]) for x in lines[1:]])
@@ -114,6 +127,7 @@ elif args.func == "analysisOB":
         report.write(str(TPs[idx]) + "," + ",".join(data[idx]) + "\n")
 
     print("Report file generated in {}".format(report_path))
+
 
 
 elif args.func == "histOB":
@@ -138,17 +152,23 @@ elif args.func == "histOB":
     log += ckt_name +  "," + ",".join(temp)
     print(log)
 
-# TODO: algorithms should not return PI
+
+
+
 elif args.func in  ["deltaP", "deltaHTO"]:
     conv = Converter(ckt_name, "EPFL") 
-    ops = observation.OPI(circuit, args.func, count_op=args.opCount, B_th=args.Bth)
+    ops = OPI(circuit, args.func, count_op=args.opCount, B_th=args.Bth)
     fname = "../data/observations/" + ckt_name + "_" + args.func + "_B-" + str(args.Bth) 
     fname += "_Count-" + str(args.opCount) + ".op"
-    print(ops)
+
     conv.nodes2tmax_OP_file(ops, fname)
     print("Stored Synopsys readable results in {}".format(fname))
+    print(ops)
     for op in ops:
         print(op + "\t" + conv.n2g(op)) 
+
+
+
 
 
 elif args.func == "gen_stil":
@@ -172,7 +192,7 @@ elif args.func == "Single_OP_FS":
     """
 
     conv = Converter(args.ckt, utils.ckt_type(args.ckt)) 
-    ops = observation.OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
+    ops = OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
     print("Observation points are: ")
     for op in ops:
         print(op + "\t" + conv.n2g(op)) 
@@ -217,7 +237,7 @@ elif args.func == "Multi_OP_FS":
     """
     
     conv = Converter(args.ckt, utils.ckt_type(args.ckt)) 
-    ops = observation.OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
+    ops = OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
     print("Observation points are: ")
     for op in ops:
         print(op + "\t" + conv.n2g(op)) 

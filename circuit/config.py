@@ -29,7 +29,7 @@ CELL_NAMES = {
         "OR": ["or", "OR2", "OR2_X1", "OR", "OR2_X2", "OR3_X1", "OR4_X1"],
         "NOR": ["nor", "NOR2", "NOR2_X1", "NOR2_X2", "NOR3_X1", "NOR4_X1"],
         "AND": ["and", "AND2", "AND2_X1", "AND", "AND2_X2", "AND3_X1", "AND4_X1"],
-        "NAND": ["nand", "NAND2", "NAND3_X1", "NAND4_X1", "NAND2_X1"],
+        "NAND": ["nand", "NAND2", "NAND2_X2", "NAND3_X1", "NAND4_X1", "NAND2_X1"],
         "NOT": ["not", "inv", "NOT", "INV_X1", "INV_X2", "INV_X4"],
         "BUFF": ["buff", "buf", 
             "CLKBUF_X12", "CLKBUF_X1", "CLKBUF_X2","CLKBUF_X4","CLKBUF_X8","CLKBUF_X16",
