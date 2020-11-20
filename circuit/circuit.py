@@ -347,6 +347,7 @@ class Circuit:
             else:
                 node.imply()
 
+
     
     def logic_sim_file(self, in_fname, out_fname, out_format): 
         """
@@ -571,6 +572,35 @@ class Circuit:
             self.fault_name.append(sa1_str)
             self.fault_node_num.append(node.num)
             self.fault_type.append(1)
+
+    
+    def clean_fanin(self):
+        for node in self.nodes_lev:
+            node.flag_seen = False
+    
+    def get_fanin_cone(self, target_num):
+        self.clean_fanin()
+        return self._fanin_cone_rec(target_num)
+
+    def _fanin_cone_rec(self, target_num):
+        """ give a node number, return the node nums of all fan-in cones """ 
+        target = self.nodes[target_num]
+        if target.flag_seen:
+            return {}
+        
+        target.flag_seen = True
+        res = set()
+
+        if target.ntype == "PI":
+            res.add(target_num)
+            return res
+        
+        for node in target.unodes:
+            res = res.union(self.get_fanin_cone(node.num))
+        
+        res.add(target_num)
+
+        return res
 
 
     def gen_fault_dic(self):

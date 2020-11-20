@@ -40,11 +40,20 @@ def stat_HTO(circuit, HTO_th, HTC_th):
     print("Number of HTO nodes are {}".format(count))
     return count
 
+def make_OP(circuit, op):
+    """ adds an observation point, updates STAFAN_B """ 
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    circuit.STAFAN_B()
 
 
-def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
+
+
+def deltaHTO(circuit, op, HTO_th, HTC_th):
     """ count the number of nodes that change from HTO to ETO 
     by making node an observation point """ 
+    #TODO: does not look at the fan-in cone, but all the circuit
+
     circuit.STAFAN_B()
     fault_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
     HTO_old = set()
@@ -68,27 +77,21 @@ def deltaHTO(circuit, op, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH):
     return count
 
 
-def circuit_deltaHTO(circuit, B_th=0.1):
+def circuit_deltaHTO(circuit, B_th, ops, args):
     res = {}
     
-    for node in circuit.nodes_lev:
+    for op in ops:
+        node = circuit.nodes[op]
 
-        if node.B > B_th:
-            continue
-        if node.ntype in ["FB", "PI"]:
+        if (node.B > B_th) or (node.ntype in ["FB", "PI"]):
             continue
 
-        count = deltaHTO(circuit, node)
+        count = deltaHTO(circuit, node, args.HTO_th, args.HTC_th)
         res[node.num] = count
 
     res = {k: v for k,v in sorted(res.items(), key=lambda item: item[1], reverse=True)}
+    # print(res)
     return res
-
-def make_OP(circuit, op):
-    """ adds an observation point, updates STAFAN_B """ 
-    circuit.PO.append(op)
-    op.ntype = "PO"
-    circuit.STAFAN_B()
 
 
 def deltaP(circuit, op):
@@ -140,7 +143,7 @@ def deltaP(circuit, op):
     return stat_arit_all, stat_geom_all, stat_arit_agg, stat_geom_agg
 
 
-def circuit_deltaP(circuit, B_th=0.1):
+def circuit_deltaP(circuit, B_th=0.1, ops=None):
     """ measuring the change made in the fan-in cone nodes if made PO 
     Calculates this for all the nodes
     returns a ranked list of nodes based on value of B
@@ -150,89 +153,56 @@ def circuit_deltaP(circuit, B_th=0.1):
     res_arit = {}
     res_geom = {}
 
-    for node in circuit.nodes_lev:
+    for op in ops:
+        node = circuit.nodes[op]
 
-        if node.B > B_th:
-            # print(node.num, "SKIPPED")
+        if (node.B > B_th) or (node.ntype in ["FB", "PI"]):
             continue
         
-        if node.ntype == "FB":
-            continue
-        
-        if node.ntype == "PI":
-            continue
-        # print("\n===============================")
-        # print(node.num, round(node.B0, 3), round(node.B1, 3), round(node.B,3))
         a_all, g_all, a_agg, g_agg = deltaP(circuit, node)
         res_arit[node.num] = a_agg
         res_geom[node.num] = g_agg
-
-        # print("Num:{}\Lev:{} is OP! \nArit AGG:\t\t {}\t\tGeom AGG: \t {}".format(
-        #     node.num, node.lev, 
-        #     [round(x, 3) for x in a_agg], [round(x, 3) for x in g_agg]))
-
-        # printing the impact on all the nodes if node is made OP
-        # for idx in range(len(a_all)):
-        #     if a_all[idx][2] < 0.001:
-        #         continue
-        #     print("{} \t{}".format(circuit.nodes_lev[idx].num, 
-        #         circuit.nodes_lev[idx].lev), end="")
-        #     print("\t\t", [round(x, 3) for x in a_all[idx]], end="\t\t")
-        #     print("\t\t", [round(x, 3) for x in g_all[idx]])
-    guide = {"B0":0, "B1":1, "B":2, "CB0":3, "CB1":4}
-    # print("\n\n=============clean format==============")
-    # print("arit: B0,B1,B,CB0,CB1. geom: B0,B1,B,CB0,CB1")
-    # for node in circuit.nodes_lev:
-    #     if node.num in res_arit:
-    #         msg = node.num + ","
-    #         msg = msg + ",".join([str(x) for x in res_arit[node.num]]) + "," 
-    #         msg = msg + ",".join([str(x) for x in res_geom[node.num]])
-    #         print(msg)
-    # print("\n\n=============clean format==============\n\n")
     
+    guide = {"B0":0, "B1":1, "B":2, "CB0":3, "CB1":4}
+
     _arit = {}
     _geom = {}
     for key in res_arit.keys():
         _arit[key] = res_arit[key][guide["B"]]
         _geom[key] = res_geom[key][guide["B"]]
-    arit_ordered = {k: v for k,v in sorted(_arit.items(), key=lambda item: item[1], reverse=True)}
-    geom_ordered = {k: v for k,v in sorted(_geom.items(), key=lambda item: item[1], reverse=True)}
-    return (arit_ordered, geom_ordered)
+    arit_sort = {k: v for k,v in sorted(_arit.items(), key=lambda item: item[1], reverse=True)}
+    # geom_sort = {k: v for k,v in sorted(_geom.items(), key=lambda item: item[1], reverse=True)}
+
+    return arit_sort
 
 
-def OPI(circuit, alg, count_op=10, B_th=0.2):
+def OPI(circuit, alg, count_op, args):
     """ runs the observation point insertion, with algorithm alg
     for count_op number of observation points 
     The circuit argument is considered to be fully loaded
     Note: this function modifies the circuit
     returns: a list of OP node numbers"""
 
-    res = [] 
-    if alg == "deltaP":
-        for x in range(count_op):
-            arit, geom = circuit_deltaP(circuit, B_th=B_th)
-            if len(arit) == 0:
-                print("No more points with B_th={}".format(B_th))
-                break
-            new_op = circuit.nodes[list(arit)[0]]
-            # print(new_op.num, arit[new_op.num])
-            res.append(new_op.num)
-            make_OP(circuit, new_op)
-    elif alg == "deltaHTO":
-        for x in range(count_op):
-            ops = circuit_deltaHTO(circuit, B_th=B_th)
-            if len(ops) == 0:
-                print("No more points with B_th={}".format(B_th))
-                break
-            new_op = circuit.nodes[list(ops)[0]]
-            if new_op.num == "N73":
-                pdb.set_trace()
-            # print(new_op.num, arit[new_op.num])
-            res.append(new_op.num)
-            make_OP(circuit, new_op)
-    else:
-        raise NameError("Algorithm not defined")
-   
+    assert alg in ["deltaHTO", "deltaP"],"Algorithm not defined"
+ 
+    res = []
+    ops = list(circuit.nodes.keys())
+
+    for x in range(count_op):
+        print("Candidates: {}".format(len(ops)))
+
+        if alg == "deltaP":
+            ops = circuit_deltaP(circuit, B_th=args.Bth, ops=ops)
+        elif alg == "deltaHTO":
+            ops = circuit_deltaHTO(circuit, B_th=args.Bth, ops=ops, args=args)
+
+        if len(ops) == 0:
+            print("Reached B_th={} limit".format(B_th))
+            break
+        new_op = circuit.nodes[list(ops)[0]]
+        res.append(new_op.num)
+        make_OP(circuit, new_op)
+  
     return res
 
 
