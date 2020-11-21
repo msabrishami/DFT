@@ -60,7 +60,7 @@ if args.func == "test":
 
 
 
-if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", 
+if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP", 
         "genV_TMAXOP", "analysisOB", "test"]:
     fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
@@ -186,11 +186,14 @@ elif args.func in  ["deltaP", "deltaHTO"]:
 elif args.func == "gen_stil":
     # Does not generate the test patterns but reads them, and creates stil file
     # generate a test pattern file in 658 format and save it in ../data/patterns/
-    # then logicsim on this and save it as stil format in ../data/patterns/
-    circuit = Circuit(args.ckt)
+
+    # We read the ckt_name circuit, which is the synthesized version
+    # But we read the golden TP from ckt circuit, because we don't have ckt.v and only 
+    # have ckt_synVX.v
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
-    tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tpLoad) + ".tp"
+    tp_fname = "../data/patterns/" + args.ckt + "_TP" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
     # circuit.gen_tp_file(args.tp, fname=tp_fname)
     circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL", tp_count = args.tp)
@@ -358,8 +361,8 @@ elif args.func == "genV_TMAXOP":
     LoadCircuit(ckt_mod,"v") 
     ckt_mod.lev()
     stil_fname = os.path.join(config.PATTERN_DIR, 
-            cname_mod + "_" + str(args.tpLoad) + ".raw-stil")
-    ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL") 
+            cname_mod + "_" + str(args.tp) + ".raw-stil")
+    ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL", args.tp) 
     print("STIL format file  generated in \t\t\t{}".format(stil_fname))
     
     print("".join(["-"]*100))

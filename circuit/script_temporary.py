@@ -9,6 +9,7 @@ netlists_EPFL_ALL = ["arbiter", "ctrl",  "i2c",  "mem_ctrl", "sin", "bar","dec",
 netlists_EPFL_EZ = ["arbiter", "sin", "bar","dec", "int2float", "multiplier", "cavlc", "adder", "max", "priority", "voter"]
 
 netlists_ISCAS = ["c17","c432","c499","c880","c1355","c1908","c2670","c3540","c5315","c6288","c7552"]
+netlists_ISCAS = ["c432","c499","c880","c1355","c1908","c3540","c5315","c6288","c7552"]
 
 all_netlists = netlists_ISCAS
 all_netlists.extend(netlists_EPFL_EZ)
@@ -33,14 +34,28 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 
 
+########################################
+###  STEP1.5: GENERATE STIL 
+########################################
+# all_netlists = ["arbiter", "max", "priority"] 
+# # all_netlists = [x + "_synV1" for x in all_netlists]
+# script = "python3 main_saeed.py -ckt \t$CKT$ -synv synV1 -tpLoad 100000 -tp 20000 -func gen_stil \t&"
+# for ckt in all_netlists:
+#     sc = script.replace("$CKT$", ckt)
+#     print(sc)
+# 
+
+
 
 #######################################
 ### STEP2: GENERATE STAFAN LOAD VALUES
 #######################################
-# script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 100000 -func saveStatTP" 
+# all_netlists = netlists_EPFL_EZ
+# tps = [1000, 2000] #, 5000, 10000, 20000, 50000, 100000]
+# script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 100000 -func saveStatTP & " 
 # 
 # for ckt in all_netlists:
-#     for version in ["synV0", "synV1"]:
+#     for version in ["synV0"]:
 #         for tp in tps:
 #             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
 #                 # print("file exists for ckt: {} version {} tp: {}!".format(ckt, version, tp))
@@ -50,6 +65,7 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 #                 sc = sc.replace("$VER$", version)
 #                 sc = sc.replace("$TP$", str(tp))
 #                 print(sc)
+
 
 
 #######################################
@@ -88,6 +104,8 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 # STEP5: Get the histogram of B values in a circuit
 # script = "python3 main_saeed.py -func histOB -ckt $CKT$ -syn $VER$ -tpLoad $TP$"
 
+
+#######################################
 # STEP6: Find HTO points with deltaHTO
 # all_netlists = ["c432"]
 # tps = [10000]
@@ -127,17 +145,16 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 #                   continue
 
 
-### STEP UNKNOWN:
+### STEP 8: generate genv_TMAXOP which is verilog and stil of OP added
 ### CREATE VERILOG FILE BASED ON OPS OF TMAX
-
-script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 10000"
-all_netlists = netlists_EPFL_EZ 
-
+script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 100000 -tp $TP$ &"
 for ckt in all_netlists:
-    for version in ["synV0", "synV1", "synV2"]:
+    for version in ["synV1"]:
         sc = script.replace("$CKT$", ckt)
         sc = sc.replace("$VER$", version)
+        if ckt in ["arbiter", "max", "priority"]:
+            sc = sc.replace("$TP$", "20000")
+        else:
+            sc = sc.replace("$TP$", "1000")
         print(sc)
-
-
 
