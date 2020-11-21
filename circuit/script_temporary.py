@@ -33,25 +33,33 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 
 
+########################################
+###  STEP1.5: GENERATE STIL 
+########################################
+
+
+
 
 #######################################
 ### STEP2: GENERATE STAFAN LOAD VALUES
 #######################################
-# script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 100000 -func saveStatTP" 
-# 
-# for ckt in all_netlists:
-#     for version in ["synV0", "synV1"]:
-#         for tp in tps:
-#             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
-#                 # print("file exists for ckt: {} version {} tp: {}!".format(ckt, version, tp))
-#                 continue
-#             else:
-#                 sc = script.replace("$CKT$", ckt)
-#                 sc = sc.replace("$VER$", version)
-#                 sc = sc.replace("$TP$", str(tp))
-#                 print(sc)
+all_netlists = netlists_EPFL_EZ
+tps = [1000, 2000] #, 5000, 10000, 20000, 50000, 100000]
+script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-tp \t$TP$ \t-tpLoad 100000 -func saveStatTP & " 
 
+for ckt in all_netlists:
+    for version in ["synV0"]:
+        for tp in tps:
+            if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
+                # print("file exists for ckt: {} version {} tp: {}!".format(ckt, version, tp))
+                continue
+            else:
+                sc = script.replace("$CKT$", ckt)
+                sc = sc.replace("$VER$", version)
+                sc = sc.replace("$TP$", str(tp))
+                print(sc)
 
+exit()
 #######################################
 ### STEP3: LIST OBSERVATION (B) VALUES OF ALL NODES 
 ### FOR SEPARATE TPs IN SEPERATE FILES
@@ -88,6 +96,8 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 # STEP5: Get the histogram of B values in a circuit
 # script = "python3 main_saeed.py -func histOB -ckt $CKT$ -syn $VER$ -tpLoad $TP$"
 
+
+#######################################
 # STEP6: Find HTO points with deltaHTO
 # all_netlists = ["c432"]
 # tps = [10000]
@@ -129,15 +139,14 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 ### STEP UNKNOWN:
 ### CREATE VERILOG FILE BASED ON OPS OF TMAX
-
-script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 10000"
-all_netlists = netlists_EPFL_EZ 
-
-for ckt in all_netlists:
-    for version in ["synV0", "synV1", "synV2"]:
-        sc = script.replace("$CKT$", ckt)
-        sc = sc.replace("$VER$", version)
-        print(sc)
-
-
+# script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 10000"
+# all_netlists = netlists_EPFL_EZ 
+# 
+# for ckt in all_netlists:
+#     for version in ["synV0", "synV1", "synV2"]:
+#         sc = script.replace("$CKT$", ckt)
+#         sc = sc.replace("$VER$", version)
+#         print(sc)
+# 
+# 
 

@@ -187,7 +187,7 @@ elif args.func == "gen_stil":
     # Does not generate the test patterns but reads them, and creates stil file
     # generate a test pattern file in 658 format and save it in ../data/patterns/
     # then logicsim on this and save it as stil format in ../data/patterns/
-    circuit = Circuit(args.ckt)
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
     tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tpLoad) + ".tp"
@@ -358,8 +358,8 @@ elif args.func == "genV_TMAXOP":
     LoadCircuit(ckt_mod,"v") 
     ckt_mod.lev()
     stil_fname = os.path.join(config.PATTERN_DIR, 
-            cname_mod + "_" + str(args.tpLoad) + ".raw-stil")
-    ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL") 
+            cname_mod + "_" + str(args.tp) + ".raw-stil")
+    ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL", args.tp) 
     print("STIL format file  generated in \t\t\t{}".format(stil_fname))
     
     print("".join(["-"]*100))
