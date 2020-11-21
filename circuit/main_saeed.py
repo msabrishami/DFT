@@ -193,7 +193,7 @@ elif args.func == "gen_stil":
     tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
     # circuit.gen_tp_file(args.tp, fname=tp_fname)
-    circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL")
+    circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL", tp_count = args.tp)
     print("Done stil gen, added in {}".format(stil_fname))
 
 

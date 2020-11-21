@@ -349,7 +349,7 @@ class Circuit:
 
 
     
-    def logic_sim_file(self, in_fname, out_fname, out_format): 
+    def logic_sim_file(self, in_fname, out_fname, out_format, tp_count=None): 
         """
         Reads the input patterns from "in_fname" with 658 format
         Does the logic simulation, stores the results in "out_fname" 
@@ -360,6 +360,10 @@ class Circuit:
         lines = infile.readlines()
         outfile = open(out_fname, "w")
 
+        if not tp_count:
+            pdb.set_trace()
+            tp_count = len(lines) 
+        
         if out_format == "658":
             outfile.write('Inputs: ')
             outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
@@ -370,9 +374,9 @@ class Circuit:
             outfile.write(",".join([node.num for node in self.PI]) + "\n")
             outfile.write("PO:")
             outfile.write(",".join([node.num for node in self.PO]) + "\n")
-           
-            
-        for idx, line in enumerate(lines[1:]):
+        
+
+        for idx, line in enumerate(lines[1:tp_count]):
             line = line.rstrip('\n').split(",")
             tp = [int(x) for x in line]
             self.logic_sim(tp)
