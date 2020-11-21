@@ -89,22 +89,22 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 # script = "python3 main_saeed.py -func histOB -ckt $CKT$ -syn $VER$ -tpLoad $TP$"
 
 # STEP6: Find HTO points with deltaHTO
-all_netlists = ["c432"]
-tps = [10000]
-script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05 -HTO_th 0.2 -HTC_th 0.2"
-for ckt in all_netlists:
-    for version in ["synV0", "synV1", "synV2"]:
-        for tp in tps:
-
-            if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
-                sc = script.replace("$CKT$", ckt)
-                sc = sc.replace("$VER$", version)
-                sc = sc.replace("$TP$", str(tp))
-                print(sc)
-            else:
-                print("STAFAN not found")
-                continue
-
+# all_netlists = ["c432"]
+# tps = [10000]
+# script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05 -HTO_th 0.2 -HTC_th 0.2"
+# for ckt in all_netlists:
+#     for version in ["synV0", "synV1", "synV2"]:
+#         for tp in tps:
+# 
+#             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
+#                 sc = script.replace("$CKT$", ckt)
+#                 sc = sc.replace("$VER$", version)
+#                 sc = sc.replace("$TP$", str(tp))
+#                 print(sc)
+#             else:
+#                 print("STAFAN not found")
+#                 continue
+# 
 
 
 # STEP7: Find HTO points with deltaP
@@ -129,4 +129,15 @@ for ckt in all_netlists:
 
 ### STEP UNKNOWN:
 ### CREATE VERILOG FILE BASED ON OPS OF TMAX
-# script = "python3 main_saeed.py -func genV_TMAXOP -ckt c432 -syn synV0 -tpLoad 10000"
+
+script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 10000"
+all_netlists = netlists_EPFL_EZ 
+
+for ckt in all_netlists:
+    for version in ["synV0", "synV1", "synV2"]:
+        sc = script.replace("$CKT$", ckt)
+        sc = sc.replace("$VER$", version)
+        print(sc)
+
+
+

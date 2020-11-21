@@ -60,7 +60,8 @@ if args.func == "test":
 
 
 
-if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB", "test"]:
+if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", 
+        "genV_TMAXOP", "analysisOB", "test"]:
     fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
     circuit = Circuit(ckt_name)
@@ -73,10 +74,13 @@ if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"
 
 
 if args.func == "genTP":
-    """ generate original test pattern file, orig-TP  """
+    
+    """ generate original test pattern file, orig-TP  
+    Important note, if synv is selected, will generate for the synthesized version
+    But it does not have any differece! """
     path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tp)
-    print("generating test patterns for {} with {} tps in {}".format(args.ckt, args.tp, path))
-    circuit = Circuit(args.ckt)
+    print("generating test patterns for {} with {} tps in {}".format(ckt_name, args.tp, path))
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.gen_tp_file(args.tp, path)

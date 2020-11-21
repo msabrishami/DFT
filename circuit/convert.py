@@ -9,6 +9,8 @@ import subprocess
 sys.path.insert(1, config.LIB_CELLS_PATH)
 import library_cells
 
+from load_circuit import read_verilog_syntax
+
 class Converter:
     def __init__(self, ckt, verilog_format):
         assert verilog_format in config.V_FORMATS, \
@@ -69,13 +71,14 @@ class Converter:
         return op_list
 
 
-    def convert_gate_node(self, path):
+    def convert_gate_node_OLD(self, path):
         """ for every gate, there are two information:
         1- gate name
         2- node number, which is basically the down-node of gate
         Some applications need the gate name (like TestMax-OPI) some others node name
         both gate name and node number are unique
         This function geenrates and returns 2 dicts: (gat2node, node2gate)
+        Bug: cannot read verilog files with gate definition in more than one line
         """
         infile = open(path)
         
@@ -108,6 +111,59 @@ class Converter:
                 self.gate2node[gate] = node
                 self.node2gate[node] = gate
                 self.gate2cell[gate] = words[0]
+
+    def convert_gate_node(self, path):
+        """ for every gate, there are two information:
+        1- gate name
+        2- node number, which is basically the down-node of gate
+        Some applications need the gate name (like TestMax-OPI) some others node name
+        both gate name and node number are unique
+        This function geenrates and returns 2 dicts: (gat2node, node2gate)
+        Bug: cannot read verilog files with gate definition in more than one line
+        """
+        self.gate2node = dict()
+        self.node2gate = dict()
+        self.gate2cell = dict()
+
+        infile = open(path)
+        eff_line = ''
+        lines = infile.readlines()
+        new_lines=[]
+        for line in lines:
+            # Remove comment in lines 
+            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
+            line = line[:line.index('//')] if line_syntax else line
+
+            # If there is no ";" or "endmodule" it means the line is continued
+            # Stack the contniuous lines to each other
+            if ';' not in line and 'endmodule' not in line:
+                eff_line = eff_line + line.rstrip()
+                continue
+                        
+            line = eff_line + line.rstrip()
+            eff_line = ''
+            new_lines.append(line)
+
+        infile.close()
+
+        for line in new_lines:
+            x_type, _ = read_verilog_syntax(line)
+            if x_type != "GATE":
+                continue
+
+            line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+            pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
+            if not pin_format:
+                pdb.set_trace()
+            if "Z" not in pin_format[-1][0]:
+                pdb.set_trace()
+                raise NameError("Cannot detect the output pin as the last argumet, check code")
+            words = line.split()
+            gate = words[1]
+            node = pin_format[-1][1]
+            self.gate2node[gate] = node
+            self.node2gate[node] = gate
+            self.gate2cell[gate] = words[0]
 
 
 def convert_opi_gate2node(verilog_path, opi_path, out_path):

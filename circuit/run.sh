@@ -1,3 +1,33 @@
-python3 main_saeed.py -func deltaHTO -ckt c432 -syn synV0 -tpLoad 10000 -opCount 20 -Bth 0.2 -HTO_th 0.2 -HTC_th 0.05
-python3 main_saeed.py -func deltaHTO -ckt c432 -syn synV1 -tpLoad 10000 -opCount 20 -Bth 0.2 -HTO_th 0.2 -HTC_th 0.05
-python3 main_saeed.py -func deltaHTO -ckt c432 -syn synV2 -tpLoad 10000 -opCount 20 -Bth 0.2 -HTO_th 0.2 -HTC_th 0.05
+python3 main_saeed.py -func genV_TMAXOP -ckt arbiter -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt arbiter -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt arbiter -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt sin -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt sin -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt sin -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt bar -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt bar -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt bar -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt dec -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt dec -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt dec -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt int2float -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt int2float -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt int2float -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt multiplier -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt multiplier -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt multiplier -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt cavlc -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt cavlc -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt cavlc -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt adder -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt adder -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt adder -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt max -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt max -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt max -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt priority -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt priority -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt priority -syn synV2 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt voter -syn synV0 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt voter -syn synV1 -tpLoad 10000
+python3 main_saeed.py -func genV_TMAXOP -ckt voter -syn synV2 -tpLoad 10000
