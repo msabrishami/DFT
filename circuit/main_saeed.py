@@ -184,14 +184,15 @@ elif args.func in  ["deltaP", "deltaHTO"]:
 
 
 elif args.func == "gen_stil":
+    # Does not generate the test patterns but reads them, and creates stil file
     # generate a test pattern file in 658 format and save it in ../data/patterns/
     # then logicsim on this and save it as stil format in ../data/patterns/
     circuit = Circuit(args.ckt)
     LoadCircuit(circuit, "v")
     circuit.lev()
-    tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".tp"
+    tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
-    circuit.gen_tp_file(args.tp, fname=tp_fname)
+    # circuit.gen_tp_file(args.tp, fname=tp_fname)
     circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL")
     print("Done stil gen, added in {}".format(stil_fname))
 
