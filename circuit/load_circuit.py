@@ -198,6 +198,8 @@ class LoadCircuit:
             # Node was seen before, in wire or in input/output, node will be added
             if x_type == "GATE":
                 gtype, nets = nets
+                if nets[0] not in _nodes:
+                    pdb.set_trace()
                 _nodes[nets[0]]['g_type'] = gtype 
                 new_node = self.add_node_v(_nodes[nets[0]])
                 circuit.nodes[new_node.num] = new_node
@@ -303,12 +305,16 @@ def read_verilog_syntax(line):
         gtype = cell2gate(line_syntax.group(1))
         #we may not use gname for now. 
         gname = line_syntax.group(2)
-
-        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+        
+        # TODO: Saeed fixed this but was not tested on all circuits
+        # It had issues with netlists that have gate description in multiple lines
+        # pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
         if pin_format:
             #TODO: for now, we considered PO as the last pin
             if "Z" not in pin_format[-1][0]:
-                raise NameError("Order of pins in verilog does not match")
+                pdb.set_trace()
+                raise NameError("Cannot detect the output pin as the last argumet, check code")
             nets = [pin_format[-1][1]]
             for x in pin_format[:-1]:
                 nets.append(x[1])

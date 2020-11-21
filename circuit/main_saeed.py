@@ -60,7 +60,8 @@ if args.func == "test":
 
 
 
-if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB", "test"]:
+if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", 
+        "genV_TMAXOP", "analysisOB", "test"]:
     fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
     circuit = Circuit(ckt_name)
@@ -73,10 +74,13 @@ if args.func not in ["saveStat", "saveStatTP", "gen_Stil", "genTP", "analysisOB"
 
 
 if args.func == "genTP":
-    """ generate original test pattern file, orig-TP  """
+    
+    """ generate original test pattern file, orig-TP  
+    Important note, if synv is selected, will generate for the synthesized version
+    But it does not have any differece! """
     path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tp)
-    print("generating test patterns for {} with {} tps in {}".format(args.ckt, args.tp, path))
-    circuit = Circuit(args.ckt)
+    print("generating test patterns for {} with {} tps in {}".format(ckt_name, args.tp, path))
+    circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.gen_tp_file(args.tp, path)
@@ -180,14 +184,15 @@ elif args.func in  ["deltaP", "deltaHTO"]:
 
 
 elif args.func == "gen_stil":
+    # Does not generate the test patterns but reads them, and creates stil file
     # generate a test pattern file in 658 format and save it in ../data/patterns/
     # then logicsim on this and save it as stil format in ../data/patterns/
     circuit = Circuit(args.ckt)
     LoadCircuit(circuit, "v")
     circuit.lev()
-    tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".tp"
+    tp_fname = "../data/patterns/" + args.ckt + "_" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
-    circuit.gen_tp_file(args.tp, fname=tp_fname)
+    # circuit.gen_tp_file(args.tp, fname=tp_fname)
     circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL")
     print("Done stil gen, added in {}".format(stil_fname))
 

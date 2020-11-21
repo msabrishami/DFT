@@ -9,6 +9,7 @@ import sys
 import os
 sys.path.insert(1, "../circuit/")
 import config
+import pdb
 
 def download_primitive(dataset_name, dataset_format=None):
     script = "wget  https://sportlab.usc.edu/~tegramax/files/verilog/$$CKT$$ -P ./verilog/"
@@ -52,7 +53,14 @@ def download_syn(dataset_name, syn_version):
                 ckt_name = ckt + "_syn" + version + ".v"
 
             if os.path.exists("./verilog/" + ckt_name):
-                print("{} already exists!".format(ckt_name))
+                print("{} already exists! Do you want to overwrite? (Enter/No)".format(ckt_name))
+                if input() == "No":
+                    continue
+                os.system("rm ./verilog/{}".format(ckt_name))
+                sc = script.replace("$$V$$", version)
+                sc = sc.replace("$$CKT$$", ckt_name)
+                print(sc)
+                os.system(sc)
             else:
                 sc = script.replace("$$V$$", version)
                 sc = sc.replace("$$CKT$$", ckt_name)
