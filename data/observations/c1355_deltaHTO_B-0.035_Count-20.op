@@ -1,4 +1,0 @@
-set_test_point_element { NOT1_5/Y NOT1_2/Y NOT1_13/Y NOT1_15/Y NOT1_12/Y  } -type observe
-set_test_point_element { NOT1_16/Y NOT1_0/Y NOT1_1/Y NOT1_3/Y NOT1_4/Y  } -type observe
-set_test_point_element { NOT1_6/Y NOT1_7/Y NOT1_8/Y NOT1_9/Y NOT1_10/Y  } -type observe
-set_test_point_element { NOT1_11/Y NOT1_14/Y NOT1_17/Y NOT1_18/Y NOT1_19/Y  } -type observe
