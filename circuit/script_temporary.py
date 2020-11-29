@@ -73,45 +73,76 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 ### FOR SEPARATE TPs IN SEPERATE FILES
 #######################################
 # script = "python3 main_saeed.py -ckt\t$CKT$ -synv \t $VER$ \t-tpLoad \t$TP$ \t-func writeOB & "
+# all_netlists = ["sin"]
+# versions = ["synV1"]
+# tps = [1000, 10000, 20000]
 # for ckt in all_netlists:
-#     for version in ["synV0", "synV1", "synV2"]:
+#     for version in versions:
 #         for tp in tps:
-#             
 #             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
 #                 if os.path.exists("../data/ob_stat/{}_{}_TP{}.obs".format(ckt, version, tp)):
-#                     # print("{} {} {} exists".format(ckt, version, tp))
+#                     print("{} {} {} exists".format(ckt, version, tp))
 #                     continue
 #                 sc = script.replace("$CKT$", ckt)
 #                 sc = sc.replace("$VER$", version)
 #                 sc = sc.replace("$TP$", str(tp))
 #                 print(sc)
 #             else:
-#                 # print("{} {} {} stafan not found".format(ckt, version, tp))
+#                 print("{} {} {} stafan not found".format(ckt, version, tp))
 #                 continue
+# exit()
 
 #######################################
 # STEP4: COLLECT THE REPORT OF STAFAN VALUES
 #######################################
 # script = "python3 main_saeed.py -ckt \t$CKT$ -synv \t $VER$ \t-func analysisOB &"
-# 
+# all_netlists = ["sin"]
+# versions = ["synV1"]
+# tps = [1000, 10000, 20000]
+
 # for ckt in all_netlists:
-#     for version in ["synV0", "synV1", "synV2"]:
+#     for version in versions:
 #         sc = script.replace("$CKT$", ckt)
 #         sc = sc.replace("$VER$", version)
 #         print(sc)
-
-#######################################
+# exit()
+# #######################################
 # STEP5: Get the histogram of B values in a circuit
 # script = "python3 main_saeed.py -func histOB -ckt $CKT$ -syn $VER$ -tpLoad $TP$"
 
 
 #######################################
 # STEP6: Find HTO points with deltaHTO
-# all_netlists = ["c432"]
+# all_netlists = ["sin"]
+
 # tps = [10000]
-# script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05 -HTO_th 0.2 -HTC_th 0.2"
+# script = "python3 main_saeed.py -func deltaHTO -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount $OPCNT$ -Bth 0.05 -HTO_th 0.2 -HTC_th 0.2 -Bth $BTH$"
+# ckt = "c3540"
+# # bth = [0.15, 0.2]
+# bth = [0.2]
+# count = [11, 20, 40]
+
+# # count = [65]
+# f = "deltaHTO"
+# htoth = "0.2"
+# htcth = "0.05"
+# tp = 100000
+# version = "synV1"
+# for cnt in count:
+#     for b in bth:            
+#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-TP{tp}.stafan"):
+#             if os.path.exists(f"../data/observations/{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op"):
+#                 print(f"{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op exists")
+#                 continue
+#             sc = f"python3 main_saeed.py -func {f} -ckt {ckt} -syn {version} -tpLoad {tp} -opCount {cnt} -Bth {b} -HTO_th {htoth} -HTC_th {htcth} > {ckt}_{version}_{f}_opcnt_{cnt}_Bth_{b}_HTO_th_{htoth}_HTC_th_{htcth}.log &"
+#             print(sc)
+#         else:
+#             print("STAFAN not found")
+#             continue
+
 # for ckt in all_netlists:
-#     for version in ["synV0", "synV1", "synV2"]:
+#     # for version in ["synV0", "synV1", "synV2"]:
+#     for version in ["synV1"]
 #         for tp in tps:
 # 
 #             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
@@ -125,36 +156,64 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 # 
 
 
-# STEP7: Find HTO points with deltaP
-#script = "python3 main_saeed.py -func deltaP -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount 20 -Bth 0.05"
-
-#   for ckt in all_netlists:
-#       for version in ["synV0", "synV1", "synV2"]:
-#           for tp in tps:
-#               
-#               if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
-#                   if os.path.exists("../data/ob_stat/{}_{}_TP{}.obs".format(ckt, version, tp)):
-#                       print("{} {} {} exists".format(ckt, version, tp))
-#                       continue
-#                   sc = script.replace("$CKT$", ckt)
-#                   sc = sc.replace("$VER$", version)
-#                   sc = sc.replace("$TP$", str(tp))
-#                   print(sc)
-#               else:
-#                   print("STAFAN not found")
-#                   continue
-
+# # STEP7: Find HTO points with deltaP
+# script = "python3 main_saeed.py -func deltaP -ckt $CKT$ -syn $VER$ -tpLoad $TP$ -opCount $OPCNT$ -Bth $BTH$"
+# all_netlists = ["sin"]
+# ckt = "c3540"
+# # bth = [0.1, 0.15, 0.2]
+# bth = [0.2]
+# # count = [13, 26, 39, 52, 65, 78, 91, 104, 117, 130, 143, 156, 169, 182]
+# count = [11, 20, 40]
+# # count = [104, 117, 130, 143, 156]
+# tp = 100000
+# f = "deltaP"
+# version = "synV1"
+# for cnt in count:
+#     for b in bth:            
+#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-TP{tp}.stafan"):
+#             if os.path.exists(f"../data/observations/{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op"):
+#                 print(f"{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op exists")
+#                 continue
+#             sc = f"python3 main_saeed.py -func {f} -ckt {ckt} -syn {version} -tpLoad {tp} -opCount {cnt} -Bth {b} > {ckt}_{version}_{f}_opcnt_{cnt}_Bth{b}.log &"
+#             print(sc)
+#         else:
+#             print("STAFAN not found")
+#             continue
+# 
 
 ### STEP 8: generate genv_TMAXOP which is verilog and stil of OP added
 ### CREATE VERILOG FILE BASED ON OPS OF TMAX
-script = "python3 main_saeed.py -func genV_TMAXOP -ckt $CKT$ -syn $VER$ -tpLoad 100000 -tp $TP$ &"
-for ckt in all_netlists:
-    for version in ["synV1"]:
-        sc = script.replace("$CKT$", ckt)
-        sc = sc.replace("$VER$", version)
-        if ckt in ["arbiter", "max", "priority"]:
-            sc = sc.replace("$TP$", "20000")
-        else:
-            sc = sc.replace("$TP$", "1000")
-        print(sc)
+script = "python3 main_saeed.py -func genV_TMAXOP -ckt c3540 -op_fname $OPFNAME$ -syn synV1 -Bth $BTH$ -tpLoad 100000 -tp 1000 &"
+ckt = "c3540"
+# bth = "0.1"
+bth = [0.2]
+# count = [13, 26, 39, 52, 65]
+count = [11, 20, 40]
+tp = 10000
+f = "deltaP"
+version = "synV1"
+for cnt in count:
+    for b in bth:
+        sc = script.replace("$OPFNAME$", f"{ckt}_synV1_{f}_B-{b}_Count-{cnt}")
+        sc = sc.replace("$BTH$", str(b))
+        print (sc)
+
+
+# for i in range(1, 10):
+#     for ver in ["beta"]:
+#         sc = script.replace("$OPFNAME$", f"sin_synV1_TMAX_{ver}_{13 * i}")
+#         print (sc)
+
+# sc = script.replace("$OPFNAME$", f"sin_synV1_TMAX_130")
+# print (sc)
+
+# for ckt in all_netlists:
+#     for version in ["synV1"]:
+#         sc = script.replace("$CKT$", ckt)
+#         sc = sc.replace("$VER$", version)
+#         if ckt in ["arbiter", "max", "priority"]:
+#             sc = sc.replace("$TP$", "20000")
+#         else:
+#             sc = sc.replace("$TP$", "1000")
+#         print(sc)
 

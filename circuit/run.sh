@@ -1,20 +1,5 @@
-python3 main_saeed.py -func genV_TMAXOP -ckt c432 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c499 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c880 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c1355 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c1908 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c3540 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c5315 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c6288 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt c7552 -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt arbiter -syn synV1 -tpLoad 100000 -tp 20000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt sin -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt bar -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt dec -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt int2float -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt multiplier -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt cavlc -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt adder -syn synV1 -tpLoad 100000 -tp 1000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt max -syn synV1 -tpLoad 100000 -tp 20000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt priority -syn synV1 -tpLoad 100000 -tp 20000 &
-python3 main_saeed.py -func genV_TMAXOP -ckt voter -syn synV1 -tpLoad 100000 -tp 1000 &
+python3 main_saeed.py -func genV_TMAXOP -ckt sin  -op_fname sin_synV1_deltaHTO_B-0.1_Count-13 -syn synV1 -Bth 0.1 -tpLoad 100000 -tp 1000 &
+python3 main_saeed.py -func genV_TMAXOP -ckt sin  -op_fname sin_synV1_deltaHTO_B-0.1_Count-26 -syn synV1 -Bth 0.1 -tpLoad 100000 -tp 1000 &
+python3 main_saeed.py -func genV_TMAXOP -ckt sin  -op_fname sin_synV1_deltaHTO_B-0.1_Count-39 -syn synV1 -Bth 0.1 -tpLoad 100000 -tp 1000 &
+python3 main_saeed.py -func genV_TMAXOP -ckt sin  -op_fname sin_synV1_deltaHTO_B-0.1_Count-52 -syn synV1 -Bth 0.1 -tpLoad 100000 -tp 1000 &
+python3 main_saeed.py -func genV_TMAXOP -ckt sin  -op_fname sin_synV1_deltaHTO_B-0.1_Count-65 -syn synV1 -Bth 0.1 -tpLoad 100000 -tp 1000 &

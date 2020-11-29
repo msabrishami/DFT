@@ -10,6 +10,7 @@ data/verilog/
 data/EPFL/
 data/patterns/
 data/observations/
+data/tpfc/
 **.png
 **.log
 gnn/notes.txt

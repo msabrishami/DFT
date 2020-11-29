@@ -197,7 +197,7 @@ def OPI(circuit, alg, count_op, args):
             ops = circuit_deltaHTO(circuit, B_th=args.Bth, ops=ops, args=args)
 
         if len(ops) == 0:
-            print("Reached B_th={} limit".format(B_th))
+            print("Reached B_th={} limit".format(args.Bth))
             break
         new_op = circuit.nodes[list(ops)[0]]
         res.append(new_op.num)

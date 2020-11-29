@@ -37,6 +37,7 @@ parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B thr
 parser.add_argument("-HTO_th", type=float, required=False, default=None, help="HTO-threshold")
 parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
 parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
+parser.add_argument("-op_fname", type=str, required=False, default=None, help="OP file name")
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
@@ -127,18 +128,20 @@ elif args.func == "analysisOB":
     report_path = "../data/ob_stat/{}_REPORT.obsr".format(ckt_name)
     report = open(report_path, "w")
     data = []
+    real_TP = []
     for tp in TPs:
         ob_fname = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, tp)
-        # print(ob_fname)
+        print(ob_fname)
         if not os.path.exists(ob_fname):
-            # print("SKIPPED", ob_fname)
+            print("SKIPPED", ob_fname)
             continue
+        real_TP.append(tp)
         infile = open(ob_fname)
         lines = infile.readlines()
         data.append([(x.split()[1]) for x in lines[1:]])
 
     for idx in range(len(data)):
-        report.write(str(TPs[idx]) + "," + ",".join(data[idx]) + "\n")
+        report.write(str(real_TP[idx]) + "," + ",".join(data[idx]) + "\n")
 
     print("Report file generated in {}".format(report_path))
 
@@ -193,7 +196,7 @@ elif args.func == "gen_stil":
     circuit = Circuit(ckt_name)
     LoadCircuit(circuit, "v")
     circuit.lev()
-    tp_fname = "../data/patterns/" + args.ckt + "_TP" + str(args.tpLoad) + ".tp"
+    tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
     # circuit.gen_tp_file(args.tp, fname=tp_fname)
     circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL", tp_count = args.tp)
@@ -311,7 +314,8 @@ elif args.func == "genV_TMAXOP":
     print("the original circuit is {}".format(path_in))
     v_orig = convert.read_verilog_lines(path_in)
     
-    op_fname = "../data/observations/{}_TMAX.op".format(ckt_name)
+    # op_fname = "../data/observations/{}_TMAX.op".format(ckt_name)
+    op_fname = f"../data/observations/{args.op_fname}.op"
     print("reading op file from {}".format(op_fname))
 
     conv = Converter(ckt_name, utils.ckt_type(args.ckt)) 
@@ -333,7 +337,7 @@ elif args.func == "genV_TMAXOP":
     temp = "," + ", ".join(new_pos) + ";"
     v_orig[2] = v_orig[2].replace(";", temp) 
 
-    cname_mod ="{}_TMAX_OP{}".format(ckt_name, args.opCount)
+    cname_mod ="{}_deltaP_Bth_{}_OP{}".format(ckt_name, args.Bth ,args.opCount)
     path_out = "../data/verilog/{}.v".format(cname_mod)
     outfile = open(path_out, "w")
     outfile.write(v_orig[0] + "\n")
