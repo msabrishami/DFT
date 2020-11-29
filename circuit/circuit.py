@@ -809,6 +809,36 @@ class Circuit:
             node.CB1 =  float(words[7]) 
             node.B =    float(words[8]) 
         # print("Circuit loaded: " + fname)
+
+    def verilog_to_ckt(self, fname = None):
+        #circuit is read from verilog file 
+        #generate ckt file
+        if fname == None:
+            fname = os.path.join(config.CKT_DIR, self.c_name + '_v.ckt')
+        fw = open(fname, mode = 'w')
+
+        ntype_str_to_int = {"GATE":0, "PI":1, "FB":2, "PO":3}
+        gtype_str_to_int = {"IPT":0, "BRCH":1, "XOR":2, "OR":3, "NOR":4, "NOT":5, "NAND":6, "AND":7, "XNOR":8, "BUFF":9}
+        
+        for node in self.nodes_lev:
+            fw.write(str(ntype_str_to_int[node.ntype]) + ' ' + node.num + ' ' + str(gtype_str_to_int[node.gtype]) + ' ')
+            if node.ntype == 'GATE':
+                fw.write(str(len(node.dnodes)) + ' ' + str(len(node.unodes)) + ' ')
+                fw.write(' '.join(self.unodes_num(node)))
+                fw.write('\n')
+            elif node.ntype == 'PI':
+                fw.write(str(len(node.dnodes)) + ' 0\n')
+            elif node.ntype == 'FB':
+                fw.write(node.unodes[0].num + ' \n')
+            else:
+                fw.write('0 ' + str(len(node.unodes)) + ' ')
+                fw.write(' '.join(self.unodes_num(node)))
+                fw.write('\n')
+            
+        fw.close()
+    def unodes_num(self, node):
+        #return all values of upnodes of a gate
+        return [unode.num for unode in node.unodes]
             
 
 def verilog_version_gate(line):
