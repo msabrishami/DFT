@@ -5,7 +5,7 @@
 ### Ruochen: 
 
 class DFS():
-    __init__(self):
+    def __init__(self):
         print("I have not been implemented yet! Maybe I'm the child of FaultSim?")
 
     

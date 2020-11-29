@@ -374,38 +374,4 @@ elif args.func == "genV_TMAXOP":
 else:
     print("Function not found")
 
-"""
-bad_nodes = []
-for node in circuit.nodes_lev:
-    if node.B < 0:
-        bad_nodes.append(node.num)
-
-for node in bad_nodes[0:10]:
-    print(circuit.nodes[node])
-
-for num in bad_nodes[0:10]:
-    node = circuit.nodes[num]
-    print("{}\t{}\t{}\t{:.8f}\t{:.8f}".format(node.num, node.C0, node.C1, node.B0, node.B1))
-
-
-"""
-# observation.stat_HTO(circuit, config.HTO_TH, config.HTC_TH)
-# graph = circuit.gen_graph()
-
-
-# Testing saving and loading graphs
-""" 
-suffix = round(math.log10(args.tp))
-fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)
-# fname = "./../data/graph/" + args.ckt + "_" + fname + ".graphml"
-fname = "./../data/graph/" + args.ckt + "_" + fname + "_HTC-" + str(config.HTC_TH) + \
-        "_HTO-" + str(config.HTO_TH) + ".graphml"
-# fname = "../data/graph/temp_graph.graphml"
-print("Saving graph in ", fname)
-nx.write_graphml(graph, fname)
-temp = nx.read_graphml(fname)
-print("loaded")
-"""
-
-
 

@@ -33,30 +33,9 @@ def main():
     print("Run | circuit: {} | Test Count: {} | CPUs: {}".format(args.ckt, args.tp, args.cpu))
     print("======================================================\n")
 
-    path_tp = "../data/modelsim/patterns/" + args.ckt + "_98_tp_b.tp"
-    path_stil = args.ckt + "_98.stil"
-
     circuit = Circuit(args.ckt)
-    LoadCircuit(circuit, "v")
+    LoadCircuit(circuit, "ckt")
     circuit.lev()
-    circuit.logic_sim_file(in_fname = path_tp, out_fname = path_stil, out_format="STIL")
-    # circuit.logic_sim_file(in_fname = path1, out_fname = "c432-658.txt", out_format="658")
-    # circuit.gen_tp_file(args.tp)
-    exit()
-
-    # graph = circuit.gen_graph()
-    # suffix = round(math.log10(args.tp))
-    # fname = ("10e" + str(suffix)) if (suffix%1==0) else str(args.tp)
-    # fname = "./../data/graph/NEW_" + args.ckt + "_" + fname + ".graphml"
-    # print("Saving graph in ", fname)
-    # nx.write_graphml(graph, fname)
-    # print("Saved!")
-    # print()
-    # temp = nx.read_graphml("./g_noon.graphml")
-
-def parallel_graph():
-    netlists = ["c17", "c432", "c499", "c880", "c1355", "c1908", "c2670",
-            "c3540", "c5315", "c6288", "c7552"]
 
 if __name__ == "__main__":
     main()
