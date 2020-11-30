@@ -69,8 +69,8 @@ def main():
     
 
     circuit = Circuit(args.ckt)
-    circuit.read_verilog()
-    #circuit.read_ckt()
+    # circuit.read_verilog()
+    circuit.read_ckt()
     circuit.lev()
 
     """ Testing DFS """
