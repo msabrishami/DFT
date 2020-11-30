@@ -1,4 +1,4 @@
-from FaultSim import *
+from fault_sim import *
 
 class DFS(FaultSim):
     def __init__(self, circuit):
