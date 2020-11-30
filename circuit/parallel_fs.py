@@ -1,31 +1,39 @@
+
+
+#TODO: change this style of import 
 import sys
 from circuit import *
 from node import *
-from FaultSim import *
+from fault_sim import *
+
+
+import pdb 
 
 class PFS(FaultSim):
+    """ Parallel Fault Simulation """ 
+
     def __init__(self, circuit):
         FaultSim.__init__(self, circuit)
         self.in_fault_num = [] # input fault num, string format
         self.in_fault_type = [] # input fault type, integer format
         self.fs_type = "PFS"
-    
-    def pfs_in_fault_list(self,fname,fault_list_type):
+     
+    def pfs_in_fault_list(self, fault_list_type="all", fname=None):
+        #TODO: we should also accept the fault list as an argument, like a list
         """
-        Parallel Fault Simulation:
-        fault_list_type = 1: input fault list is full fault list
-        fault_list_type = 0: input fault list is given by user.
-
+        fault_list_type = all: input fault list is full fault list
+        fault_list_type = user: input fault list is given by user.
         For a given input fault list
         generate two lists: in_fault_num, in_fault_type.
         """
         self.in_fault_num = []
         self.in_fault_type = []
-        if fault_list_type == 1:
+        if fault_list_type == "all":
             self.circuit.get_full_fault_list()
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
-        else:
+        elif fault_list_type == "user":
+            print("Reading the fault list from file: {}".format(fname))
             fr = open(fname, mode='r')
             lines = fr.readlines()
             for line in lines:
@@ -33,6 +41,8 @@ class PFS(FaultSim):
                 line_split=line.split('@')
                 self.in_fault_num.append(line_split[0])
                 self.in_fault_type.append(int(line_split[1]))
+        else:
+            raise NameError("Fault list type <{}> is not accepted".format(fault_list_type))
     
     def single(self, input_pattern):
         """
@@ -96,11 +106,12 @@ class PFS(FaultSim):
                     node.pfs_I = mask_dict[node.num]
 
                 if node.gtype == "IPT":
-                    node.imply_p(bitwise_not,node_dict[node.num])
+                    node.imply_p(bitwise_not, node_dict[node.num])
                 else:
                     node.imply_p(bitwise_not)
                 node.insert_f(bitwise_not)
             
+            pdb.set_trace()
             # output result
             for i in self.circuit.nodes_lev:
                 if i.ntype == 'PO':

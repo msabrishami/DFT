@@ -1,4 +1,6 @@
-from FaultSim import *
+
+#TODO: change this format
+from fault_sim import *
 
 class DFS(FaultSim):
     def __init__(self, circuit):
@@ -8,24 +10,27 @@ class DFS(FaultSim):
 
 
     def single(self, input_pattern):
+        #TODO: What does this method get as an argument? What is its type?
+        #TODO: What does it return and what is its type? 
         """ running deductive fault simulation on the circuit 
-        needs to make sure the levelization is updated """ 
+        circuit must be levelized before running this method""" 
         self.circuit.logic_sim(input_pattern)
         fault_set = set()
         for node in self.circuit.nodes_lev:
             node.dfs()
         for node in self.circuit.PO:
             fault_set = fault_set.union(node.faultlist_dfs)
-        # return a fault set
         return fault_set
 
 
-
     def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
+        #TODO: for full mode, we save multiple_separate, for rand we do multiple, 
+        #     mention this in your comments 
         """
-        Execute fs in rand or full mode
+        A wrapper that executes fs in rand or full mode
         rand: the total faults can be detected by several random patterns
-        full: the faults can be detected by each single pattern; all possible patterns are included
+        full: the faults can be detected by each single pattern; 
+            all possible patterns are included
         """
 
         if t_mode == 'rand':
