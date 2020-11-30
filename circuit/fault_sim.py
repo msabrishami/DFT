@@ -152,23 +152,32 @@ class FaultSim:
         for sub_pattern in pattern_list:
             # print("hello pattern list")
             fault_subset = self.single(sub_pattern)
-            fault_sublist = list(fault_subset)
-            updated_fault_sublist = []
-            for subset in fault_sublist:
-                if '-' in subset[0]:
-                    updated_fault_sublist.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
-                else:
-                    updated_fault_sublist.append((subset[0], '0', subset[1]))
-            updated_fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
+            # fault_sublist = list(fault_subset)
+            # updated_fault_sublist = []
+            # for subset in fault_sublist:
+            #     if '-' in subset[0]:
+            #         updated_fault_sublist.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
+            #     else:
+            #         updated_fault_sublist.append((subset[0], '0', subset[1]))
+            # updated_fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
             pattern_str = map(str,sub_pattern)
             pattern_str = ",".join(pattern_str)
             fw.write(pattern_str + '\n')
-            fault_coverage = float(len(fault_sublist) / (2*len(self.circuit.nodes_lev)))
-            for fault in updated_fault_sublist:
-                if fault[1] == '0':
-                    fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
-                else:
-                    fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
+            fault_coverage = float(len(fault_subset) / (2*len(self.circuit.nodes_lev)))
+            for fault in fault_subset:
+                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
+                # with sort and branches
+                # if fault[1] == '0':
+                #     fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
+                # else:
+                #     fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
+
+            # fault_coverage = float(len(fault_sublist) / (2*len(self.circuit.nodes_lev)))
+            # for fault in updated_fault_sublist:
+            #     if fault[1] == '0':
+            #         fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
+            #     else:
+            #         fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
             fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
             fw.write('\n')
         fw.close()
@@ -194,22 +203,31 @@ class FaultSim:
             fault_subset = self.single(sub_pattern)
             fault_set = fault_set.union(fault_subset)
         # generate output file
-        fault_list = list(fault_set)
-        updated_fault_list = []
-        for subset in fault_list:
-            if '-' in subset[0]:
-                updated_fault_list.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
-            else:
-                updated_fault_list.append((subset[0], '0', subset[1]))
+        # fault_list = list(fault_set)
+        # updated_fault_list = []
+        # for subset in fault_list:
+        #     if '-' in subset[0]:
+        #         updated_fault_list.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
+        #     else:
+        #         updated_fault_list.append((subset[0], '0', subset[1]))
+        fault_coverage = float(len(fault_set) / (2*len(self.circuit.nodes_lev)))
+        for fault in fault_set:
+            fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
+            # with sort and branches
+            # if fault[1] == '0':
+            #     fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
+            # else:
+            #     fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
         #fault_list.sort(key=lambda x: (int(x[0]), int(x[1])))
-        updated_fault_list.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
-        # fault is a tuple like: (1,0): node 1 ss@0
-        fault_coverage = float(len(fault_list) / (2*len(self.circuit.nodes_lev)))
-        for fault in updated_fault_list:
-            if fault[1] == '0':
-                fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
-            else:
-                fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
+        # updated_fault_list.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
+        # # fault is a tuple like: (1,0): node 1 ss@0
+        # fault_coverage = float(len(fault_list) / (2*len(self.circuit.nodes_lev)))
+        # for fault in updated_fault_list:
+        #     if fault[1] == '0':
+        #         fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
+        #     else:
+        #         fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
+
         fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
         fw.close()
         print(self.fs_type + "-Multiple completed. \nLog file saved in {}".format(fname_log))
