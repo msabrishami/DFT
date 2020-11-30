@@ -1,7 +1,7 @@
 import sys
 from circuit import *
 from node import *
-from FaultSim import *
+from fault_sim import *
 
 class PFS(FaultSim):
     def __init__(self, circuit):
@@ -130,6 +130,7 @@ class PFS(FaultSim):
         self.pfs_in_fault_list(fname,fault_list_type)
 
         if t_mode == 'rand':
+            self.fs_folder(tp_mode='rand', r_mode='b')
             report_fname = self.circuit.c_name + '_' + str(tp_num) + '_' + self.fs_type + '_'+ r_mode + '.log'
             tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.txt"
 
@@ -140,6 +141,7 @@ class PFS(FaultSim):
             self.multiple(pattern_list=pattern_list, fname_log=report_fname, mode="b")
 
         elif t_mode == 'full':
+            self.fs_folder(tp_mode='rand', r_mode='b')
             report_fname = self.circuit.c_name + '_full_' + self.fs_type + '_' + r_mode + '.log'
             tp_fname = self.circuit.c_name + '_full_tp_' + r_mode + '.txt'
             # generate all possible patterns in order

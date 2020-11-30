@@ -18,7 +18,7 @@ import config
 from checker_logicsim import *
 from regular_tp_gen import *
 from checker_dfs import *
-from FaultSim import *
+from fault_sim import *
 from parallel_fs import *
 
 def check_gate_netlist(circuit, total_T=1):
@@ -69,8 +69,8 @@ def main():
     
 
     circuit = Circuit(args.ckt)
-    circuit.read_verilog()
-    #circuit.read_ckt()
+    #circuit.read_verilog()
+    circuit.read_ckt()
     circuit.lev()
 
     """ Testing DFS """
