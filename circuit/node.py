@@ -133,14 +133,13 @@ class Node:
         ''' forward implication for a logic gate ''' 
         raise NotImplementedError()
     
-    def imply_p(self):
+    def imply_p(self, bitwise_not):
         ''' forward parallel implication for a logic gate ''' 
         raise NotImplementedError()
 
-    def insert_f(self):
+    def insert_f(self, bitwise_not):
         """ insert a fault for pdf in this node """ 
-        bitlen = int(math.log2(sys.maxsize))+1
-        pfs_I_bar = self.pfs_I ^ (2**bitlen-1)
+        pfs_I_bar = self.pfs_I ^ bitwise_not
         self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & self.pfs_S)         
 
     def unodes_val(self):
@@ -367,7 +366,7 @@ class BUFF(Node):
     def imply(self):
         self.value = self.unodes[0].value
 
-    def imply_p(self):
+    def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
 
     def eval_CC(self):
@@ -395,9 +394,8 @@ class NOT(Node):
     def imply(self):
         self.value = 1 if (self.unodes[0].value == 0) else 0
 
-    def imply_p(self):
-        bitlen = int(math.log2(sys.maxsize))+1  # bit-width of processor
-        self.pfs_V = self.unodes[0].pfs_V ^ (2**bitlen-1)    # invert pfs_V using xor "1111..."
+    def imply_p(self, bitwise_not):
+        self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
 
     def eval_CC(self):
         self.CC0 = 1 + self.unodes[0].CC1
@@ -423,14 +421,10 @@ class OR(Node):
     def imply(self):
         self.value = 1 if (1 in self.unodes_val()) else 0
 
-    def imply_p(self):
-        flag = 0
-        for unode in self.unodes:
-            if flag == 0:
-                self.pfs_V = unode.pfs_V
-                flag = 1
-            else:
-                self.pfs_V = self.pfs_V | unode.pfs_V
+    def imply_p(self, bitwise_not):
+        self.pfs_V = self.unodes[0].pfs_V
+        for unode in self.unodes[1:]:
+            self.pfs_V = self.pfs_V | unode.pfs_V
 
     def eval_CC(self):
         self.CC0 = 1 + sum([unode.CC0 for unode in self.unodes])
@@ -466,16 +460,11 @@ class NOR(Node):
         for unode in self.unodes[1:]:
             self.value_p = ~ (self.value_p | unode.value_p)
     
-    def imply_p(self):
-        flag = 0
-        for unode in self.unodes:
-            if flag == 0:
-                self.pfs_V = unode.pfs_V
-                flag = 1
-            else:
-                self.pfs_V = self.pfs_V | unode.pfs_V
-        bitlen = int(math.log2(sys.maxsize))+1
-        self.pfs_V = self.pfs_V ^ (2**bitlen-1)
+    def imply_p(self, bitwise_not):
+        self.pfs_V = self.unodes[0].pfs_V
+        for unode in self.unodes[1:]:
+            self.pfs_V = self.pfs_V | unode.pfs_V
+        self.pfs_V = self.pfs_V ^ bitwise_not
 
     def eval_CC(self):
         self.CC1 = 1 + sum([unode.CC0 for unode in self.unodes])
@@ -506,15 +495,10 @@ class AND(Node):
     def imply(self):
         self.value = 0 if (0 in self.unodes_val()) else 1
     
-    def imply_p(self):
-        #TODO:Yichen
-        flag = 0
-        for unode in self.unodes:
-            if flag == 0:
-                self.pfs_V = unode.pfs_V
-                flag = 1
-            else:
-                self.pfs_V = self.pfs_V & unode.pfs_V
+    def imply_p(self, bitwise_not):
+        self.pfs_V = self.unodes[0].pfs_V
+        for unode in self.unodes[1:]:
+            self.pfs_V = self.pfs_V & unode.pfs_V
 
     def eval_CC(self):
         self.CC1 = 1 + sum([unode.CC1 for unode in self.unodes])
@@ -545,17 +529,11 @@ class NAND(Node):
     def imply(self):
         self.value = 1 if (0 in self.unodes_val()) else 0
     
-    def imply_p(self):
-        #TODO:Yichen
-        flag = 0
-        for unode in self.unodes:
-            if flag == 0:
-                self.pfs_V = unode.pfs_V
-                flag = 1
-            else:
-                self.pfs_V = self.pfs_V & unode.pfs_V
-        bitlen = int(math.log2(sys.maxsize))+1
-        self.pfs_V = self.pfs_V ^ (2**bitlen-1)
+    def imply_p(self, bitwise_not):
+        self.pfs_V = self.unodes[0].pfs_V
+        for unode in self.unodes[1:]:
+            self.pfs_V = self.pfs_V & unode.pfs_V
+        self.pfs_V = self.pfs_V ^ bitwise_not
 
     def eval_CC(self):
         self.CC0 = 1 + sum([unode.CC1 for unode in self.unodes])
@@ -591,7 +569,7 @@ class XOR(Node):
             print("issue")
             pdb.set_trace()
     
-    def imply_p(self):
+    def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
             self.pfs_V = self.pfs_V ^ unode.pfs_V
@@ -634,13 +612,11 @@ class XNOR(Node):
     def imply(self):
         self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
     
-    def imply_p(self):
+    def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
             self.pfs_V = self.pfs_V ^ unode.pfs_V
-        #TODO:Yichen Remove all the sys calls within node operation
-        bitlen = int(math.log2(sys.maxsize))+1
-        self.pfs_V = self.pfs_V ^ (2**bitlen-1)
+        self.pfs_V = self.pfs_V ^ bitwise_not
 
     def eval_CC(self):
         #TODO: only 2 inputs supported for now, we can later add multiple inputs
@@ -694,11 +670,8 @@ class IPT(Node):
         self.faultlist_dfs.clear()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
     
-    def imply_p(self, pfs_V):
-        if pfs_V == 1:
-            bitlen = int(math.log2(sys.maxsize))+1
-            pfs_V =  2**bitlen - 1
-        self.pfs_V = pfs_V
+    def imply_p(self,bitwise_not, pfs_V):
+        self.pfs_V = pfs_V * bitwise_not
 
 
 class BRCH(Node):
@@ -708,7 +681,7 @@ class BRCH(Node):
     def imply(self):
         self.value = self.unodes[0].value
 
-    def imply_p(self):
+    def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
 
     def eval_CC(self):
