@@ -1,15 +1,14 @@
 import config
 import os
 
+
 class FaultSim:
     def __init__(self, circuit):
         self.circuit = circuit
         # fault sim type: dfs / pfs
         self.fs_type = ""
+        
 
-    # TODO: do I need to call this myself? 
-    # We should be very cautious about calling this method, as it can overwrite all our 
-    # ...  previous simulations
     def fs_folder(self, tp_mode='rand', r_mode='b'):
         '''
         Create all folder needed for fault simulation
@@ -41,8 +40,6 @@ class FaultSim:
 
 
     def fs_tp_gen(self, tp_num=1, t_mode='rand', r_mode='b'):
-        #TODO: where do we save these test pattern files? 
-        #TODO: apply all the changes that were mentioned in fs_input_fetch
         '''
         Generate test patterns for DFS/PFS
         rand: random mode, create certain number of random test pattterns
@@ -76,16 +73,48 @@ class FaultSim:
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
 
 
-    #TODO: no need for fs prefix, we are already in fault simulation class
+################################## just for golden file ############################################
+    def fs_tp_gen_golden(self, tp_num=1, no=1, t_mode='rand', r_mode='b'):
+        '''
+        Generate test patterns for DFS/PFS
+        rand: random mode, create certain number of random test pattterns
+        full: create all possible test patterns in order
+        '''
+        tp_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/'
+        if t_mode == 'rand':
+            tp_fname = tp_path + self.circuit.c_name + '_' + str(tp_num) + '_' + str(no) + '_tp_' + r_mode + '.txt'
+            self.circuit.gen_tp_file(
+                tp_num, 
+                fname = tp_fname,
+                mode = "b")
+        elif t_mode == 'full':
+            tp_fname = tp_path + self.circuit.c_name + '_full_tp_' + r_mode + '.txt'
+            num = len(self.circuit.PI)
+            times = pow(2, num)
+            pattern = []
+            fw = open(tp_fname, mode='w')
+            PI_list = []
+            for node in self.circuit.PI:
+                PI_list.append(node.num)
+            PI_string = ','.join(PI_list)
+            print(PI_string)
+            fw.write(PI_string + '\n')
+            for i in range(times):
+                pattern = list(bin(i)[2:].zfill(num))
+                pattern_str = ",".join(pattern)
+                print(pattern_str)
+                fw.write(pattern_str + '\n')
+        else: 
+            raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
+##########################################################################################
+
     def fs_input_fetch(self, fname_tp):
         '''
-        Fetch input pattern list from an input file
+        Fetch input pattern list from a input file
         pattern_list = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
         '''
-        #TODO: do not use this notation + '/', replace it with os.path.join
+        # output_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + self.fs_type + '/'
         input_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/'
-        #TODO: check if this file exists first! 
-        print("Reading test patterns from file: {}".format(input_path))
         fr = open(input_path + fname_tp, mode='r')
         # read the test pattern
         lines = fr.readlines()
@@ -99,6 +128,7 @@ class FaultSim:
             pattern_list.append(line_split)
         fr.close()
         return pattern_list
+
 
 
     def single(self, input_pattern):
@@ -126,8 +156,7 @@ class FaultSim:
             updated_fault_sublist = []
             for subset in fault_sublist:
                 if '-' in subset[0]:
-                    updated_fault_sublist.append(
-                            (subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
+                    updated_fault_sublist.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
                 else:
                     updated_fault_sublist.append((subset[0], '0', subset[1]))
             updated_fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
@@ -188,12 +217,17 @@ class FaultSim:
 
 
     def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
-        """ Defined in extended class: DFS, PFS """
+        """
+        Defined in extended class: DFS, PFS
+        """
         raise NotImplementedError()
 
 
+
     def FD_new_generator(self):
-        """ Creat a new FD in excel using dfs results """
+        """
+        Creat a new FD in excel using dfs results
+        """
         # output golden file
         fw_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/'
         fr_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/dfs/'
@@ -232,5 +266,3 @@ class FaultSim:
                 sheet.write(j, 0, line)
 
         workbook.save(os.path.join(fw_path, self.circuit.c_name + '_FD_new.xls'))
-
-
