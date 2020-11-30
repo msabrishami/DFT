@@ -69,6 +69,9 @@ class Node:
         self.pfs_I = None   # mask
         self.pfs_S = None   # stuck values of fault for each pass
 
+        #Podem
+        self.f_value = 9
+
         # Saeed does not confirm
         # self.cpt = 0
         # self.sa0 = 0
