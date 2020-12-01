@@ -80,11 +80,13 @@ def main():
     """
     print("DFS starts")
     dfs = DFS(circuit)
+    ####################  golden file needed #################################
     # generate 10 random test patterns and get 10 output files of each pattern
     for i in range(1, 11):
         dfs.fs_exe_golden(tp_num=1, t_mode='rand', no=i, r_mode='b')
     
-    # generate 10 random test patterns and get 1 output file
+    ####################  general tests needed ################################
+    # generate several random test patterns and get 1 output file
     # which contain all faults detected by the 10 patterns
     dfs.fs_exe(tp_num=args.tp, t_mode='rand', r_mode='b')
 

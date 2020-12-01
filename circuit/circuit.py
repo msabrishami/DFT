@@ -5,7 +5,7 @@ import random
 from enum import Enum
 import math
 import sys
-import networkx as nx
+# import networkx as nx
 # import matplotlib.pyplot as plt
 from random import randint
 import time
