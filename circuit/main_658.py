@@ -32,6 +32,11 @@ for x in range(args.tp):
     all_faults = temp.union(all_faults)
 
 print("{}/{}".format(len(all_faults), len(circuit.nodes_lev)*2))
+for node in circuit.nodes_lev:
+    for x in [0,1]:
+        fault = (str(node.num), x)
+        if fault not in all_faults:
+            print("{}@{}".format(node.num, x))
 # generate 10 random test patterns and corresponding results
 
 # for i in range(1, 11):
