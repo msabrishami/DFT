@@ -16,6 +16,7 @@ from deductive_fs import DFS
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")
+parser.add_argument("-tp", type=int, help="test patterns")
 args = parser.parse_args()
 
 circuit = Circuit(args.ckt)
@@ -24,6 +25,13 @@ circuit.read_ckt()
 circuit.lev()
 print("DFS starts")
 dfs = DFS(circuit)
+all_faults = set()
+for x in range(args.tp):
+    tp = circuit.gen_tp()
+    temp = dfs.single(tp)
+    all_faults = temp.union(all_faults)
+
+print("{}/{}".format(len(all_faults), len(circuit.nodes_lev)*2))
 # generate 10 random test patterns and corresponding results
 
 # for i in range(1, 11):
