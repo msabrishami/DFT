@@ -3,16 +3,20 @@
 import sys
 from circuit import Circuit
 #TODO: change this style of import
-from node import *
+from node import Node
+import math
 from fault_sim import FaultSim, FaultList
 import pdb
 
 class PFS(FaultSim):
     def __init__(self, circuit):
         FaultSim.__init__(self, circuit)
-        # self.in_fault_num = [] # input fault num, string format
-        # self.in_fault_type = [] # input fault type, integer format
-        self.fs_type = "PFS"
+        self.in_fault_num = [] # input fault num, string format
+        self.in_fault_type = [] # input fault type, integer format
+        #node = [] # input fault num, string format
+        #fault = []# input fault type, integer format
+
+        self.fs_type = 'pfs'
     
     def add_fault(self, mode="full", fname=None):
         """ add faults to the fault list 
@@ -20,7 +24,9 @@ class PFS(FaultSim):
         mode = user: input fault list is given by user as a file name
         """
         if mode == "full":
-            # circuit.get_full_fault_list()
+            #
+            self.circuit.get_full_fault_list()
+            #
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
         elif mode == "user":
@@ -95,7 +101,7 @@ class PFS(FaultSim):
                 #TODO: if this is something that is common for all nodes, 
                 # ... why are we making it an atribute for the node? 
                 # ... we need to pass it to each nodes pfs function
-                node.pfs_S = pfs_stuck_values
+                #node.pfs_S = pfs_stuck_values
 
                 # if fault should be inserted in this node
                 if node.num in mask_dict:
@@ -105,7 +111,7 @@ class PFS(FaultSim):
                     node.imply_p(bitwise_not,node_dict[node.num])
                 else:
                     node.imply_p(bitwise_not)
-                node.insert_f(bitwise_not)
+                node.insert_f(bitwise_not,pfs_stuck_values)
             
             # output result
             for i in self.circuit.PO:
@@ -125,14 +131,14 @@ class PFS(FaultSim):
         return fault_set
 
     
-    def fs_exe(self, tp_num, t_mode, r_mode, fault_list_type):
+    def fs_exe(self, tp_num, t_mode, r_mode, fault_list_type,fname):
         """
         Execute pfs in rand or full mode
         rand: the total faults can be detected by several random patterns
         full: the faults can be detected by each single pattern; all possible patterns are included
         """
-        fname = 'c17_f0.saf'
-        self.pfs_in_fault_list(fname,fault_list_type)
+        #fname = 'c17_f0.saf'
+        self.add_fault(fault_list_type,fname)
 
         if t_mode == 'rand':
             self.fs_folder(tp_mode='rand', r_mode='b')

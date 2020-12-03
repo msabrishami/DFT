@@ -76,7 +76,10 @@ def main():
     """ Testing DFS """
     print("PFS starts")
     pfs = PFS(circuit)
-    pfs.fs_exe(tp_num=args.tp, t_mode='rand', r_mode='b',fault_list_type=1)
+    pfs.add_fault("full",None)
+    #print(pfs.single([1,1,1,1,0]))
+    
+    pfs.fs_exe(tp_num=args.tp, t_mode='rand', r_mode='b',fault_list_type="full",fname = None)
 
     # circuit.FD_new_generator()
     exit()
