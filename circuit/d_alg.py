@@ -684,14 +684,10 @@ class D_alg:
         # in the backward imply, input cannot have D / D'
         # c-val in inputs: the output is 1 or 1/0: D
         # return value:   1: no conflict, no J;  0: conflict;  2: no conf, J
-        if (cval in unodes_value):
-            if ((val == cout) | (val == cout ^ 3)):
-                return 1
-            else:
-                print("BWD:  Conflict:  In has cval , but out is not cout/fault")
-                return 0
-
-        # no c-val in inputs, so if the inputs have fault, it must can be propagated
+        if ((cval in unodes_value)) & ((val != cout) & (val != cout ^ 12)):
+            print("BWD:  Conflict:  In has cval , but out is not cout/fault")
+            return 0
+        # no c-val in inputs
         else:
             # count how many X in inputs
             x_list = []
@@ -700,23 +696,14 @@ class D_alg:
                     x_list.append(unode)
             x_num = len(x_list)
 
-            if (val == cout_bar):
+            if (val == cout_bar) | (val == 12 ^ cout):
                 # case1: input has no cval, output has no fault
-                if (12 in unodes_value) | (3 in unodes_value):
-                    print("BWD:  Conflict:  In has fault & no-cval , but out is not cout/fault")
-                    return 0
-                else:
-                    for unode in node.dnodes[0].unodes:
-                        unode.value = cval_bar
-                    return 1
-
-                
-            elif (val == 12 ^ cout):
                 # case2: input has no cval, output has fault
-                #        inputs cannot contain D or D', only non-c or X ----------------- It is not correct!!!
+                #        inputs cannot contain D or D', only non-c or X
                 #        in fault free: output should be cout_bar
-                
-                
+                for unode in node.dnodes[0].unodes:
+                    unode.value = cval_bar
+                return 1
         
             elif (val == cout) | (val == 12 ^ cout_bar):
                 # case1: input has c, output has no fault
