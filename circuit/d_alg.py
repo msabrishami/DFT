@@ -565,7 +565,7 @@ class D_alg:
 
 
 
-    def return_IPI(self):
+    def return_IPT(self):
         """
         Return the generated test pattern
         Return: a list of PI value, in the order of self.ciruit.PI
