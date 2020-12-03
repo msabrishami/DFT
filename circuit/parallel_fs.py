@@ -14,6 +14,27 @@ class PFS(FaultSim):
         # self.in_fault_type = [] # input fault type, integer format
         self.fs_type = "PFS"
     
+    def add_fault(self, mode="full", fname=None):
+        """ add faults to the fault list 
+        mode = full: input fault list is full fault list
+        mode = user: input fault list is given by user as a file name
+        """
+        if mode == "full":
+            # circuit.get_full_fault_list()
+            self.in_fault_num = self.circuit.fault_node_num
+            self.in_fault_type = self.circuit.fault_type
+        elif mode == "user":
+            fr = open(fname, mode='r')
+            lines = fr.readlines()
+            for line in lines:
+                line=line.rstrip('\n')
+                line_split=line.split('@')
+                self.in_fault_num.append(line_split[0])
+                self.in_fault_type.append(int(line_split[1]))
+        else:
+            raise NameError("fault list type is not accepted")
+
+
    
     def single(self, input_pattern):
         """
