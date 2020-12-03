@@ -23,20 +23,21 @@ circuit = Circuit(args.ckt)
 # circuit.read_verilog()
 circuit.read_ckt()
 circuit.lev()
-print("DFS starts")
 dfs = DFS(circuit)
 all_faults = set()
 for x in range(args.tp):
     tp = circuit.gen_tp()
     temp = dfs.single(tp)
     all_faults = temp.union(all_faults)
-
-print("{}/{}".format(len(all_faults), len(circuit.nodes_lev)*2))
+nd_faults = []
 for node in circuit.nodes_lev:
     for x in [0,1]:
         fault = (str(node.num), x)
         if fault not in all_faults:
-            print("{}@{}".format(node.num, x))
+            nd_faults.append("{}@{}".format(node.num, x))
+print("Circuit {}, TP {}".format(args.ckt, args.tp))
+print("{}/{}".format(len(all_faults), len(circuit.nodes_lev)*2))
+print(",".join(nd_faults))
 # generate 10 random test patterns and corresponding results
 
 # for i in range(1, 11):
