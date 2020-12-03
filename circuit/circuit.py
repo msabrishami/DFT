@@ -1574,9 +1574,6 @@ class Circuit:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
 
-<<<<<<< HEAD
-
-
     def save_circuit(self, fname):
         outfile = open(fname, "w")
         for node in self.nodes_lev:
@@ -1719,7 +1716,7 @@ def read_verilog_syntax(line):
         return ("GATE", (gtype, nets) )
     
     raise NameError("No suggestion for \n>{}<\n was found".format(line))
-=======
+
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
@@ -1729,6 +1726,5 @@ class Imply_counter:
         self.cnt += 1
     def initialize(self):
         self.cnt = 0
->>>>>>> 8b13aad36fc8e5900215a2790ecd424518d66181
 
 
