@@ -7,6 +7,12 @@ class FaultSim:
         self.circuit = circuit
         # fault sim type: dfs / pfs
         self.fs_type = ""
+        # 12.1 added
+        self.fault_set_all = set()
+        for node in self.circuit.nodes_lev:
+            self.fault_set_all.add((node.num,0))
+            self.fault_set_all.add((node.num,1))
+        self.fault_set_rest = self.fault_set_all
         
 
     def fs_folder(self, tp_mode='rand', r_mode='b'):
@@ -202,6 +208,9 @@ class FaultSim:
             # print("hello pattern list")
             fault_subset = self.single(sub_pattern)
             fault_set = fault_set.union(fault_subset)
+            # 12.1 added
+            # remove the detected faults from the fault_set_rest
+            self.fault_set_rest = self.fault_set_rest.difference(fault_set)
         # generate output file
         # fault_list = list(fault_set)
         # updated_fault_list = []
@@ -240,6 +249,10 @@ class FaultSim:
         """
         raise NotImplementedError()
 
+
+    # 12.1 added
+    def return_rest_fault(self):
+        return self.fault_set_rest
 
 
     def FD_new_generator(self):
