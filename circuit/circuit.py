@@ -810,32 +810,45 @@ class Circuit:
             node.B =    float(words[8]) 
         # print("Circuit loaded: " + fname)
 
+    def make_num_int(self):
+        node2int = dict()
+        for idx, node in enumerate(self.nodes_lev):
+            node2int[node.num] = idx
+        return node2int
+
     def verilog_to_ckt(self, fname = None):
         #circuit is read from verilog file 
         #generate ckt file
+
+        node2int = self.make_num_int()
+
         if fname == None:
             fname = os.path.join(config.CKT_DIR, self.c_name + '_v.ckt')
         fw = open(fname, mode = 'w')
 
         ntype_str_to_int = {"GATE":0, "PI":1, "FB":2, "PO":3}
-        gtype_str_to_int = {"IPT":0, "BRCH":1, "XOR":2, "OR":3, "NOR":4, "NOT":5, "NAND":6, "AND":7, "XNOR":8, "BUFF":9}
+        gtype_str_to_int = {"IPT":0, "BRCH":1, "XOR":2, "OR":3, "NOR":4, 
+                "NOT":5, "NAND":6, "AND":7, "XNOR":8, "BUFF":9}
         
         for node in self.nodes_lev:
-            fw.write(str(ntype_str_to_int[node.ntype]) + ' ' + node.num + ' ' + str(gtype_str_to_int[node.gtype]) + ' ')
+            fw.write(str(ntype_str_to_int[node.ntype]) + ' ' + node2int[node.num] + ' ' + 
+                    str(gtype_str_to_int[node.gtype]) + ' ')
+            
             if node.ntype == 'GATE':
                 fw.write(str(len(node.dnodes)) + ' ' + str(len(node.unodes)) + ' ')
-                fw.write(' '.join(self.unodes_num(node)))
+                fw.write(' '.join([node2int[unode] for unode in self.unodes_num(node)]))
                 fw.write('\n')
             elif node.ntype == 'PI':
                 fw.write(str(len(node.dnodes)) + ' 0\n')
             elif node.ntype == 'FB':
-                fw.write(node.unodes[0].num + ' \n')
+                fw.write(node2int[node.unodes[0].num] + ' \n')
             else:
                 fw.write('0 ' + str(len(node.unodes)) + ' ')
-                fw.write(' '.join(self.unodes_num(node)))
+                fw.write(' '.join([node2int[unode] for unode in self.unodes_num(node)]))
                 fw.write('\n')
             
         fw.close()
+
     def unodes_num(self, node):
         #return all values of upnodes of a gate
         return [unode.num for unode in node.unodes]
