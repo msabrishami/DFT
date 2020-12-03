@@ -2,9 +2,38 @@ import config
 import os
 
 
+#TODO: DFS does not have any fault list? 
+
+
+class FaultList:
+    def __init__(self):
+        node = []
+        fault = []
+    
+    def add_fault(self, circuit, mode="full", fname=None):
+        """ add faults to the fault list 
+        mode = full: input fault list is full fault list
+        mode = user: input fault list is given by user as a file name
+        """
+        if mode == "full":
+            circuit.get_full_fault_list()
+            self.in_fault_num = self.circuit.fault_node_num
+            self.in_fault_type = self.circuit.fault_type
+        elif fault_list_type == "user":
+            fr = open(fname, mode='r')
+            lines = fr.readlines()
+            for line in lines:
+                line=line.rstrip('\n')
+                line_split=line.split('@')
+                self.in_fault_num.append(line_split[0])
+                self.in_fault_type.append(int(line_split[1]))
+        else:
+            raise NameError("fault list type is not accepted")
+
 class FaultSim:
     def __init__(self, circuit):
         self.circuit = circuit
+        self.flist = FaultList()
         # fault sim type: dfs / pfs
         self.fs_type = ""
         # 12.1 added
@@ -13,8 +42,7 @@ class FaultSim:
             self.fault_set_all.add((node.num,0))
             self.fault_set_all.add((node.num,1))
         self.fault_set_rest = self.fault_set_all
-        
-
+     
     def fs_folder(self, tp_mode='rand', r_mode='b'):
         '''
         Create all folder needed for fault simulation
@@ -51,15 +79,16 @@ class FaultSim:
         rand: random mode, create certain number of random test pattterns
         full: create all possible test patterns in order
         '''
+        #TODO: use os.path.join instead of using the below syntax for making a path
         tp_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/'
         if t_mode == 'rand':
-            tp_fname = tp_path + self.circuit.c_name + '_' + str(tp_num) + '_tp_' + r_mode + '.txt'
+            tp_fname = tp_path + self.circuit.c_name + '_' + str(tp_num) + '_tp_' + r_mode + '.tp'
             self.circuit.gen_tp_file(
                 tp_num, 
                 fname = tp_fname,
                 mode = "b")
         elif t_mode == 'full':
-            tp_fname = tp_path + self.circuit.c_name + '_full_tp_' + r_mode + '.txt'
+            tp_fname = tp_path + self.circuit.c_name + '_full_tp_' + r_mode + '.tp'
             num = len(self.circuit.PI)
             times = pow(2, num)
             pattern = []
@@ -77,6 +106,8 @@ class FaultSim:
                 fw.write(pattern_str + '\n')
         else: 
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
+
+        print("Test patterns were saved in {}".format(tp_fname))
 
 
 ################################## just for golden file ############################################
@@ -201,8 +232,10 @@ class FaultSim:
         """
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
-        output_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + self.fs_type + '/'
-        fw = open(output_path + fname_log, mode='w')
+        output_path = "{}/{}/{}/{}".format(config.FAULT_SIM_DIR, 
+                self.circuit.c_name, self.fs_type, fname_log)
+
+        fw = open(output_path, mode='w')
         fault_set = set()
         for sub_pattern in pattern_list:
             # print("hello pattern list")
@@ -239,7 +272,8 @@ class FaultSim:
 
         fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
         fw.close()
-        print(self.fs_type + "-Multiple completed. \nLog file saved in {}".format(fname_log))
+        print("{}-Multiple completed. \nLog file saved in {}".format(
+            self.fs_type, output_path))
 
 
 
@@ -253,7 +287,6 @@ class FaultSim:
     # 12.1 added
     def return_rest_fault(self):
         return self.fault_set_rest
-
 
     def FD_new_generator(self):
         """

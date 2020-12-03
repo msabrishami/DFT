@@ -21,7 +21,6 @@ from observation import *
 import experiments 
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")

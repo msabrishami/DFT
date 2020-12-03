@@ -1,31 +1,29 @@
+
+
 import sys
-from circuit import *
+from circuit import Circuit
+#TODO: change this style of import
 from node import *
-from fault_sim import *
+from fault_sim import FaultSim, FaultList
+import pdb
 
 class PFS(FaultSim):
     def __init__(self, circuit):
         FaultSim.__init__(self, circuit)
-        self.in_fault_num = [] # input fault num, string format
-        self.in_fault_type = [] # input fault type, integer format
+        # self.in_fault_num = [] # input fault num, string format
+        # self.in_fault_type = [] # input fault type, integer format
         self.fs_type = "PFS"
     
-    def pfs_in_fault_list(self,fname,fault_list_type):
+    def add_fault(self, mode="full", fname=None):
+        """ add faults to the fault list 
+        mode = full: input fault list is full fault list
+        mode = user: input fault list is given by user as a file name
         """
-        Parallel Fault Simulation:
-        fault_list_type = 1: input fault list is full fault list
-        fault_list_type = 0: input fault list is given by user.
-
-        For a given input fault list
-        generate two lists: in_fault_num, in_fault_type.
-        """
-        self.in_fault_num = []
-        self.in_fault_type = []
-        if fault_list_type == 1:
-            self.circuit.get_full_fault_list()
+        if mode == "full":
+            # circuit.get_full_fault_list()
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
-        else:
+        elif mode == "user":
             fr = open(fname, mode='r')
             lines = fr.readlines()
             for line in lines:
@@ -33,7 +31,11 @@ class PFS(FaultSim):
                 line_split=line.split('@')
                 self.in_fault_num.append(line_split[0])
                 self.in_fault_type.append(int(line_split[1]))
-    
+        else:
+            raise NameError("fault list type is not accepted")
+
+
+   
     def single(self, input_pattern):
         """
         Parallel Fault Simulation:
@@ -54,8 +56,8 @@ class PFS(FaultSim):
         detected_fault_num = []
         detected_fault_value = []
 
-        while (pass_tot != 0):
-            pass_tot -= 1
+        for _pass in range(pass_tot):
+            
             pfs_stuck_values = 0
             read_fault_ind = 0
 
@@ -76,7 +78,8 @@ class PFS(FaultSim):
                 if read_fault_ind == bitlen - 1:
                     break
             
-            # calculate stuck values of faults in this pass of PFS, and mask for each fault_num
+            # calculate stuck values of faults in this pass of PFS, 
+            # generating masks for each fault_num
             for i in range(len(fault_val)):
                 pfs_stuck_values = pfs_stuck_values + fault_val[i]*2**i
 
@@ -84,11 +87,14 @@ class PFS(FaultSim):
                     mask_dict[fault_num[i]] = mask_dict[fault_num[i]] + 2**i
                 else:
                     mask_dict[fault_num[i]] = 2**i
-            
+
             # pfs for one pass
             node_dict = dict(zip([x.num for x in self.circuit.PI], input_pattern))
             for node in self.circuit.nodes_lev:
                 node.pfs_I = 0
+                #TODO: if this is something that is common for all nodes, 
+                # ... why are we making it an atribute for the node? 
+                # ... we need to pass it to each nodes pfs function
                 node.pfs_S = pfs_stuck_values
 
                 # if fault should be inserted in this node
@@ -102,20 +108,19 @@ class PFS(FaultSim):
                 node.insert_f(bitwise_not)
             
             # output result
-            for i in self.circuit.nodes_lev:
-                if i.ntype == 'PO':
-                    # if some faults can be detected
-                    if (i.pfs_V != 0) and (i.pfs_V != bitwise_not):
-                        pfs_V_str = format(i.pfs_V,"b").zfill(bitlen)
-                        msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
-                        for j in range(bitlen-1):
-                            if pfs_V_str[bitlen-1-j] != msb_pfs_V:
-                                detected_fault_num.append(fault_num[j])
-                                detected_fault_value.append(fault_val[j])
+            for i in self.circuit.PO:
+                # if some faults can be detected
+                if (i.pfs_V != 0) and (i.pfs_V != bitwise_not):
+                    pfs_V_str = format(i.pfs_V,"b").zfill(bitlen)
+                    msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
+                    for j in range(bitlen-1):
+                        if pfs_V_str[bitlen-1-j] != msb_pfs_V:
+                            detected_fault_num.append(fault_num[j])
+                            detected_fault_value.append(fault_val[j])
 
         fault_set = set()
         for k in range(len(detected_fault_num)):
-            fault_set = fault_set.union({(detected_fault_num[k],str(detected_fault_value[k]))})
+            fault_set = fault_set.union({(detected_fault_num[k],detected_fault_value[k])})
 
         return fault_set
 
