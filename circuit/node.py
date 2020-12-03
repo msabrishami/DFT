@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from numpy import uint64
+#from numpy import uint64
 from enum import Enum
 import pdb
 import math 
-import sys
-import config 
+#import sys
+
 # We are using GNOT, etc. as we may later use X values
 
 
@@ -61,6 +61,8 @@ class Node:
         self.num = num
         self.lev = None
         self.value = None
+        self.cval = None
+        self.inv = None
         self.unodes = []
         self.dnodes = []
 
@@ -68,9 +70,6 @@ class Node:
         self.pfs_V = None   # pfs value
         self.pfs_I = None   # mask
         self.pfs_S = None   # stuck values of fault for each pass
-
-        #Podem
-        self.f_value = 9
 
         # Saeed does not confirm
         # self.cpt = 0
@@ -112,25 +111,13 @@ class Node:
         self.CB1 = None          # prob
         self.CB0 = None          # prob
         self.B = None          # prob
-        
 
-        # recursive fanin-cone search
-        self.flag_seen = None
         # Test Point Insertion Measurements
         self.stat = {}
                     
     def __str__(self):
-        unodes_num = [(x.num, x.value) for x in self.unodes]
-        dnodes_num = [(x.num, x.value) for x in self.dnodes]
-        return(", ".join([str(self.num), self.ntype, self.gtype, "Lev:" + str(self.lev), 
-            "C0>"+str(self.C0), 
-            "C1>"+str(self.C1), 
-            "B0>"+str(self.B0), 
-            "B1>"+str(self.B1),
-            "S>"+str(self.S),
-            # str(len(self.unodes)), str(len(self.dnodes))]))
-            "Unodes:", str(unodes_num),
-            "Dnodes:", str(dnodes_num)]))
+        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
+            str(len(self.unodes)), str(len(self.dnodes))]))
     
     def imply(self):
         ''' forward implication for a logic gate ''' 
@@ -163,14 +150,6 @@ class Node:
     def dfs(self):
         ''' deductive fault simulation (dfs) using unodes ''' 
         raise NotImplementedError()
-
-    def eval_HTO(self):
-        if len(self.stat) == 0:
-            raise NameError("No statistical analysis yet been done!")
-        if self.stat["SS@0"] == "HTO" or self.stat["SS@1"] == "HTO":
-            self.HTO = 1
-        else:
-            self.HTO = 0
 
 
     
@@ -215,7 +194,7 @@ class Node:
         if self.ntype == 'PO':
             return True
 
-        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH', "BUFF"]:
+        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH']:
             return True
 
         elif self.dnodes[0].gtype in ['AND', 'NAND']:
@@ -231,7 +210,7 @@ class Node:
                 return True
 
         else:
-            raise NameError("Error: is_sensible is not implemented for this node")
+            print("Error: Not implemented yet")
 
 
     def semi_detect(self):
@@ -255,13 +234,8 @@ class Node:
         elif self.sense:
 
             dn = self.dnodes[0]
-            
-            if dn.gtype == 'BUFF':
-                # TODO: Double check this
-                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
 
-            elif dn.gtype == 'AND':
+            if dn.gtype == 'AND':
                 self.D1 = True if ((self.value == 1) & (dn.D1)) else False
                 self.D0 = True if ((self.value == 0) & (dn.D0)) else False
 
@@ -288,15 +262,6 @@ class Node:
                 elif dn.value == 0:
                     self.D1 = dn.D0
                     self.D0 = dn.D0
-            
-            # TODO: not sure if its correct!
-            elif dn.gtype == 'XNOR':
-                if dn.value == 1:
-                    self.D1 = dn.D1
-                    self.D0 = dn.D1
-                elif dn.value == 0:
-                    self.D1 = dn.D0
-                    self.D0 = dn.D0
 
             elif dn.gtype == 'BRCH':
                 if (self.value == 1):
@@ -310,7 +275,8 @@ class Node:
                             self.D0 = True
                             break
             else:
-                raise NameError("Error: semi_detect is not implemented for this gate")
+                print("gate type is {}".format(self.gtype))
+                print("This gate is not supported yet")
 
         self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
         self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
@@ -319,8 +285,8 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "BC0", "BC1", "B"] 
-            # "D0%", "D1%", "SS@0", "SS@1"]
+                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%",
+                    "SS@0", "SS@1"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -328,15 +294,15 @@ class Node:
             print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
             print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
             print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
-            print("C0:{:.2f}\t".format(self.C0), end="")
-            print("C1:{:.2f}\t".format(self.C1), end="")
-            print("S:{:.2f}\t".format(self.S), end="")
-            print("B0:{:.2f}\t".format(self.B0), end="")
-            print("B1:{:.2f}\t".format(self.B1), end="")
-            print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
-            print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
-            print("%D0:{:.2f}\t".format(self.D0_p), end="")
-            print("%D1:{:.2f}\t".format(self.D1_p))
+            # print("C0:{:.2f}\t".format(self.C0), end="")
+            # print("C1:{:.2f}\t".format(self.C1), end="")
+            # print("S:{:.2f}\t".format(self.S), end="")
+            # print("B0:{:.2f}\t".format(self.B0), end="")
+            # print("B1:{:.2f}\t".format(self.B1), end="")
+            # print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
+            # print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
+            # print("%D0:{:.2f}\t".format(self.D0_p), end="")
+            # print("%D1:{:.2f}\t".format(self.D1_p))
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -344,21 +310,20 @@ class Node:
             print("{}\t".format(str(self.CC0).zfill(3)), end="")
             print("{}\t".format(str(self.CC1).zfill(3)), end="")
             print("{}\t".format(str(self.CO).zfill(3)), end="")
-            print("{:e}\t".format(self.C0), end="")
-            print("{:e}\t".format(self.C1), end="")
-            print("{:e}\t".format(self.S), end="")
-            print("{:e}\t".format(self.B0), end="")
-            print("{:e}\t".format(self.B1), end="")
-            print("{:e}\t".format(self.CB0), end="")
-            print("{:e}\t".format(self.CB1), end="")
-            print("{:e}\t".format(self.B), end="")
+            print("{:.2f}\t".format(self.C0), end="")
+            print("{:.2f}\t".format(self.C1), end="")
+            print("{:.2f}\t".format(self.S), end="")
+            print("{:.2f}\t".format(self.B0), end="")
+            print("{:.2f}\t".format(self.B1), end="")
+            print("{:.2f}\t".format(self.CB0), end="")
+            print("{:.2f}\t".format(self.CB1), end="")
+            print("{:.2f}\t".format(self.B), end="")
             # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
             # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
-            # print("{:.2f}\t".format(self.D0_p), end="")
-            # print("{:.2f}\t".format(self.D1_p), end="")
-            # print("{}\t".format(self.stat["SS@0"]), end="")
-            # print("{}\t".format(self.stat["SS@1"]))
-            print()
+            print("{:.2f}\t".format(self.D0_p), end="")
+            print("{:.2f}\t".format(self.D1_p), end="")
+            print("{}\t".format(self.stat["SS@0"]), end="")
+            print("{}\t".format(self.stat["SS@1"]))
     
 
 class BUFF(Node):
@@ -377,7 +342,7 @@ class BUFF(Node):
         self.CC1 = 1 + self.unodes[0].CC1
     
     def eval_CO(self):
-        self.unodes[0].CO = self.CO + 1
+        self.unodes.CO = self.CO + 1
     
     def stafan_b(self):
         self.unodes[0].B1 = self.B1
@@ -395,7 +360,7 @@ class NOT(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
-        self.value = 1 if (self.unodes[0].value == 0) else 0
+        self.value = 1 if (self.unodes[0] == 0) else 0
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
@@ -405,7 +370,7 @@ class NOT(Node):
         self.CC1 = 1 + self.unodes[0].CC0
     
     def eval_CO(self):
-        self.unodes[0].CO = self.CO + 1
+        self.unodes.CO = self.CO + 1
     
     def stafan_b(self):
         self.unodes[0].B1 = self.B0
@@ -420,6 +385,8 @@ class NOT(Node):
 class OR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.cval = 15
+        self.inv = 0
 
     def imply(self):
         self.value = 1 if (1 in self.unodes_val()) else 0
@@ -439,9 +406,7 @@ class OR(Node):
     
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            # adjust_STAFAN_C(self)
-            pass
-            # raise NameError("OR gate, C0 or C1 is zero")
+            raise NameError("OR gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             unode.B0 = self.B0 * self.C0 / unode.C0
@@ -454,14 +419,11 @@ class OR(Node):
 class NOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.cval = 15
+        self.inv = 15
 
     def imply(self):
         self.value = 0 if (1 in self.unodes_val()) else 1
-    
-    def imply_p(self):
-        self.value_p = self.unodes[0].value_p
-        for unode in self.unodes[1:]:
-            self.value_p = ~ (self.value_p | unode.value_p)
     
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -479,8 +441,7 @@ class NOR(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            # adjust_STAFAN_C(self)
-            pass
+            raise NameError("NOR gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
@@ -494,6 +455,8 @@ class NOR(Node):
 class AND(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.cval = 0
+        self.inv = 0
 
     def imply(self):
         self.value = 0 if (0 in self.unodes_val()) else 1
@@ -513,8 +476,7 @@ class AND(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            # adjust_STAFAN_C(self)
-            pass
+            raise NameError("AND gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B1 * self.C1 / unode.C1
             unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
@@ -528,6 +490,8 @@ class AND(Node):
 class NAND(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.cval = 0
+        self.inv = 15
     
     def imply(self):
         self.value = 1 if (0 in self.unodes_val()) else 0
@@ -548,8 +512,7 @@ class NAND(Node):
     
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            # adjust_STAFAN_C(self)
-            pass
+            raise NameError("NAND gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B0 * self.C0 / unode.C1
             # Formula in the original paper has a typo
@@ -564,6 +527,7 @@ class NAND(Node):
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.c_flag = 0
 
     def imply(self):
         try:
@@ -611,6 +575,7 @@ class XOR(Node):
 class XNOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
+        self.c_flag = 0
 
     def imply(self):
         self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
@@ -657,7 +622,10 @@ class IPT(Node):
         Node.__init__(self, n_type, g_type, num)
     
     def imply(self, value):
-        self.value = value 
+        self.value = value
+
+    def imply_p(self,bitwise_not, pfs_V):
+        self.pfs_V = pfs_V * bitwise_not
 
     def eval_CC(self):
         self.CC0 = 0 
@@ -672,9 +640,6 @@ class IPT(Node):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
-    
-    def imply_p(self,bitwise_not, pfs_V):
-        self.pfs_V = pfs_V * bitwise_not
 
 
 class BRCH(Node):
@@ -880,25 +845,4 @@ class podem_node_5val():
         val.x = self.x
         return val
 
-
-def adjust_STAFAN_C(node):
-    flag = False
-    if node.C0 == 0:
-        # print("WARNING: node {} , C0 is zero, ".format(node.num), end="")
-        # print("replaced with {}".format(config.STAFAN_C_MIN))
-        node.C0 = config.STAFAN_C_MIN
-        node.C1 = node.C1 - config.STAFAN_C_MIN
-        flag = True
-    if node.C1 == 0:
-        # print("WARNING: node {} , C1 is zero, ".format(node.num), end="")
-        # print("replaced with {}".format(config.STAFAN_C_MIN))
-        node.C1 = config.STAFAN_C_MIN
-        node.C0 = node.C0 - config.STAFAN_C_MIN
-        flag = True
-
-    if node.S == 0:
-        node.S = config.STAFAN_C_MIN
-        flag = True
-
-    return flag
 
