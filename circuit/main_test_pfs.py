@@ -73,10 +73,10 @@ def main():
     circuit.read_ckt()
     circuit.lev()
 
-    """ Testing DFS """
+    """ Testing PFS """
     print("PFS starts")
     pfs = PFS(circuit)
-    pfs.add_fault("full",None)
+    #pfs.add_fault("full",None)
     #print(pfs.single([1,1,1,1,0]))
     
     pfs.fs_exe(tp_num=args.tp, t_mode='rand', r_mode='b',fault_list_type="full",fname = None)
