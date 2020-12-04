@@ -69,7 +69,7 @@ class Node:
         # PFS:
         self.pfs_V = None   # pfs value
         self.pfs_I = None   # mask
-        self.pfs_S = None   # stuck values of fault for each pass
+        #self.pfs_S = None   # stuck values of fault for each pass
 
         # Saeed does not confirm
         # self.cpt = 0
@@ -127,10 +127,10 @@ class Node:
         ''' forward parallel implication for a logic gate ''' 
         raise NotImplementedError()
 
-    def insert_f(self, bitwise_not):
+    def insert_f(self, bitwise_not,pfs_S):
         """ insert a fault for pdf in this node """ 
         pfs_I_bar = self.pfs_I ^ bitwise_not
-        self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & self.pfs_S)         
+        self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
 
     def unodes_val(self):
         return [int(unode.value) for unode in self.unodes]
