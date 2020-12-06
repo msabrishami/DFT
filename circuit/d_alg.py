@@ -520,7 +520,7 @@ class D_alg:
                     
                         # print("Last D front choice: ", d_fr_node.num)
                         if self.dalg_recur(unode.num,unode.value):
-                            print("DALG_RECUR:  D frontier select")
+                            print("DALG_RECUR:  D frontier assignment successed! ")
                             self.print_PI()
                             self.print_all()
                             return 1
