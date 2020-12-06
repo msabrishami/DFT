@@ -111,14 +111,14 @@ def main():
 
 
     # """
-    for ckt in ['c4']:
+    for ckt in ['FA']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "ckt")
         # circuit.read_verilog()
         circuit.lev()
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
-        for fault in [('4', 0)]:
+        for fault in [('16', 1)]:
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
@@ -157,7 +157,7 @@ def main():
     """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
-    for ckt in ['c4']:
+    for ckt in ['FA']:
         print('\n\n')
         print("******************* start DALG at ", ckt, " *************************")
         circuit = Circuit(ckt)

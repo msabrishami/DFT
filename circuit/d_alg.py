@@ -249,18 +249,6 @@ class D_alg:
         """
         print("BWD: " + node.num + ": " + str(node.value))
         if node.dnodes[0].gtype == 'BRCH':
-            # print("Hello my dnode is BRCH!!!")
-            # dnodes_val = []
-            # for dnode in node.dnodes:
-            #     dnodes_val.append(dnode.value)
-            # if (15 in dnodes_val) | (12 in dnodes_val):
-            #     node.value = 15
-            # elif (0 in dnodes_val) | (3 in dnodes_val):
-            #     node.value = 0
-            # else:
-            #     node.value = 9
-
-            # return 1
             print("Hello I'm BRCH!!!")
             dnodes_val = set()
             # the stem has been assigned
@@ -524,6 +512,7 @@ class D_alg:
                                 unode.value = 0
                                 d_fr_node.c_flag = 0
                             print("Assign XOR / XNOR: " + unode.num + "---" + str(unode.value))
+                        
                         # if the gate type is AND, OR, NAND, NOR
                         else:
                             unode.value = d_fr_node.cval ^ 15
@@ -803,7 +792,7 @@ class D_alg:
         return temp_val
 
 
-
+    # 12.5: when temp_val = 9 but node already has value, put the node's unodes to S_bwd
     def fwd_check_5val_gen(self, node, temp_val):   
         """
         General Function for forward check
@@ -812,6 +801,11 @@ class D_alg:
         print("General FWD: ", node.gtype)
         if temp_val == 9:
             print("Imply result is X, no conflict!")
+            # if the node already has value, put the unodes of the node to S_bwd
+            # maybe we can backward imply the other inputs!
+            if node.value != 9:
+                for unode in node.unodes:
+                    self.S_bwd.append(unode)
             return 1
         if node.value == 9:
             node.value = temp_val
