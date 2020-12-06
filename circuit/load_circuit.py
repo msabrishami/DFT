@@ -49,7 +49,7 @@ class LoadCircuit:
                 node = NOR(n_type, g_type, num)
 
             elif g_type == 'NOT':
-                node = NOR(n_type, g_type, num)
+                node = NOT(n_type, g_type, num)
 
             elif g_type == 'NAND':
                 node = NAND(n_type, g_type, num)

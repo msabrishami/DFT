@@ -360,7 +360,7 @@ class NOT(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
-        self.value = 1 if (self.unodes[0] == 0) else 0
+        self.value = 1 if (self.unodes[0].value == 0) else 0
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
