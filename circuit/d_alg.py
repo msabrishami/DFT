@@ -100,9 +100,9 @@ class D_alg:
                 # self.eval_node.append(node)   wrong!!!
 
                 # 12.5: if the output is not X, we can remove it from D frontier
-                if node in self.D_frontier:
-                    self.D_frontier.remove(node)
-                    print("Remove from D frontier: already evaluated:  ", node.num)
+                # if node in self.D_frontier:
+                #     self.D_frontier.remove(node)
+                #     print("Remove from D frontier: already evaluated:  ", node.num)
 
                 print ("S_fwd")
                 for dnode in node.dnodes:
@@ -239,8 +239,8 @@ class D_alg:
                 # the output node should be remove from J & Dfrontier
                 if node in self.J_frontier:
                     self.J_frontier.remove(node)
-                if node in self.D_frontier:
-                    self.D_frontier.remove(node)
+                # if node in self.D_frontier:
+                #     self.D_frontier.remove(node)
                 
             return 1
         else:
@@ -512,20 +512,31 @@ class D_alg:
                     print(unode.num + ': ' + str(unode.value))
                     if unode.value == 9:
                         # if the gate type is XOR, it has no cval, we can assign either 0 or 1
+                        # 12.5: 
+                        # by default: assign 1, but we cannot move it from D frontier
+                        # if error occurs, we assign 0 to it, then we can remove it
+                        # the following code did this
                         if d_fr_node.gtype in ["XOR", "XNOR"]:
                             if not d_fr_node.c_flag:
                                 unode.value = 15
                                 d_fr_node.c_flag = 1
+                                # self.D_frontier.append(d_fr_node)
+                                self.D_frontier.append(d_fr_node)
+                                print("**********XOR / XNOR likely assignment: add back D front:  " + node.num)
                             else:
                                 unode.value = 0
                                 d_fr_node.c_flag = 0
                             print("Assign XOR / XNOR: " + unode.num + "---" + str(unode.value))
-                        
                         # if the gate type is AND, OR, NAND, NOR
                         else:
                             unode.value = d_fr_node.cval ^ 15
                             print("Assign: " + unode.num + "---" + str(unode.value))
-                    
+                        
+                        print("D frontier after poping: ")
+                        self.print_node(self.D_frontier)
+
+
+
                         # print("Last D front choice: ", d_fr_node.num)
                         if self.dalg_recur(unode.num,unode.value):
                             print("DALG_RECUR:  D frontier assignment successed! ")
@@ -544,10 +555,13 @@ class D_alg:
                             self.eval_node = self.checkpoint_eval.pop()
                             prev_val = self.checkpoint_val.pop()
                             # put the XOR or XNOR if we have other choice
-                            if (d_fr_node.gtype in ["XOR","XNOR"]):
-                                if (d_fr_node.c_flag == 1):
-                                    self.D_frontier.append(d_fr_node)
-                                    print("**********Add D front:  " + node.num)
+                            ############### test 12.5
+                            print("chosen gate type: ", d_fr_node.gtype, "-----", d_fr_node.num)
+                            # print("flag value: ", d_fr_node.c_flag)
+                            # if (d_fr_node.gtype in ["XOR","XNOR"]):
+                            #     if (d_fr_node.c_flag == 1):
+                            #         self.D_frontier.append(d_fr_node)
+                            #         print("**********XOR / XNOR wrong assignment: add bakc D front:  " + node.num)
                             i = 0
                             for node in self.circuit.nodes_lev:
                                 if node.value != prev_val:
