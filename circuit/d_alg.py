@@ -493,7 +493,7 @@ class D_alg:
                 for node in self.circuit.nodes_lev:
                     sublist_val.append(node.value)
                 # whole stack storing all node.value sublists
-                print("D frontier: new pop out, save the checkpointing")
+                print("D frontier: new pop out, save the checkpointing, after poping: ")
                 self.checkpoint_val.append(sublist_val.copy())
                 # whole stack storing all J frontier / D frontier
                 # the D frontier must be the vesion after poping
@@ -547,7 +547,8 @@ class D_alg:
                         # we should recover our previous node values, then choose another
                         else:
                             print("DALG FAIL: Wrong D front choice: should recover preovious node values")
-                            print("Recover preovious node values......")
+                            print("Fail node: ", d_fr_node.num)
+                            print("Recover previous node values......")
                             if self.checkpoint_J == []:
                                 return 0
                             self.J_frontier = self.checkpoint_J.pop()
