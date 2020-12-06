@@ -15,6 +15,7 @@ class DFS(FaultSim):
         for node in self.circuit.nodes_lev:
             node.dfs()
         for node in self.circuit.PO:
+            # print(node.faultlist_dfs)
             fault_set = fault_set.union(node.faultlist_dfs)
         # return a fault set
         return fault_set
