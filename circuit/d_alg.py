@@ -316,23 +316,25 @@ class D_alg:
                     self.eval_node.remove(node.dnodes[0])
                     print("Already in J front: remove from eval_node")
                 return 1
-            # if 1 input is X
-            elif (9 in unodes_value):
+            # if 1 input is X and node.value is X
+            elif (node.value == 9):
                 if (unodes_value[0] == 9):
-                    unodes_value[0] = val ^ 15 ^ unodes_value[1]
-                    # input cannot be D or D'
-                    if unodes_value[0] in [3,12]:
-                        unodes_value[0] = unodes_value[0] ^ 3
+                    node.value = val ^ 15 ^ unodes_value[1]
                 else:
-                    unodes_value[1] = val ^ 15 ^ unodes_value[0]
-                    if unodes_value[1] in [3,12]:
-                        unodes_value[1] = unodes_value[1] ^ 3
+                    node.value = val ^ 15 ^ unodes_value[0]
+                # input cannot be D or D'
+                if node.value in [3,12]:
+                    node.value = node.value ^ 3
                 
                 # 12.5: two inputs can be known
                 if node.dnodes[0] in self.J_frontier:
                     self.J_frontier.remove(node.dnodes[0])
                 return 1
-            
+            # if 1 input is X
+            elif (9 in unodes_value):
+                if (node.value in [3,12]) & (val in [0,15]):
+                    return 0
+                return 1            
             # 2 inputs are not X
             # if output != input1 ^ input2 ^15
             else:
@@ -359,23 +361,25 @@ class D_alg:
                     print("Already in J front: remove from eval_node")
                 return 1
 
-            # if 1 input is X
-            elif (9 in unodes_value):
+            # if 1 input is X and node.value is X
+            elif (node.value == 9):
                 if (unodes_value[0] == 9):
-                    unodes_value[0] = val ^ unodes_value[1]
-                    #input cannot be D or D'
-                    if unodes_value[0] in [3, 12]:
-                        unodes_value[0] = unodes_value[0] ^ 3
+                    node.value = val ^ unodes_value[1]
                 else:
-                    unodes_value[1] = val ^ unodes_value[0]
-                    if unodes_value[1] in [3, 12]:
-                        unodes_value[1] = unodes_value[1] ^ 3
+                    node.value = val ^ unodes_value[0]
+                # input cannot be D or D'
+                if node.value in [3,12]:
+                    node.value = node.value ^ 3
                 
                 # 12.5: two inputs can be known
                 if node.dnodes[0] in self.J_frontier:
                     self.J_frontier.remove(node.dnodes[0])
-
                 return 1
+            # if 1 input is X
+            elif (9 in unodes_value):
+                if (node.value in [3,12]) & (val in [0,15]):
+                    return 0
+                return 1   
             # 2 inputs are not X
             # if output != input1 ^ input2 ^15
             else:
