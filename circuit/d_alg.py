@@ -55,6 +55,10 @@ class D_alg:
 
         #for observation
         self.dalg_cnt = 0
+        self.fwd_cnt = 0
+        self.bwd_cnt = 0
+        self.d_cnt = 0
+
         # convert the input fault to 5-val
         # fault_val = 1: 0/1---D'    fault_val = 0: 1/0---D  
         self.fault_node = fault_node
@@ -87,33 +91,37 @@ class D_alg:
 
         # do recursive I&C until the stack is empty
         while self.S_fwd:
-            node = self.S_fwd.pop()
-            if node in self.eval_node:
-                if not self.fwd_imply_check_5val(node):
-                    print("Node is already evaluated, but check is wrong!!")
-                    return 0
-                print("Node is already evaluated, and check is correct!!")
-            if node not in self.eval_node:
-                if not self.fwd_imply_check_5val(node):
-                    print("ERROR fwd: " + node.num + '----' + str(node.value) + '\n')
-                    return 0
-                print(node.num + '----' + str(node.value) + '\n')
-                if node.value == 9:
-                    continue
-                ## 12.4: prob2 solve: should add during fwd
-                # self.eval_node.append(node)   wrong!!!
+            if self.fwd_cnt > 10000:
+                raise NameError("fwd cnt out of range!!!!!!!!")
+            else:
+                self.fwd_cnt = self.fwd_cnt + 1
+                node = self.S_fwd.pop()
+                if node in self.eval_node:
+                    if not self.fwd_imply_check_5val(node):
+                        print("Node is already evaluated, but check is wrong!!")
+                        return 0
+                    print("Node is already evaluated, and check is correct!!")
+                if node not in self.eval_node:
+                    if not self.fwd_imply_check_5val(node):
+                        print("ERROR fwd: " + node.num + '----' + str(node.value) + '\n')
+                        return 0
+                    print(node.num + '----' + str(node.value) + '\n')
+                    if node.value == 9:
+                        continue
+                    ## 12.4: prob2 solve: should add during fwd
+                    # self.eval_node.append(node)   wrong!!!
 
-                # 12.5: if the output is not X, we can remove it from D frontier
-                # if node in self.D_frontier:
-                #     self.D_frontier.remove(node)
-                #     print("Remove from D frontier: already evaluated:  ", node.num)
+                    # 12.5: if the output is not X, we can remove it from D frontier
+                    # if node in self.D_frontier:
+                    #     self.D_frontier.remove(node)
+                    #     print("Remove from D frontier: already evaluated:  ", node.num)
 
-                print ("S_fwd")
-                for dnode in node.dnodes:
-                    self.S_fwd.append(dnode)
-                    print(dnode.num)
-                print (self.S_fwd)
-                print('\n')
+                    print ("S_fwd")
+                    for dnode in node.dnodes:
+                        self.S_fwd.append(dnode)
+                        print(dnode.num)
+                    print (self.S_fwd)
+                    print('\n')
 
             # self.Imply_Check(node, node.value)
 
@@ -127,43 +135,47 @@ class D_alg:
         
         # do recursive I&C until the stack is empty
         while self.S_bwd:
-            node = self.S_bwd.pop()
-            if node in self.eval_node:
-                if not self.bwd_imply_check_5val(node):
-                    return 0
-            if node not in self.eval_node:
-                if not self.bwd_imply_check_5val(node):
-                    print("ERROR bwd:  " + node.num + '----' + str(node.value) + '\n')
-                    return 0
-                print("BWD Result: " + node.num + '----' + str(node.value))
-                print("BWD Result: " + str(node.dnodes[0].unodes_val()) + '\n')
-                
-                if node.value == 9:       # stop implying
-                    continue
-                
-                #################################
-                ## inefficient  improve later
-                #################################
-                if node.gtype != "BRCH":
-                    if node not in self.eval_node:
-                        self.eval_node.append(node)
-
-                if node.dnodes[0].gtype != "BRCH":
-                    if node not in self.eval_node:
-                        self.eval_node.append(node)
-                else:
-                    if not self.Imply_Check(node, node.value):
-                        return 0
-
-                print ("S_bwd: ************  END  ************")
-                for unode in node.unodes:
-                    self.S_bwd.append(unode)
-                    print(unode.num , ": " , unode.value)
-                print (self.S_bwd)
-                print ('\n')
-
+            if self.bwd_cnt > 10000:
+                raise NameError("bwd cnt out of range!!!!!!!!")
             else:
-                print(node.num, " is already evaluated!!!")
+                self.bwd_cnt = self.bwd_cnt + 1
+                node = self.S_bwd.pop()
+                if node in self.eval_node:
+                    if not self.bwd_imply_check_5val(node):
+                        return 0
+                if node not in self.eval_node:
+                    if not self.bwd_imply_check_5val(node):
+                        print("ERROR bwd:  " + node.num + '----' + str(node.value) + '\n')
+                        return 0
+                    print("BWD Result: " + node.num + '----' + str(node.value))
+                    print("BWD Result: " + str(node.dnodes[0].unodes_val()) + '\n')
+                    
+                    if node.value == 9:       # stop implying
+                        continue
+                    
+                    #################################
+                    ## inefficient  improve later
+                    #################################
+                    if node.gtype != "BRCH":
+                        if node not in self.eval_node:
+                            self.eval_node.append(node)
+
+                    if node.dnodes[0].gtype != "BRCH":
+                        if node not in self.eval_node:
+                            self.eval_node.append(node)
+                    else:
+                        if not self.Imply_Check(node, node.value):
+                            return 0
+
+                    print ("S_bwd: ************  END  ************")
+                    for unode in node.unodes:
+                        self.S_bwd.append(unode)
+                        print(unode.num , ": " , unode.value)
+                    print (self.S_bwd)
+                    print ('\n')
+
+                else:
+                    print(node.num, " is already evaluated!!!")
 
         return 1
 
@@ -512,133 +524,138 @@ class D_alg:
             ##                D frontier assignment
             #############################################################
             while (len(self.D_frontier) != 0):
-                print("D_frontier before poping: ")
-                self.print_node(self.D_frontier)
-                d_fr_node = self.D_frontier.pop() #should be in string format
-                print("Pop D front:  " + d_fr_node.num)
-                #######################################
-                #####    save the check points    #####
-                #######################################
-                ##   wrong saving !!!!!!!!!!!!! should save when assign!!!!!!!!!!!!!!!!!
-                # sublist_val = []       # sublist for node values
-                # for node in self.circuit.nodes_lev:
-                #     sublist_val.append(node.value)
-                # # whole stack storing all node.value sublists
-                # print("D frontier: new pop out, save the checkpointing, after poping: ")
-                # self.checkpoint_val.append(sublist_val.copy())
-                # # whole stack storing all J frontier / D frontier
-                # # the D frontier must be the vesion after poping
-                # # but the J frontier or values do not need to be
-                # # cp_J = self.J_frontier.copy()
-                # # cp_D = self.D_frontier.copy()
-                # self.checkpoint_J.append(self.J_frontier.copy())
-                # self.checkpoint_D.append(self.D_frontier.copy())
-                # self.checkpoint_eval.append(self.eval_node.copy())
-                # print("checkpoint_val: ", len(self.checkpoint_val))
-                # print("checkpoint_J: ", len(self.checkpoint_J))
-                # print("checkpoint_D: ", len(self.checkpoint_D))
-                # print("************ save checkpoint finish *****************\n")
+                if self.d_cnt > 10000:
+                    raise NameError("d front assmt cnt out of range!!!!!!!!")
+                else:
+                    self.d_cnt = self.d_cnt + 1
 
-                for unode in d_fr_node.unodes:
-                    print("For d_fr_node ", d_fr_node.num, "'s unodes:")
-                    print(unode.num + ': ' + str(unode.value))
-                    if unode.value == 9:
-                        # if the gate type is XOR, it has no cval, we can assign either 0 or 1
-                        # 12.5: 
-                        # by default: assign 1, but we cannot move it from D frontier
-                        # if error occurs, we assign 0 to it, then we can remove it
-                        # the following code did this
+                    print("D_frontier before poping: ")
+                    self.print_node(self.D_frontier)
+                    d_fr_node = self.D_frontier.pop() #should be in string format
+                    print("Pop D front:  " + d_fr_node.num)
+                    #######################################
+                    #####    save the check points    #####
+                    #######################################
+                    ##   wrong saving !!!!!!!!!!!!! should save when assign!!!!!!!!!!!!!!!!!
+                    # sublist_val = []       # sublist for node values
+                    # for node in self.circuit.nodes_lev:
+                    #     sublist_val.append(node.value)
+                    # # whole stack storing all node.value sublists
+                    # print("D frontier: new pop out, save the checkpointing, after poping: ")
+                    # self.checkpoint_val.append(sublist_val.copy())
+                    # # whole stack storing all J frontier / D frontier
+                    # # the D frontier must be the vesion after poping
+                    # # but the J frontier or values do not need to be
+                    # # cp_J = self.J_frontier.copy()
+                    # # cp_D = self.D_frontier.copy()
+                    # self.checkpoint_J.append(self.J_frontier.copy())
+                    # self.checkpoint_D.append(self.D_frontier.copy())
+                    # self.checkpoint_eval.append(self.eval_node.copy())
+                    # print("checkpoint_val: ", len(self.checkpoint_val))
+                    # print("checkpoint_J: ", len(self.checkpoint_J))
+                    # print("checkpoint_D: ", len(self.checkpoint_D))
+                    # print("************ save checkpoint finish *****************\n")
 
-
-                        ################## should save checkpoint when you assign!!!! Not pop!!!!!
-                        #######################################
-                        #####    save the check points    #####
-                        #######################################
-                        sublist_val = []       # sublist for node values
-                        for node in self.circuit.nodes_lev:
-                            sublist_val.append(node.value)
-                        # whole stack storing all node.value sublists
-                        print("D frontier: new pop out, save the checkpointing, after poping: ")
-                        self.checkpoint_val.append(sublist_val.copy())
-                        # whole stack storing all J frontier / D frontier
-                        # the D frontier must be the vesion after poping
-                        # but the J frontier or values do not need to be
-                        # cp_J = self.J_frontier.copy()
-                        # cp_D = self.D_frontier.copy()
-                        self.checkpoint_J.append(self.J_frontier.copy())
-                        self.checkpoint_D.append(self.D_frontier.copy())
-                        self.checkpoint_eval.append(self.eval_node.copy())
-                        print("checkpoint_val: ", len(self.checkpoint_val))
-                        print("checkpoint_J: ", len(self.checkpoint_J))
-                        print("checkpoint_D: ", len(self.checkpoint_D))
-                        print("************ save checkpoint finish *****************\n")
+                    for unode in d_fr_node.unodes:
+                        print("For d_fr_node ", d_fr_node.num, "'s unodes:")
+                        print(unode.num + ': ' + str(unode.value))
+                        if unode.value == 9:
+                            # if the gate type is XOR, it has no cval, we can assign either 0 or 1
+                            # 12.5: 
+                            # by default: assign 1, but we cannot move it from D frontier
+                            # if error occurs, we assign 0 to it, then we can remove it
+                            # the following code did this
 
 
-
-                        if d_fr_node.gtype in ["XOR", "XNOR"]:
-                            if not d_fr_node.c_flag:
-                                unode.value = 15
-                                d_fr_node.c_flag = 1
-                                # self.D_frontier.append(d_fr_node)
-                                # self.D_frontier.append(d_fr_node)
-                                # print("**********XOR / XNOR likely assignment: add back D front:  " + node.num)
-                            else:
-                                unode.value = 0
-                                d_fr_node.c_flag = 0
-                            print("Assign XOR / XNOR: " + unode.num + "---" + str(unode.value))
-                        # if the gate type is AND, OR, NAND, NOR
-                        else:
-                            unode.value = d_fr_node.cval ^ 15
-                            print("Assign: " + unode.num + "---" + str(unode.value))
-                        
-                        print("D frontier after poping: ")
-                        self.print_node(self.D_frontier)
-
-
-
-                        # print("Last D front choice: ", d_fr_node.num)
-                        if self.dalg_recur(unode.num,unode.value):
-                            print("DALG_RECUR:  D frontier assignment successed! ")
-                            # self.print_PI()
-                            # self.print_all()
-                            print("SUCCESS: Return back to last dalg\n")
-                            return 1
-                        # the latest D frontier choice is wrong
-                        # we should recover our previous node values, then choose another
-                        else:
-                            print("DALG FAIL: Wrong D front choice: should recover previous node values")
-                            print("Fail node: ", d_fr_node.num)
-                            print("Recover previous node values......")
-                            if self.checkpoint_J == []:
-                                print("FAIL: Return back to last dalg\n")
-                                return 0
-                            self.J_frontier = self.checkpoint_J.pop()
-                            self.D_frontier = self.checkpoint_D.pop()
-                            self.eval_node = self.checkpoint_eval.pop()
-                            prev_val = self.checkpoint_val.pop()
-                            # put the XOR or XNOR if we have other choice
-                            ############### test 12.5
-                            # print("chosen gate type: ", d_fr_node.gtype, "-----", d_fr_node.num)
-                            # print("flag value: ", d_fr_node.c_flag)
-                            if (d_fr_node.gtype in ["XOR","XNOR"]):
-                                if (d_fr_node.c_flag == 1):
-                                    self.D_frontier.append(d_fr_node)
-                                    print("**********XOR / XNOR wrong assignment: add bakc D front:  " + node.num)
-                            i = 0
+                            ################## should save checkpoint when you assign!!!! Not pop!!!!!
+                            #######################################
+                            #####    save the check points    #####
+                            #######################################
+                            sublist_val = []       # sublist for node values
                             for node in self.circuit.nodes_lev:
-                                if node.value != prev_val:
-                                    node.value = prev_val[i]
-                                    if node in self.eval_node:
-                                        self.eval_node.remove(node) 
-                                i = i + 1
-                            print("After recovering.......")
+                                sublist_val.append(node.value)
+                            # whole stack storing all node.value sublists
+                            print("D frontier: new pop out, save the checkpointing, after poping: ")
+                            self.checkpoint_val.append(sublist_val.copy())
+                            # whole stack storing all J frontier / D frontier
+                            # the D frontier must be the vesion after poping
+                            # but the J frontier or values do not need to be
+                            # cp_J = self.J_frontier.copy()
+                            # cp_D = self.D_frontier.copy()
+                            self.checkpoint_J.append(self.J_frontier.copy())
+                            self.checkpoint_D.append(self.D_frontier.copy())
+                            self.checkpoint_eval.append(self.eval_node.copy())
                             print("checkpoint_val: ", len(self.checkpoint_val))
                             print("checkpoint_J: ", len(self.checkpoint_J))
-                            print("D_frontier: ")
+                            print("checkpoint_D: ", len(self.checkpoint_D))
+                            print("************ save checkpoint finish *****************\n")
+
+
+
+                            if d_fr_node.gtype in ["XOR", "XNOR"]:
+                                if not d_fr_node.c_flag:
+                                    unode.value = 15
+                                    d_fr_node.c_flag = 1
+                                    # self.D_frontier.append(d_fr_node)
+                                    # self.D_frontier.append(d_fr_node)
+                                    # print("**********XOR / XNOR likely assignment: add back D front:  " + node.num)
+                                else:
+                                    unode.value = 0
+                                    d_fr_node.c_flag = 0
+                                print("Assign XOR / XNOR: " + unode.num + "---" + str(unode.value))
+                            # if the gate type is AND, OR, NAND, NOR
+                            else:
+                                unode.value = d_fr_node.cval ^ 15
+                                print("Assign: " + unode.num + "---" + str(unode.value))
+                            
+                            print("D frontier after poping: ")
                             self.print_node(self.D_frontier)
 
-                    else:
-                        print("The unode is not X!! ", unode.num, ": ", unode.value)
+
+
+                            # print("Last D front choice: ", d_fr_node.num)
+                            if self.dalg_recur(unode.num,unode.value):
+                                print("DALG_RECUR:  D frontier assignment successed! ")
+                                # self.print_PI()
+                                # self.print_all()
+                                print("SUCCESS: Return back to last dalg\n")
+                                return 1
+                            # the latest D frontier choice is wrong
+                            # we should recover our previous node values, then choose another
+                            else:
+                                print("DALG FAIL: Wrong D front choice: should recover previous node values")
+                                print("Fail node: ", d_fr_node.num)
+                                print("Recover previous node values......")
+                                if self.checkpoint_J == []:
+                                    print("FAIL: Return back to last dalg\n")
+                                    return 0
+                                self.J_frontier = self.checkpoint_J.pop()
+                                self.D_frontier = self.checkpoint_D.pop()
+                                self.eval_node = self.checkpoint_eval.pop()
+                                prev_val = self.checkpoint_val.pop()
+                                # put the XOR or XNOR if we have other choice
+                                ############### test 12.5
+                                # print("chosen gate type: ", d_fr_node.gtype, "-----", d_fr_node.num)
+                                # print("flag value: ", d_fr_node.c_flag)
+                                if (d_fr_node.gtype in ["XOR","XNOR"]):
+                                    if (d_fr_node.c_flag == 1):
+                                        self.D_frontier.append(d_fr_node)
+                                        print("**********XOR / XNOR wrong assignment: add bakc D front:  " + node.num)
+                                i = 0
+                                for node in self.circuit.nodes_lev:
+                                    if node.value != prev_val:
+                                        node.value = prev_val[i]
+                                        if node in self.eval_node:
+                                            self.eval_node.remove(node) 
+                                    i = i + 1
+                                print("After recovering.......")
+                                print("checkpoint_val: ", len(self.checkpoint_val))
+                                print("checkpoint_J: ", len(self.checkpoint_J))
+                                print("D_frontier: ")
+                                self.print_node(self.D_frontier)
+
+                        else:
+                            print("The unode is not X!! ", unode.num, ": ", unode.value)
             # self.print_PI()
             # self.print_all()
             print("FAIL: Return back to last dalg\n")
@@ -809,7 +826,7 @@ class D_alg:
                 print("checkpoint_val: ", len(self.checkpoint_val))
                 print("checkpoint_D: ", len(self.checkpoint_D))
                 print("J_frontier: ")
-                self.print_node(self.J_frontier)
+                # self.print_node(self.J_frontier)
 
                 # if the gate type is XOR, it has no cval
                 if j_fr_node.gtype in ["XOR", "XNOR"]:
@@ -842,6 +859,7 @@ class D_alg:
 
 
     def dalg(self):
+        blockPrint()
         if self.dalg_recur(self.fault_node, self.fault_val):
             print("\n\n")
             print("==================== END FOUND  ========================")
@@ -1111,9 +1129,9 @@ class D_alg:
                         print("BWD:  Conflict:  In has no X or cval, but out is cout")
                         return 0
 # Disable
-# def blockPrint():
-#     sys.stdout = open(os.devnull, 'w')
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
 
-# # Restore
-# def enablePrint():
-#     sys.stdout = sys.__stdout__
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
