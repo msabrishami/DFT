@@ -84,6 +84,9 @@ class D_alg:
         # do recursive I&C until the stack is empty
         while self.S_fwd:
             node = self.S_fwd.pop()
+            if node in self.eval_node:
+                if not self.fwd_imply_check_5val(node):
+                    return 0
             if node not in self.eval_node:
                 if not self.fwd_imply_check_5val(node):
                     print("ERROR fwd: " + node.num + '----' + str(node.value) + '\n')
@@ -119,6 +122,9 @@ class D_alg:
         # do recursive I&C until the stack is empty
         while self.S_bwd:
             node = self.S_bwd.pop()
+            if node in self.eval_node:
+                if not self.bwd_imply_check_5val(node):
+                    return 0
             if node not in self.eval_node:
                 if not self.bwd_imply_check_5val(node):
                     print("ERROR bwd:  " + node.num + '----' + str(node.value) + '\n')
