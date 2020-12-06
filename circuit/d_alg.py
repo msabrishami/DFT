@@ -2,8 +2,8 @@ import copy
 from enum import Enum
 # from classdef import five_value
 import json
-import sys
 from collections import OrderedDict 
+import os, sys
 sys.setrecursionlimit(10000)
 
 #Introduction
@@ -52,6 +52,9 @@ class D_alg:
         self.checkpoint_J = []
         self.checkpoint_D = []
         self.checkpoint_eval = []
+
+        #for observation
+        self.dalg_cnt = 0
         # convert the input fault to 5-val
         # fault_val = 1: 0/1---D'    fault_val = 0: 1/0---D  
         self.fault_node = fault_node
@@ -62,6 +65,7 @@ class D_alg:
         # initialize all nodes to X(9)
         for i in self.circuit.nodes_lev:
             i.value = 9
+
 
     # input: node name, value
     def Imply_Check(self, node, val):
@@ -222,6 +226,7 @@ class D_alg:
             flag = 1
         elif node.gtype == 'BUFF':
             #--- Not sure if we have buffer ---#
+            unodes_value = node.unodes_val()
             if (unodes_value[0] == 9):
                 temp_val = 9
             else:
@@ -471,6 +476,10 @@ class D_alg:
 
 
     def dalg_recur(self, node_num, val):
+        # self.dalg_cnt = self.dalg_cnt + 1
+        # enablePrint()
+        # print(self.dalg_cnt)
+        # blockPrint()
         node = self.circuit.nodes[node_num]
         node.value = val
         if not self.Imply_Check(node,val):
@@ -838,12 +847,20 @@ class D_alg:
             print("==================== END FOUND  ========================")
             self.print_PI()
             self.print_all()
+            for node in self.circuit.nodes_lev:
+                if node.gtype in ["XOR", "XNOR"]:
+                    node.c_flag = 0
+            print("XOR / XNOR c_flag reset is finish!\n")
             return 1
         else:
             print("\n\n")
             print("==================== END NOT FOUND  ========================")
             self.print_PI()
             self.print_all()
+            for node in self.circuit.nodes_lev:
+                if node.gtype in ["XOR", "XNOR"]:
+                    node.c_flag = 0
+            print("XOR / XNOR c_flag reset is finish!\n")
             return 0
 
 
@@ -1093,3 +1110,10 @@ class D_alg:
                     else:
                         print("BWD:  Conflict:  In has no X or cval, but out is cout")
                         return 0
+# Disable
+# def blockPrint():
+#     sys.stdout = open(os.devnull, 'w')
+
+# # Restore
+# def enablePrint():
+#     sys.stdout = sys.__stdout__
