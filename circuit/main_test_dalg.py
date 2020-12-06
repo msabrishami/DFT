@@ -20,6 +20,7 @@ from regular_tp_gen import *
 #from checker_dfs import *
 from fault_sim import *
 from deductive_fs import DFS
+from parallel_fs import PFS
 from d_alg import *
 
 
@@ -91,15 +92,17 @@ def main():
     print("***********        START D-ALG         **************")
     print("*****************************************************")
     
+    """
     circuit = Circuit(args.ckt)
     # circuit.read_verilog()
     circuit.read_ckt()
     circuit.lev()
     d_alg = D_alg(circuit, '6', 0)
     if d_alg.dalg() == True:
-        IPI_list = d_alg.return_IPI()
+        IPI_list = d_alg.return_IPT()
     else:
         print("Not found!!")
+    """
     # ignore all print()!!!!!!!!!
     # old_stdout = sys.stdout # backup current stdout
     # sys.stdout = open(os.devnull, "w")
@@ -107,15 +110,15 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    """
-    for ckt in ['c1']:
+    # """
+    for ckt in ['c4']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "ckt")
         # circuit.read_verilog()
         circuit.lev()
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
-        for fault in [('6', 0)]:
+        for fault in [('4', 0)]:
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
@@ -127,22 +130,22 @@ def main():
             # fault_val = fault_val ^ 12
             ###########################################
             if d_alg.dalg() == True:
-                IPI_list = d_alg.return_IPI()
-                IPI_binary_list = []
-                for x in IPI_list:
+                IPT_list = d_alg.return_IPT()
+                IPT_binary_list = []
+                for x in IPT_list:
                     if x == 9 or x == 15 or x == 12:
-                        IPI_binary_list.append(1)
+                        IPT_binary_list.append(1)
                     else:
-                        IPI_binary_list.append(0)
+                        IPT_binary_list.append(0)
                     # if x == 9 or x == 0 or x == 3:
-                    #     IPI_binary_list.append(0)
+                    #     IPT_binary_list.append(0)
                     # else:
-                    #     IPI_binary_list.append(1)
+                    #     IPT_binary_list.append(1)
                 dfs_test = DFS(circuit)
-                fault_list = dfs_test.single(IPI_binary_list)
+                fault_list = dfs_test.single(IPT_binary_list)
                 
                 print('fault >> ',fault)
-                print('D_alg generates input pattern >> ',IPI_binary_list)
+                print('D_alg generates input pattern >> ',IPT_binary_list)
                 print('fault_list >> ', fault_list)
                 if fault in fault_list:
                     print('result is correct')
@@ -150,11 +153,12 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    """
+    # """
     """
     # for ckt in ['c499','c432']:     
-    # for ckt in ['c1', 'c2', 'c3', 'FA', 'FA_NAND', 'add2']:
-    for ckt in ['c1']:
+    # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
+    for ckt in ['c4']:
+        print('\n\n')
         print("******************* start DALG at ", ckt, " *************************")
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "ckt")
@@ -174,7 +178,24 @@ def main():
         i = 0
         #seed(1)
         list_not_correct = []
-        list_no_test = []    
+        list_no_test = []  
+        list_should_have_test = []
+        set_cover = set()
+
+        # dfs full: generate a fault set including all detectable faults
+        dfs_full = DFS(circuit)
+        num = len(circuit.PI)
+        times = pow(2, num)
+        pattern = []
+        for i in range(times):
+            pattern = list(bin(i)[2:].zfill(num))
+            for i in range(0, len(pattern)): 
+                pattern[i] = int(pattern[i]) 
+            print(pattern)
+            full_sublist = dfs_full.single(pattern)
+            set_cover = set_cover.union(full_sublist)
+        print(set_cover)
+        
         for fault in total_fault_list:
         #while(i<20):
             #print(len(total_fault_list))
@@ -190,23 +211,25 @@ def main():
             # sys.stdout = open(os.devnull, "w")
 
             # podem.reset_and_get_fault(fault[0], fault[1])#TODO
+            print(' \n')
+            print(' \n')
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             if d_alg.dalg() == True:
                 # sys.stdout = old_stdout # reset old stdout
 
-                IPI_list = d_alg.return_IPI()
-                IPI_binary_list = []
+                IPT_list = d_alg.return_IPT()
+                IPT_binary_list = []
                 #print(IPT_list)
-                for x in IPI_list:
+                for x in IPT_list:
                     if x == 15 or x == 12 or x == 9: 
-                        IPI_binary_list.append(1)
+                        IPT_binary_list.append(1)
                     else:
-                        IPI_binary_list.append(0)
+                        IPT_binary_list.append(0)
 
                 #print(IPT_binary_list)
                 dfs_test = DFS(circuit)
-                fault_list = dfs_test.single(IPI_binary_list)
+                fault_list = dfs_test.single(IPT_binary_list)
                 #print('fault >> ',fault)
                 #print('fault_list >> ', fault_list)
                 if fault in fault_list:
@@ -220,11 +243,12 @@ def main():
                     #print(fault_list)
                     flag = 1
             else:
-                # sys.stdout = old_stdout # reset old stdout
-                #print(fault)
-                #print(IPT_binary_list)
                 list_no_test.append(fault)
                 print('############can not find test##############')
+                if fault in set_cover:
+                    print("The fault should have been detected!! Wrong no test!!!")
+                    list_should_have_test.append(fault)
+                    flag = 1
             # print(podem.count)
             # podem.count = 0
             #print('#########################')
@@ -234,9 +258,10 @@ def main():
         if flag == 1:
             print('result is not correct')
         else:
-            print('result is correct')
+            print('Congrats!!! result is correct')
         print('list_not_correct >>',list_not_correct)
         print('list_no_test >>',list_no_test)
+        print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
     """
     exit()

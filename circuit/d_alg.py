@@ -50,6 +50,7 @@ class D_alg:
         # store the node.value, J_frontier
         self.checkpoint_val = []
         self.checkpoint_J = []
+        self.checkpoint_D = []
         self.checkpoint_eval = []
         # convert the input fault to 5-val
         # fault_val = 1: 0/1---D'    fault_val = 0: 1/0---D  
@@ -71,8 +72,9 @@ class D_alg:
 
         # if no BRCH, it must have only 1 dnode
         # should we have a loop here ???? only 1 element ???
-        print ("S_fwd")
+        print ("S_fwd: ************  START  *************")
         center_node = node
+        print("FWD center node: ", center_node.num)
         for dnode in center_node.dnodes:
             self.S_fwd.append(dnode)
             print(dnode.num)
@@ -89,7 +91,13 @@ class D_alg:
                 print(node.num + '----' + str(node.value) + '\n')
                 if node.value == 9:
                     continue
-                self.eval_node.append(node)
+                ## 12.4: prob2 solve: should add during fwd
+                # self.eval_node.append(node)   wrong!!!
+
+                # 12.5: if the output is not X, we can remove it from D frontier
+                if node in self.D_frontier:
+                    self.D_frontier.remove(node)
+                    print("Remove from D frontier: already evaluated:  ", node.num)
 
                 print ("S_fwd")
                 for dnode in node.dnodes:
@@ -101,7 +109,7 @@ class D_alg:
             # self.Imply_Check(node, node.value)
 
         print ("S_bwd: ************  START  *************")
-        print("center node: ", center_node.num)
+        print("BWD center node: ", center_node.num)
         for unode in center_node.unodes:
             self.S_bwd.append(unode)
             print(unode.num , ": " , unode.value)
@@ -125,12 +133,15 @@ class D_alg:
                 ## inefficient  improve later
                 #################################
                 if node.gtype != "BRCH":
-                    self.eval_node.append(node)
+                    if node not in self.eval_node:
+                        self.eval_node.append(node)
 
                 if node.dnodes[0].gtype != "BRCH":
-                    self.eval_node.append(node)
+                    if node not in self.eval_node:
+                        self.eval_node.append(node)
                 else:
-                    self.Imply_Check(node, node.value)
+                    if not self.Imply_Check(node, node.value):
+                        return 0
 
                 print ("S_bwd: ************  END  ************")
                 for unode in node.unodes:
@@ -149,8 +160,9 @@ class D_alg:
     def fwd_imply_check_5val(self, node):
         """
         Forward Imply and Check
-        The input is node type
-        The dnode gtype is NAND or BRCH
+        The input is node type (the output of gates, should be assigned)
+        we use its unodes to imply the node value
+        Note that during fwd, it's likely to remove elem from D frontier
         """
         # forward imply, get the value of its only dnode
         # in ntype, Fb includes PO
@@ -171,6 +183,7 @@ class D_alg:
                 if (12 in unodes_value) | (3 in unodes_value):
                     if node not in self.D_frontier:
                         self.D_frontier.append(node)
+                        print("**********Add D front:  " + node.num)
                         flag = 2
             else:
                 temp_val = unodes_value[0] ^ unodes_value[1] ^ 15
@@ -185,6 +198,7 @@ class D_alg:
                 if (12 in unodes_value) | (3 in unodes_value):
                     if node not in self.D_frontier:
                         self.D_frontier.append(node)
+                        print("**********Add D front:  " + node.num)
                         flag = 2
             else:
                 temp_val = unodes_value[0] ^ unodes_value[1]
@@ -206,8 +220,20 @@ class D_alg:
                 temp_val = unodes_value[0]
             flag = 1
 
+
         # check if any conflict
         if self.fwd_check_5val_gen(node, temp_val):
+            # if the evaluation result is X
+            # regardless of its previous value, we shouldn't add it to eval nodes
+            if temp_val != 9:
+                self.eval_node.append(node)
+                # if temp_val != 9, means the inputs can imply output
+                # the output node should be remove from J & Dfrontier
+                if node in self.J_frontier:
+                    self.J_frontier.remove(node)
+                if node in self.D_frontier:
+                    self.D_frontier.remove(node)
+                
             return 1
         else:
             return 0
@@ -286,7 +312,12 @@ class D_alg:
             if (unodes_value[0] == 9) & (unodes_value[1] == 9):
                 if node.dnodes[0] not in self.J_frontier:
                     self.J_frontier.append(node.dnodes[0])
+                    print("**********Add J front:  " + node.dnodes[0].num)
                     return 2
+                if node.dnodes[0] in self.eval_node:
+                    self.eval_node.remove(node.dnodes[0])
+                    print("Already in J front: remove from eval_node")
+                return 1
             # if 1 input is X
             elif (node.value == 9):
                 if (unodes_value[0] == 9):
@@ -296,6 +327,10 @@ class D_alg:
                 # input cannot be D or D'
                 if node.value in [3, 12]:
                     node.value = node.value ^ 3
+                # 12.5: two inputs can be known
+                if node.dnodes[0] in self.J_frontier:
+                    self.J_frontier.remove(node.dnodes[0])
+
                 return 1
             
             # 2 inputs are not X
@@ -315,9 +350,14 @@ class D_alg:
             # if 2 inputs are both X
             if (unodes_value[0] == 9) & (unodes_value[1] == 9):
                 if node.dnodes[0] not in self.J_frontier:
-                        self.J_frontier.append(node.dnodes[0])
-                        return 2
+                    self.J_frontier.append(node.dnodes[0])
+                    print("**********Add J front:  " + node.dnodes[0].num)
+                    return 2
+                if node.dnodes[0] in self.eval_node:
+                    self.eval_node.remove(node.dnodes[0])
+                    print("Already in J front: remove from eval_node")
                 return 1
+
             # if 1 input is X
             elif (node.value == 9):
                 if (unodes_value[0] == 9):
@@ -327,6 +367,11 @@ class D_alg:
                 #input cannot be D or D'
                 if node.value in [3, 12]:
                     node.value = node.value ^ 3
+                
+                # 12.5: two inputs can be known
+                if node.dnodes[0] in self.J_frontier:
+                    self.J_frontier.remove(node.dnodes[0])
+
                 return 1
             # 2 inputs are not X
             # if output != input1 ^ input2 ^15
@@ -405,6 +450,14 @@ class D_alg:
         for node in self.circuit.nodes_lev:
             print(node.num + '-----' + str(node.value) + '\n')
         print("==============Finish all==================")
+    
+    def print_node(self, node_list):
+        if node_list == []:
+            print("======= Empty =======")
+        else:
+            for node in node_list:
+                print(node.num + '-----' + str(node.value))
+            print("======= all nodes printed =======")
 
 
     def dalg_recur(self, node_num, val):
@@ -412,6 +465,8 @@ class D_alg:
         node.value = val
         if not self.Imply_Check(node,val):
             print("I AND C wrong")
+            self.S_fwd.clear()
+            self.S_bwd.clear()
             # self.print_PI()
             # self.print_all()
             return 0
@@ -431,26 +486,34 @@ class D_alg:
                     return 0
 
             while (len(self.D_frontier) != 0):
-                print(self.D_frontier)
+                print("D_frontier before poping: ")
+                self.print_node(self.D_frontier)
                 d_fr_node = self.D_frontier.pop() #should be in string format
+                print("Pop D front:  " + d_fr_node.num)
                 #######################################
-                #####    store the check points   #####
+                #####    save the check points    #####
                 #######################################
                 sublist_val = []       # sublist for node values
                 for node in self.circuit.nodes_lev:
                     sublist_val.append(node.value)
                 # whole stack storing all node.value sublists
                 print("D frontier: new pop out, save the checkpointing")
-                self.checkpoint_val.append(sublist_val)
-                # whole stack storing all J frontier
-                self.checkpoint_J.append(self.J_frontier)
-                # self.checkpoint_eval.append(self.eval_node)
+                self.checkpoint_val.append(sublist_val.copy())
+                # whole stack storing all J frontier / D frontier
+                # the D frontier must be the vesion after poping
+                # but the J frontier or values do not need to be
+                # cp_J = self.J_frontier.copy()
+                # cp_D = self.D_frontier.copy()
+                self.checkpoint_J.append(self.J_frontier.copy())
+                self.checkpoint_D.append(self.D_frontier.copy())
+                self.checkpoint_eval.append(self.eval_node.copy())
                 print("checkpoint_val: ", len(self.checkpoint_val))
                 print("checkpoint_J: ", len(self.checkpoint_J))
+                print("checkpoint_D: ", len(self.checkpoint_D))
+                print("************ save checkpoint finish *****************\n")
 
-                print("Pop D front:  " + d_fr_node.num)
                 for unode in d_fr_node.unodes:
-                    print(unode.num + ': ' + str(unode.value) + '\n')
+                    print(unode.num + ': ' + str(unode.value))
                     if unode.value == 9:
                         # if the gate type is XOR, it has no cval, we can assign either 0 or 1
                         if d_fr_node.gtype in ["XOR", "XNOR"]:
@@ -460,7 +523,7 @@ class D_alg:
                             else:
                                 unode.value = 0
                                 d_fr_node.c_flag = 0
-                            print("Assign: " + unode.num + "---" + str(unode.value))
+                            print("Assign XOR / XNOR: " + unode.num + "---" + str(unode.value))
                         # if the gate type is AND, OR, NAND, NOR
                         else:
                             unode.value = d_fr_node.cval ^ 15
@@ -476,18 +539,18 @@ class D_alg:
                         # we should recover our previous node values, then choose another
                         else:
                             print("DALG FAIL: Wrong D front choice: should recover preovious node values")
-                            print("checkpoint_val: ", len(self.checkpoint_val))
-                            print("checkpoint_J: ", len(self.checkpoint_J))
-                            # print("checkpoint_eval: " + str(self.checkpoint_eval))
+                            print("Recover preovious node values......")
                             if self.checkpoint_J == []:
                                 return 0
                             self.J_frontier = self.checkpoint_J.pop()
-                            # self.eval_node = self.checkpoint_eval.pop()
+                            self.D_frontier = self.checkpoint_D.pop()
+                            self.eval_node = self.checkpoint_eval.pop()
                             prev_val = self.checkpoint_val.pop()
                             # put the XOR or XNOR if we have other choice
                             if (d_fr_node.gtype in ["XOR","XNOR"]):
                                 if (d_fr_node.c_flag == 1):
                                     self.D_frontier.append(d_fr_node)
+                                    print("**********Add D front:  " + node.num)
                             i = 0
                             for node in self.circuit.nodes_lev:
                                 if node.value != prev_val:
@@ -495,57 +558,169 @@ class D_alg:
                                     if node in self.eval_node:
                                         self.eval_node.remove(node) 
                                 i = i + 1
+                            print("After recovering.......")
+                            print("checkpoint_val: ", len(self.checkpoint_val))
+                            print("checkpoint_J: ", len(self.checkpoint_J))
+                            print("D_frontier: ")
+                            self.print_node(self.D_frontier)
 
+                    else:
+                        print("The unode is not X!! ", unode.num, ": ", unode.value)
             # self.print_PI()
             # self.print_all()
             return 0
         
         # error propagated to a PO
+        print("J frontier length: ", len(self.J_frontier))
         if len(self.J_frontier) == 0:
             print("J frontier empty")
             # self.print_PI()
             # self.print_all()
             return 1
         
+        # when we make an assignment from J frontier, we need to save checkpoints
+        # if we need to reverse the decision, we have to recover the previous checkpoints
+
         j_fr_node = self.J_frontier.pop()
+        #######################################
+        #####    save the check points    #####
+        #######################################
+        sublist_val = []       # sublist for node values
+        for node in self.circuit.nodes_lev:
+            sublist_val.append(node.value)
+        # whole stack storing all node.value sublists
+        print("J frontier: new pop out, save the checkpointing")
+        self.checkpoint_val.append(sublist_val.copy())
+        # whole stack storing all J frontier / D frontier
+        # the D frontier must be the vesion after poping
+        # but the J frontier or values do not need to be
+        # cp_J = self.J_frontier.copy()
+        # cp_D = self.D_frontier.copy()
+        self.checkpoint_J.append(self.J_frontier.copy())
+        self.checkpoint_D.append(self.D_frontier.copy())
+        self.checkpoint_eval.append(self.eval_node.copy())
+        print("The evaluated nodes: ")
+        self.print_node(self.eval_node)
+        print("checkpoint_val: ", len(self.checkpoint_val))
+        print("checkpoint_J: ", len(self.checkpoint_J))
+        print("checkpoint_D: ")
+        self.print_node(self.D_frontier)
+        print("************ save checkpoint finish *****************\n")
         print("Pop J front:  " + j_fr_node.num + '\n')
+        print("J front rest:  ", self.print_node(self.J_frontier),"   length: ",  len(self.J_frontier), '\n')
         for unode in j_fr_node.unodes:
             if unode.value == 9:
                 # if the gate type is XOR, it has no cval
                 if j_fr_node.gtype in ["XOR", "XNOR"]:
                     # first: assign 1
+                    # j_jr_node.c_flag=0: means we haven't assign any input
                     if not j_fr_node.c_flag:
                         unode.value = 15
                         j_fr_node.c_flag = 1
-                        self.J_frontier.append(j_fr_node)
+                        # self.J_frontier.append(j_fr_node)
+                        # print("Add to J frontier again: ", j_fr_node.num)
                     # second: assign the same as backward imply
                     else:
                         if j_fr_node.value in [15, 12]:
                             unode.value = 0
                         elif j_fr_node.value in [0, 3]:
-                            unode.value = 15                        
+                            unode.value = 15             
                         j_fr_node.c_flag = 0
                     print("Assign: " + unode.num + "---" + str(unode.value))
+                    #### 12.4 prob1 solve: every time assign to J, clear the eval nodes
+                    print("Clear the eval_nodes......")
+                    self.eval_node.clear()
+
+
+                    if self.dalg_recur(j_fr_node.num, j_fr_node.value):
+                        print("J frontier choice correct! ")
+                        # self.print_PI()
+                        # self.print_all()
+                        return 1
+                
+                # elif j_fr_node.gtype in ["XNOR"]:
+                #     # first: assign 1
+                #     # j_jr_node.c_flag=0: means we haven't assign any input
+                #     if not j_fr_node.c_flag:
+                #         unode.value = 15
+                #         j_fr_node.c_flag = 1
+                #         # self.J_frontier.append(j_fr_node)
+                #         # print("Add to J frontier again: ", j_fr_node.num)
+                #     # second: assign the same as backward imply
+                #     else:
+                #         if j_fr_node.value in [15, 12]:
+                #             unode.value = 0
+                #         elif j_fr_node.value in [0, 3]:
+                #             unode.value = 15                        
+                #         j_fr_node.c_flag = 0
+                #     print("Assign: " + unode.num + "---" + str(unode.value))
+                
                 # if the gate type is AND, OR, NAND, NOR
                 else:
                     unode.value = j_fr_node.cval
                     print("Assign: " + unode.num + "---" + str(j_fr_node.cval))
-                
-                if self.dalg_recur(unode.num,unode.value):
-                    print("DALG_RECUR")
-                    # self.print_PI()
-                    # self.print_all()
-                    return 1
+                    if self.dalg_recur(unode.num, unode.value):
+                        print("J frontier choice correct! ")
+                        # self.print_PI()
+                        # self.print_all()
+                        return 1
 
+                # if self.dalg_recur(unode.num,unode.value):
+                #     print("J frontier choice correct! ")
+                #     # self.print_PI()
+                #     # self.print_all()
+                #     return 1
+                ################# Reverse the decision #######################
                 # the dalg failed, we need to reassign the inverse value to J front elem
                 print("DALG FAIL: Reverse the decision in J frontier assignment")
+                print("Re-assign for input of: ", j_fr_node.num)
+                print("Recover preovious node values......")
+                # print("checkpoint_eval: " + str(self.checkpoint_eval))
+                if self.checkpoint_J == []:
+                    return 0
+                self.J_frontier = self.checkpoint_J.pop()
+                self.D_frontier = self.checkpoint_D.pop()
+                self.eval_node = self.checkpoint_eval.pop()
+                prev_val = self.checkpoint_val.pop()
+                # put the XOR or XNOR if we have other choice
+                # if (d_fr_node.gtype in ["XOR","XNOR"]):
+                #     if (d_fr_node.c_flag == 1):
+                #         self.D_frontier.append(d_fr_node)
+                #         print("**********Add D front:  " + node.num)
+                i = 0
+                for node in self.circuit.nodes_lev:
+                    if node.value != prev_val:
+                        node.value = prev_val[i]
+                        # if node in self.eval_node:
+                        #     self.eval_node.remove(node) 
+                    i = i + 1
+
+                print("After recovering.......")
+                print("checkpoint_val: ", len(self.checkpoint_val))
+                print("checkpoint_D: ", len(self.checkpoint_D))
+                print("J_frontier: ")
+                self.print_node(self.J_frontier)
+
                 # if the gate type is XOR, it has no cval
                 if j_fr_node.gtype in ["XOR", "XNOR"]:
                     unode.value = 0
-                # if the gate type is AND, OR, NAND, NOR
+                    print("Assign: " + unode.num + "---" + str(unode.value) + '\n')
+                    if self.dalg_recur(j_fr_node.num, j_fr_node.value):
+                        print("J frontier reverse choice correct! ")
+                        # self.print_PI()
+                        # self.print_all()
+                        return 1
+                # if the gate type is AND, OR, NAND, NOR, assign the inverse value
                 else:
                     unode.value = j_fr_node.cval ^ 15
-                print("Assign: " + unode.num + "---" + str(j_fr_node.cval) + '\n')
+                    print("Assign: " + unode.num + "---" + str(unode.value) + '\n')
+                    if self.dalg_recur(unode.num, unode.value):
+                        print("J frontier reverse choice correct! ")
+                        # self.print_PI()
+                        # self.print_all()
+                        return 1
+                
+                
         
         print("END")
         # self.print_PI()
@@ -609,7 +784,7 @@ class D_alg:
                 if (12 in unodes_value) | (3 in unodes_value):
                     if node not in self.D_frontier:
                         self.D_frontier.append(node)
-                        print("Add D front:  " + node.num)
+                        print("**********Add D front:  " + node.num)
                         flag = 2
                 flag = 1
             # inputs have only D and 1
@@ -668,6 +843,8 @@ class D_alg:
         For: NAND, AND, NOR, OR
         Need controling value and inversion
         cval and inv are both 5-value
+        input node: a input of the evaluated gate
+        Note that during bwd, it's likely to remove elem in J frontier
         """
         print("BWD: type: " + node.dnodes[0].gtype)
         cval = node.dnodes[0].cval
@@ -685,7 +862,11 @@ class D_alg:
         # c-val in inputs: the output is 1 or 1/0: D
         # return value:   1: no conflict, no J;  0: conflict;  2: no conf, J
         if (cval in unodes_value):
+            # if input has cval, cannot imply any other input
+            # 12.5: J front elem should be remove
             if ((val == cout) | (val == cout ^ 3)):
+                if node.dnodes[0] in self.J_frontier:
+                    self.J_frontier.remove(node.dnodes[0])
                 return 1
             else:
                 print("BWD:  Conflict:  In has cval , but out is not cout/fault")
@@ -701,7 +882,8 @@ class D_alg:
             x_num = len(x_list)
 
             if (val == cout_bar):
-                # case1: input has no cval, output has no fault
+                # input has no cval, output has no fault
+                # if fault free: output = cout_bar, means all input = cval_bar
                 if (12 in unodes_value) | (3 in unodes_value):
                     print("BWD:  Conflict:  In has fault & no-cval , but out is not cout/fault")
                     return 0
@@ -711,37 +893,88 @@ class D_alg:
                     return 1
 
                 
-            elif (val == 12 ^ cout):
-                # case2: input has no cval, output has fault
-                #        inputs cannot contain D or D', only non-c or X ----------------- It is not correct!!!
-                #        in fault free: output should be cout_bar
-                
-                
-        
-            elif (val == cout) | (val == 12 ^ cout_bar):
-                # case1: input has c, output has no fault
-                # case2: input has cval, output has fault
-                #        inputs cannot contain D or D', only c or X
-                #        in fault free: output should be cout
-                if (9 in unodes_value):   # inputs have X
-                    if (x_num == 1) & (cval not in unodes_value):
+            elif (val == 3 ^ cout_bar):
+                # 3 ^ cout_bar: means the fault can be activated when the output is cout_bar
+                # if fault free: output = cout_bar, means all input = cval_bar
+                # input: no cval, and fault has been propagated, so the inputs other than fault is cval_bar
+                # input: if fault' exist, or no fault, then conflict
+                # fault: activated by cval_bar, = cval_bar^3;
+                # fault': activated by cval, = cval^3
+                if (cval^3 in unodes_value):
+                    print("BWD:  Conflict:  In has wrong fault, but out is fault")
+                    return 0
+                # only fault & X in inputs
+                # case1: input has fault & X
+                # case2: input has only X
+                # since the input should be all cval_bar, these two cases are the same
+                else:
+                    for unode in node.dnodes[0].unodes:
+                        if unode.value == 9:
+                            unode.value = cval_bar
+                    return 1
+
+
+            
+            elif (val == 3 ^ cout):
+                # 3 ^ cout: means the fault can be activated when the output is cout
+                # if fault free: output = cout, means at least 1 input is cval
+                # input: no cval, can only be X, D, D'
+                # input: if fault' exist, or no fault, then conflict
+                # fault: activated by cval, = cval^3;
+                # fault': activated by cval_bar, = cval_bar^3
+                if cval_bar^3 in unodes_value:
+                    print("BWD:  Conflict:  In has wrong fault, but out is fault")
+                    return 0
+                # input has fault and X, the fault has to be propagated
+                #################################----------are these two the same?????????????????????
+                elif cval^3 in unodes_value:
+                    for unode in node.dnodes[0].unodes:
+                        if unode.value == 9:
+                            unode.value = cval_bar
+                    return 1   
+                # no fault in input, all X
+                # input should have 1 cval, put it into J frontier
+                else:
+                    if node.dnodes[0] not in self.J_frontier:
+                        self.J_frontier.append(node.dnodes[0])
+                        print("**********Add J front:  " + node.dnodes[0].num)
+                        return 2
+                    if node.dnodes[0] in self.eval_node:
+                        self.eval_node.remove(node.dnodes[0])
+                        print("Already in J front: remove from eval_node") 
+                    return 1
+
+            
+            elif (val == cout):
+                # the inputs have at least 1 cval
+                # no cval, if only 1 X, X=cval
+                # if no conflict and input has >1 X, put it into J_frontier
+                if (9 in unodes_value):
+                    if (x_num == 1):
+                        # input has only 1 X, imply: X=cval
                         print(str(unodes_value) + '\n')
                         print("cval is " + str(cval) + '\n')
                         x_list[0].value = cval
+                        if node.dnodes[0] in self.J_frontier:
+                            print("Remove from J frontier: inputs already have cval: ", node.dnodes[0].num)
+                            self.J_frontier.remove(node.dnodes[0])
                         return 1
-                    # X >= 2 or inputs have X and cval
                     else:
+                        # X >= 2, put it in J frontier if haven't been there
                         if node.dnodes[0] not in self.J_frontier:
                             self.J_frontier.append(node.dnodes[0])
-                            print("Add J front:  " + node.dnodes[0].num)
+                            print("**********Add J front:  " + node.dnodes[0].num)
                             return 2
+                        if node.dnodes[0] in self.eval_node:
+                            self.eval_node.remove(node.dnodes[0])
+                            print("Already in J front : remove from eval_node")
                         return 1
-                # no X
-                else: 
-                    # no cval exist in inputs, conflict
-                    if (cval not in unodes_value):
+                # no X, input has only cval_bar & X, check conflict       
+                else:
+                    if (3 in unodes_value) | (12 in unodes_value):
+                        print("BWD:  Conflict:  In has only fault & cval_bar, but out is cout")
+                        return 0
+                    # no X, no fault, only cbar
+                    else:
                         print("BWD:  Conflict:  In has no X or cval, but out is cout")
                         return 0
-                    # input has cval, no conflict
-                    else: 
-                        return 1
