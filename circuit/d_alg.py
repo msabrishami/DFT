@@ -86,7 +86,9 @@ class D_alg:
             node = self.S_fwd.pop()
             if node in self.eval_node:
                 if not self.fwd_imply_check_5val(node):
+                    print("Node is already evaluated, but check is wrong!!")
                     return 0
+                print("Node is already evaluated, and check is correct!!")
             if node not in self.eval_node:
                 if not self.fwd_imply_check_5val(node):
                     print("ERROR fwd: " + node.num + '----' + str(node.value) + '\n')
@@ -527,8 +529,8 @@ class D_alg:
                         # print("Last D front choice: ", d_fr_node.num)
                         if self.dalg_recur(unode.num,unode.value):
                             print("DALG_RECUR:  D frontier assignment successed! ")
-                            self.print_PI()
-                            self.print_all()
+                            # self.print_PI()
+                            # self.print_all()
                             return 1
                         # the latest D frontier choice is wrong
                         # we should recover our previous node values, then choose another
@@ -718,8 +720,6 @@ class D_alg:
                 
         
         print("END")
-        # self.print_PI()
-        # self.print_all()
         return 0
 
 
@@ -727,8 +727,16 @@ class D_alg:
 
     def dalg(self):
         if self.dalg_recur(self.fault_node, self.fault_val):
+            print("\n\n")
+            print("==================== END FOUND  ========================")
+            self.print_PI()
+            self.print_all()
             return 1
         else:
+            print("\n\n")
+            print("==================== END NOT FOUND  ========================")
+            self.print_PI()
+            self.print_all()
             return 0
 
 
