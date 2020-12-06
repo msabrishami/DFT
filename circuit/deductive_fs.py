@@ -32,7 +32,7 @@ class DFS(FaultSim):
             self.fs_folder(tp_mode='rand', r_mode='b')
             report_fname = self.circuit.c_name + '_' + str(tp_num) + '_dfs_'+ r_mode + '.log'
             # tp_fname = tp_path + self.c_name + '_' + str(tp_num) + "_tp_b.txt"
-            tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.tp"
+            tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.txt"
 
             self.fs_tp_gen(tp_num = tp_num, t_mode = 'rand', r_mode = r_mode)
             # tp_fname is bare name, the path is given in the method
@@ -43,7 +43,7 @@ class DFS(FaultSim):
         elif t_mode == 'full':
             self.fs_folder(tp_mode='full', r_mode='b')
             report_fname = self.circuit.c_name + '_full_dfs_' + r_mode + '.log'
-            tp_fname = self.circuit.c_name + '_full_tp_' + r_mode + '.tp'
+            tp_fname = self.circuit.c_name + '_full_tp_' + r_mode + '.txt'
             # generate all possible patterns in order
             self.fs_tp_gen(tp_num = tp_num, t_mode = 'full', r_mode = r_mode)
             pattern_list = self.fs_input_fetch(tp_fname)
@@ -54,7 +54,7 @@ class DFS(FaultSim):
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
 
 
-    ########## just for golden file #############################
+######################## just for golden file ########################################################
     def fs_exe_golden(self, tp_num=1, no=1, t_mode='rand', r_mode='b'):
         """
         Execute fs in rand or full mode
