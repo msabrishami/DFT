@@ -612,7 +612,7 @@ class XNOR(Node):
         self.faultlist_dfs.clear()
         xnor_FL_set = set()
         for unode in self.unodes:
-            xnor_FL_set = xnor_FL_set.symmetric_difference(unide.faultlist_dfs)
+            xnor_FL_set = xnor_FL_set.symmetric_difference(unode.faultlist_dfs)
         xnor_FL_set.add((self.num, GNOT(self.value)))
         self.faultlist_dfs = xnor_FL_set
 
