@@ -434,7 +434,9 @@ class D_alg:
     def err_at_PO(self):
         for po_node in self.circuit.PO:
             if ((po_node.value == 12) | (po_node.value == 3)):
+                print("SUCCESS: Return back to last dalg\n")
                 return 1
+        print("FAIL: Return back to last dalg\n")
         return 0
 
     def print_PI(self):
@@ -465,12 +467,14 @@ class D_alg:
             self.S_bwd.clear()
             # self.print_PI()
             # self.print_all()
+            print("FAIL: Return back to last dalg\n")
             return 0
         if not self.err_at_PO():
             if len(self.D_frontier) == 0:
                 print("ERROR NOT PO:  D frontier is empty!!")
                 # self.print_PI()
                 # self.print_all()
+                print("FAIL: Return back to last dalg\n")
                 return 0
             else:
                 po_val = set()
@@ -479,8 +483,13 @@ class D_alg:
                 print(po_val)
                 if (12 not in po_val) & (3 not in po_val) & (9 not in po_val):
                     print("ERROR NOT PO:  D frontier is not empty!! Should choose another")
+                    print("FAIL: Return back to last dalg\n")
                     return 0
 
+
+            #############################################################
+            ##                D frontier assignment
+            #############################################################
             while (len(self.D_frontier) != 0):
                 print("D_frontier before poping: ")
                 self.print_node(self.D_frontier)
@@ -489,26 +498,28 @@ class D_alg:
                 #######################################
                 #####    save the check points    #####
                 #######################################
-                sublist_val = []       # sublist for node values
-                for node in self.circuit.nodes_lev:
-                    sublist_val.append(node.value)
-                # whole stack storing all node.value sublists
-                print("D frontier: new pop out, save the checkpointing, after poping: ")
-                self.checkpoint_val.append(sublist_val.copy())
-                # whole stack storing all J frontier / D frontier
-                # the D frontier must be the vesion after poping
-                # but the J frontier or values do not need to be
-                # cp_J = self.J_frontier.copy()
-                # cp_D = self.D_frontier.copy()
-                self.checkpoint_J.append(self.J_frontier.copy())
-                self.checkpoint_D.append(self.D_frontier.copy())
-                self.checkpoint_eval.append(self.eval_node.copy())
-                print("checkpoint_val: ", len(self.checkpoint_val))
-                print("checkpoint_J: ", len(self.checkpoint_J))
-                print("checkpoint_D: ", len(self.checkpoint_D))
-                print("************ save checkpoint finish *****************\n")
+                ##   wrong saving !!!!!!!!!!!!! should save when assign!!!!!!!!!!!!!!!!!
+                # sublist_val = []       # sublist for node values
+                # for node in self.circuit.nodes_lev:
+                #     sublist_val.append(node.value)
+                # # whole stack storing all node.value sublists
+                # print("D frontier: new pop out, save the checkpointing, after poping: ")
+                # self.checkpoint_val.append(sublist_val.copy())
+                # # whole stack storing all J frontier / D frontier
+                # # the D frontier must be the vesion after poping
+                # # but the J frontier or values do not need to be
+                # # cp_J = self.J_frontier.copy()
+                # # cp_D = self.D_frontier.copy()
+                # self.checkpoint_J.append(self.J_frontier.copy())
+                # self.checkpoint_D.append(self.D_frontier.copy())
+                # self.checkpoint_eval.append(self.eval_node.copy())
+                # print("checkpoint_val: ", len(self.checkpoint_val))
+                # print("checkpoint_J: ", len(self.checkpoint_J))
+                # print("checkpoint_D: ", len(self.checkpoint_D))
+                # print("************ save checkpoint finish *****************\n")
 
                 for unode in d_fr_node.unodes:
+                    print("For d_fr_node ", d_fr_node.num, "'s unodes:")
                     print(unode.num + ': ' + str(unode.value))
                     if unode.value == 9:
                         # if the gate type is XOR, it has no cval, we can assign either 0 or 1
@@ -516,13 +527,40 @@ class D_alg:
                         # by default: assign 1, but we cannot move it from D frontier
                         # if error occurs, we assign 0 to it, then we can remove it
                         # the following code did this
+
+
+                        ################## should save checkpoint when you assign!!!! Not pop!!!!!
+                        #######################################
+                        #####    save the check points    #####
+                        #######################################
+                        sublist_val = []       # sublist for node values
+                        for node in self.circuit.nodes_lev:
+                            sublist_val.append(node.value)
+                        # whole stack storing all node.value sublists
+                        print("D frontier: new pop out, save the checkpointing, after poping: ")
+                        self.checkpoint_val.append(sublist_val.copy())
+                        # whole stack storing all J frontier / D frontier
+                        # the D frontier must be the vesion after poping
+                        # but the J frontier or values do not need to be
+                        # cp_J = self.J_frontier.copy()
+                        # cp_D = self.D_frontier.copy()
+                        self.checkpoint_J.append(self.J_frontier.copy())
+                        self.checkpoint_D.append(self.D_frontier.copy())
+                        self.checkpoint_eval.append(self.eval_node.copy())
+                        print("checkpoint_val: ", len(self.checkpoint_val))
+                        print("checkpoint_J: ", len(self.checkpoint_J))
+                        print("checkpoint_D: ", len(self.checkpoint_D))
+                        print("************ save checkpoint finish *****************\n")
+
+
+
                         if d_fr_node.gtype in ["XOR", "XNOR"]:
                             if not d_fr_node.c_flag:
                                 unode.value = 15
                                 d_fr_node.c_flag = 1
                                 # self.D_frontier.append(d_fr_node)
-                                self.D_frontier.append(d_fr_node)
-                                print("**********XOR / XNOR likely assignment: add back D front:  " + node.num)
+                                # self.D_frontier.append(d_fr_node)
+                                # print("**********XOR / XNOR likely assignment: add back D front:  " + node.num)
                             else:
                                 unode.value = 0
                                 d_fr_node.c_flag = 0
@@ -542,14 +580,16 @@ class D_alg:
                             print("DALG_RECUR:  D frontier assignment successed! ")
                             # self.print_PI()
                             # self.print_all()
+                            print("SUCCESS: Return back to last dalg\n")
                             return 1
                         # the latest D frontier choice is wrong
                         # we should recover our previous node values, then choose another
                         else:
-                            print("DALG FAIL: Wrong D front choice: should recover preovious node values")
+                            print("DALG FAIL: Wrong D front choice: should recover previous node values")
                             print("Fail node: ", d_fr_node.num)
                             print("Recover previous node values......")
                             if self.checkpoint_J == []:
+                                print("FAIL: Return back to last dalg\n")
                                 return 0
                             self.J_frontier = self.checkpoint_J.pop()
                             self.D_frontier = self.checkpoint_D.pop()
@@ -557,12 +597,12 @@ class D_alg:
                             prev_val = self.checkpoint_val.pop()
                             # put the XOR or XNOR if we have other choice
                             ############### test 12.5
-                            print("chosen gate type: ", d_fr_node.gtype, "-----", d_fr_node.num)
+                            # print("chosen gate type: ", d_fr_node.gtype, "-----", d_fr_node.num)
                             # print("flag value: ", d_fr_node.c_flag)
-                            # if (d_fr_node.gtype in ["XOR","XNOR"]):
-                            #     if (d_fr_node.c_flag == 1):
-                            #         self.D_frontier.append(d_fr_node)
-                            #         print("**********XOR / XNOR wrong assignment: add bakc D front:  " + node.num)
+                            if (d_fr_node.gtype in ["XOR","XNOR"]):
+                                if (d_fr_node.c_flag == 1):
+                                    self.D_frontier.append(d_fr_node)
+                                    print("**********XOR / XNOR wrong assignment: add bakc D front:  " + node.num)
                             i = 0
                             for node in self.circuit.nodes_lev:
                                 if node.value != prev_val:
@@ -580,48 +620,83 @@ class D_alg:
                         print("The unode is not X!! ", unode.num, ": ", unode.value)
             # self.print_PI()
             # self.print_all()
+            print("FAIL: Return back to last dalg\n")
             return 0
         
+        #############################################################
+        ##                J frontier assignment
+        #############################################################
         # error propagated to a PO
         print("J frontier length: ", len(self.J_frontier))
         if len(self.J_frontier) == 0:
             print("J frontier empty")
             # self.print_PI()
             # self.print_all()
+            print("SUCCESS: Return back to last dalg\n")
             return 1
         
         # when we make an assignment from J frontier, we need to save checkpoints
         # if we need to reverse the decision, we have to recover the previous checkpoints
 
         j_fr_node = self.J_frontier.pop()
+        print("Pop J front:  " + j_fr_node.num + '\n')
+        print("J front rest:  ", self.print_node(self.J_frontier),"   length: ",  len(self.J_frontier), '\n')
         #######################################
         #####    save the check points    #####
         #######################################
-        sublist_val = []       # sublist for node values
-        for node in self.circuit.nodes_lev:
-            sublist_val.append(node.value)
-        # whole stack storing all node.value sublists
-        print("J frontier: new pop out, save the checkpointing")
-        self.checkpoint_val.append(sublist_val.copy())
-        # whole stack storing all J frontier / D frontier
-        # the D frontier must be the vesion after poping
-        # but the J frontier or values do not need to be
-        # cp_J = self.J_frontier.copy()
-        # cp_D = self.D_frontier.copy()
-        self.checkpoint_J.append(self.J_frontier.copy())
-        self.checkpoint_D.append(self.D_frontier.copy())
-        self.checkpoint_eval.append(self.eval_node.copy())
-        print("The evaluated nodes: ")
-        self.print_node(self.eval_node)
-        print("checkpoint_val: ", len(self.checkpoint_val))
-        print("checkpoint_J: ", len(self.checkpoint_J))
-        print("checkpoint_D: ")
-        self.print_node(self.D_frontier)
-        print("************ save checkpoint finish *****************\n")
-        print("Pop J front:  " + j_fr_node.num + '\n')
-        print("J front rest:  ", self.print_node(self.J_frontier),"   length: ",  len(self.J_frontier), '\n')
+        ##   wrong saving checkpoint!!!!!!! should save when assign!!!!!!!
+        # sublist_val = []       # sublist for node values
+        # for node in self.circuit.nodes_lev:
+        #     sublist_val.append(node.value)
+        # # whole stack storing all node.value sublists
+        # print("J frontier: new pop out, save the checkpointing")
+        # self.checkpoint_val.append(sublist_val.copy())
+        # # whole stack storing all J frontier / D frontier
+        # # the D frontier must be the vesion after poping
+        # # but the J frontier or values do not need to be
+        # # cp_J = self.J_frontier.copy()
+        # # cp_D = self.D_frontier.copy()
+        # self.checkpoint_J.append(self.J_frontier.copy())
+        # self.checkpoint_D.append(self.D_frontier.copy())
+        # self.checkpoint_eval.append(self.eval_node.copy())
+        # print("The evaluated nodes: ")
+        # self.print_node(self.eval_node)
+        # print("checkpoint_val: ", len(self.checkpoint_val))
+        # print("checkpoint_J: ", len(self.checkpoint_J))
+        # print("checkpoint_D: ")
+        # self.print_node(self.D_frontier)
+        # print("************ save checkpoint finish *****************\n")
+        
         for unode in j_fr_node.unodes:
             if unode.value == 9:
+
+
+                #######################################
+                #####    save the check points    #####
+                #######################################
+                sublist_val = []       # sublist for node values
+                for node in self.circuit.nodes_lev:
+                    sublist_val.append(node.value)
+                # whole stack storing all node.value sublists
+                print("J frontier: new pop out, save the checkpointing")
+                self.checkpoint_val.append(sublist_val.copy())
+                # whole stack storing all J frontier / D frontier
+                # the D frontier must be the vesion after poping
+                # but the J frontier or values do not need to be
+                # cp_J = self.J_frontier.copy()
+                # cp_D = self.D_frontier.copy()
+                self.checkpoint_J.append(self.J_frontier.copy())
+                self.checkpoint_D.append(self.D_frontier.copy())
+                self.checkpoint_eval.append(self.eval_node.copy())
+                print("The evaluated nodes: ")
+                self.print_node(self.eval_node)
+                print("checkpoint_val: ", len(self.checkpoint_val))
+                print("checkpoint_J: ", len(self.checkpoint_J))
+                print("checkpoint_D: ")
+                self.print_node(self.D_frontier)
+                print("************ save checkpoint finish *****************\n")
+
+
                 # if the gate type is XOR, it has no cval
                 if j_fr_node.gtype in ["XOR", "XNOR"]:
                     # first: assign 1
@@ -648,6 +723,7 @@ class D_alg:
                         print("J frontier choice correct! ")
                         # self.print_PI()
                         # self.print_all()
+                        print("SUCCESS: Return back to last dalg\n")
                         return 1
                 
                 # elif j_fr_node.gtype in ["XNOR"]:
@@ -675,6 +751,7 @@ class D_alg:
                         print("J frontier choice correct! ")
                         # self.print_PI()
                         # self.print_all()
+                        print("SUCCESS: Return back to last dalg\n")
                         return 1
 
                 # if self.dalg_recur(unode.num,unode.value):
@@ -721,6 +798,7 @@ class D_alg:
                         print("J frontier reverse choice correct! ")
                         # self.print_PI()
                         # self.print_all()
+                        print("SUCCESS: Return back to last dalg\n")
                         return 1
                 # if the gate type is AND, OR, NAND, NOR, assign the inverse value
                 else:
@@ -730,11 +808,13 @@ class D_alg:
                         print("J frontier reverse choice correct! ")
                         # self.print_PI()
                         # self.print_all()
+                        print("SUCCESS: Return back to last dalg\n")
                         return 1
                 
                 
         
         print("END")
+        print("FAIL: Return back to last dalg\n")
         return 0
 
 
