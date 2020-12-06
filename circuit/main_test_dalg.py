@@ -110,7 +110,7 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    # """
+    """
     for ckt in ['FA']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "ckt")
@@ -153,11 +153,11 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    # """
     """
+    # """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
-    for ckt in ['FA']:
+    for ckt in ['c432']:
         print('\n\n')
         print("******************* start DALG at ", ckt, " *************************")
         circuit = Circuit(ckt)
@@ -185,17 +185,19 @@ def main():
         # dfs full: generate a fault set including all detectable faults
         dfs_full = DFS(circuit)
         num = len(circuit.PI)
-        times = pow(2, num)
+        times = 20000
         pattern = []
         for i in range(times):
-            pattern = list(bin(i)[2:].zfill(num))
-            for i in range(0, len(pattern)): 
-                pattern[i] = int(pattern[i]) 
-            print(pattern)
+            # pattern = list(bin(i)[2:].zfill(num))
+            pattern = [random.randint(0,1) for x in range(len(circuit.PI))]
+            # print(pat)
+            # for i in range(0, len(pattern)): 
+            #     pattern[i] = int(pattern[i]) 
+            # print(pattern)
             full_sublist = dfs_full.single(pattern)
+            print(full_sublist)
             set_cover = set_cover.union(full_sublist)
         print(set_cover)
-        
         for fault in total_fault_list:
         #while(i<20):
             #print(len(total_fault_list))
@@ -263,7 +265,7 @@ def main():
         print('list_no_test >>',list_no_test)
         print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
-    """
+    # """
     exit()
 
 
