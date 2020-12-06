@@ -257,7 +257,7 @@ class D_alg:
         """
         print("BWD: " + node.num + ": " + str(node.value))
         if node.dnodes[0].gtype == 'BRCH':
-            print("Hello I'm BRCH!!!")
+            print("Hello I'm the stem of BRCH!!!")
             dnodes_val = set()
             # the stem has been assigned
             # add other branches to dnode value set
@@ -295,12 +295,14 @@ class D_alg:
                 
 
         elif node.dnodes[0].gtype in ['NAND', 'AND', 'NOR', 'OR']:
+            print("Hello I'm a input of ", node.dnodes[0].gtype)
             if self.bwd_imply_check_5val_gen(node):
                 return 1
             else:
                 return 0
         
         elif node.dnodes[0].gtype == 'XNOR':
+            print("Hello I'm a input of ", node.dnodes[0].gtype)
             val = node.dnodes[0].value
             unodes_value = node.dnodes[0].unodes_val()
             # if the output is not X #####
@@ -326,7 +328,6 @@ class D_alg:
                 # 12.5: two inputs can be known
                 if node.dnodes[0] in self.J_frontier:
                     self.J_frontier.remove(node.dnodes[0])
-
                 return 1
             
             # 2 inputs are not X
@@ -340,6 +341,7 @@ class D_alg:
         
         
         elif node.dnodes[0].gtype == 'XOR':
+            print("Hello I'm a input of ", node.dnodes[0].gtype)
             val = node.dnodes[0].value
             unodes_value = node.dnodes[0].unodes_val()
             # if the output is not X#####
@@ -378,7 +380,7 @@ class D_alg:
                 return 1
         
         elif node.dnodes[0].gtype == 'NOT':
-            print("Hello I'm INV!!!")
+            print("Hello I'm a input of ", node.dnodes[0].gtype)
             val = node.dnodes[0].value
             # if the input is X
             if node.value == 9:
@@ -404,6 +406,7 @@ class D_alg:
             #     return 1
         
         elif node.dnodes[0].gtype == 'BUFF':
+            print("Hello I'm a input of ", node.dnodes[0].gtype) 
             val = node.dnodes[0].value
             unodes_value = node.dnodes[0].unodes_val()
             # if the input is X

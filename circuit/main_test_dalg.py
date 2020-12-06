@@ -110,7 +110,7 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    """
+    # """
     for ckt in ['cmini']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
@@ -118,7 +118,7 @@ def main():
         circuit.lev()
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
-        for fault in [('B-3', 0)]:
+        for fault in [('d-2', 1)]:
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
@@ -153,8 +153,8 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    """
     # """
+    """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
     for ckt in ['cmini']:
@@ -273,7 +273,7 @@ def main():
         print('list_no_test >>',list_no_test)
         print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
-    # """
+    """
     exit()
 
 
