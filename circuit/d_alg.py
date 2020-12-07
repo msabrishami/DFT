@@ -76,6 +76,8 @@ class D_alg:
         # forward implication
         # if the dnodes has BRCH, then all the dnodes are BRCH
         # in this case, we can directly assign val to dnodes and put their dnode in front of S_fwd     
+        fwd_cnt = 0
+        bwd_cnt = 0
 
 
         # if no BRCH, it must have only 1 dnode
@@ -91,8 +93,11 @@ class D_alg:
 
         # do recursive I&C until the stack is empty
         while self.S_fwd:
-            if self.fwd_cnt > 10000:
-                raise NameError("fwd cnt out of range!!!!!!!!")
+            # if self.fwd_cnt > 3000:
+            if fwd_cnt > 3000:
+                # raise NameError("fwd cnt out of range!!!!!!!!")
+                print("fwd cnt out of range!!!!!!!!")
+                return 0
             else:
                 self.fwd_cnt = self.fwd_cnt + 1
                 node = self.S_fwd.pop()
@@ -135,8 +140,11 @@ class D_alg:
         
         # do recursive I&C until the stack is empty
         while self.S_bwd:
-            if self.bwd_cnt > 10000:
-                raise NameError("bwd cnt out of range!!!!!!!!")
+            # if self.bwd_cnt > 3000:
+            if bwd_cnt > 3000:
+                # raise NameError("bwd cnt out of range!!!!!!!!")
+                print("bwd cnt out of range!!!!!!!!")
+                return 0
             else:
                 self.bwd_cnt = self.bwd_cnt + 1
                 node = self.S_bwd.pop()
@@ -524,8 +532,10 @@ class D_alg:
             ##                D frontier assignment
             #############################################################
             while (len(self.D_frontier) != 0):
-                if self.d_cnt > 10000:
-                    raise NameError("d front assmt cnt out of range!!!!!!!!")
+                if self.d_cnt > 3000:
+                    # raise NameError("d front assmt cnt out of range!!!!!!!!")
+                    print("d front assmt cnt out of range!!!!!!!!")
+                    return 0
                 else:
                     self.d_cnt = self.d_cnt + 1
 
@@ -859,7 +869,7 @@ class D_alg:
 
 
     def dalg(self):
-        blockPrint()
+        # blockPrint()
         if self.dalg_recur(self.fault_node, self.fault_val):
             print("\n\n")
             print("==================== END FOUND  ========================")
@@ -917,6 +927,8 @@ class D_alg:
         if (cval in unodes_value):
             temp_val = cout
             flag = 1
+            if node in self.J_frontier:
+                self.J_frontier.remove(node)
         # no controling value in inputs
         else:
             # inputs have D and D'
