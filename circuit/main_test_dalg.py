@@ -21,10 +21,9 @@ from regular_tp_gen import *
 from fault_sim import *
 from deductive_fs import DFS
 from parallel_fs import PFS
-from d_alg import *
+from d_alg_bkup import *
+import os, sys
 
-
-import os
 
 def check_gate_netlist(circuit, total_T=1):
 
@@ -46,6 +45,17 @@ def check_gate_netlist(circuit, total_T=1):
             return False
     print("all test patterns passed")
     return True
+
+
+# Disable
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
+
+
 
 
 def main():
@@ -110,15 +120,16 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    # """
-    for ckt in ['cmini']:
+    """
+    for ckt in ['c499']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
         # circuit.read_verilog()
         circuit.lev()
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
-        for fault in [('d-2', 1)]:
+
+        for fault in [('N17', 0)]:
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
@@ -153,21 +164,30 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    # """
     """
+    # """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
-    for ckt in ['cmini']:
+    for ckt in ['c499']:
         print('\n\n')
         print("******************* start DALG at ", ckt, " *************************")
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
         circuit.lev()
         flag = 0
-        total_fault_list = []
-        for node in circuit.nodes_lev:
-            total_fault_list.append((node.num,0))
-            total_fault_list.append((node.num,1))
+
+        # # for full fault list test
+        # total_fault_list = []
+        # for node in circuit.nodes_lev:
+        #     total_fault_list.append((node.num,0))
+        #     total_fault_list.append((node.num,1))
+
+        # total_fault_list = []
+        total_fault_list = [('N57',1), ('N57',0), ('N61',1), ('N61',0), ('N65',1), ('N65',0), ('N69',1), ('N69',0), ('N73',1), ('N73',0)]
+        # for node in circuit.PI:
+        #     total_fault_list.append((node.num,0))
+        #     total_fault_list.append((node.num,1))
+
         
         #print(total_fault_list)
         
@@ -185,24 +205,27 @@ def main():
         # dfs full: generate a fault set including all detectable faults
         dfs_full = DFS(circuit)
         num = len(circuit.PI)
-        times = pow(2, num)
-        # times = 20000
+        # times = pow(2, num)
+        times = 1000
         pattern = []
+        cnt_dfs = 0
         # large circuit
-        # for i in range(times):
-        #     pattern = [random.randint(0,1) for x in range(len(circuit.PI))]
-        #     full_sublist = dfs_full.single(pattern)
-        #     print(full_sublist)
-        #     set_cover = set_cover.union(full_sublist)
+        for i in range(times):
+            print(cnt_dfs)
+            cnt_dfs = cnt_dfs + 1
+            pattern = [random.randint(0,1) for x in range(len(circuit.PI))]
+            full_sublist = dfs_full.single(pattern)
+            # print(full_sublist)
+            set_cover = set_cover.union(full_sublist)
         
         # small circuit: full
-        for i in range(times):
-            pattern = list(bin(i)[2:].zfill(num))
-            for i in range(0, len(pattern)): 
-                pattern[i] = int(pattern[i]) 
-            print(pattern)
-            full_sublist = dfs_full.single(pattern)
-            set_cover = set_cover.union(full_sublist)
+        # for i in range(times):
+        #     pattern = list(bin(i)[2:].zfill(num))
+        #     for i in range(0, len(pattern)): 
+        #         pattern[i] = int(pattern[i]) 
+        #     print(pattern)
+        #     full_sublist = dfs_full.single(pattern)
+        #     set_cover = set_cover.union(full_sublist)
 
         print(set_cover)
 
@@ -223,10 +246,15 @@ def main():
             # podem.reset_and_get_fault(fault[0], fault[1])#TODO
             print(' \n')
             print(' \n')
-            print("******************* start DALG at ", fault, " *************************")
+            print("******************* start DALG at ", fault, " *************************")     
             d_alg = D_alg(circuit, fault[0], fault[1])
+            # blockPrint()
+
             if d_alg.dalg() == True:
                 # sys.stdout = old_stdout # reset old stdout
+                # enablePrint()
+
+                #print(d_alg.dalg_cnt)
 
                 IPT_list = d_alg.return_IPT()
                 IPT_binary_list = []
@@ -273,7 +301,7 @@ def main():
         print('list_no_test >>',list_no_test)
         print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
-    """
+    # """
     exit()
 
 
