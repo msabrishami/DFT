@@ -120,7 +120,7 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    """
+    # """
     for ckt in ['c499']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
@@ -129,7 +129,7 @@ def main():
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
 
-        for fault in [('N17', 0)]:
+        for fault in [('N81', 1)]:
             print("******************* start DALG at ", fault, " *************************")
             d_alg = D_alg(circuit, fault[0], fault[1])
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
@@ -164,8 +164,8 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    """
     # """
+    """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
     for ckt in ['c499']:
@@ -183,7 +183,8 @@ def main():
         #     total_fault_list.append((node.num,1))
 
         # total_fault_list = []
-        total_fault_list = [('N57',1), ('N57',0), ('N61',1), ('N61',0), ('N65',1), ('N65',0), ('N69',1), ('N69',0), ('N73',1), ('N73',0)]
+        # total_fault_list = [('N77',1), ('N77',0), ('N81',1), ('N81',0), ('N85',1), ('N85',0), ('N89',1), ('N89',0), ('N93',1), ('N93',0)]
+        total_fault_list = [('N77',1), ('N77',0)]
         # for node in circuit.PI:
         #     total_fault_list.append((node.num,0))
         #     total_fault_list.append((node.num,1))
@@ -301,7 +302,7 @@ def main():
         print('list_no_test >>',list_no_test)
         print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
-    # """
+    """
     exit()
 
 
