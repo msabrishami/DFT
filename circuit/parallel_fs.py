@@ -17,12 +17,9 @@ class PFS(FaultSim):
         self.fs_type = 'pfs'
 
     
-    def fs_for_atpg(self, faultset, ipt_pattern_list):
-        fault_set = set()
+    def fs_for_atpg(self, faultset, ipt_pattern):
         self.add_fault(mode="atpg", fname=None, faultset = faultset)
-        for ipt_pattern in ipt_pattern_list:
-            fault_set = fault_set  | self.single(ipt_pattern)
-        return fault_set
+        return self.single(ipt_pattern)
         
     
     
