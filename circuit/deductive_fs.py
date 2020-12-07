@@ -5,7 +5,8 @@ class DFS(FaultSim):
         FaultSim.__init__(self, circuit)
         self.fs_type = 'dfs'
 
-
+    def fs_for_atpg(self, ipt_pattern):
+        return self.single(ipt_pattern)
 
     def single(self, input_pattern):
         """ running deductive fault simulation on the circuit 

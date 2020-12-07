@@ -172,6 +172,9 @@ class FaultSim:
         '''DFS/PFS for single test pattern'''
         raise NotImplementedError()
 
+    def fs_for_atpg(self):
+        '''DFS/PFS for ATPG use'''
+        raise NotImplementedError()
     
     def multiple_separate(self, pattern_list, fname_log, mode="b"):
         """ 

@@ -1,5 +1,3 @@
-
-
 import sys
 from circuit import Circuit
 #TODO: change this style of import
@@ -17,8 +15,15 @@ class PFS(FaultSim):
         #fault = []# input fault type, integer format
 
         self.fs_type = 'pfs'
+
     
-    def add_fault(self, mode="full", fname=None):
+    def fs_for_atpg(self, faultset, ipt_pattern):
+        self.add_fault(mode="atpg", fname=None, faultset = faultset)
+        return self.single(ipt_pattern)
+        
+    
+    
+    def add_fault(self, mode="full", fname=None, faultset = None):
         """ add faults to the fault list 
         mode = full: input fault list is full fault list
         mode = user: input fault list is given by user as a file name
@@ -37,10 +42,15 @@ class PFS(FaultSim):
                 line_split=line.split('@')
                 self.in_fault_num.append(line_split[0])
                 self.in_fault_type.append(int(line_split[1]))
+        elif mode == "atpg":
+            for fault in faultset:
+                self.in_fault_num.append(fault[0])
+                self.in_fault_type.append(int(fault[1]))
+        
         else:
             raise NameError("fault list type is not accepted")
 
-
+    
    
     def single(self, input_pattern):
         """
