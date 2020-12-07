@@ -342,7 +342,7 @@ class BUFF(Node):
         self.CC1 = 1 + self.unodes[0].CC1
     
     def eval_CO(self):
-        self.unodes.CO = self.CO + 1
+        self.unodes[0].CO = self.CO + 1
     
     def stafan_b(self):
         self.unodes[0].B1 = self.B1
@@ -370,7 +370,7 @@ class NOT(Node):
         self.CC1 = 1 + self.unodes[0].CC0
     
     def eval_CO(self):
-        self.unodes.CO = self.CO + 1
+        self.unodes[0].CO = self.CO + 1
     
     def stafan_b(self):
         self.unodes[0].B1 = self.B0
