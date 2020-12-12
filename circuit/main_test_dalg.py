@@ -23,7 +23,7 @@ from deductive_fs import DFS
 from parallel_fs import PFS
 # from d_alg_bkup import *
 # from d_alg_c880_cmini import *
-from d_alg_1210_test_bwd import *
+from d_alg import *
 # from d_alg_1210_test_nodict import *
 from atpg_new import ATPG
 
