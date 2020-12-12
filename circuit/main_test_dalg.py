@@ -21,7 +21,12 @@ from regular_tp_gen import *
 from fault_sim import *
 from deductive_fs import DFS
 from parallel_fs import PFS
-from d_alg_bkup import *
+# from d_alg_bkup import *
+# from d_alg_c880_cmini import *
+from d_alg_1210_test_bwd import *
+# from d_alg_1210_test_nodict import *
+from atpg_new import ATPG
+
 import os, sys
 
 
@@ -120,7 +125,10 @@ def main():
     # sys.stdout = old_stdout # reset old stdout
 
 
-    # """
+    """
+    This part used for testing single fault in certain circuit
+    """
+    """
     for ckt in ['c499']:
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
@@ -129,9 +137,9 @@ def main():
         # in fault: ('14',0): node 14 SA0
         # but we need to gives D to the node in dalg!!!!!!!!!!!!!!!!!!############
 
-        for fault in [('N57', 0)]:
+        for fault in [('N113', 1)]:
             print("******************* start DALG at ", fault, " *************************")
-            d_alg = D_alg(circuit, fault[0], fault[1])
+            d_alg = D_alg(circuit, fault[0], fault[1], 3000)
             # fault_val = 1: 1^12=D'    fault_val = 0: 0^12=D
             ######################## needs to be changed!!!! put in dalg!!!!!!
             # if fault[1] == 1:
@@ -140,18 +148,23 @@ def main():
             #     fault_val = 0
             # fault_val = fault_val ^ 12
             ###########################################
-            if d_alg.dalg() == True:
+            if d_alg.test() == True:
                 IPT_list = d_alg.return_IPT()
+                print("D alg generated pattern: ")
+                print(IPT_list)
                 IPT_binary_list = []
                 for x in IPT_list:
-                    if x == 9 or x == 15 or x == 12:
-                        IPT_binary_list.append(1)
-                    else:
-                        IPT_binary_list.append(0)
-                    # if x == 9 or x == 0 or x == 3:
-                    #     IPT_binary_list.append(0)
-                    # else:
+                    # if x == 9 or x == 15 or x == 12:
                     #     IPT_binary_list.append(1)
+                    # else:
+                    #     IPT_binary_list.append(0)
+                    if x == 15 or x == 12:
+                        IPT_binary_list.append(1)
+                    elif x == 3 or x == 0:
+                        IPT_binary_list.append(0)
+                    elif x == 9:
+                        IPT_binary_list.append(random.randint(0,1))
+
                 dfs_test = DFS(circuit)
                 fault_list = dfs_test.single(IPT_binary_list)
                 
@@ -164,38 +177,35 @@ def main():
                     print('result is not correct')
             else:
                 print('can not find test')
-    # """
     """
+
+
+
+
+
+    """
+    This part used for testing all faults in certain circuit
+    """
+    # """
     # for ckt in ['c499','c432']:     
     # for ckt in ['c1', 'c2', 'c3', 'c4', 'FA', 'FA_NAND', 'add2']:
     for ckt in ['c499']:
         print('\n\n')
-        print("******************* start DALG at ", ckt, " *************************")
+        print("******************* start ATPG at ", ckt, " *************************")
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
         circuit.lev()
         flag = 0
 
         # # for full fault list test
-        # total_fault_list = []
-        # for node in circuit.nodes_lev:
-        #     total_fault_list.append((node.num,0))
-        #     total_fault_list.append((node.num,1))
-
-        # total_fault_list = []
-        # total_fault_list = [('N77',1), ('N77',0), ('N81',1), ('N81',0), ('N85',1), ('N85',0), ('N89',1), ('N89',0), ('N93',1), ('N93',0)]
-        total_fault_list = [('N77',1), ('N77',0)]
-        # for node in circuit.PI:
-        #     total_fault_list.append((node.num,0))
-        #     total_fault_list.append((node.num,1))
-
         
-        #print(total_fault_list)
+        total_fault_list = []
+        for node in circuit.PI:
+            total_fault_list.append((node.num,0))
+            total_fault_list.append((node.num,1))
         
-        #total_fault_list = [('N4-1',1)]
-        #default
-        # podem = Podem(circuit, 'N1', 0)#TODO
-        # d_alg = D_alg(circuit, fault[0], fault[1])
+
+
         i = 0
         #seed(1)
         list_not_correct = []
@@ -207,7 +217,7 @@ def main():
         dfs_full = DFS(circuit)
         num = len(circuit.PI)
         # times = pow(2, num)
-        times = 1000
+        times = 10000
         pattern = []
         cnt_dfs = 0
         # large circuit
@@ -230,6 +240,7 @@ def main():
 
         print(set_cover)
 
+
         for fault in total_fault_list:
         #while(i<20):
             #print(len(total_fault_list))
@@ -248,10 +259,10 @@ def main():
             print(' \n')
             print(' \n')
             print("******************* start DALG at ", fault, " *************************")     
-            d_alg = D_alg(circuit, fault[0], fault[1])
+            d_alg = D_alg(circuit, fault[0], fault[1], 3000)
             # blockPrint()
 
-            if d_alg.dalg() == True:
+            if d_alg.test() == True:
                 # sys.stdout = old_stdout # reset old stdout
                 # enablePrint()
 
@@ -271,10 +282,7 @@ def main():
                 fault_list = dfs_test.single(IPT_binary_list)
                 #print('fault >> ',fault)
                 #print('fault_list >> ', fault_list)
-                if fault in fault_list:
-                    # print('result is correct')
-                    pass
-                else:
+                if fault not in fault_list:
                     list_not_correct.append(fault)
                     print('result is not correct')
                     #print(fault)
@@ -302,7 +310,7 @@ def main():
         print('list_no_test >>',list_no_test)
         print('list_should_have_test >>',list_should_have_test)
         print(len(list_no_test))
-    """
+    # """
     exit()
 
 
