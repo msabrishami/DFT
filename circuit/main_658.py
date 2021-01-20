@@ -13,12 +13,25 @@ import config
 # from checker_dfs import *
 # from FaultSim import FaultSim
 from deductive_fs import DFS
-
+from load_circuit import LoadCircuit
 parser = argparse.ArgumentParser()
 parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")
 parser.add_argument("-tp", type=int, help="test patterns")
 args = parser.parse_args()
 
+
+for ckt in ["c1", "c2", "c3", "c4", "c17", "add2", "x3mult", "c432", "c499", "c880", "c1355"]:
+    circuit = Circuit(ckt)
+    LoadCircuit(circuit, "ckt")
+    circuit.lev()
+    print(len(circuit.nodes_lev))
+    outfile = open("../data/fault_sim/{}_full_fs.txt".format(ckt), "w")
+    for node in circuit.nodes_lev:
+        outfile.write("{}@0\n".format(node.num))
+        outfile.write("{}@1\n".format(node.num))
+    outfile.close()
+
+exit()
 circuit = Circuit(args.ckt)
 # circuit.read_verilog()
 circuit.read_ckt()
