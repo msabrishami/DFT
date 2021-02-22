@@ -81,54 +81,8 @@ class Circuit:
         
     
     def add_node(self, line):
-        """ Create a node based on 1 line of ckt file
-        does not make the unodes/dnodes connections
-        """
-        # possible empty lines
-        if len(line) < 6:
-            return 
-        
-        attr = line.split()
-        n_type = ntype(int(attr[0])).name
-        g_type = gtype(int(attr[2])).name
-        num = attr[1]
-        
-        if n_type == "PI" and g_type=="IPT":
-            node = IPT(n_type, g_type, num)
-
-        elif n_type == "FB" and g_type=="BRCH":
-            node = BRCH(n_type, g_type, num)
-        
-        elif n_type == "GATE" and g_type=="BRCH":
-            raise NotImplementedError()
-
-        elif n_type == "GATE" or n_type == "PO":
-            if g_type == 'XOR':
-                node = XOR(n_type, g_type, num)
-
-            elif g_type == 'OR':
-                node = OR(n_type, g_type, num)
-
-            elif g_type == 'NOR':
-                node = NOR(n_type, g_type, num)
-
-            elif g_type == 'NOT':
-                node = NOR(n_type, g_type, num)
-
-            elif g_type == 'NAND':
-                node = NAND(n_type, g_type, num)
-
-            elif g_type == 'AND':
-                node = AND(n_type, g_type, num)
-
-        node.ntype = n_type
-        node.gtype = g_type
-        if node.ntype == "PI":
-            self.PI.append(node)
-
-        elif node.ntype == "PO":
-            self.PO.append(node)
-        return node 
+        raise NameError("Not supported anymore, refer to DAC version")
+    
     
     def make_PO(self, target):
         """ connects this target node to a PO using a branch 
@@ -362,45 +316,6 @@ class Circuit:
                     B_Dict[FB_node.num] = FB_node
                     self.insert_node(node, node.dnodes[0], FB_node)
         self.nodes.update(B_Dict)
-
-    def read_ckt(self):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        path = "../data/ckt/{}.ckt".format(self.c_name)
-        infile = open(path, 'r')
-        lines = infile.readlines()
-        self.nodes= {}
-
-        # First time over the netlist
-        for line in lines:
-            new_node = self.add_node(line.strip())
-            self.nodes[new_node.num] = new_node
-            
-        for line in lines:
-            self.connect_node(line.strip())
-
-
-
-
-
-    def read_ckt(self):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        path = "../data/ckt/{}.ckt".format(self.c_name)
-        infile = open(path, 'r')
-        lines = infile.readlines()
-        self.nodes= {}
-
-        # First time over the netlist
-        for line in lines:
-            new_node = self.add_node(line.strip())
-            self.nodes[new_node.num] = new_node
-            
-        for line in lines:
-            self.connect_node(line.strip())
-                    
     
     def lev(self):
         """

@@ -50,15 +50,12 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
     ckt_name, args.tp, args.tpLoad, args.cpu))
 
 
-
-
 if args.func == "test":
     circuit = Circuit(args.ckt)
     LoadCircuit(circuit, "v")
     circuit.lev()
     justNode = circuit.nodes_lev[3]
     print(justNode)
-
 
 
 if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP", 
@@ -70,7 +67,6 @@ if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP",
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.load_circuit(fname)
 
 
 
