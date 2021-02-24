@@ -15,73 +15,6 @@ class LoadCircuit:
         else:
             raise NotImplementedError("Circuit format {} is not supported!".format(mode))
 
-
-    def read_node_ckt(self, circuit, line):
-        raise NameError("This function is deprecated")
-        """ read a node's info based on 1 line of ckt file
-        does not make any node or unodes/dnodes connections
-        """
-        # possible empty lines
-        attr = line.split()
-        node_info = dict()
-        node_info["n_type"] = ntype(int(attr[0])).name
-        node_info["g_type"] = gtype(int(attr[2])).name
-        node_info["num"] = attr[1]
-        print(node_info)
-        return node_info
-
-
-    def add_node_ckt(self, circuit,  line):
-        raise NameError("This function is no longer supported")
-        """ Create a node based on 1 line of ckt file
-        does not make the unodes/dnodes connections
-        """
-        # possible empty lines
-        if len(line) < 6:
-            return 
-        
-        attr = line.split()
-        n_type = ntype(int(attr[0])).name
-        g_type = gtype(int(attr[2])).name
-        num = attr[1]
-        
-        if n_type == "PI" and g_type=="IPT":
-            node = IPT(n_type, g_type, num)
-
-        elif n_type == "FB" and g_type=="BRCH":
-            node = BRCH(n_type, g_type, num)
-        
-        elif n_type == "GATE" and g_type=="BRCH":
-            raise NotImplementedError()
-
-        elif n_type == "GATE" or n_type == "PO":
-            if g_type == 'XOR':
-                node = XOR(n_type, g_type, num)
-
-            elif g_type == 'OR':
-                node = OR(n_type, g_type, num)
-
-            elif g_type == 'NOR':
-                node = NOR(n_type, g_type, num)
-
-            elif g_type == 'NOT':
-                node = NOT(n_type, g_type, num)
-
-            elif g_type == 'NAND':
-                node = NAND(n_type, g_type, num)
-
-            elif g_type == 'AND':
-                node = AND(n_type, g_type, num)
-
-        node.ntype = n_type
-        node.gtype = g_type
-        if node.ntype == "PI":
-            circuit.PI.append(node)
-
-        elif node.ntype == "PO":
-            circuit.PO.append(node)
-        return node 
-
     def connect_node(self, circuit,  line):
         # As we move forward, find the upnodes and connects them
         
@@ -115,7 +48,7 @@ class LoadCircuit:
             print("ERROR: not known!", ptr.num)
 
     
-    def add_node(self, Dict):
+    def gen_node(self, Dict):
         """ creates a node, does not make any connections, 
         does not modify the PI, PO list of this circuit """
         
@@ -202,7 +135,7 @@ class LoadCircuit:
             # PI: n_type=PI, g_type=IPT, Node will be added! 
             if x_type == "PI":
                 for pi in nets:
-                    new_node = self.add_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
+                    new_node = self.gen_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"})
                     circuit.nodes[new_node.num] = new_node
                     circuit.PI.append(new_node)
 
@@ -218,7 +151,7 @@ class LoadCircuit:
                 if nets[0] not in _nodes:
                     pdb.set_trace()
                 _nodes[nets[0]]['g_type'] = gtype 
-                new_node = self.add_node(_nodes[nets[0]])
+                new_node = self.gen_node(_nodes[nets[0]])
                 circuit.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
                     circuit.PO.append(new_node)
@@ -240,7 +173,7 @@ class LoadCircuit:
             if len(node.dnodes) > 1:
                 for idx in range(len(node.dnodes)):
                     ## New BNCH
-                    branch = self.add_node({'num': node.num + '-' + str(idx+1), 
+                    branch = self.gen_node({'num': node.num + '-' + str(idx+1), 
                         'n_type':"FB", 'g_type':"BRCH"})
                     branches[branch.num] = branch
                     insert_branch(node, node.dnodes[0], branch)
@@ -264,7 +197,7 @@ class LoadCircuit:
             node_info["n_type"] = ntype(int(attr[0])).name
             node_info["g_type"] = gtype(int(attr[2])).name
             node_info["num"] = attr[1]
-            new_node = self.add_node(node_info)
+            new_node = self.gen_node(node_info)
             # new_node.ntype = n_type
             # new_node.gtype = g_type
             if new_node.ntype == "PI":

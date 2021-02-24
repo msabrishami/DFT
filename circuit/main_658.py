@@ -34,6 +34,11 @@ args = parser.parse_args()
 circuit = Circuit(args.ckt)
 LoadCircuit(circuit, "ckt")
 circuit.lev()
+
+######### START OF SSTA 
+circuit.SSTA()
+######### END OF SSTA
+
 dfs = DFS(circuit)
 all_faults = set()
 for x in range(args.tp):

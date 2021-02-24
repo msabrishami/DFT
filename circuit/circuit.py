@@ -21,6 +21,12 @@ import os
 import config
 #import xlwt
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
+
+sys.path.insert(1, "/home/msabrishami/workspace/temp12345/")
+from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp
+#from distribution import Distribution
+
+
 """
 # Tasks for the DFT team:
 - Don't change my alreay written methods, if u need to change it let me know. 
@@ -81,8 +87,7 @@ class Circuit:
         
     
     def add_node(self, line):
-        raise NameError("Not supported anymore, refer to DAC version")
-    
+        raise NameError("This function is deprecated")
     
     def make_PO(self, target):
         """ connects this target node to a PO using a branch 
@@ -184,139 +189,6 @@ class Circuit:
         i_node.unodes.append(u_node)
         i_node.dnodes.append(d_node)
 
-    ## According to the Dict, this function will return the specific node
-    ## It is similar to part of add_node()
-    def node_generation(self, Dict):
-        if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
-            node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-        elif Dict['n_type'] == "FB" and Dict['g_type'] == "BRCH":
-            node = BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-        elif Dict['n_type'] == "GATE" and Dict['g_type'] == "BRCH":
-            raise NotImplementedError()
-
-        elif Dict['n_type'] == "GATE" or Dict['n_type'] == "PO":
-            if Dict['g_type'] == 'XOR':
-                node = XOR(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'OR':
-                node = OR(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'NOR':
-                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'NOT':
-                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'NAND':
-                node = NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'AND':
-                node = AND(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            elif Dict['g_type'] == 'BUFF':
-                node = BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
-
-            # elif Dict['g_type'] == 'XNOR':
-            #     node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
-        else:
-            raise NotImplementedError()
-        return node
-
-    def read_verilog(self):
-        """
-        Read circuit from .v file, each node as an object
-        """
-        path = "../data/verilog/{}.v".format(self.c_name)
-
-        ## Read the file and Deal with comment and ; issues
-        infile = open(path, 'r')
-        eff_line = ''
-        lines = infile.readlines()
-        new_lines=[]
-        for line in lines:
-            # eliminate comment first
-            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
-            if line_syntax:
-                line = line[:line.index('//')]
-
-            # considering ';' issues
-            if ';' not in line and 'endmodule' not in line:
-                eff_line = eff_line + line.rstrip()
-                continue
-            line = eff_line + line.rstrip()
-            eff_line = ''
-            new_lines.append(line)
-        infile.close()
-
-        ## 1st time Parsing: Creating all nodes
-        # Because the ntype and gtype information are separate, we need to use Dict to collect all information
-        # Key: num
-        # Value: num, ntype and gtype
-        Dict = {}
-        for line in new_lines:
-            if line != "":
-                # Wire
-                line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(1).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n[1:]] = {'num': n[1:], 'n_type':ntype(0).name, 'g_type':None}
-
-                # PI: n_type = 0 g_type = 0
-                line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        new_node = self.node_generation({'num': n[1:], 'n_type': ntype(1).name, 'g_type': self.gtype_translator('ipt')})
-                        self.nodes[new_node.num] = new_node
-                        self.PI.append(new_node)
-
-                # PO n_type = 3 but g_type has an issue
-                line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-                if line_syntax:
-                    for n in line_syntax.group(2).replace(' ', '').replace('\t', '').split(','):
-                        Dict[n[1:]] = {'num': n[1:], 'n_type': ntype(3).name, 'g_type': None}
-
-                # Gate reading and Making Connection of nodes
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) != 'module':
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        # Nodes Generation
-                        Dict[node_order[0][1:]]['g_type'] = self.gtype_translator(line_syntax.group(1))
-                        new_node = self.node_generation(Dict[node_order[0][1:]])
-                        self.nodes[new_node.num] = new_node
-                        if new_node.ntype == 'PO':
-                            self.PO.append(new_node)
-
-        # 2nd time Parsing: Making All Connections
-        for line in new_lines:
-            if line != "":
-                line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-                if line_syntax:
-                    if line_syntax.group(1) != 'module':
-                        node_order = line_syntax.group(3).replace(' ', '').split(',')
-                        for i in range(1, len(node_order)):
-                            # Making connections
-                            self.nodes[node_order[0][1:]].unodes.append(self.nodes[node_order[i][1:]])
-                            self.nodes[node_order[i][1:]].dnodes.append(self.nodes[node_order[0][1:]])
-
-        ###### Branch Generation ######
-        # The basic way is looking for those nodes with more-than-1 fan-out nodes
-        # Creating a new FB node
-        # Inserting FB node back into the circuit
-        # We cannot change the dictionary size while in its for loop,
-        # so we create a new dictionary and integrate it back to nodes at the end
-        B_Dict = {}
-        for node in self.nodes.values():
-            if len(node.dnodes) > 1:
-                for index in range(len(node.dnodes)):
-                    ## New BNCH
-                    FB_node = self.node_generation({'num': node.num + '-' + str(index+1), 'n_type':ntype(2).name, 'g_type':gtype(1).name})
-                    B_Dict[FB_node.num] = FB_node
-                    self.insert_node(node, node.dnodes[0], FB_node)
-        self.nodes.update(B_Dict)
-    
     def lev(self):
         """
         Levelization, assigns a level to each node
@@ -341,7 +213,7 @@ class Circuit:
     
         self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
     
-
+    
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
@@ -350,8 +222,8 @@ class Circuit:
         res.append("#PO: " + str(len(self.PO)) + " >> ")
         res.append(str([x.num for x in self.PO]))
 
-        # for num, node in self.nodes.items():
-        #     res.append(str(node))
+        for num, node in self.nodes.items():
+            res.append(str(node))
         return "\n".join(res)
     
 
@@ -1489,6 +1361,50 @@ class Circuit:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
 
+    def SSTA(self):
+        # First, what is the delay distribution of each gate? (num/alt)
+        cell_dg = self.get_cell_delay()
+        for node in self.nodes_lev:
+            if node.ntype in ["PI", "FB"]:
+                node.tg = Normal(0, 0.001)
+            elif node.ntype in ["GATE", "PO"]:
+                node.tg = cell_dg[node.gtype] 
+            else:
+                raise NameError("ERROR")
+
+        # Second, go over each gate and run a MAX-SUM simulation
+        for node in self.nodes_lev:
+            if node.ntype == "PI":
+                node.td = Normal(0, 0.001)
+            elif node.ntype == "FB":
+                node.td = node.unodes[0].td
+            elif node.ntype in ["GATE", "PO"]:
+                opmax = MaxOp()
+                td_unodes = [unode.td for unode in node.unodes]
+                td_max = td_unodes[0]
+                for n in range(1, len(td_unodes)):
+                    td_max = opmax.max_alt(td_max, td_unodes[n])
+                # td_max = opmax.max_analytical(node.unodes[0].td, node.unodes[1].td)
+                opsum = SumOp()
+                node.td = opsum.sum_alt(node.tg, td_max)
+
+        print("Node\tLevel\tMean\tSTD")
+        for node in self.nodes_lev:
+            print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num, node.lev, node.td.mu, node.td.sigma))
+
+    def get_cell_delay(self):
+        cell_dg = {}
+        cell_dg["NOT"] = Normal(1, 0.1)
+        cell_dg["NAND"] = Normal(3, 0.4)
+        cell_dg["AND"] = Normal(4.2, 0.5)
+        cell_dg["NOR"] = Normal(3, 0.7)
+        cell_dg["OR"] = Normal(4.2, 0.7)
+        cell_dg["XOR"] = Normal(8, 0.7)
+        cell_dg["XNOR"] = Normal(8, 0.7)
+        cell_dg["BUFF"] = Normal(2, 0.3)
+        return cell_dg
+
+
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
@@ -1498,5 +1414,4 @@ class Imply_counter:
         self.cnt += 1
     def initialize(self):
         self.cnt = 0
-
 

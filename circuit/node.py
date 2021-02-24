@@ -42,7 +42,7 @@ class Node:
     num:        the node number as in ckt format, type is string
     lev:        level of the node in circuit
     gtype:      the upnode gate type
-                supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND
+                supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND, BUFF
     ntype:      the node type
                 supporting: GATE, PI, FB, PO
     unodes:     list of upper hand node objects
@@ -114,6 +114,11 @@ class Node:
 
         # Test Point Insertion Measurements
         self.stat = {}
+        
+        # SSTA Project
+        tg = None
+        td = None
+
                     
     def __str__(self):
         return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
@@ -150,6 +155,7 @@ class Node:
     def dfs(self):
         ''' deductive fault simulation (dfs) using unodes ''' 
         raise NotImplementedError()
+
 
 
     
