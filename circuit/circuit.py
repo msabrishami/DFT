@@ -9,7 +9,7 @@ from node import gtype
 from node import ntype
 from node import *
 # import networkx as nx
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from random import randint
 import time
@@ -17,14 +17,13 @@ import pdb
 from multiprocessing import Process, Pipe
 #import numpy as np
 import os
-
+import utils
 import config
 #import xlwt
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 
-sys.path.insert(1, "/home/msabrishami/workspace/temp12345/")
+sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp
-#from distribution import Distribution
 
 
 """
@@ -1360,6 +1359,74 @@ class Circuit:
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
+    
+    def load_mchist(self, tech_name):
+        "MOSFET_16nm_HP --> MOSFET_16nm_HP_NAND.mchist"
+        _cells = set()
+        for node in self.nodes_lev:
+            if node.ntype == "GATE":
+                _cells.add(node.gtype)
+        
+        cell_ssta = dict()
+        for cell in _cells: 
+            fname = os.path.join("../data/cell_ssta/cell_mchist/", 
+                    tech_name+"_"+cell+".mchist")
+            T, h_T = utils.load_mchist(fname)
+            h_T = utils.smooth_hist(h_T, 11)
+            T, f_T = utils.hist2pmf(T, h_T)
+            cell_ssta[cell] = (T, f_T)
+
+        self.cell_ssta = cell_ssta
+
+    def ssta_pmf(self):
+        # all gate distributions are pmf and all process is numerical on pmfs 
+        for node in self.nodes_lev:
+            # if int(node.num) > 10:
+            #     return 
+            # print("-----------------------------------------------")
+            # print(node)
+
+            # Initiate the PIs first:
+            if node.ntype == "PI":
+                node.td = Normal(0, 1)
+            elif node.ntype == "FB":
+                node.td = node.unodes[0].td
+            elif node.ntype in ["GATE", "PO"]:
+                opmax = MaxOp()
+                td_unodes = [unode.td for unode in node.unodes]
+                td_max = td_unodes[0]
+                for n in range(1, len(td_unodes)):
+                    td_max = opmax.max_num(td_max, td_unodes[n])
+
+                opsum = SumOp()
+                tg = self.cell_ssta[node.gtype]
+                node.td = opsum.sum_num(tg, td_max)
+
+
+    def ssta_plot(self):
+        cmap = utils.get_cmap(20)
+        plt.figure(figsize=(20,10))
+        cnt = 0
+        for idx, node in enumerate(self.nodes_lev):
+            # if int(node.num) > 10:
+            #     return 
+            # if node.ntype in ["PI", "FB"]:
+            #     continue
+
+            if isinstance(node.td, Distribution):
+                T, f_T = node.td.pmf(100)
+            else:
+                T = node.td[0]
+                f_T = node.td[1]
+            plt.plot(T, f_T, linewidth=3, color=cmap(cnt), \
+                    alpha=0.5, linestyle='--', label=node.num)
+            cnt += 1
+        
+            # plt.grid()
+        plt.legend()
+        plt.savefig("c17-ssta-{}.png".format(node.num))
+        plt.close()
+
 
     def SSTA(self):
         # First, what is the delay distribution of each gate? (num/alt)
@@ -1375,7 +1442,7 @@ class Circuit:
         # Second, go over each gate and run a MAX-SUM simulation
         for node in self.nodes_lev:
             if node.ntype == "PI":
-                node.td = Normal(0, 0.001)
+                node.td = Normal(1, 0.1)
             elif node.ntype == "FB":
                 node.td = node.unodes[0].td
             elif node.ntype in ["GATE", "PO"]:
@@ -1388,9 +1455,9 @@ class Circuit:
                 opsum = SumOp()
                 node.td = opsum.sum_alt(node.tg, td_max)
 
-        print("Node\tLevel\tMean\tSTD")
-        for node in self.nodes_lev:
-            print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num, node.lev, node.td.mu, node.td.sigma))
+        # print("Node\tLevel\tMean\tSTD")
+        # for node in self.nodes_lev:
+        #     print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,node.td.mu,node.td.sigma))
 
     def get_cell_delay(self):
         cell_dg = {}

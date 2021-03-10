@@ -18,6 +18,7 @@ gnn/TEMP_func.py
 circuit/temp_results/
 circuit/exp-results/
 data/ob_stat/
+data/cell_ssta/cell_mchist/
 
 # **.graphml
 **.png
