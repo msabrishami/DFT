@@ -183,20 +183,20 @@ tps = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 ### STEP 8: generate genv_TMAXOP which is verilog and stil of OP added
 ### CREATE VERILOG FILE BASED ON OPS OF TMAX
-script = "python3 main_saeed.py -func genV_TMAXOP -ckt c3540 -op_fname $OPFNAME$ -syn synV1 -Bth $BTH$ -tpLoad 100000 -tp 1000 &"
-ckt = "c3540"
-# bth = "0.1"
-bth = [0.2]
-# count = [13, 26, 39, 52, 65]
-count = [11, 20, 40]
-tp = 10000
-f = "deltaP"
-version = "synV1"
-for cnt in count:
-    for b in bth:
-        sc = script.replace("$OPFNAME$", f"{ckt}_synV1_{f}_B-{b}_Count-{cnt}")
-        sc = sc.replace("$BTH$", str(b))
-        print (sc)
+# script = "python3 main_saeed.py -func genV_TMAXOP -ckt c3540 -op_fname $OPFNAME$ -syn synV1 -Bth $BTH$ -tpLoad 100000 -tp 1000 &"
+# ckt = "c3540"
+# # bth = "0.1"
+# bth = [0.2]
+# # count = [13, 26, 39, 52, 65]
+# count = [11, 20, 40]
+# tp = 10000
+# f = "deltaP"
+# version = "synV1"
+# for cnt in count:
+#     for b in bth:
+#         sc = script.replace("$OPFNAME$", f"{ckt}_synV1_{f}_B-{b}_Count-{cnt}")
+#         sc = sc.replace("$BTH$", str(b))
+#         print (sc)
 
 
 # for i in range(1, 10):
