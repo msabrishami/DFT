@@ -22,7 +22,8 @@ import config
 #import xlwt
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 
-sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
+# distributions added to the repo temporarily 
+# sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp
 
 
