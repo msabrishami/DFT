@@ -1312,6 +1312,38 @@ class Circuit:
         print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
     
+    def save_circuit(self, fname):
+        outfile = open(fname, "w")
+        for node in self.nodes_lev:
+            arr = [node.num,node.C0,node.C1,node.B0,node.B1,node.S,node.CB0,node.CB1, node.B] 
+            arr = [str(x) for x in arr]
+            ss = ",".join(arr)
+            outfile.write(ss + "\n")
+        outfile.close()
+
+    def load_circuit(self, fname):
+        infile = open(fname)
+        for line in infile:
+            words = line.strip().split(",")
+            node = self.nodes[words[0]]
+            node.C0 =   float(words[1])  
+            node.C1 =   float(words[2]) 
+            node.B0 =   float(words[3]) 
+            node.B1 =   float(words[4]) 
+            node.S  =   float(words[5]) 
+            node.CB0 =  float(words[6]) 
+            node.CB1 =  float(words[7]) 
+            node.B =    float(words[8]) 
+        # print("Circuit loaded: " + fname)
+
+    def make_num_int(self):
+        node2int = dict()
+        for idx, node in enumerate(self.nodes_lev):
+            node2int[node.num] = idx
+        return node2int
+
+
+
     def gen_graph(self):
         """
         Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
