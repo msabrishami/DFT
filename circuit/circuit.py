@@ -409,7 +409,7 @@ class Circuit:
     
     
     ## TODO: What about inverter?
-    def STAFAN_CS(self, num_pattern, limit=None, detect=False):
+    def STAFAN_CS(self, num_pattern, tp_fname=None, limit=None, detect=False):
         ''' note:
         we are generating random numbers with replacement
         if u need to test all the patterns, add a new flag

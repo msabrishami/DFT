@@ -101,7 +101,7 @@ elif args.func == "saveStatTP":
     circuit.SCOAP_CO()
     circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
     circuit.STAFAN_B() 
-    print("Zeros: \t{}".format(circuit.c_zero_count))
+    # print("Zeros: \t{}".format(circuit.c_zero_count))
     print("Time: \t{:.3}".format(time.time() - time_start))
     fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".stafan"
     print("Saving circuit with STAFAN values in " + fname)
