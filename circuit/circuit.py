@@ -10,6 +10,7 @@ from node import ntype
 from node import *
 # import networkx as nx
 import matplotlib.pyplot as plt
+from itertools import cycle
 
 from random import randint
 import time
@@ -1408,42 +1409,44 @@ class Circuit:
         cmap = utils.get_cmap(20)
         plt.figure(figsize=(20,10))
         cnt = 0
-        for idx, node in enumerate(self.nodes_lev):
-            # if int(node.num) > 10:
-            #     return 
-            # if node.ntype in ["PI", "FB"]:
-            #     continue
+        lines = ["-","--","-.",":"]
+        linecycler = cycle(lines)
 
+        for idx, node in enumerate(self.nodes_lev):
+            if node.ntype in ["PI", "FB"]:
+                continue
             if isinstance(node.td, Distribution):
-                T, f_T = node.td.pmf(100)
+                T, f_T = node.td.pmf(samples=100)
             else:
                 T = node.td[0]
                 f_T = node.td[1]
             plt.plot(T, f_T, linewidth=3, color=cmap(cnt), \
-                    alpha=0.5, linestyle='--', label=node.num)
+                    alpha=0.5, linestyle=next(linecycler), label=node.num)
             cnt += 1
         
-            # plt.grid()
-        plt.legend()
-        plt.savefig("c17-ssta-{}.png".format(node.num))
+        plt.grid()
+        plt.legend(loc=1, prop={'size': 10})
+        plt.savefig("{}-ssta.png".format(self.c_name))
         plt.close()
 
 
-    def SSTA(self):
+    def SSTA(self, mode):
         # First, what is the delay distribution of each gate? (num/alt)
         cell_dg = self.get_cell_delay()
         for node in self.nodes_lev:
             if node.ntype in ["PI", "FB"]:
-                node.tg = Normal(0, 0.001)
+                node.tg = Normal(0, 1)
             elif node.ntype in ["GATE", "PO"]:
                 node.tg = cell_dg[node.gtype] 
             else:
                 raise NameError("ERROR")
 
         # Second, go over each gate and run a MAX-SUM simulation
+
+        print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
             if node.ntype == "PI":
-                node.td = Normal(1, 0.1)
+                node.td = node.tg 
             elif node.ntype == "FB":
                 node.td = node.unodes[0].td
             elif node.ntype in ["GATE", "PO"]:
@@ -1451,25 +1454,32 @@ class Circuit:
                 td_unodes = [unode.td for unode in node.unodes]
                 td_max = td_unodes[0]
                 for n in range(1, len(td_unodes)):
-                    td_max = opmax.max_alt(td_max, td_unodes[n])
-                # td_max = opmax.max_analytical(node.unodes[0].td, node.unodes[1].td)
+                    if mode == "alt":
+                        td_max = opmax.max_alt(td_max, td_unodes[n])
+                    elif mode == "num":
+                        td_max = opmax.max_num(td_max, td_unodes[n], samples=50)
+                    else: 
+                        raise NameError("Wrong code for SSTA simulation")
                 opsum = SumOp()
-                node.td = opsum.sum_alt(node.tg, td_max)
-
-        # print("Node\tLevel\tMean\tSTD")
-        # for node in self.nodes_lev:
-        #     print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,node.td.mu,node.td.sigma))
+                if mode == "alt":
+                    node.td = opsum.sum_alt(node.tg, td_max)
+                elif mode == "num":
+                    node.td = opsum.sum_num(node.tg, td_max, samples=50)
+                else:
+                    raise NameError("Wrong code for SSTA simulation")
+            mm = node.td.moments()
+            print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,mm[0], mm[1]))
 
     def get_cell_delay(self):
         cell_dg = {}
-        cell_dg["NOT"] = Normal(1, 0.1)
-        cell_dg["NAND"] = Normal(3, 0.4)
-        cell_dg["AND"] = Normal(4.2, 0.5)
-        cell_dg["NOR"] = Normal(3, 0.7)
-        cell_dg["OR"] = Normal(4.2, 0.7)
-        cell_dg["XOR"] = Normal(8, 0.7)
-        cell_dg["XNOR"] = Normal(8, 0.7)
-        cell_dg["BUFF"] = Normal(2, 0.3)
+        cell_dg["NOT"] = Normal(1, 1)
+        cell_dg["NAND"] = Normal(3, 1)
+        cell_dg["AND"] = Normal(4.2, 1)
+        cell_dg["NOR"] = Normal(3, 1)
+        cell_dg["OR"] = Normal(4.2, 1)
+        cell_dg["XOR"] = Normal(8, 1)
+        cell_dg["XNOR"] = Normal(8, 1)
+        cell_dg["BUFF"] = Normal(2, 1)
         return cell_dg
 
 

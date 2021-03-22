@@ -6,7 +6,11 @@ import math
 #import sys
 
 # We are using GNOT, etc. as we may later use X values
-
+"""" GENERAL NOTES AND SUGGESTIONS: 
+    Class 1: Simple node in a graph
+    Class 2: Node with test features
+    Class 3: Node with SSTA features 
+"""
 
 class five_value(Enum):
    ZERO = 0

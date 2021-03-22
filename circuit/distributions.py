@@ -8,6 +8,11 @@ from gekko import GEKKO
 import math
 import pdb
 
+""" Distributions should be able to return their moments 
+Right now Numerical Distribtion can't! """ 
+
+
+
 class Distribution:
     def __init__(self, m1=None, m2=None):
         self.mu = m1
@@ -143,6 +148,9 @@ class Normal(Distribution):
     def margin(self):
         return self.mu-5*self.sigma, self.mu+5*self.sigma
 
+    # TODO: tofmaali 
+    def moments(self):
+        return [self.mu, self.sigma * self.sigma]
 
 class SkewNormal(Distribution):
     def __init__(self, zeta, omega, alpha):
@@ -270,9 +278,16 @@ class NumDist(Distribution):
         self.T = T
         self.f_T = f_T
         self.gen_F()
-
-    def pmf(self):
-        return self.T, self.f_T
+    """
+    def pmf(self, samples=None, margin=None):
+        if (samples==None or samples==len(self.T)) and (margin==None):
+            return self.T, self.f_T
+        elif margin==None:
+            pdb.set_trace()
+            super().pmf(samples=samples)
+        else:
+            raise NameError("Extra options are not implemented yet")
+    """
     
     def pdf(self, t):
         idx = np.searchsorted(self.T, t)
@@ -299,8 +314,12 @@ class NumDist(Distribution):
         self.F_T = F_T
 
     def margin(self):
-        print("calc margin")
+        # print("calc margin")
         return (min(self.T), max(self.T))
+
+    # TODO: fix this later! Bad coding!
+    def moments(self):
+        return Distribution.moments_from_pmf(self.T, self.f_T)
 
 
 class Uniform(Distribution):
@@ -393,8 +412,8 @@ class MaxOp:
             f2 = d2.pdf(t)
             F2 = d2.cdf(t)
             f_max[idx] = f1*F2 + F1*f2
-
-        return domain, f_max
+        
+        return NumDist(domain, f_max)
 
 
 class SumOp:
@@ -439,9 +458,9 @@ class SumOp:
         high = h1 + h2
         domain = np.linspace(low, high, samples)
         # dT = domain[1] - domain[0]
-        print("Margin Dist #1:  {:.3f}\t{:.3f}".format(l1, h1))
-        print("Margin Dist #2:  {:.3f}\t{:.3f}".format(l2, h2))
-        print("Margin Dist Sum: {:.3f}\t{:.3f}".format(low, high))
+        # print("Margin Dist #1:  {:.3f}\t{:.3f}".format(l1, h1))
+        # print("Margin Dist #2:  {:.3f}\t{:.3f}".format(l2, h2))
+        # print("Margin Dist Sum: {:.3f}\t{:.3f}".format(low, high))
         f_sum = np.zeros(samples) 
         for sum_idx, t in enumerate(domain):
             # fz(t) = INT fX(k) * fY(t-k) for k in [-inf, +inf]
@@ -450,7 +469,7 @@ class SumOp:
                 dK = T1[idx+1] - T1[idx]
                 f_sum[sum_idx] += (d1.pdf(k) * d2.pdf(t-k) * dK)
         print(Distribution.area_pmf(domain, f_sum))
-        return domain, f_sum
+        return NumDist(domain, f_sum)
 
 class DistScore:
 

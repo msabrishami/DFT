@@ -20,8 +20,9 @@ circuit = Circuit(args.ckt)
 LoadCircuit(circuit, "ckt")
 circuit.lev()
 circuit.load_mchist("MOSFET_16nm_HP")
-circuit.ssta_pmf()
+# circuit.ssta_pmf()
+circuit.SSTA(mode="num")
 circuit.ssta_plot()
-temp = circuit.load_mchist("MOSFET_16nm_HP")
+# temp = circuit.load_mchist("MOSFET_16nm_HP")
 
 
