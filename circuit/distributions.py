@@ -8,18 +8,84 @@ from gekko import GEKKO
 import math
 import pdb
 
+AREA_CORRECTION = True
+#### MAIN ISSUE with ACCURACY are the boundaries!
+
+
 class Distribution:
-    def __init__(self, m1=None, m2=None):
-        self.mu = m1
-        self.sigma = m2
+    """ moments is a list of moments """ 
+    def __init__(self, mom):
+        self.mom = mom
+        self.T = None
+        self.f_T = None
+        self.samples = None
     
     def pdf(self, t):
         raise NotImplementedError()
     
     def cdf(self, t):
         raise NotImplementedError()
+    def F_inv(self, low, high, F_target, eps=0.01):
+        mid = 0.5*(low+high)
+        F_mid = self.cdf(mid)
+        
+        # print(low, high, mid, self.pdf(low), self.pdf(high), self.pdf(mid), self.cdf(low), self.cdf(high), F_mid, np.abs(F_mid-F_target))
 
-    def pmf(self, samples=1000, margin=6):
+        # print("{:.10f}\t{:.10f}\t{:.10f}\t{:.10f}\t{:.10f}\t".format(
+        #     low, high, mid, F_mid, np.abs(F_mid-F_target)))
+        # pdb.set_trace()
+        if abs(F_mid - F_target) < eps:
+            return mid
+        elif F_mid > F_target:
+            return self.F_inv(low, mid, F_target, eps=eps)
+        else:
+            return self.F_inv(mid, high, F_target, eps=eps)
+    
+    def equal_F(self, low, high, count, eps=0.001):
+        # print("Function call:\t{:.4f}\t{:.4f}\t{}".format(low, high, count))
+        F_mid = (self.cdf(low) + self.cdf(high))/2
+        t_mid = self.F_inv(low, high, F_mid, eps=eps)
+        if count == 2:
+            res = [low, t_mid]
+        else:
+            left = self.equal_F(low, t_mid, count/2, eps)
+            right = self.equal_F(t_mid, high, count/2, eps)
+            left.extend(right)
+            res = left
+        # print("Results are:  \t{:.4f}\t{:.4f}\t-->{}".format(low, high, res))
+        return res
+
+    def pmf(self, samples, eps=0.0001):
+        # TODO: the description of function should be updated
+        """ Generates a smart sample set from the PDF of a Distribution
+        Arguments 
+        -- samples: number of samples, if margin defined in this distribution, samples are 
+            provided within margin, otherwise solid m1+-margin*m2 is margin
+        Returns:
+        -- A tuple of (T, f_T), both are numpy arrays
+        -- T: time value (RV) of each sample
+        -- f_T: the prob. value of T, i.e. f_T = f(t=T) """
+        
+        low, high = self.margin()
+        if low == None:
+            print("Warning: possible mismatch in margin")
+            if self.m1 == None:
+                raise NameError("mean is not available")
+            else:
+                low = self.m1 - margin*self.m2
+                high = self.m1 + margin*self.m2
+            
+        if np.log2(samples)%2 != 0:
+            samples = np.power(2, np.ceil(np.log2(samples)))
+            print("Changing samples to {}".format(samples))
+        
+        T = self.equal_F(low, high, samples, eps=eps)
+        T.append(high)
+        f_T = [self.pdf(t) for t in T]
+        # F_T = [d.cdf(t) for t in T]
+        return np.asarray(T), np.asarray(f_T)
+
+    def __pmf(self, samples, margin=6):
         """ Generates a uniform sample set from the PDF of a Distribution
         Arguments 
         -- samples: number of samples, if margin defined in this distribution, samples are 
@@ -43,7 +109,7 @@ class Distribution:
             f_T[idx] = self.pdf(t)
         return T, f_T
 
-    def cmf(self, samples=1000):
+    def cmf(self, samples):
         """ Generates a uniform sample set from the PDF of a Distribution
         Arguments 
         -- samples: number of samples, if margin defined in this distribution, samples are 
@@ -85,28 +151,7 @@ class Distribution:
 
     def margin(self):
         low, high = None, None
-
-    def get_m1(self):
-        """ TODO: bug can happen here! """ 
-        if self.mu:
-            return self.mu
-        T, f_T = self.pmf()
-        E_x = 0
-        for idx in range(len(T)-1):
-            E_x += (T[idx] * (T[idx+1]-T[idx]) * self.pdf(T[idx]))
-        return E_x
-
-
-    def get_m1m2(self):
-        """ TODO: bug can happen here! """
-        T, f_T = self.pmf()
-        E_x = 0
-        E_xx = 0
-        for idx in range(len(T)-1):
-            E_x += (T[idx] * (T[idx+1]-T[idx]) * self.pdf(T[idx]))
-            E_xx += (T[idx] * T[idx] * (T[idx+1]-T[idx]) * self.pdf(T[idx]))
-        return E_x, E_xx - E_x**2
-
+    
     @staticmethod
     def moments_from_pmf(T, f_T, moments=2):
 
@@ -132,7 +177,10 @@ class Distribution:
 
 class Normal(Distribution):
     def __init__(self, mu=0, sigma=1):
-        super().__init__(mu, sigma)
+        super().__init__([mu, sigma*sigma])
+        self.mu = mu
+        self.sigma = sigma
+        self.var = sigma*sigma
 
     def pdf(self, t):
         return norm.pdf(t, self.mu, self.sigma)
@@ -141,7 +189,7 @@ class Normal(Distribution):
         return norm.cdf(t, self.mu, self.sigma)
 
     def margin(self):
-        return self.mu-5*self.sigma, self.mu+5*self.sigma
+        return self.mu-6*self.sigma, self.mu+6*self.sigma
 
 
 class SkewNormal(Distribution):
@@ -166,15 +214,15 @@ class SkewNormal(Distribution):
     def cdf(self, t):
         return skewnorm.cdf(t, self.alpha, self.zeta, self.omega)
 
-    def margin(self):
-        _t = list(np.linspace(-4, 4, 101))
+    def margin(self, eps=0.0001):
+        _t = list(np.linspace(-3, 5, 101))
         _phi = np.asarray([norm.cdf(t) for t in _t])
         _owens_t = np.asarray([owens_t(t, self.alpha) for t in _t])
         _cdf = _phi - 2*_owens_t 
-        idx_l = next (x for x in range(len(_cdf)) if _cdf[x] > 0.0001 )
-        idx_h = next (x for x in range(len(_cdf)) if _cdf[x] > 0.9999 )
-        low  = _t[idx_l]
-        high = _t[idx_h]
+        idx_l = next (x for x in range(len(_cdf)) if _cdf[x] > eps )
+        idx_h = next (x for x in range(len(_cdf)) if _cdf[x] > 1-eps )
+        low  = _t[max(idx_l-1, 0)]
+        high = _t[min(idx_h+1, 100)]
         low = (low*self.omega) + self.zeta
         high = (high*self.omega) + self.zeta
         return low, high
@@ -248,7 +296,6 @@ class LogNormal(Distribution):
             high = high*1.1
 
         return (low, high)
- 
 
     @staticmethod
     def param_from_mom(mom):
@@ -266,9 +313,34 @@ class LogNormal(Distribution):
 
 class NumDist(Distribution):
     #TODO: I need to double check the boundaries
-    def __init__(self, T, f_T):
-        self.T = T
-        self.f_T = f_T
+    def __init__(self, T, f_T, clean=False, eps=1e-5, eps2=2e-5):
+        if clean:
+            self.T = []
+            self.f_T = []
+            ptr_s = 0
+            ptr_f = len(T)-1
+            while(f_T[ptr_s] < eps):
+                ptr_s += 1
+            while(f_T[ptr_f] < eps):
+                ptr_f -= 1
+            while(ptr_s + 2 < ptr_f):
+                if f_T[ptr_s] < eps2 and f_T[ptr_s+1] < eps2 and f_T[ptr_s+2] < eps2:
+                    ptr_s += 1
+                else:
+                    break
+            while(ptr_f - 2 > 0):
+                if f_T[ptr_f] < eps2 and f_T[ptr_f-1] < eps2 and f_T[ptr_f-2] < eps2:
+                    ptr_f -= 1
+                else:
+                    break
+
+            self.T = T[ptr_s:ptr_f+1]
+            self.f_T = f_T[ptr_s:ptr_f+1]
+            print(len(T), len(self.T))
+        else:
+            self.T = T
+            self.f_T = f_T
+
         self.gen_F()
 
     def pmf(self):
@@ -276,30 +348,38 @@ class NumDist(Distribution):
     
     def pdf(self, t):
         idx = np.searchsorted(self.T, t)
-        idx = len(self.T)-1 if idx==len(self.T) else idx
         if idx==0:
             return 0
+        if idx==len(self.T):
+            # extra-polation
+            a = (self.f_T[-1] - self.f_T[-2])/(self.T[-1] - self.T[-2])
+            res = self.f_T[-1] + a * (t-self.T[-1]) 
+            return max(0, res)
+        
         a = (t-self.T[idx-1])/(self.T[idx] - self.T[idx-1])
-        return a*self.f_T[idx-1] + (1-a)*self.f_T[idx]
+        return (1-a)*self.f_T[idx-1] + a*self.f_T[idx]
 
     def cdf(self, t):
         idx = np.searchsorted(self.T, t)
-        idx = len(self.T)-1 if idx==len(self.T) else idx
         if idx==0: #TODO: tof-maal
             return 0
+        if idx==len(self.T): # TODO: tof-maal
+            return 1
+            # print("Error is here, idx={:.5f} \t t={:.5f}".format(idx, t))
         a = (t-self.T[idx-1])/(self.T[idx] - self.T[idx-1])
-        return a*self.F_T[idx-1] + (1-a)*self.F_T[idx]
+        return (1-a)*self.F_T[idx-1] + a*self.F_T[idx]
+
 
     def gen_F(self):
         F_T = np.zeros(len(self.T))
         F_T[0] = 0
         for i in range(1, len(self.T)):
             dT = self.T[i] - self.T[i-1]
-            F_T[i] = F_T[i-1] + dT*self.f_T[i]
+            # 0.5 added to make better prediction
+            F_T[i] = F_T[i-1] + 0.5*dT*(self.f_T[i]+self.f_T[i-1])
         self.F_T = F_T
 
     def margin(self):
-        print("calc margin")
         return (min(self.T), max(self.T))
 
 
@@ -370,7 +450,7 @@ class MaxOp:
 
         return Normal(mu_max, sig_max) 
 
-    def max_num(self, d1, d2, rho=0, samples=200):
+    def max_num(self, d1, d2, samples, rho=0):
         """ if d1 or d2 are raw pmfs, tuple(T, f_T), they will be converted to  NumDist
         o.w. they should be of type Distribution, or similar """ 
         if isinstance(d1, tuple):
@@ -383,9 +463,11 @@ class MaxOp:
         l2, h2 = d2.margin()
         # print(l1, l2, h1, h2)
         ''' range can be more restricted for max operation '''  
-        low = min(l1, l2)
+        low = max(l1, l2)
         high = max(h1, h2)
-        domain = np.linspace(low, high, samples)
+
+        ex_space = (high-low)*0.02
+        domain = np.linspace(low-ex_space, high+ex_space, samples)
         f_max = np.zeros(samples) 
         for idx, t in enumerate(domain):
             f1 = d1.pdf(t)
@@ -394,11 +476,25 @@ class MaxOp:
             F2 = d2.cdf(t)
             f_max[idx] = f1*F2 + F1*f2
 
-        return domain, f_max
 
+        if AREA_CORRECTION:
+            a =  Distribution.area_pmf(domain, f_max)
+            if a!=1:
+                f_max = [f/a for f in f_max]
+        temp = NumDist(domain, f_max)
+        print("Area under pdf: {:.3f} {:.3f} {:.3f}".format(
+            Distribution.area_pmf(d1.T, d1.f_T), 
+            Distribution.area_pmf(d2.T, d2.f_T),
+            Distribution.area_pmf(temp.T, temp.f_T)))
+        
+        print( "D1  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nD2  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nMax low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f}".format(
+            d1.margin()[0], d1.margin()[1], d1.f_T[0], d1.f_T[-1], 
+            d2.margin()[0], d2.margin()[1], d2.f_T[0], d2.f_T[-1], 
+            temp.margin()[0], temp.margin()[1], temp.f_T[0], temp.f_T[-1]))
+
+        return NumDist(domain, f_max, clean=True)
 
 class SumOp:
-
     def __init__(self):
         self.sum_alt_map = {
                 (Normal, Normal): self._sum_NN, (Normal, SkewNormal): self._sum_NSN, 
@@ -449,8 +545,9 @@ class SumOp:
             for idx, k in enumerate(T1[:-1]):
                 dK = T1[idx+1] - T1[idx]
                 f_sum[sum_idx] += (d1.pdf(k) * d2.pdf(t-k) * dK)
-        print(Distribution.area_pmf(domain, f_sum))
-        return domain, f_sum
+        print("Area: ", Distribution.area_pmf(domain, f_sum))
+        return NumDist(domain, f_sum, clean=True)
+
 
 class DistScore:
 
@@ -481,7 +578,7 @@ class DistScore:
             dT = T[idx] - T[idx-1] 
             t = T[idx]
             if dT * ( (F_T[idx] - d_alt.cdf(t))**2 ) < 0:
-                pdb.set_trace()
+                raise NameError("Some issue with CVM")
             score += dT * ( (F_T[idx] - d_alt.cdf(t))**2 )
             
         return np.sqrt(score)

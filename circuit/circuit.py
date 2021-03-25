@@ -25,7 +25,7 @@ import config
 
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
-from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp
+from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 
 """
@@ -1455,7 +1455,7 @@ class Circuit:
                 node.td = opsum.sum_num(tg, td_max)
 
 
-    def ssta_plot(self):
+    def ssta_plot(self, fname):
         cmap = utils.get_cmap(20)
         plt.figure(figsize=(20,10))
         cnt = 0
@@ -1465,7 +1465,10 @@ class Circuit:
         for idx, node in enumerate(self.nodes_lev):
             if node.ntype in ["PI", "FB"]:
                 continue
-            if isinstance(node.td, Distribution):
+
+            if isinstance(node.td, NumDist):
+                T, f_T = node.td.pmf()
+            elif isinstance(node.td, Distribution):
                 T, f_T = node.td.pmf(samples=100)
             else:
                 T = node.td[0]
@@ -1476,7 +1479,8 @@ class Circuit:
         
         plt.grid()
         plt.legend(loc=1, prop={'size': 10})
-        plt.savefig("{}-ssta.png".format(self.c_name))
+        # plt.xlim([-5,25])
+        plt.savefig("{}".format(fname))
         plt.close()
 
 
@@ -1492,9 +1496,11 @@ class Circuit:
                 raise NameError("ERROR")
 
         # Second, go over each gate and run a MAX-SUM simulation
-
+        SAMPLES = 100 
         print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
+            print("==================================================")
+            print(node.num)
             if node.ntype == "PI":
                 node.td = node.tg 
             elif node.ntype == "FB":
@@ -1507,18 +1513,18 @@ class Circuit:
                     if mode == "alt":
                         td_max = opmax.max_alt(td_max, td_unodes[n])
                     elif mode == "num":
-                        td_max = opmax.max_num(td_max, td_unodes[n], samples=50)
+                        td_max = opmax.max_num(td_max, td_unodes[n], samples=SAMPLES)
                     else: 
                         raise NameError("Wrong code for SSTA simulation")
                 opsum = SumOp()
                 if mode == "alt":
                     node.td = opsum.sum_alt(node.tg, td_max)
                 elif mode == "num":
-                    node.td = opsum.sum_num(node.tg, td_max, samples=50)
+                    node.td = opsum.sum_num(node.tg, td_max, samples=SAMPLES)
                 else:
                     raise NameError("Wrong code for SSTA simulation")
-            mm = node.td.moments()
-            print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,mm[0], mm[1]))
+            # mm = node.td.moments()
+            # print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,mm[0], mm[1]))
 
     def get_cell_delay(self):
         cell_dg = {}
