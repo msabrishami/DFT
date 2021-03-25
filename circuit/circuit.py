@@ -1469,7 +1469,7 @@ class Circuit:
             if isinstance(node.td, NumDist):
                 T, f_T = node.td.pmf()
             elif isinstance(node.td, Distribution):
-                T, f_T = node.td.pmf(samples=100)
+                T, f_T = node.td.pmf(samples=500)
             else:
                 T = node.td[0]
                 f_T = node.td[1]
@@ -1496,7 +1496,7 @@ class Circuit:
                 raise NameError("ERROR")
 
         # Second, go over each gate and run a MAX-SUM simulation
-        SAMPLES = 100 
+        SAMPLES = 200 
         print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
             print("==================================================")

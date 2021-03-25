@@ -476,23 +476,27 @@ class MaxOp:
             F2 = d2.cdf(t)
             f_max[idx] = f1*F2 + F1*f2
 
-
         if AREA_CORRECTION:
             a =  Distribution.area_pmf(domain, f_max)
             if a!=1:
                 f_max = [f/a for f in f_max]
-        temp = NumDist(domain, f_max)
-        print("Area under pdf: {:.3f} {:.3f} {:.3f}".format(
-            Distribution.area_pmf(d1.T, d1.f_T), 
-            Distribution.area_pmf(d2.T, d2.f_T),
-            Distribution.area_pmf(temp.T, temp.f_T)))
-        
-        print( "D1  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nD2  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nMax low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f}".format(
-            d1.margin()[0], d1.margin()[1], d1.f_T[0], d1.f_T[-1], 
-            d2.margin()[0], d2.margin()[1], d2.f_T[0], d2.f_T[-1], 
-            temp.margin()[0], temp.margin()[1], temp.f_T[0], temp.f_T[-1]))
+        res = NumDist(domain, f_max)
+        print("Area under pdf: {:.3f}".format(Distribution.area_pmf(res.T, res.f_T)))
+        #     Distribution.area_pmf(d1.T, d1.f_T), 
+        #     Distribution.area_pmf(d2.T, d2.f_T),
+        #     Distribution.area_pmf(temp.T, temp.f_T)))
 
-        return NumDist(domain, f_max, clean=True)
+        # print("Area under pdf: {:.3f} {:.3f} {:.3f}".format(
+        #     Distribution.area_pmf(d1.T, d1.f_T), 
+        #     Distribution.area_pmf(d2.T, d2.f_T),
+        #     Distribution.area_pmf(temp.T, temp.f_T)))
+        # 
+        # print( "D1  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nD2  low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f} \nMax low={:.5f} \t high={:.5f} \t f[0]={:.5f} \t f[-1]={:.5f}".format(
+        #     d1.margin()[0], d1.margin()[1], d1.f_T[0], d1.f_T[-1], 
+        #     d2.margin()[0], d2.margin()[1], d2.f_T[0], d2.f_T[-1], 
+        #     temp.margin()[0], temp.margin()[1], temp.f_T[0], temp.f_T[-1]))
+
+        return res 
 
 class SumOp:
     def __init__(self):
@@ -527,7 +531,10 @@ class SumOp:
             d2 = NumDist(d2[0], d2[1])
         assert isinstance(d1, Distribution), print("Error: d1 is not numerical distribution") 
         assert isinstance(d2, Distribution), print("Error: d2 is not numerical distribution") 
-        T1, f_T_1 = d1.pmf()
+        if isinstance(d1, Distribution):
+            T1, f_T_1 = d1.pmf(samples)
+        else:
+            T1, f_T_1 = d1.pmf()
         l1, h1 = d1.margin()
         l2, h2 = d2.margin()
         ''' range can be more restricted for max operation '''  
