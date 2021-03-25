@@ -17,7 +17,7 @@ import time
 import pdb
 from multiprocessing import Process, Pipe
 #import numpy as np
-import os
+import os 
 import utils
 import config
 #import xlwt
@@ -447,6 +447,11 @@ class Circuit:
             node.S = node.sen_count / num_pattern
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
+    
+    def CALC_ENTROPY(self):
+        for node in self.nodes_lev:
+            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + (node.C0*math.log(node.C0, 2.0)))
+
 
     def TPI_stat(self, HTO_th, HTC_th):
         """ this is a simple division of nodes, 
@@ -1320,6 +1325,19 @@ class Circuit:
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
+
+
+    
+    def save_circuit_entropy(self, fname):
+        outfile = open(fname, "w")
+        for node in self.nodes_lev:
+            arr = [node.num,node.Entropy] 
+            arr = [str(x) for x in arr]
+            ss = ",".join(arr)
+            outfile.write(ss + "\n")
+        outfile.close()
+
+
 
     def load_circuit(self, fname):
         infile = open(fname)

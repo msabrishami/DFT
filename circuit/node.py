@@ -116,6 +116,10 @@ class Node:
         self.CB0 = None          # prob
         self.B = None          # prob
 
+        #Entropy
+        self.Entropy =None      #entropy of the node
+
+        
         # Test Point Insertion Measurements
         self.stat = {}
         

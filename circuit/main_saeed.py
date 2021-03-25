@@ -108,7 +108,30 @@ elif args.func == "saveStatTP":
     circuit.save_circuit(fname)
 
 
+elif args.func == "saveEntropyTP":
+    """ generate stafan stat file based on orig-TPs, and given tp 
+    The version must be added to the name of .stat file"""
 
+    tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
+    if not os.path.exists(tp_path):
+        raise NameError("no file found in {}".format(tp_path))
+    config.STAFAN_C_MIN = 1.0/(10*args.tp)
+    time_start = time.time()
+    circuit = Circuit(ckt_name)
+    LoadCircuit(circuit, "v")
+    circuit.lev()
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+    circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
+    circuit.STAFAN_B()
+    circuit.CALC_ENTROPY()
+    # print("Zeros: \t{}".format(circuit.c_zero_count))
+    print("Time: \t{:.3}".format(time.time() - time_start))
+    fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".ent"
+    print("Saving circuit with Entropy values in " + fname)
+    circuit.save_circuit_entropy(fname)
+
+ 
 
 elif args.func == "writeOB":
     # circuit.co_ob_info()
