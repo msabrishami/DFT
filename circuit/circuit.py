@@ -1469,7 +1469,7 @@ class Circuit:
             if isinstance(node.td, NumDist):
                 T, f_T = node.td.pmf()
             elif isinstance(node.td, Distribution):
-                T, f_T = node.td.pmf(samples=500)
+                T, f_T = node.td.pmf(samples=config.SAMPLES)
             else:
                 T = node.td[0]
                 f_T = node.td[1]
@@ -1484,19 +1484,18 @@ class Circuit:
         plt.close()
 
 
-    def SSTA(self, mode):
+    def SSTA(self, mode, samples):
         # First, what is the delay distribution of each gate? (num/alt)
         cell_dg = self.get_cell_delay()
         for node in self.nodes_lev:
             if node.ntype in ["PI", "FB"]:
-                node.tg = Normal(0, 1)
+                node.tg = Normal(0, 0.1)
             elif node.ntype in ["GATE", "PO"]:
                 node.tg = cell_dg[node.gtype] 
             else:
                 raise NameError("ERROR")
 
         # Second, go over each gate and run a MAX-SUM simulation
-        SAMPLES = 200 
         print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
             print("==================================================")
@@ -1513,14 +1512,14 @@ class Circuit:
                     if mode == "alt":
                         td_max = opmax.max_alt(td_max, td_unodes[n])
                     elif mode == "num":
-                        td_max = opmax.max_num(td_max, td_unodes[n], samples=SAMPLES)
+                        td_max = opmax.max_num(td_max, td_unodes[n], samples=samples)
                     else: 
                         raise NameError("Wrong code for SSTA simulation")
                 opsum = SumOp()
                 if mode == "alt":
                     node.td = opsum.sum_alt(node.tg, td_max)
                 elif mode == "num":
-                    node.td = opsum.sum_num(node.tg, td_max, samples=SAMPLES)
+                    node.td = opsum.sum_num(node.tg, td_max, samples=samples)
                 else:
                     raise NameError("Wrong code for SSTA simulation")
             # mm = node.td.moments()
@@ -1528,14 +1527,24 @@ class Circuit:
 
     def get_cell_delay(self):
         cell_dg = {}
-        cell_dg["NOT"] = Normal(1, 1)
-        cell_dg["NAND"] = Normal(3, 1)
-        cell_dg["AND"] = Normal(4.2, 1)
-        cell_dg["NOR"] = Normal(3, 1)
-        cell_dg["OR"] = Normal(4.2, 1)
-        cell_dg["XOR"] = Normal(8, 1)
-        cell_dg["XNOR"] = Normal(8, 1)
-        cell_dg["BUFF"] = Normal(2, 1)
+        # cell_dg["NOT"] = Normal(1, 1)
+        # cell_dg["NAND"] = Normal(3, 1)
+        # cell_dg["AND"] = Normal(4.2, 1)
+        # cell_dg["NOR"] = Normal(3, 1)
+        # cell_dg["OR"] = Normal(4.2, 1)
+        # cell_dg["XOR"] = Normal(8, 1)
+        # cell_dg["XNOR"] = Normal(8, 1)
+        # cell_dg["BUFF"] = Normal(2, 1)
+
+        cell_dg["NOT"] =    SkewNormal(1, 1, 10)
+        cell_dg["NAND"] =   SkewNormal(4, 1, 10)
+        cell_dg["AND"] =    SkewNormal(4.2, 1, 10)
+        cell_dg["NOR"] =    SkewNormal(3, 1, 10)
+        cell_dg["OR"] =     SkewNormal(4.2, 1, 10)
+        cell_dg["XOR"] =    SkewNormal(8, 1, 10)
+        cell_dg["XNOR"] =   SkewNormal(8, 1, 10)
+        cell_dg["BUFF"] =   SkewNormal(2, 1, 10)
+
         return cell_dg
 
 
