@@ -38,6 +38,7 @@ parser.add_argument("-HTO_th", type=float, required=False, default=None, help="H
 parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
 parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
 parser.add_argument("-op_fname", type=str, required=False, default=None, help="OP file name")
+parser.add_argument("-TPI_num", type=int, required=False, default=None, help="Number of TPI candidates specified")
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
@@ -113,6 +114,7 @@ elif args.func == "saveEntropyTP":
     The version must be added to the name of .stat file"""
 
     tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
+    tpi_num = args.TPI_num
     if not os.path.exists(tp_path):
         raise NameError("no file found in {}".format(tp_path))
     config.STAFAN_C_MIN = 1.0/(10*args.tp)
@@ -129,7 +131,11 @@ elif args.func == "saveEntropyTP":
     print("Time: \t{:.3}".format(time.time() - time_start))
     fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".ent"
     print("Saving circuit with Entropy values in " + fname)
+    circuit.CALC_TPI(tpi_num, fname + "TP")  
     circuit.save_circuit_entropy(fname)
+   
+
+
 
  
 

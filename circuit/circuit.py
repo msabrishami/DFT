@@ -452,6 +452,28 @@ class Circuit:
         for node in self.nodes_lev:
             node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + (node.C0*math.log(node.C0, 2.0)))
 
+    def CALC_TPI(self, num_TPI, fname):
+        TPI_list = [] #list of node entropy 
+        for node in self.nodes_lev:
+            node_list = [node.num, node.Entropy]
+            if not '-' in node.num:
+                TPI_list.append(node_list)
+            #print(TPI_list)
+        TPI_list.sort(key = lambda x: x[1])
+        print(TPI_list)
+        TPI_list = TPI_list[:num_TPI]
+        print(TPI_list)
+        
+        if not os.path.exists('../data/stafan-data'):
+            os.makedirs('../data/stafan-data')
+        outfile = open(fname, "w")
+        for item in TPI_list: 
+            outfile.write(item[0] + "\n")
+        outfile.close()
+        
+            
+
+
 
     def TPI_stat(self, HTO_th, HTC_th):
         """ this is a simple division of nodes, 
@@ -1329,6 +1351,8 @@ class Circuit:
 
     
     def save_circuit_entropy(self, fname):
+        if not os.path.exists('../data/stafan-data'):
+            os.makedirs('../data/stafan-data')
         outfile = open(fname, "w")
         for node in self.nodes_lev:
             arr = [node.num,node.Entropy] 
