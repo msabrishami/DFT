@@ -1509,13 +1509,16 @@ class Circuit:
 
 
     def SSTA(self, mode, samples):
+        # node.tg: the timing delay of a gate/node
+        # node.td: the timing delay distribution at this node
+
         # First, what is the delay distribution of each gate? (num/alt)
-        cell_dg = self.get_cell_delay()
+        cell_delay_dist = self.get_cell_delay()
         for node in self.nodes_lev:
             if node.ntype in ["PI", "FB"]:
                 node.tg = Normal(0, 0.1)
             elif node.ntype in ["GATE", "PO"]:
-                node.tg = cell_dg[node.gtype] 
+                node.tg = cell_delay_dist[node.gtype] 
             else:
                 raise NameError("ERROR")
 
@@ -1560,15 +1563,14 @@ class Circuit:
         # cell_dg["XNOR"] = Normal(8, 1)
         # cell_dg["BUFF"] = Normal(2, 1)
 
-        cell_dg["NOT"] =    SkewNormal(1, 1, 10)
-        cell_dg["NAND"] =   SkewNormal(4, 1, 10)
+        cell_dg["NOT"] =    SkewNormal(1,   1, 10)
+        cell_dg["NAND"] =   SkewNormal(4,   1, 10)
         cell_dg["AND"] =    SkewNormal(4.2, 1, 10)
-        cell_dg["NOR"] =    SkewNormal(3, 1, 10)
+        cell_dg["NOR"] =    SkewNormal(3,   1, 10)
         cell_dg["OR"] =     SkewNormal(4.2, 1, 10)
-        cell_dg["XOR"] =    SkewNormal(8, 1, 10)
-        cell_dg["XNOR"] =   SkewNormal(8, 1, 10)
-        cell_dg["BUFF"] =   SkewNormal(2, 1, 10)
-
+        cell_dg["XOR"] =    SkewNormal(8,   1, 10)
+        cell_dg["XNOR"] =   SkewNormal(8,   1, 10)
+        cell_dg["BUFF"] =   SkewNormal(2,   1, 10)
         return cell_dg
 
 

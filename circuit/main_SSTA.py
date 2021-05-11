@@ -13,7 +13,6 @@ from load_circuit import LoadCircuit
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp
 import distributions as dist
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-ckt", type=str, default="c17", help="circuit name, c17, no extension")
 parser.add_argument("-mode", type=str, default="alt", help="circuit name, c17, no extension")
@@ -24,7 +23,7 @@ config.SAMPLES = args.samples
 circuit = Circuit(args.ckt)
 LoadCircuit(circuit, "ckt")
 circuit.lev()
-circuit.load_mchist("MOSFET_16nm_HP")
+# circuit.load_mchist("MOSFET_16nm_HP")
 # circuit.ssta_pmf()
 circuit.SSTA(mode=args.mode, samples=args.samples)
 fname = "ssta-{}-{}-SK.png".format(args.ckt, args.mode)
