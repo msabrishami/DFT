@@ -18,12 +18,13 @@ The package was first developed by a group of University of Southern California 
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
 
 **Main contributers:**  <br /> 
+<cite>[Luke Grantham][20]</cite> <br />
+<cite>[Yang Shen][14]</cite> <br />
+
+
+**Graduate students who worked with this platform (some during their EE658 course**) *(equal contribution):* <br /> 
 <cite>[Amir Erfan Eshratifar][19]</cite>  <br />
-
-
-**Graduate students who worked with this platform during their EE658 course** *(equal contribution):* <br /> 
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
-Yang Shen  <cite>[LinkedIn][14]</cite> <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
 Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
 Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
@@ -44,7 +45,7 @@ Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 [17]: https://www.linkedin.com/in/shubo-li-760991193/
 [18]: https://www.linkedin.com/in/yida-yan-489b06191/
 [19]: http://amirerfan.com/
-
+[20]: https://www.linkedin.com/in/lukegrantham/
 ## Setup Environment
 Python3
 
