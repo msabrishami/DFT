@@ -208,7 +208,7 @@ class Node:
         if self.ntype == 'PO':
             return True
 
-        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH']:
+        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH', 'BUFF']:
             return True
 
         elif self.dnodes[0].gtype in ['AND', 'NAND']:
@@ -222,9 +222,9 @@ class Node:
                 return False
             else:
                 return True
-
         else:
-            print("Error: Not implemented yet")
+            print("Error: Not implemented yet") 
+            pdb.set_trace()
 
 
     def semi_detect(self):
@@ -249,25 +249,13 @@ class Node:
 
             dn = self.dnodes[0]
 
-            if dn.gtype == 'AND':
-                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
+            if dn.gtype in ['OR', 'AND', 'BUFF']:
+                self.D1 = (self.value == 1) & (dn.D1)
+                self.D0 = (self.value == 0) & (dn.D0)
 
-            elif dn.gtype == 'NAND':
-                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
-
-            elif dn.gtype == 'OR':
-                self.D1 = True if ((self.value == 1) & (dn.D1)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D0)) else False
-
-            elif dn.gtype == 'NOR':
-                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
-
-            elif dn.gtype == 'NOT':
-                self.D1 = True if ((self.value == 1) & (dn.D0)) else False
-                self.D0 = True if ((self.value == 0) & (dn.D1)) else False
+            elif dn.gtype in ['NAND', 'NOR', 'NOT']:
+                self.D1 = (self.value == 1) & (dn.D0)
+                self.D0 = (self.value == 0) & (dn.D1)
 
             elif dn.gtype == 'XOR':
                 if dn.value == 1:
