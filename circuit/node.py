@@ -39,12 +39,17 @@ class ntype(Enum):
 
 
 class Node:
-    ''' Implementation is node based.
-    A node also represents the upnode gate, as it is always unique.
-    Difference of node type and gate type important, refer to ckt document.
-    value:      value on the node, currently only accepting 2-value logic
-    num:        the node number as in ckt format, type is string
-    lev:        level of the node in circuit
+    """ Representing a circuit node, i.e. also representing its unique upnode gate.
+        Difference of node type and gate type important, refer to ckt documentation.
+
+    Attributes
+    ----------
+    num : str
+        the node number as in ckt format
+    value : int
+        logical value on the node, currently only accepting 2-value logic
+    lev : int
+        level of the node in circuit
     gtype:      the upnode gate type
                 supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND, BUFF
     ntype:      the node type
@@ -57,7 +62,8 @@ class Node:
     index:      #TODO: Not known
     TODO: add information about the rest of the attributes,
     including paper references for STAFAN and SCOAP
-    '''
+    """
+
     def __init__(self, n_type, g_type, num):
         # Saeed confirms: 
         self.gtype = g_type
@@ -124,8 +130,8 @@ class Node:
         self.stat = {}
         
         # SSTA Project
-        tg = None
-        td = None
+        self.dd_cell = None
+        self.dd_node = None
 
                     
     def __str__(self):

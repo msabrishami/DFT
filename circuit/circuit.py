@@ -25,6 +25,7 @@ import config
 
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
+import load_circuit
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 
@@ -42,25 +43,51 @@ from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDis
 
 
 class Circuit:
-    def __init__(self, c_name):
-        ''' a digital logic circuit
-        c_name:             circuit name, without .ckt extension
-        nodes:              list of nodes objects
-        input_num_list:     list of PI node numbers
-        nodes_cnt:          total number of nodes in the circuit
-        nodes_lev:          circuit information after levelization,
-                            each node has level info, previous nodelist_order
-        nodes_sim:          circuit information after logic simulation, each node has value
-        fautl_name:         full fault list in string format
-        fault_node_num:     node numbers in full fault list
-        '''
-        
-        # Saeed confirms using these attributes
-        self.c_name = c_name
+    """ Representing a digital logic circuit, capable of doing logic simulation, 
+        test related operations such as fault simulation, ATPG, OPI, testability 
+        measurements, SSTA, etc. 
+
+        Attributes
+        ---------
+        c_name_full : str
+            circuit name, full with path and format
+        c_name : str
+            circuit name, without path or format
+        nodes : list
+            list of nodes objects
+        input_num_list : list
+            list of PI node numbers
+        nodes_cnt : 
+            total number of nodes in the circuit
+        nodes_lev : 
+            circuit information after levelization,
+            each node has level info, previous nodelist_order
+        nodes_sim : 
+            circuit information after logic simulation, each node has value
+        fault_name : 
+            full fault list in string format
+        fault_node_num : 
+            node numbers in full fault list
+        """
+
+    def __init__(self, netlist_fname):
+        """ 
+        Parameters
+        ----------
+        c_name : str
+            the full name of the circuit with path and format 
+        """
+
+        self.c_fname = netlist_fname 
+        self.c_name = netlist_fname.split('/')[-1].split('.')[0]
+
+
         self.nodes = {}     # dict of all nodes, key is now string node-num
         self.nodes_lev = [] # list of all nodes, ordered by level
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
+
+        load_circuit.LoadCircuit(self, netlist_fname)
         
         # Saeed does not confirm using these attributes
         self.nodes_sim = None
@@ -79,10 +106,7 @@ class Circuit:
         self.lvls_list = [] #controllability and observability
         self.node_ids = [] #for mapping random node ids to 0-len(nodes)
 
-        # Saeed  
-
-
-        #pfs:
+        # PFS: 
         self.in_fault_node_num = [] # input fault num, string format
         self.in_fault_node_type = [] # input fault type, integer format
         
@@ -1464,19 +1488,19 @@ class Circuit:
 
             # Initiate the PIs first:
             if node.ntype == "PI":
-                node.td = Normal(0, 1)
+                node.dd_node = Normal(0, 1)
             elif node.ntype == "FB":
-                node.td = node.unodes[0].td
+                node.dd_node = node.unodes[0].dd_node
             elif node.ntype in ["GATE", "PO"]:
                 opmax = MaxOp()
-                td_unodes = [unode.td for unode in node.unodes]
-                td_max = td_unodes[0]
-                for n in range(1, len(td_unodes)):
-                    td_max = opmax.max_num(td_max, td_unodes[n])
+                dd_node_unodes = [unode.dd_node for unode in node.unodes]
+                dd_node_max = dd_node_unodes[0]
+                for n in range(1, len(dd_node_unodes)):
+                    dd_node_max = opmax.max_num(dd_node_max, dd_node_unodes[n])
 
                 opsum = SumOp()
-                tg = self.cell_ssta[node.gtype]
-                node.td = opsum.sum_num(tg, td_max)
+                dd_cell = self.cell_ssta[node.gtype]
+                node.dd_node = opsum.sum_num(dd_cell, dd_node_max)
 
 
     def ssta_plot(self, fname):
@@ -1490,13 +1514,13 @@ class Circuit:
             if node.ntype in ["PI", "FB"]:
                 continue
 
-            if isinstance(node.td, NumDist):
-                T, f_T = node.td.pmf()
-            elif isinstance(node.td, Distribution):
-                T, f_T = node.td.pmf(samples=config.SAMPLES)
+            if isinstance(node.dd_node, NumDist):
+                T, f_T = node.dd_node.pmf()
+            elif isinstance(node.dd_node, Distribution):
+                T, f_T = node.dd_node.pmf(samples=config.SAMPLES)
             else:
-                T = node.td[0]
-                f_T = node.td[1]
+                T = node.dd_node[0]
+                f_T = node.dd_node[1]
             plt.plot(T, f_T, linewidth=3, color=cmap(cnt), \
                     alpha=0.5, linestyle=next(linecycler), label=node.num)
             cnt += 1
@@ -1509,48 +1533,53 @@ class Circuit:
 
 
     def SSTA(self, mode, samples):
-        # node.tg: the timing delay of a gate/node
-        # node.td: the timing delay distribution at this node
+        """ Runs SSTA on the circuit. Currently the cell distributions are hard-coded
+
+        Parameters
+        ----------
+        mode : str
+            SSTA mode for statistical operations
+            alt, analytical
+            num, numerical 
+        samples : int
+            number of samples used for the numerical statistical operations
+        """
 
         # First, what is the delay distribution of each gate? (num/alt)
+        print("Warning: currently circuit SSTA only loads default distributions for cells")
         cell_delay_dist = self.get_cell_delay()
         for node in self.nodes_lev:
             if node.ntype in ["PI", "FB"]:
-                node.tg = Normal(0, 0.1)
+                node.dd_cell = Normal(0, 0.1)
             elif node.ntype in ["GATE", "PO"]:
-                node.tg = cell_delay_dist[node.gtype] 
-            else:
-                raise NameError("ERROR")
+                node.dd_cell = cell_delay_dist[node.gtype] 
 
         # Second, go over each gate and run a MAX-SUM simulation
         print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
-            print("==================================================")
-            print(node.num)
+            t_s = time.time()
+            print("Node: {} ----------------".format(node.num))
             if node.ntype == "PI":
-                node.td = node.tg 
+                node.dd_node = node.dd_cell 
             elif node.ntype == "FB":
-                node.td = node.unodes[0].td
+                node.dd_node = node.unodes[0].dd_node
             elif node.ntype in ["GATE", "PO"]:
                 opmax = MaxOp()
-                td_unodes = [unode.td for unode in node.unodes]
-                td_max = td_unodes[0]
-                for n in range(1, len(td_unodes)):
+                dd_unodes = [unode.dd_node for unode in node.unodes]
+                dd_max = dd_unodes[0]
+                for n in range(1, len(dd_unodes)):
                     if mode == "alt":
-                        td_max = opmax.max_alt(td_max, td_unodes[n])
+                        dd_max = opmax.max_alt(dd_max, dd_unodes[n])
                     elif mode == "num":
-                        td_max = opmax.max_num(td_max, td_unodes[n], samples=samples)
-                    else: 
-                        raise NameError("Wrong code for SSTA simulation")
+                        dd_max = opmax.max_num(dd_max, dd_unodes[n], samples=samples, 
+                            eps_error_area=0.01)
+                print("Done with MAX op: {:.4f}".format(time.time() - t_s))
                 opsum = SumOp()
                 if mode == "alt":
-                    node.td = opsum.sum_alt(node.tg, td_max)
+                    node.dd_node = opsum.sum_alt(node.dd_cell, dd_max)
                 elif mode == "num":
-                    node.td = opsum.sum_num(node.tg, td_max, samples=samples)
-                else:
-                    raise NameError("Wrong code for SSTA simulation")
-            # mm = node.td.moments()
-            # print("{}\t{}\t{:.3f}\t{:.3f}".format(node.num,node.lev,mm[0], mm[1]))
+                    node.dd_node = opsum.sum_num(node.dd_cell, dd_max, samples=samples)
+                    print("Done with SUM op: {:.4f}".format(time.time() - t_s))
 
     def get_cell_delay(self):
         cell_dg = {}

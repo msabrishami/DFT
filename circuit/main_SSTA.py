@@ -21,7 +21,6 @@ args = parser.parse_args()
 config.SAMPLES = args.samples
 
 circuit = Circuit(args.ckt)
-LoadCircuit(circuit, "ckt")
 circuit.lev()
 # circuit.load_mchist("MOSFET_16nm_HP")
 # circuit.ssta_pmf()

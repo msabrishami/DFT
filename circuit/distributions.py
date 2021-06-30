@@ -8,7 +8,8 @@ from gekko import GEKKO
 import math
 import pdb
 
-AREA_CORRECTION = True
+
+AREA_CORRECTION = False
 #### MAIN ISSUE with ACCURACY are the boundaries!
 
 
@@ -75,7 +76,7 @@ class Distribution:
                 low = self.m1 - margin*self.m2
                 high = self.m1 + margin*self.m2
             
-        if np.log2(samples)%2 != 0:
+        if np.log2(samples)%1 != 0:
             samples = np.power(2, np.ceil(np.log2(samples)))
             print("Changing samples to {}".format(samples))
         
@@ -344,28 +345,44 @@ class NumDist(Distribution):
         self.gen_F()
 
     def pmf(self):
+        """ Overwriting pmf method from Distribution class, just returning T,f_T """
         return self.T, self.f_T
     
     def pdf(self, t):
-        idx = np.searchsorted(self.T, t)
-        if idx==0:
-            return 0
-        if idx==len(self.T):
-            # extra-polation
+        """ Returns the pdf at delay value t for this numerical distribution 
+        Warning: this method includes a search in a sorted list 
+        """ 
+        idx = np.searchsorted(self.T, t) # gives idx of first number bigger than t
+        
+        if idx==0: # extrapolation
+            a = (self.f_T[1] - self.f_T[0])/(self.T[1] - self.T[0])
+            res = self.f_T[0] - a * (self.T[0]-t) 
+            return max(0, res)
+        
+        if idx==len(self.T): # extrapolation
             a = (self.f_T[-1] - self.f_T[-2])/(self.T[-1] - self.T[-2])
             res = self.f_T[-1] + a * (t-self.T[-1]) 
             return max(0, res)
         
-        a = (t-self.T[idx-1])/(self.T[idx] - self.T[idx-1])
+        a = (t-self.T[idx-1])/(self.T[idx] - self.T[idx-1]) # interpolation
         return (1-a)*self.f_T[idx-1] + a*self.f_T[idx]
 
     def cdf(self, t):
-        idx = np.searchsorted(self.T, t)
-        if idx==0: #TODO: tof-maal
-            return 0
-        if idx==len(self.T): # TODO: tof-maal
-            return 1
-            # print("Error is here, idx={:.5f} \t t={:.5f}".format(idx, t))
+        """ Returns the cdf at delay value t for this numerical distribution
+        Warning: this method includes a search in a sorted list
+        """
+        idx = np.searchsorted(self.T, t) # gives idx of first number bigger than t
+
+        if idx==0: # extrapolation 
+            a = (self.F_T[1] - self.F_T[0])/(self.T[1] - self.T[0])
+            res = self.F_T[0] - a * (self.T[0]-t) 
+            return max(0, res)
+
+        if idx==len(self.T): # extrapolation 
+            a = (self.F_T[-1] - self.F_T[-2])/(self.T[-1] - self.T[-2])
+            res = self.F_T[-1] + a * (t-self.T[-1]) 
+            return min(1, res)
+
         a = (t-self.T[idx-1])/(self.T[idx] - self.T[idx-1])
         return (1-a)*self.F_T[idx-1] + a*self.F_T[idx]
 
@@ -450,7 +467,7 @@ class MaxOp:
 
         return Normal(mu_max, sig_max) 
 
-    def max_num(self, d1, d2, samples, rho=0):
+    def max_num(self, d1, d2, samples, rho=0, eps_error_area=0.001):
         """ if d1 or d2 are raw pmfs, tuple(T, f_T), they will be converted to  NumDist
         o.w. they should be of type Distribution, or similar """ 
         if isinstance(d1, tuple):
@@ -481,7 +498,11 @@ class MaxOp:
             if a!=1:
                 f_max = [f/a for f in f_max]
         res = NumDist(domain, f_max)
-        print("Area under pdf: {:.3f}".format(Distribution.area_pmf(res.T, res.f_T)))
+        _area = Distribution.area_pmf(res.T, res.f_T)
+        if abs(_area-1) > eps_error_area:
+            print("Error: area under pdf: {:.4f}".format(_area))
+            return -1
+            #TODO
         #     Distribution.area_pmf(d1.T, d1.f_T), 
         #     Distribution.area_pmf(d2.T, d2.f_T),
         #     Distribution.area_pmf(temp.T, temp.f_T)))
@@ -495,6 +516,7 @@ class MaxOp:
         #     d1.margin()[0], d1.margin()[1], d1.f_T[0], d1.f_T[-1], 
         #     d2.margin()[0], d2.margin()[1], d2.f_T[0], d2.f_T[-1], 
         #     temp.margin()[0], temp.margin()[1], temp.f_T[0], temp.f_T[-1]))
+        
 
         return res 
 
@@ -529,12 +551,10 @@ class SumOp:
             d1 = NumDist(d1[0], d1[1])
         if isinstance(d2, tuple):
             d2 = NumDist(d2[0], d2[1])
-        assert isinstance(d1, Distribution), print("Error: d1 is not numerical distribution") 
-        assert isinstance(d2, Distribution), print("Error: d2 is not numerical distribution") 
-        if isinstance(d1, Distribution):
-            T1, f_T_1 = d1.pmf(samples)
-        else:
-            T1, f_T_1 = d1.pmf()
+        assert isinstance(d1, Distribution), print("Error: d1 is not distribution") 
+        assert isinstance(d2, Distribution), print("Error: d2 is not distribution") 
+        T1, f_T_1 = d1.pmf(samples)
+        
         l1, h1 = d1.margin()
         l2, h2 = d2.margin()
         ''' range can be more restricted for max operation '''  
@@ -542,9 +562,9 @@ class SumOp:
         high = h1 + h2
         domain = np.linspace(low, high, samples)
         # dT = domain[1] - domain[0]
-        print("Margin Dist #1:  {:.3f}\t{:.3f}".format(l1, h1))
-        print("Margin Dist #2:  {:.3f}\t{:.3f}".format(l2, h2))
-        print("Margin Dist Sum: {:.3f}\t{:.3f}".format(low, high))
+        # print("Margin Dist #1:  {:.3f}\t{:.3f}".format(l1, h1))
+        # print("Margin Dist #2:  {:.3f}\t{:.3f}".format(l2, h2))
+        # print("Margin Dist Sum: {:.3f}\t{:.3f}".format(low, high))
         f_sum = np.zeros(samples) 
         for sum_idx, t in enumerate(domain):
             # fz(t) = INT fX(k) * fY(t-k) for k in [-inf, +inf]

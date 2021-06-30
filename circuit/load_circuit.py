@@ -6,12 +6,27 @@ from node import *
 import config
 
 class LoadCircuit:
-    def __init__(self, circuit, mode = 'ckt'):
-        self.c_name = circuit.c_name
-        if mode == 'ckt':
-            self.read_ckt(circuit)
-        elif mode == 'v':
-            self.read_verilog(circuit)
+    """ Reads a circuit netlist (gate level), 
+    currently supports .ckt (refer to USC EE658) and .v (Verilog) 
+    """
+    
+    def __init__(self, circuit, circuit_fname):
+        """ Reads a gate level netlist and feeds the Circuit object 
+
+        Parameters
+        ----------
+        circuit : Circuit 
+            A Circuit object that will be be initialized 
+        circuit_name : str
+            the name of the circuit netlist file, with path and format
+        """ 
+        circuit_name   = circuit_fname.split('/')[-1].split('.')[0]
+        circuit_format = circuit_fname.split('/')[-1].split('.')[1]
+
+        if circuit_format == 'ckt':
+            self.read_ckt(circuit, circuit_fname)
+        elif circuit_format == 'v':
+            self.read_verilog(circuit, circuit_fname)
         else:
             raise NotImplementedError("Circuit format {} is not supported!".format(mode))
 
@@ -91,12 +106,11 @@ class LoadCircuit:
         return node
 
 
-    def read_verilog(self, circuit):
+    def read_verilog(self, circuit, circuit_fname):
         """
         Read circuit from .v file, each node as an object
         """
-        path = os.path.join(config.VERILOG_DIR, "{}.v".format(self.c_name))
-        infile = open(path, 'r')
+        infile = open(circuit_fname, 'r')
         eff_line = ''
         lines = infile.readlines()
         new_lines=[]
@@ -179,12 +193,11 @@ class LoadCircuit:
                     insert_branch(node, node.dnodes[0], branch)
         circuit.nodes.update(branches)
 
-    def read_ckt(self, circuit):
+    def read_ckt(self, circuit, circuit_fname):
         """
         Read circuit from .ckt file, each node as an object
         """
-        path = os.path.join(config.CKT_DIR, self.c_name + '.ckt')
-        infile = open(path, 'r')
+        infile = open(circuit_fname, 'r')
         lines = infile.readlines()
         circuit.nodes= {}
         # First time over the netlist
