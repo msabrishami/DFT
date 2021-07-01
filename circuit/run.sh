@@ -1,6 +1,9 @@
-python main_SSTA.py -ckt c17    -mode num -samples 512  & 
-python main_SSTA.py -ckt c1     -mode num -samples 512  &
-python main_SSTA.py -ckt c2     -mode num -samples 512  &
-python main_SSTA.py -ckt c3     -mode num -samples 512  &
-python main_SSTA.py -ckt x3mult -mode num -samples 512  &
-python main_SSTA.py -ckt add2   -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/c17.ckt    -mode num -samples 512  & 
+python main_SSTA.py -ckt ../data/ckt/c1.ckt     -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/c2.ckt     -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/c3.ckt     -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/c4.ckt     -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/x3mult.ckt -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/add2.ckt   -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/FA.ckt   -mode num -samples 512  &
+python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt   -mode num -samples 512  &

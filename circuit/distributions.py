@@ -56,7 +56,7 @@ class Distribution:
         # print("Results are:  \t{:.4f}\t{:.4f}\t-->{}".format(low, high, res))
         return res
 
-    def pmf(self, samples, eps=0.0001):
+    def __pmf(self, samples, eps=0.0001):
         # TODO: the description of function should be updated
         """ Generates a smart sample set from the PDF of a Distribution
         Arguments 
@@ -86,7 +86,7 @@ class Distribution:
         # F_T = [d.cdf(t) for t in T]
         return np.asarray(T), np.asarray(f_T)
 
-    def __pmf(self, samples, margin=6):
+    def pmf(self, samples, margin=6):
         """ Generates a uniform sample set from the PDF of a Distribution
         Arguments 
         -- samples: number of samples, if margin defined in this distribution, samples are 
@@ -401,7 +401,15 @@ class NumDist(Distribution):
 
 
 class Uniform(Distribution):
+    """ Representing a uniform distribution """
+    
     def __init__(self, a, b):
+        """ 
+        a : float 
+            start value of distribtion 
+        b : float 
+            end value of distribtion
+        """
         assert a < b, "Uniform distribution, margin is not correct ({} > {})".format(a,b)
         self.a = a
         self.b = b
@@ -422,7 +430,53 @@ class Uniform(Distribution):
         return 1
 
     def margin(self, eps = 0.01):
-        return (1-eps)*self.a, (1+eps)*self.b
+        return  self.a-(self.b-self.a)*eps, self.b + (self.b-self.a)*eps
+
+
+class Triangle(Distribution):
+    """ Representing a triangle distribution """
+    
+    def __init__(self, a, b, c):
+        """ 
+        a : float 
+            lower limit
+        b : float 
+            upper limit 
+        c : float
+            mode of the distribution
+        """
+
+        assert a < b, "Triangle distribution, margin is not correct ({} > {})".format(a,b)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.mu = (a+b+c)/3
+        self.var = (a**2 + b**2 + c**2 - (a*b + a*c + b*c) )/18
+        self.sigma = np.sqrt(self.var)
+
+    def pdf(self, t):
+        if t <= self.a or t >= self.b:
+            return 0
+        elif t < self.c:
+            return 2*(t-self.a)/( (self.b-self.a)*(self.c-self.a) )
+        elif t == self.c:
+            return 2/(self.b-self.a)
+        else: # if c < t < b:
+            return 2*(self.b-t)/( (self.b-self.a)*(self.b-self.c) )
+
+    def cdf(self, t):
+        if t < self.a:
+            return 0
+        elif t <= self.c:
+            return (t-self.a)**2/( (self.b-self.a)*(self.c -self.a) )
+        elif t < self.b:
+            return 1 - ((self.b-t)**2/( (self.b-self.a)*(self.c -self.a) ))
+        else: # if t >= b
+            return 1
+
+    def margin(self, eps = 0.01):
+        return  self.a-(self.b-self.a)*eps, self.b + (self.b-self.a)*eps
+
 
 class MaxOp:
     def __init__(self):
@@ -545,8 +599,8 @@ class SumOp:
         return Normal(d1.mu + d2.mu, np.sqrt(d1.sigma**2 + d2.sigma**2)) 
 
     def sum_num(self, d1, d2, rho=0, samples=200):
-        """ if d1 or d2 are raw pmfs, tuple(T, f_T), they will be converted to  NumDist
-        o.w. they should be of type Distribution, or similar """ 
+        """ if d1 or d2 are raw pmfs, i.e. tuple(T, f_T), they will be converted to  
+        NumDist o.w. they should be of type Distribution """ 
         if isinstance(d1, tuple):
             d1 = NumDist(d1[0], d1[1])
         if isinstance(d2, tuple):
@@ -557,7 +611,6 @@ class SumOp:
         
         l1, h1 = d1.margin()
         l2, h2 = d2.margin()
-        ''' range can be more restricted for max operation '''  
         low = l1 + l2
         high = h1 + h2
         domain = np.linspace(low, high, samples)
@@ -570,6 +623,7 @@ class SumOp:
             # fz(t) = INT fX(k) * fY(t-k) for k in [-inf, +inf]
             # ..... = INT fX(k) * fY(t-k) for k in [X_min, X_max]
             for idx, k in enumerate(T1[:-1]):
+                if k > t-l2: break
                 dK = T1[idx+1] - T1[idx]
                 f_sum[sum_idx] += (d1.pdf(k) * d2.pdf(t-k) * dK)
         print("Area: ", Distribution.area_pmf(domain, f_sum))

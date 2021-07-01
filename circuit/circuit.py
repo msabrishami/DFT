@@ -49,7 +49,7 @@ class Circuit:
 
         Attributes
         ---------
-        c_name_full : str
+        c_fname : str
             circuit name, full with path and format
         c_name : str
             circuit name, without path or format
@@ -62,7 +62,7 @@ class Circuit:
         nodes_lev : 
             circuit information after levelization,
             each node has level info, previous nodelist_order
-        nodes_sim : 
+        nodes_sim : -- depreciated 
             circuit information after logic simulation, each node has value
         fault_name : 
             full fault list in string format
@@ -90,7 +90,7 @@ class Circuit:
         load_circuit.LoadCircuit(self, netlist_fname)
         
         # Saeed does not confirm using these attributes
-        self.nodes_sim = None
+        # self.nodes_sim = None
         self.fault_name = []
         self.fault_node_num = []
         self.fault_type = [] # fault type for each node in fault list, (stuck at)1 or (stuck at)0
@@ -472,6 +472,7 @@ class Circuit:
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
     
+
     def CALC_ENTROPY(self):
         for node in self.nodes_lev:
             node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + (node.C0*math.log(node.C0, 2.0)))
@@ -495,9 +496,6 @@ class Circuit:
             outfile.write(item[0] + "\n")
         outfile.close()
         
-            
-
-
 
     def TPI_stat(self, HTO_th, HTC_th):
         """ this is a simple division of nodes, 
@@ -523,18 +521,6 @@ class Circuit:
                 node.stat["SS@0"] = "HTD"
 
     
-    """
-    def experiment_1(self):
-        for node in self.nodes_lev:
-            node.stat{"B0_old"} = node.B0
-            node.stat{"B1_old"} = node.B1
-        
-        for node in self.nodes_lev:
-            node.ntype="PO"
-            self.STAFAN_B()
-            for node in self.nodes_lev = 
-    """ 
-
     def NVIDIA_count(self, op, HTO_th, HTC_th):
         """ count the number of nodes that change from HTO to ETO 
         by making node an observation point """ 
@@ -560,22 +546,7 @@ class Circuit:
         self.PO = self.PO[:-1]
         return count
 
-    """
-    def IMOP_1(self, node):
-        # Sum of all the observations of the fan-in cone, only if lower than HTO
-        # if target becomes OP, how many node pass the threshold
-        if node.seen:
-            return 0
-        delta_B0 = node.B0 / node.stat{"B0_old"}
-        delta_B1 = node.B1 / node.stat{"B1_old"}
-        elif delta_B0 < 2 and delta_B1 < 2:
-            # no significant change
-            return 
-        for node in self.nodes_lev:
-            node.seen = False
-
-    """
-    
+   
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
         # calculate observability
@@ -993,6 +964,7 @@ class Circuit:
         """
         Using checkpoint theorem,
         generate reduced fault list
+        Warning: Checkpoint theorem does not apply to XOR/XNOR gates
         """
         faults_fanout = []
         for i in range(len(self.nodes)):
@@ -1026,9 +998,6 @@ class Circuit:
                 self.rfl_node.append(self.nodes[i].num)
                 self.rfl_ftype.append(1)
 
-    #to be continued
-    def equvalenceAndDominance(self):
-        return
 
     def D_alg(self, fault_index, imply_counter):
         """
@@ -1037,7 +1006,8 @@ class Circuit:
         """
         res = D_alg(self.nodes, fault_index, imply_counter)
         return res
-    #to be continued
+    
+    
     def podem(self, i):
         """
         Given a fault, returns whether it can be detected,
@@ -1046,12 +1016,14 @@ class Circuit:
         res = podem(self.fault_node_num[i], self.fault_type[i], self.nodes, self.nodes_lev)
         return res
 
+    
     def read_fault_dict(self):
         """read already generated fault dictionary"""
         fd = open("../fault_dic/{}.fd".format(self.c_name),"r")
         self.fd_data = fd.read()
         fd.close()
 
+    
     def get_patterns(self, test_pattern):
         """
         Given a test pattern with "X"s,
@@ -1092,6 +1064,7 @@ class Circuit:
         else:
             return True
 
+
     def check_success(self, fault_name, search_patterns):
         """
         Check if the returned pattern can detected the given fault
@@ -1125,6 +1098,7 @@ class Circuit:
                 entry = v
             pattern_Xless.append(entry)
         return pattern_Xless
+
 
     def get_d_correctness(self):
         """
@@ -1174,6 +1148,7 @@ class Circuit:
         self.d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / len(self.fault_node_num)) * 100
         print ("D algorithm correctness rate: {}%".format(self.d_correctness_rate))
 
+
     def get_d_coverage(self):
         """
         Count the percentage of faults in the full fault list D algorithm claimed as detected.
@@ -1218,6 +1193,7 @@ class Circuit:
         self.pass_cnt = 0
         return failure_fault_list
 
+
     def get_podem_correctness(self):
         """
         Check correctness of Podem for both detected and undetected faults.
@@ -1231,7 +1207,8 @@ class Circuit:
                 search_patterns = self.get_patterns(res.pattern)
                 pattern_found = self.check_success(self.fault_name[i], search_patterns)
                 if pattern_found == 0:
-                    print("Podem algorithm Error at fault {}, type SUCCESS".format(self.fault_name[i]))
+                    print("Podem algorithm Error at fault {}, type SUCCESS".format(
+                        self.fault_name[i]))
                     pd_error_cnt += 1
                 else:
                     pass
@@ -1239,12 +1216,15 @@ class Circuit:
                 # print("Podem_alg FAILURE")
                 error_not_found = self.check_failure(self.fault_name[i])
                 if error_not_found == 0:
-                    print("Podem algorithm Error at fault {}, type FAILURE".format(self.fault_name[i]))
+                    print("Podem algorithm Error at fault {}, type FAILURE".format(
+                        self.fault_name[i]))
                     pd_error_cnt += 1
                 else:
                     pass
-        self.pd_correctness_rate = ((len(self.fault_node_num) - pd_error_cnt) / len(self.fault_node_num)) * 100
+        self.pd_correctness_rate = 100 *( (len(self.fault_node_num) - pd_error_cnt) / 
+                len(self.fault_node_num) )
         print ("Podem algorithm correctness rate: {}%".format(self.pd_correctness_rate))
+
 
     def get_podem_coverage(self):
         """
@@ -1291,11 +1271,6 @@ class Circuit:
         print(totaltime)
 
 
-            
-
-    
-
-
     def control_thread(self, conn, c_name, i, total_T,num_proc):
         circuit = Circuit(c_name)
         circuit.read_circuit()
@@ -1326,7 +1301,8 @@ class Circuit:
         for i in range(num_proc):
         # for idx in process_list:
             parent_conn, child_conn = Pipe()
-            p = Process(target = self.control_thread, args =(child_conn, self.c_name, i, total_T,num_proc, ))
+            p = Process(target = self.control_thread, 
+                    args =(child_conn, self.c_name, i, total_T,num_proc, ))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -1355,7 +1331,6 @@ class Circuit:
             self.nodes_lev[i].D0_p = D0_count_list[i] / total_T
             self.nodes_lev[i].D1_p = D1_count_list[i] / total_T
 
-        #print (self.nodes_lev[i].num, self.nodes_lev[i].one_control, self.nodes_lev[i].zero_control,self.nodes_lev[i].sen_p)
         self.nodes_lev.sort(key=lambda x: x.lev)
         self.STAFAN_B()
         end_time = time.time()
@@ -1371,9 +1346,8 @@ class Circuit:
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
-
-
     
+
     def save_circuit_entropy(self, fname):
         if not os.path.exists('../data/stafan-data'):
             os.makedirs('../data/stafan-data')
@@ -1384,7 +1358,6 @@ class Circuit:
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
-
 
 
     def load_circuit(self, fname):
@@ -1407,7 +1380,6 @@ class Circuit:
         for idx, node in enumerate(self.nodes_lev):
             node2int[node.num] = idx
         return node2int
-
 
 
     def gen_graph(self):
@@ -1440,12 +1412,14 @@ class Circuit:
                 pass
         return G
 
+
     def get_node_attr(self, node_attr):
         data = []
         for node in self.nodes_lev:
             data.append(getattr(node, node_attr))
 
         return data
+
 
     def get_hist(self, node_attr, plot=False, fname=None):
         plt.clf()
@@ -1459,7 +1433,8 @@ class Circuit:
         else:
             fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
             plt.savefig(fname)
-    
+
+
     def load_mchist(self, tech_name):
         "MOSFET_16nm_HP --> MOSFET_16nm_HP_NAND.mchist"
         _cells = set()
@@ -1504,6 +1479,15 @@ class Circuit:
 
 
     def ssta_plot(self, fname):
+        """ Saves the plot of the delay distribution of the nodes 
+        It can be modified to only plot the internal gates and outputs
+        
+        Parameters
+        ---------
+        fname : str 
+            output file name 
+        """
+        
         cmap = utils.get_cmap(20)
         plt.figure(figsize=(20,10))
         cnt = 0
@@ -1519,6 +1503,7 @@ class Circuit:
             elif isinstance(node.dd_node, Distribution):
                 T, f_T = node.dd_node.pmf(samples=config.SAMPLES)
             else:
+                print("Warning: a tuple distribution is found in circuit!")
                 T = node.dd_node[0]
                 f_T = node.dd_node[1]
             plt.plot(T, f_T, linewidth=3, color=cmap(cnt), \
@@ -1530,6 +1515,7 @@ class Circuit:
         # plt.xlim([-5,25])
         plt.savefig("{}".format(fname))
         plt.close()
+        print("Circuit SSTA plot saved in {}".format(fname))
 
 
     def SSTA(self, mode, samples):
@@ -1580,6 +1566,7 @@ class Circuit:
                 elif mode == "num":
                     node.dd_node = opsum.sum_num(node.dd_cell, dd_max, samples=samples)
                     print("Done with SUM op: {:.4f}".format(time.time() - t_s))
+
 
     def get_cell_delay(self):
         cell_dg = {}
