@@ -40,3 +40,8 @@ CELL_NAMES = {
 ALL_ISCAS85=["c17","c432","c499","c880","c1355","c1908","c2670","c3540","c5315","c6288","c7552"] 
 ALL_EPFL_EZ=["arbiter", "sin", "bar","dec", "int2float", 
         "multiplier", "cavlc", "adder", "max", "priority", "voter"]
+
+SSTA_DATA_DIR = "../data/cell_ssta"
+PVS = "vth0-N0.03_lg-N0.05_w-N0.05_toxe-N0.10_ndep-N0.05_MC20000"
+TECH = "MOSFET_45nm_HP"
+

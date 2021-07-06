@@ -88,13 +88,19 @@ class Distribution:
 
     def pmf(self, samples, margin=6):
         """ Generates a uniform sample set from the PDF of a Distribution
-        Arguments 
-        -- samples: number of samples, if margin defined in this distribution, samples are 
+
+        Parameters
+        ----------
+        samples: int 
+            number of samples, if margin defined in this distribution, samples are 
             provided within margin, otherwise solid m1+-margin*m2 is margin
-        Returns:
-        -- A tuple of (T, f_T), both are numpy arrays
-        -- T: time value (RV) of each sample
-        -- f_T: the prob. value of T, i.e. f_T = f(t=T) """
+        Returns
+        -------
+        (T, f_T) : tuple (numpy array, numpy array)
+            T: time value (RV) of each sample
+            f_T: the prob. value of T, i.e. f_T = f(t=T) 
+        """
+
         low, high = self.margin()
         if low == None:
             print("Warning: possible mismatch in margin")
@@ -230,10 +236,10 @@ class SkewNormal(Distribution):
     
     def _margin(self, eps=0.001):
         low = self.mu
-        print(low)
+        print("**", low)
         while self.cdf(low) > eps:
             low -= 0.1*np.abs(low)
-            print(low, self.cdf(low))
+            print("*&*", low, self.cdf(low))
         high = self.mu
         while self.cdf(high) < 1-eps:
             high += 0.1*np.abs(high)
@@ -313,8 +319,22 @@ class LogNormal(Distribution):
 
 
 class NumDist(Distribution):
-    #TODO: I need to double check the boundaries
-    def __init__(self, T, f_T, clean=False, eps=1e-5, eps2=2e-5):
+    """ Representing a probabilistic delay distribution with a a list of delays (T)
+        and a list of probability distribution function (pdf: f_T) values 
+    """
+
+    def __init__(self, T, f_T, clean=False, eps=1e-6, eps2=2e-6):
+        """ 
+        Parameters
+        ----------
+        T : list of float
+            sample delay values 
+        f_T : list of float 
+            sample of pdf values corresponding to T values
+        clean : bool
+            if clean, a method is used to clear the boundaries of the f #TODO
+        """
+        #TODO: I need to double check the boundaries
         if clean:
             self.T = []
             self.f_T = []
@@ -337,7 +357,7 @@ class NumDist(Distribution):
 
             self.T = T[ptr_s:ptr_f+1]
             self.f_T = f_T[ptr_s:ptr_f+1]
-            print(len(T), len(self.T))
+            print("\tChanging resolution: {} --> {}".format(len(T), len(self.T)))
         else:
             self.T = T
             self.f_T = f_T
@@ -398,6 +418,9 @@ class NumDist(Distribution):
 
     def margin(self):
         return (min(self.T), max(self.T))
+
+    def area(self):
+        return Distribution.area_pmf(self.T, self.f_T)
 
 
 class Uniform(Distribution):
@@ -528,6 +551,12 @@ class MaxOp:
             d1 = NumDist(d1[0], d1[1])
         if isinstance(d2, tuple):
             d2 = NumDist(d2[0], d2[1])
+        
+        # Dirac distribution 
+        if d1 == 0:
+            return d2;
+        if d2 == 0:
+            return d1;
         assert isinstance(d1, Distribution), print("Error: d1 is not numerical distribution") 
         assert isinstance(d2, Distribution), print("Error: d2 is not numerical distribution") 
         l1, h1 = d1.margin()
@@ -598,16 +627,27 @@ class SumOp:
         '''
         return Normal(d1.mu + d2.mu, np.sqrt(d1.sigma**2 + d2.sigma**2)) 
 
+
     def sum_num(self, d1, d2, rho=0, samples=200):
         """ if d1 or d2 are raw pmfs, i.e. tuple(T, f_T), they will be converted to  
         NumDist o.w. they should be of type Distribution """ 
         if isinstance(d1, tuple):
+            print("Warning -- we still have T,f_T tupe as input for sum_num")
             d1 = NumDist(d1[0], d1[1])
         if isinstance(d2, tuple):
+            print("Warning -- we still have T,f_T tupe as input for sum_num")
             d2 = NumDist(d2[0], d2[1])
+
+        # Dirac distribution 
+        if d1 == 0:
+            return d2
+        if d2 == 0:
+            return d1
         assert isinstance(d1, Distribution), print("Error: d1 is not distribution") 
         assert isinstance(d2, Distribution), print("Error: d2 is not distribution") 
-        T1, f_T_1 = d1.pmf(samples)
+                
+        # The issue is that formal distributions need samples, but not NumDist
+        T1, f_T_1 = d1.pmf() if isinstance(d1, NumDist) else d1.pmf(samples)
         
         l1, h1 = d1.margin()
         l2, h2 = d2.margin()
@@ -626,7 +666,8 @@ class SumOp:
                 if k > t-l2: break
                 dK = T1[idx+1] - T1[idx]
                 f_sum[sum_idx] += (d1.pdf(k) * d2.pdf(t-k) * dK)
-        print("Area: ", Distribution.area_pmf(domain, f_sum))
+        # print("\tArea: {:.6f}".format(Distribution.area_pmf(domain, f_sum)))
+
         return NumDist(domain, f_sum, clean=True)
 
 

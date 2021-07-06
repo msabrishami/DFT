@@ -15,10 +15,10 @@ data/tpfc/
 **.log
 gnn/notes.txt
 gnn/TEMP_func.py
-circuit/temp_results/
+circuit/results/
 circuit/exp-results/
 data/ob_stat/
-data/cell_ssta/cell_mchist/
+data/cell_ssta/
 
 # **.graphml
 **.png

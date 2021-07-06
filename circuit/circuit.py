@@ -22,7 +22,12 @@ import utils
 import config
 #import xlwt
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
-
+#TODO: we need a flag to make sure no new nodes are added to the circuit, 
+#   ... for example, if we find all cell types in one method, later we should 
+#   ... read this flag to make sure what this method found is valid now, 
+#   ... and no new cell added that is not tracked. 
+#TODO: in DFT package gates are logical, NAND can have several inputs, but 
+#   ... for SSTA we have cell SSTA delay for NAND2 and NAND3, fix this!
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 import load_circuit
@@ -62,8 +67,6 @@ class Circuit:
         nodes_lev : 
             circuit information after levelization,
             each node has level info, previous nodelist_order
-        nodes_sim : -- depreciated 
-            circuit information after logic simulation, each node has value
         fault_name : 
             full fault list in string format
         fault_node_num : 
@@ -90,22 +93,13 @@ class Circuit:
         load_circuit.LoadCircuit(self, netlist_fname)
         
         # Saeed does not confirm using these attributes
-        # self.nodes_sim = None
         self.fault_name = []
         self.fault_node_num = []
         self.fault_type = [] # fault type for each node in fault list, (stuck at)1 or (stuck at)0
-        self.d_coverage = None
-        self.pd_coverage = None
         self.fd_data = None
-        self.d_correctness_rate = None
-        self.pd_correctness_rate = None
         self.pass_cnt = 0
-        self.input_cnt = None
         self.rfl_node = []
         self.rfl_ftype = []
-        self.lvls_list = [] #controllability and observability
-        self.node_ids = [] #for mapping random node ids to 0-len(nodes)
-
         # PFS: 
         self.in_fault_node_num = [] # input fault num, string format
         self.in_fault_node_type = [] # input fault type, integer format
@@ -923,14 +917,14 @@ class Circuit:
         Speed up the fault dictionary generation process.
         """
         fault_dict = {}
-        total_pattern = pow(2, self.input_cnt)
+        total_pattern = pow(2, len(self.PI))
         pattern_per_thread = int(total_pattern / thread_cnt)
 
         for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
             #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = ('{:0%db}'%self.input_cnt).format(i)
+            b = ('{:0%db}'%len(self.PI)).format(i)
             list_to_pfs = []
-            for j in range(self.input_cnt):
+            for j in range(len(self.PI)):
                 list_to_pfs.append(int(b[j]))
         #do pfs based on the prodeuced input files
             result = []
@@ -944,8 +938,8 @@ class Circuit:
             fault_dict.update({b: fault})
 
         with open ("../fault_dic/{}_{}.fd".format(self.c_name, idx), "w") as fo:
-            for i in range(self.input_cnt):
-                if (i < self.input_cnt - 1):
+            for i in range(len(self.PI)):
+                if (i < len(self.PI) - 1):
                     fo.write('%d->' % self.input_num_list[i])
                 else:
                     fo.write('%d' % self.input_num_list[i])
@@ -953,7 +947,7 @@ class Circuit:
             fo.write('\n')
             fo.write('input_patterns\t\t\tdetected_faults\n')
             for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-                b = ('{:0%db}'%self.input_cnt).format(i)
+                b = ('{:0%db}'%len(self.PI)).format(i)
                 fo.write('%s\t\t\t\t' % b)
                 for i in range(len(fault_dict.get(b))):
                     fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
@@ -1145,8 +1139,9 @@ class Circuit:
                     d_error_cnt += 1
                 else:
                     pass
-        self.d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / len(self.fault_node_num)) * 100
-        print ("D algorithm correctness rate: {}%".format(self.d_correctness_rate))
+        d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / 
+                len(self.fault_node_num)) * 100
+        print ("D algorithm correctness rate: {}%".format(d_correctness_rate))
 
 
     def get_d_coverage(self):
@@ -1188,8 +1183,8 @@ class Circuit:
 
             check_cnt += 1
             print ("check_cnt={}".format(check_cnt))
-        self.d_coverage = (self.pass_cnt / len(self.fault_node_num)) * 100
-        print ("D algorithm fault coverage: {}".format(self.d_coverage))
+        d_coverage = (self.pass_cnt / len(self.fault_node_num)) * 100
+        print ("D algorithm fault coverage: {}".format(d_coverage))
         self.pass_cnt = 0
         return failure_fault_list
 
@@ -1221,9 +1216,9 @@ class Circuit:
                     pd_error_cnt += 1
                 else:
                     pass
-        self.pd_correctness_rate = 100 *( (len(self.fault_node_num) - pd_error_cnt) / 
+        pd_correctness_rate = 100 *( (len(self.fault_node_num) - pd_error_cnt) / 
                 len(self.fault_node_num) )
-        print ("Podem algorithm correctness rate: {}%".format(self.pd_correctness_rate))
+        print ("Podem algorithm correctness rate: {}%".format(pd_correctness_rate))
 
 
     def get_podem_coverage(self):
@@ -1251,9 +1246,9 @@ class Circuit:
                     print("Test Pattern error for Podem at fault {}".format(fault))
             else:
                 pass
-        self.pd_coverage = self.pass_cnt / len(self.fault_node_num) * 100
+        pd_coverage = self.pass_cnt / len(self.fault_node_num) * 100
         self.pass_cnt = 0
-        print ("Podem algorithm fault coverage: {}%".format(self.pd_coverage))
+        print ("Podem algorithm fault coverage: {}%".format(pd_coverage))
 
 
     def podem_single_test(self, fault_node_num, fault_type):
@@ -1388,7 +1383,6 @@ class Circuit:
         """
         G = nx.DiGraph()
         for n in self.nodes_lev:
-            # n_num_normal = self.node_ids.index(n.num) #TODO: efficient search using dict
             n_num_normal = n.num
             G.add_node(n_num_normal)
             G.nodes[n_num_normal]['lev'] = n.lev
@@ -1421,38 +1415,6 @@ class Circuit:
         return data
 
 
-    def get_hist(self, node_attr, plot=False, fname=None):
-        plt.clf()
-        data = self.get_node_attr(node_attr)
-        res = plt.hist(data)
-        plt.title(self.c_name)
-        plt.xlabel(node_attr)
-        plt.ylabel("Occurrence")
-        if plot:
-            plt.show()
-        else:
-            fname = self.c_name + "_" + node_attr + ".png" if fname==None else fname
-            plt.savefig(fname)
-
-
-    def load_mchist(self, tech_name):
-        "MOSFET_16nm_HP --> MOSFET_16nm_HP_NAND.mchist"
-        _cells = set()
-        for node in self.nodes_lev:
-            if node.ntype == "GATE":
-                _cells.add(node.gtype)
-        
-        cell_ssta = dict()
-        for cell in _cells: 
-            fname = os.path.join("../data/cell_ssta/cell_mchist/", 
-                    tech_name+"_"+cell+".mchist")
-            T, h_T = utils.load_mchist(fname)
-            h_T = utils.smooth_hist(h_T, 11)
-            T, f_T = utils.hist2pmf(T, h_T)
-            cell_ssta[cell] = (T, f_T)
-
-        self.cell_ssta = cell_ssta
-
     def ssta_pmf(self):
         # all gate distributions are pmf and all process is numerical on pmfs 
         for node in self.nodes_lev:
@@ -1478,7 +1440,7 @@ class Circuit:
                 node.dd_node = opsum.sum_num(dd_cell, dd_node_max)
 
 
-    def ssta_plot(self, fname):
+    def ssta_plot(self, fname, select="gate"):
         """ Saves the plot of the delay distribution of the nodes 
         It can be modified to only plot the internal gates and outputs
         
@@ -1486,7 +1448,14 @@ class Circuit:
         ---------
         fname : str 
             output file name 
+        select : string
+            what nodes should be plotted
+            all plots all nodes
+            gate plots only gates and POs, no PI, FB
+            output plots only outputs
         """
+        if select not in ["gate", "all", "output"]:
+            raise NameError("Error (ssta_plot): select arg is not valid")
         
         cmap = utils.get_cmap(20)
         plt.figure(figsize=(20,10))
@@ -1495,7 +1464,9 @@ class Circuit:
         linecycler = cycle(lines)
 
         for idx, node in enumerate(self.nodes_lev):
-            if node.ntype in ["PI", "FB"]:
+            if select == "output" and node.ntype != "PO":
+                continue
+            elif select == "gate" and node.ntype not in ["GATE", "PO"]:
                 continue
 
             if isinstance(node.dd_node, NumDist):
@@ -1516,9 +1487,66 @@ class Circuit:
         plt.savefig("{}".format(fname))
         plt.close()
         print("Circuit SSTA plot saved in {}".format(fname))
+    
 
+    def set_cell_ssta_delay(self, src="mcraw", tech=config.TECH, pvs=config.PVS):
+        """ Reads Monte Carlo simulation results and generates ssta delay for cells 
+        
+        Parameters
+        ----------
+        src : str
+            mcraw > raw data of MC simulations results
+            mchist > Monte Carlo histogram, it can be filtered or cut before
+            text > not implemented yet, txt file with distribution info 
+        tech : str 
+            the name of the technology, e.g. MOSFET_45nm_HP
+        pvs : str
+            process variation specifier, refer to CSM package
+            e.g. vth0-N0.05_lg-N0.05_w-N0.10_toxe-N0.10_MC1000
+        """ 
+        cell_ssta_delay = dict()
+        for node in self.nodes_lev:
+            if node.ntype in ["PI", "FB"]: #TODO: delay of inputs and FB?
+                node.cell_name = node.ntype
+                continue
+            
+            cell_name = utils.get_node_gtype_fin(node) # gate name with fin 
+            node.cell_name = cell_name
+            if cell_name in cell_ssta_delay:
+                continue
+            
+            # Store the delay distribution for this cell in circuit
+            if src == "mchist":
+                fname = tech + "_" + cell_name + "_" + pvs + "." + src 
+                fname = os.path.join(config.SSTA_DATA_DIR, src + "/" + fname)
+                print("Loading mchist file for {}: {}".format(cell_name, fname))
+                T, h_T = utils.load_mchist(fname)
+                h_T = utils.smooth_hist(h_T, 11) #TODO: mchist smooth hard-coded
+                T, f_T = utils.hist2pmf(T, h_T)
+                print("\tArea: {}".format(Distribution.area_pmf(T, f_T)))
+                utils.plot_pmf(NumDist(T,f_T), fname=cell_name+".pdf")
+                cell_ssta_delay[cell_name] = NumDist(T, f_T)
+            
+            elif src == "default":
+                cell_ssta_delay[cell_name] = self.get_cell_delay(node.gtype)
+            
+            elif src == "mcraw":
+                fname = tech + "_" + cell_name + "_" + pvs + "." + src 
+                fname = os.path.join(config.SSTA_DATA_DIR, src + "/" + fname)
+                print("Loading mcraw file for {}: {}".format(cell_name, fname))
+                delays = utils.load_mcraw(fname)
+                T, f_T = utils.mcraw2mchist(delays, 200, pad=3)
+                f_T = utils.smooth_hist(f_T, window=5) 
+                print("\tArea: {}".format(Distribution.area_pmf(T, f_T)))
+                # utils.plot_pmf(NumDist(T,f_T), fname=cell_name+".pdf")
+                cell_ssta_delay[cell_name] = NumDist(T, f_T)
 
-    def SSTA(self, mode, samples):
+            else:
+                raise NameError("WRONG VALUES -- still developing")
+        self.cell_ssta_delay = cell_ssta_delay
+        
+
+    def ssta_sim(self, mode, src, samples):
         """ Runs SSTA on the circuit. Currently the cell distributions are hard-coded
 
         Parameters
@@ -1529,24 +1557,25 @@ class Circuit:
             num, numerical 
         samples : int
             number of samples used for the numerical statistical operations
+
+        Note: the delay of PI and FB is considered as 0
         """
 
         # First, what is the delay distribution of each gate? (num/alt)
-        print("Warning: currently circuit SSTA only loads default distributions for cells")
-        cell_delay_dist = self.get_cell_delay()
+        self.set_cell_ssta_delay(src, tech=config.TECH, pvs=config.PVS)
         for node in self.nodes_lev:
             if node.ntype in ["PI", "FB"]:
-                node.dd_cell = Normal(0, 0.1)
+                node.dd_cell = 0 
             elif node.ntype in ["GATE", "PO"]:
-                node.dd_cell = cell_delay_dist[node.gtype] 
+                node.dd_cell = self.cell_ssta_delay[node.cell_name] 
 
         # Second, go over each gate and run a MAX-SUM simulation
         print("Node\tLevel\tMean\tSTD")
         for node in self.nodes_lev:
             t_s = time.time()
-            print("Node: {} ----------------".format(node.num))
+            print("Node: {}\t".format(node.num))
             if node.ntype == "PI":
-                node.dd_node = node.dd_cell 
+                node.dd_node = 0 
             elif node.ntype == "FB":
                 node.dd_node = node.unodes[0].dd_node
             elif node.ntype in ["GATE", "PO"]:
@@ -1557,18 +1586,28 @@ class Circuit:
                     if mode == "alt":
                         dd_max = opmax.max_alt(dd_max, dd_unodes[n])
                     elif mode == "num":
+                        print("\t- unode: {}".format(node.unodes[n].num))
                         dd_max = opmax.max_num(dd_max, dd_unodes[n], samples=samples, 
                             eps_error_area=0.01)
-                print("Done with MAX op: {:.4f}".format(time.time() - t_s))
+                        if dd_max != 0:
+                            print("\tArea: {:.5f}".format(dd_max.area()))
+                
+                print("\tMAX time: {:2.4f}".format(time.time() - t_s))
+                if dd_max != 0:
+                    print("\tMAX Area: {:.5f}".format(dd_max.area()))
+                t_s = time.time()
                 opsum = SumOp()
                 if mode == "alt":
                     node.dd_node = opsum.sum_alt(node.dd_cell, dd_max)
                 elif mode == "num":
                     node.dd_node = opsum.sum_num(node.dd_cell, dd_max, samples=samples)
-                    print("Done with SUM op: {:.4f}".format(time.time() - t_s))
+                    print("\tSUM time: {:3.4f}".format(time.time() - t_s))
 
+                print("\tSUM Area: {:.5f}".format(node.dd_node.area()))
+                utils.plot_pmf(node.dd_node, fname=self.c_name + "-" + node.num + ".pdf")
 
     def get_cell_delay(self):
+        """ This method assigns temporary distributions to cells """ 
         cell_dg = {}
         # cell_dg["NOT"] = Normal(1, 1)
         # cell_dg["NAND"] = Normal(3, 1)
@@ -1578,7 +1617,6 @@ class Circuit:
         # cell_dg["XOR"] = Normal(8, 1)
         # cell_dg["XNOR"] = Normal(8, 1)
         # cell_dg["BUFF"] = Normal(2, 1)
-
         cell_dg["NOT"] =    SkewNormal(1,   1, 10)
         cell_dg["NAND"] =   SkewNormal(4,   1, 10)
         cell_dg["AND"] =    SkewNormal(4.2, 1, 10)

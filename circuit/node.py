@@ -170,8 +170,6 @@ class Node:
         ''' deductive fault simulation (dfs) using unodes ''' 
         raise NotImplementedError()
 
-
-
     
     # TODO: Saeed thinks many of these are redundant! 
     '''
