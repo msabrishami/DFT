@@ -1,24 +1,25 @@
-python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 128   
-python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 128  
-python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 128  
-python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 128  
-python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 128  
-python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 128
-python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 512   
-python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 512  
-python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 512  
-python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 512  
-python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 512  
-python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 512
-python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 1024   
-python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 1024  
-python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 1024  
-python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 1024  
-python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 1024  
-python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 1024
-python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 4096   
-python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 4096  
-python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 4096  
-python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 4096  
-python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 4096  
-python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 4096
+python main_saeed.py -ckt ../data/ckt/c17.ckt        -func test 
+# python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 128   
+# python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 128  
+# python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 128  
+# python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 128  
+# python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 128  
+# python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 128
+# python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 512   
+# python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 512  
+# python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 512  
+# python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 512  
+# python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 512  
+# python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 512
+# python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 1024   
+# python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 1024  
+# python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 1024  
+# python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 1024  
+# python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 1024  
+# python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 1024
+# python main_SSTA.py -ckt ../data/ckt/c17.ckt        -mode num -samples 4096   
+# python main_SSTA.py -ckt ../data/ckt/c1.ckt         -mode num -samples 4096  
+# python main_SSTA.py -ckt ../data/ckt/c2.ckt         -mode num -samples 4096  
+# python main_SSTA.py -ckt ../data/ckt/c3.ckt         -mode num -samples 4096  
+# python main_SSTA.py -ckt ../data/ckt/c4.ckt         -mode num -samples 4096  
+# python main_SSTA.py -ckt ../data/ckt/FA_NAND.ckt    -mode num -samples 4096

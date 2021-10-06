@@ -25,6 +25,56 @@ from convert import Converter
 import convert
 import utils 
 
+
+### These functions are copied from main_personal.py ### 
+def read_tp_file(fname):
+    infile = open(fname)
+    lines = infile.readlines()
+    tps = []
+    for line in lines[1:]:
+        tps.append(line.strip().split(","))
+
+    return tps
+
+def gen_tps():
+    # Gen tps and all the required folder!
+    for ckt in CKTs: 
+        print(ckt)
+        circuit = Circuit(ckt)
+        LoadCircuit(circuit, "ckt")
+        circuit.lev()
+        dfs = DFS(circuit)
+        dfs.fs_folder()
+        for idx in range(3):
+            if len(circuit.PI) < 6:
+                test_count = 4
+            else:
+                test_count = 10
+            circuit.gen_tp_file(test_count = test_count, 
+                    fname="../data/fault_sim/{}/input/{}_test_count-{}_id-{}.tp".format(
+                        ckt, ckt, str(test_count), str(idx)))
+            circuit.gen_tp_file(test_count = 1, 
+                    fname="../data/fault_sim/{}/input/{}_test_count-1_id-{}.tp".format(
+                        ckt, ckt, str(idx)))
+
+def golden_fault_sim():
+    import glob
+    for ckt in CKTs: 
+        print(ckt)
+        circuit = Circuit(ckt)
+        LoadCircuit(circuit, "ckt")
+        circuit.lev()
+        dfs = DFS(circuit) 
+        files = glob.glob("../data/fault_sim/{}/input/*.tp".format(ckt))
+        files.sort()
+        for tp_fname in files:
+            tps = read_tp_file(tp_fname)
+            tps = [[int(x) for x in tp] for tp in tps]
+            fs_fname = tp_fname.split("/")[-1][:-2] + "fs"
+            print(fs_fname)
+            dfs.multiple(pattern_list = tps, fname_log=fs_fname)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")
 parser.add_argument("-synv", type=str, required=False , help="syn ver")
@@ -38,6 +88,7 @@ parser.add_argument("-HTO_th", type=float, required=False, default=None, help="H
 parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
 parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
 parser.add_argument("-op_fname", type=str, required=False, default=None, help="OP file name")
+parser.add_argument("-TPI_num", type=int, required=False, default=None, help="Number of TPI candidates specified")
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
@@ -52,10 +103,7 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
 
 if args.func == "test":
     circuit = Circuit(args.ckt)
-    LoadCircuit(circuit, "v")
     circuit.lev()
-    justNode = circuit.nodes_lev[3]
-    print(justNode)
 
 
 if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP", 
@@ -63,7 +111,6 @@ if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP",
     fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
     print("Loading circuit with STAFAN values in " + fname)
     circuit = Circuit(ckt_name)
-    LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
@@ -113,6 +160,7 @@ elif args.func == "saveEntropyTP":
     The version must be added to the name of .stat file"""
 
     tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
+    tpi_num = args.TPI_num
     if not os.path.exists(tp_path):
         raise NameError("no file found in {}".format(tp_path))
     config.STAFAN_C_MIN = 1.0/(10*args.tp)
@@ -129,6 +177,7 @@ elif args.func == "saveEntropyTP":
     print("Time: \t{:.3}".format(time.time() - time_start))
     fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".ent"
     print("Saving circuit with Entropy values in " + fname)
+    circuit.CALC_TPI(tpi_num, fname + "TP")  
     circuit.save_circuit_entropy(fname)
 
  
