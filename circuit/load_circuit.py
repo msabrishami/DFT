@@ -66,6 +66,8 @@ class LoadCircuit:
     def gen_node(self, Dict):
         """ creates a node, does not make any connections, 
         does not modify the PI, PO list of this circuit """
+
+        node = -1
         
         if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
             node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
@@ -103,6 +105,9 @@ class LoadCircuit:
         else:
             raise NotImplementedError()
         
+        if node == -1:
+            import pdb
+            pdb.set_trace()
         return node
 
 

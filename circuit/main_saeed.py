@@ -101,60 +101,77 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
     ckt_name, args.tp, args.tpLoad, args.cpu))
 
 
-if args.func == "test":
+if args.func == "test1":
     circuit = Circuit(args.ckt)
     circuit.lev()
+    print(circuit)
 
 
-if args.func not in ["saveStat", "saveStatTP", "gen_stil", "genTP", 
-        "genV_TMAXOP", "analysisOB", "test"]:
-    fname = "../data/stafan-data/{}-TP{}.stafan".format(ckt_name, args.tpLoad)
-    print("Loading circuit with STAFAN values in " + fname)
-    circuit = Circuit(ckt_name)
+elif args.func == "test2": 
+    circuit = Circuit(args.ckt)
+    circuit.lev()
+    
+    # testing single test pattern generation 
+    temp = circuit.gen_tp()
+   
+    # testing generating a file of test patterns 
+    path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
+    circuit.gen_tp_file(args.tp, path)
+
+
+elif args.func == "test3": 
+    circuit = Circuit(args.ckt)
+    circuit.lev()
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+    circuit.STAFAN_CS(args.tp) 
+    circuit.STAFAN_B() 
+
+
+elif args.func == "test4":
+
+    time_start = time.time()
+    circuit = Circuit(args.ckt)
+    circuit.lev()
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+    
+    path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
+    circuit.gen_tp_file(args.tp, path)
+    circuit.STAFAN_CS(args.tp, path) 
+    circuit.STAFAN_B() 
+    
+    fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
+    circuit.save_TMs(fname)
+    print("Time: \t{:.3}".format(time.time() - time_start))
+
+
+elif args.func == "saveStatTP":
+    ## For now, we are only generating the random input vector files, 
+    # Later we need to add read from file 
+    """ generate stafan stat file based on reading TPs from file
+    The version must be added to the name of .stat file"""
+    
+    circuit = Circuit(args.ckt)
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
 
-
-
-if args.func == "genTP":
-    
-    """ generate original test pattern file, orig-TP  
-    Important note, if synv is selected, will generate for the synthesized version
-    But it does not have any differece! """
-    path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tp)
-    print("generating test patterns for {} with {} tps in {}".format(ckt_name, args.tp, path))
-    circuit = Circuit(ckt_name)
-    LoadCircuit(circuit, "v")
-    circuit.lev()
-    circuit.gen_tp_file(args.tp, path)
-
-
-
-
-elif args.func == "saveStatTP":
-    """ generate stafan stat file based on orig-TPs, and given tp 
-    The version must be added to the name of .stat file"""
-
-    tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
+    tp_path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tpLoad)
     if not os.path.exists(tp_path):
         raise NameError("no file found in {}".format(tp_path))
     config.STAFAN_C_MIN = 1.0/(10*args.tp)
     time_start = time.time()
-    circuit = Circuit(ckt_name)
-    LoadCircuit(circuit, "v")
-    circuit.lev()
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
+    # circuit.STAFAN_CS(args.tp, tp_path) 
+    circuit.STAFAN_CS(args.tp) 
     circuit.STAFAN_B() 
     # print("Zeros: \t{}".format(circuit.c_zero_count))
+    fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
+    circuit.save_TMs(fname)
     print("Time: \t{:.3}".format(time.time() - time_start))
-    fname = "../data/stafan-data/" + ckt_name + "-TP" + str(args.tp) + ".stafan"
-    print("Saving circuit with STAFAN values in " + fname)
-    circuit.save_circuit(fname)
 
 
+# Double check later 
 elif args.func == "saveEntropyTP":
     """ generate stafan stat file based on orig-TPs, and given tp 
     The version must be added to the name of .stat file"""
@@ -166,7 +183,6 @@ elif args.func == "saveEntropyTP":
     config.STAFAN_C_MIN = 1.0/(10*args.tp)
     time_start = time.time()
     circuit = Circuit(ckt_name)
-    LoadCircuit(circuit, "v")
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
@@ -181,14 +197,11 @@ elif args.func == "saveEntropyTP":
     circuit.save_circuit_entropy(fname)
 
  
-
 elif args.func == "writeOB":
     # circuit.co_ob_info()
     path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)
     print("Saving ob info in {}".format(path))
     circuit.write_ob_info(path)
-
-
 
 
 elif args.func == "analysisOB":

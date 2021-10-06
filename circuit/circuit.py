@@ -84,7 +84,6 @@ class Circuit:
         self.c_fname = netlist_fname 
         self.c_name = netlist_fname.split('/')[-1].split('.')[0]
 
-
         self.nodes = {}     # dict of all nodes, key is now string node-num
         self.nodes_lev = [] # list of all nodes, ordered by level
         self.PI = [] # this should repalce input_num_list
@@ -95,7 +94,7 @@ class Circuit:
         # Saeed does not confirm using these attributes
         self.fault_name = []
         self.fault_node_num = []
-        self.fault_type = [] # fault type for each node in fault list, (stuck at)1 or (stuck at)0
+        self.fault_type = [] # fault type for each node in fault list, s-a-1 or s-a-0
         self.fd_data = None
         self.pass_cnt = 0
         self.rfl_node = []
@@ -106,108 +105,9 @@ class Circuit:
         
     
     def add_node(self, line):
-        raise NameError("This function is deprecated")
+        raise NameError("This method is deprecated")
     
-    def make_PO(self, target):
-        """ connects this target node to a PO using a branch 
-        """
-        if target.ntype == "PO":
-            return 
-        # target becomes stem, create new branches:
-        new_brch = BRCH("PO", "BRCH", target.num+"-IPO") 
-        old_brch = BRCH("FB", "BRCH", target.num+"-OLD")
-
-        # fixing unodes for new branches
-        new_brch.unodes.append(target)
-        old_brch.unodes.append(target)
-        old_brch.dnodes = target.dnodes
-        
-        # fixing unodes for target.dnodes
-        # if target was stem:
-        if len(target.dnodes) > 1:
-            for dnode in target.dnodes:
-                dnode.unodes = [old_brch]
-        # if target was a gate
-        else:
-            new_unodes = []
-            for unode in target.dnodes[0].unodes:
-                if unode.num != target.num:
-                    new_unodes.append(unode)
-            new_unodes.append(old_brch)
-            target.dnodes[0].unodes = new_unodes
-
-        self.PO.append(new_brch)
-        self.nodes[new_brch.num] = new_brch
-
-
-    def connect_node(self, line):
-        # As we move forward, find the upnodes and connects them
-        
-        attr = line.split()
-        ptr = self.nodes[attr[1]]
-        
-        # ntype=PI and gtype=IPT: good
-        # we don't care about #fan-out
-        if ptr.ntype == "PI" and ptr.gtype=="IPT":
-            None
-        
-        # ntype=FB and gtyep=BRCH
-        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
-            unode = self.nodes[attr[3]]
-            ptr.unodes.append(unode)
-            unode.dnodes.append(ptr)
-        
-        # ntype=GATE and gtype=BRCH
-        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
-            print("ERROR: gate and branch", ptr.num)
-
-        # ntype=GATE or ntype=PO 
-        # we don't care about #fan-out
-        # some gates have a single input, they are buffer
-        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
-            for unode_num in attr[5:]:
-                unode = self.nodes[unode_num]
-                ptr.unodes.append(unode)
-                unode.dnodes.append(ptr)
-        else:
-            print("ERROR: not known!", ptr.num)
-
     
-    ## Inputs: Verilog gate input formats
-    ## Outputs: gtype corresponding gate name
-    def gtype_translator(self, gate_type):
-        if gate_type == 'ipt':
-            return gtype(0).name
-        elif gate_type == 'xor':
-            return gtype(2).name
-        elif gate_type == 'or':
-            return gtype(3).name
-        elif gate_type == 'nor':
-            return gtype(4).name
-        elif gate_type == 'not':
-            return gtype(5).name
-        elif gate_type == 'nand':
-            return gtype(6).name
-        elif gate_type == 'and':
-            return gtype(7).name
-        ## new node type
-        elif gate_type == 'xnor':
-            return gtype(8).name
-        elif gate_type == 'buf':
-            return gtype(9).name
-
-
-    ## This function is used for inserting the BRCH node
-    ## u_node and d_node are connected originally
-    ## i_node is the node be inserted between u_node and d_node
-    def insert_node(self, u_node, d_node, i_node):
-        u_node.dnodes.remove(d_node)
-        u_node.dnodes.append(i_node)
-        d_node.unodes.remove(u_node)
-        d_node.unodes.append(i_node)
-        i_node.unodes.append(u_node)
-        i_node.dnodes.append(d_node)
-
     def lev(self):
         """
         Levelization, assigns a level to each node
@@ -236,13 +136,13 @@ class Circuit:
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
-        res.append("#PI: " + str(len(self.PI)) + " >> ")
-        res.append(str([x.num for x in self.PI]))
+        res.append("#PI: " + str(len(self.PI)) + " >> ") 
+        # res.append("\t" + str([x.num for x in self.PI]))
         res.append("#PO: " + str(len(self.PO)) + " >> ")
-        res.append(str([x.num for x in self.PO]))
+        # res.append("\t" + str([x.num for x in self.PO]))
 
-        for num, node in self.nodes.items():
-            res.append(str(node))
+        # for num, node in self.nodes.items():
+        #     res.append(str(node))
         return "\n".join(res)
     
 
@@ -267,8 +167,8 @@ class Circuit:
             raise NameError("Mode is not acceptable")
         fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
         fname = fn if fname==None else fname
-        infile = open(fname, 'w')
-        infile.write(",".join([str(node.num) for node in self.PI]) + "\n")
+        outfile = open(fname, 'w')
+        outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
         
         for t in range(test_count):
             if mode == "b":
@@ -277,13 +177,35 @@ class Circuit:
                 pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
                 pat = ["X" if x=="2" else x for x in pat]
             # print(",".join(pat))
-            infile.write(",".join(pat) + "\n")
+            outfile.write(",".join(pat) + "\n")
         
-        infile.close()
+        outfile.close()
+        print("Generated {} test patterns and saved in {}".format(test_count, fname))
 
-                
+    # do we need to check the order of the inputs in the file?  
+    # this can be done using "yield" or "generate" -- check online 
+    def load_tp_file(self, fname):
+        """ create single file with multiple input patterns
+        mode b: generate values in {0, 1}
+        mode x: generate values in {0, 1, X}
+        """ 
+        infile = open(fname, 'r')
+        tps = []
+        lines = infile.readlines()
+
+        # @Ghazal: check the order of inputs in the file is the same as self.PI
+        for line in lines[1:]:
+            words = line.rstrip().split(',')
+            words = [int(word) for word in words]
+            tps.append(words)
+        infile.close()
+        return tps
+
 
     def read_PO(self):
+        """ reads the values of POs in a dictionary 
+        The key to the dictionary is the PO node and value is the value of node
+        """ 
         res = {}
         for node in self.PO:
             res["out" + str(node.num)] = node.value
@@ -307,12 +229,13 @@ class Circuit:
                 node.imply()
 
     
+    # Saeed needs to rewrite this method using 'yield' in load_tp_file     
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
         """
-        This method does the logic simulation in our platform
-        First: generate a output folder in ../data/modelsim/circuit_name/ directory
-        Second: read a input file in input folder
-        Third: generate a output file in output folder by using logic_sim() function
+        logic simulation with given input vectors from a file
+        - generates an output folder in ../data/modelsim/circuit_name/ directory
+        - read a input file in input folder
+        - generate a output file in output folder by using logic_sim() function
         """
         fr = open(in_fname, mode='r')
         fw = open(out_fname, mode='w')
@@ -361,6 +284,7 @@ class Circuit:
                 outfile.write("; } \n")
             outfile.close()
 
+    # Saeed: this needs to be tested by myself later
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
         #  ... provided a golden input/output file
@@ -390,19 +314,14 @@ class Circuit:
         return True
     
     
-    def co_ob_info(self):
-        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
-        for node in self.nodes_lev:
-            node.print_info(print_labels=False)
-
-
     def SCOAP_CC(self):
+        """ Calculates combinational controllability based on SCOAP measure """ 
         for node in self.nodes_lev:
             node.eval_CC()
     
 
     def SCOAP_CO(self):
-
+        """ Calculates combinational observability based on SCOAP measure """ 
         for node in self.PO:
             node.CO = 0
 
@@ -426,24 +345,39 @@ class Circuit:
             node.D0 = False
     
     
-    ## TODO: What about inverter?
-    def STAFAN_CS(self, num_pattern, tp_fname=None, limit=None, detect=False):
+    ## TODO: What about inverter? (what did I mean by this question??!)
+    # for now the arguemnts used for parallel processing are not active:
+    # tp_fname, limit, detect 
+    def STAFAN_CS(self, num_pattern=None, tp_fname=None, limit=None, detect=False):
         ''' note:
-        we are generating random numbers with replacement
+        we are generating random input patterns with replacement
         if u need to test all the patterns, add a new flag
         initial test showed when 10**7 in 4G patterns, 16M replacements
         random.choice is very inefficient
+        temporary description: 
+        just running STAFAN_CS I guess?!?!? 
         '''
+
+        if num_pattern == None and tp_fname == None:
+            print("Error! num_pattern = tp_fname = None")
+            return 
         
         # We need to resent the circuit
         self.STAFAN_reset_counts()
-        
         limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
+
+        if tp_fname:
+            tps = self.load_tp_file(tp_fname)
+            num_pattern = len(tps)
+
         for t in range(num_pattern):
-            b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
-            test = [int(b[j]) for j in range(len(self.PI))]
+            if tp_fname == None:
+                b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
+                tp = [int(b[j]) for j in range(len(self.PI))]
+            else:
+                tp = tps[t]
             
-            self.logic_sim(test)
+            self.logic_sim(tp)
             self.STAFAN_reset_flags()
             
             for node in self.nodes_lev:
@@ -465,11 +399,40 @@ class Circuit:
             node.S = node.sen_count / num_pattern
             node.D0_p = node.D0_count / num_pattern
             node.D1_p = node.D1_count / num_pattern
-    
+
+
+    def STAFAN_B(self):
+        # TODO: comment and also the issue of if C1==1
+        # calculate observability
+        # for node in self.PO:
+        #     print(">>", node.num)
+        #     node.B1 = 1.0
+        #     node.B0 = 1.0
+        
+        for node in reversed(self.nodes_lev):
+            # with checking node==PO we can add one node in the 
+            # .... middle of the circuit as PO, and stefan is still correct
+            if node in self.PO:
+                node.B0 = 1.0
+                node.B1 = 1.0
+            node.stafan_b()
+            node.CB1 = node.C1 * node.B1
+            node.CB0 = node.C0 * node.B0
+            node.B = (node.B0*node.C0) + (node.B1*node.C1)
+
 
     def CALC_ENTROPY(self):
         for node in self.nodes_lev:
-            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + (node.C0*math.log(node.C0, 2.0)))
+            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
+                    (node.C0*math.log(node.C0, 2.0)))
+
+
+
+    def co_ob_info(self):
+        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
+        for node in self.nodes_lev:
+            node.print_info(print_labels=False)
+
 
     def CALC_TPI(self, num_TPI, fname):
         TPI_list = [] #list of node entropy 
@@ -492,8 +455,11 @@ class Circuit:
         
 
     def TPI_stat(self, HTO_th, HTC_th):
-        """ this is a simple division of nodes, 
-        the element C*B can also be used. 
+        """ Categorization of nodes based on STAFAN's measurement into 4 groups:
+        ETD: easy to detect 
+        HTC: hard to control, but easy to observe 
+        HTO: hard to observe, but easy to control 
+        HTD: hard to control, hard to observe
         """
         for node in self.nodes_lev:
             if (node.B0 >= HTO_th) and (node.C0 >= HTC_th):
@@ -539,26 +505,6 @@ class Circuit:
         op.ntype = orig_ntype
         self.PO = self.PO[:-1]
         return count
-
-   
-    def STAFAN_B(self):
-        # TODO: comment and also the issue of if C1==1
-        # calculate observability
-        # for node in self.PO:
-        #     print(">>", node.num)
-        #     node.B1 = 1.0
-        #     node.B0 = 1.0
-        
-        for node in reversed(self.nodes_lev):
-            # with checking node==PO we can add one node in the 
-            # .... middle of the circuit as PO, and stefan is still correct
-            if node in self.PO:
-                node.B0 = 1.0
-                node.B1 = 1.0
-            node.stafan_b()
-            node.CB1 = node.C1 * node.B1
-            node.CB0 = node.C0 * node.B0
-            node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
 
     def get_full_fault_list(self):
@@ -1288,7 +1234,13 @@ class Circuit:
         conn.send((one_count_list, zero_count_list, sen_count_list, D0_count, D1_count))
         conn.close()
 
-
+    """ temporary documentation: 
+    ----> Method has a bug ----> deprecated and needs to be updated 
+    Generating STAFAN ctrl and obsv 
+    this method generates random inpits within itself 
+    total_T: total number of test vectors 
+    num_proc: number of processors that will be used in parallel processing 
+    """
     def STAFAN(self, total_T, num_proc=1):
         start_time = time.time()
         # thread_cnt = 1
@@ -1333,7 +1285,7 @@ class Circuit:
         print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
     
-    def save_circuit(self, fname):
+    def save_TMs(self, fname):
         outfile = open(fname, "w")
         for node in self.nodes_lev:
             arr = [node.num,node.C0,node.C1,node.B0,node.B1,node.S,node.CB0,node.CB1, node.B] 
@@ -1341,7 +1293,7 @@ class Circuit:
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
-    
+        print("Saved circuit with STAFAN values in " + fname)
 
     def save_circuit_entropy(self, fname):
         if not os.path.exists('../data/stafan-data'):
@@ -1628,6 +1580,127 @@ class Circuit:
         return cell_dg
 
 
+   
+    
+    def make_PO(self, target):
+        """ connects this target node to a PO using a branch 
+        """
+        if target.ntype == "PO":
+            return 
+        # target becomes stem, create new branches:
+        new_brch = BRCH("PO", "BRCH", target.num+"-IPO") 
+        old_brch = BRCH("FB", "BRCH", target.num+"-OLD")
+
+        # fixing unodes for new branches
+        new_brch.unodes.append(target)
+        old_brch.unodes.append(target)
+        old_brch.dnodes = target.dnodes
+        
+        # fixing unodes for target.dnodes
+        # if target was stem:
+        if len(target.dnodes) > 1:
+            for dnode in target.dnodes:
+                dnode.unodes = [old_brch]
+        # if target was a gate
+        else:
+            new_unodes = []
+            for unode in target.dnodes[0].unodes:
+                if unode.num != target.num:
+                    new_unodes.append(unode)
+            new_unodes.append(old_brch)
+            target.dnodes[0].unodes = new_unodes
+
+        self.PO.append(new_brch)
+        self.nodes[new_brch.num] = new_brch
+
+    
+    # This method is deprecated @Ghazal: please double check in circuit_loader 
+    def gtype_translator(self, gate_type):
+        """ input: Verilog gate input formats
+        outputs: gtype corresponding gate name """ 
+
+        if gate_type == 'ipt':
+            return gtype(0).name
+        elif gate_type == 'xor':
+            return gtype(2).name
+        elif gate_type == 'or':
+            return gtype(3).name
+        elif gate_type == 'nor':
+            return gtype(4).name
+        elif gate_type == 'not':
+            return gtype(5).name
+        elif gate_type == 'nand':
+            return gtype(6).name
+        elif gate_type == 'and':
+            return gtype(7).name
+        ## new node type
+        elif gate_type == 'xnor':
+            return gtype(8).name
+        elif gate_type == 'buf':
+            return gtype(9).name
+
+    
+    # This method is deprecated  @Ghazal: please double check in circuit_loader
+    def connect_node(self, line):
+        """ As we move forward, find the upnodes and connects them """ 
+        
+        attr = line.split()
+        ptr = self.nodes[attr[1]]
+        
+        # ntype=PI and gtype=IPT: good -- we need more documentation here
+        # we don't care about #fan-out
+        if ptr.ntype == "PI" and ptr.gtype=="IPT":
+            None
+        
+        # ntype=FB and gtyep=BRCH
+        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
+            unode = self.nodes[attr[3]]
+            ptr.unodes.append(unode)
+            unode.dnodes.append(ptr)
+        
+        # ntype=GATE and gtype=BRCH
+        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
+            print("ERROR: gate and branch", ptr.num)
+
+        # ntype=GATE or ntype=PO 
+        # we don't care about #fan-out
+        # some gates have a single input, they are buffer
+        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
+            for unode_num in attr[5:]:
+                unode = self.nodes[unode_num]
+                ptr.unodes.append(unode)
+                unode.dnodes.append(ptr)
+        else:
+            print("ERROR: not known!", ptr.num)
+
+    
+    # This method is deprecated  @Ghazal: please double check in circuit_loader
+    def insert_node(self, u_node, d_node, i_node):
+        """ This function is used for inserting the BRCH node
+        u_node and d_node are connected originally
+        i_node is the node be inserted between u_node and d_node 
+        """ 
+        u_node.dnodes.remove(d_node)
+        u_node.dnodes.append(i_node)
+        d_node.unodes.remove(u_node)
+        d_node.unodes.append(i_node)
+        i_node.unodes.append(u_node)
+        i_node.dnodes.append(d_node)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
     def __init__(self, abort_cnt):
@@ -1637,4 +1710,4 @@ class Imply_counter:
         self.cnt += 1
     def initialize(self):
         self.cnt = 0
-
+ 
