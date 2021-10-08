@@ -12,6 +12,8 @@ import numpy as np
 from circuit import Circuit
 from modelsim_simulator import Modelsim
 
+from regular_tp_gen import regular_tp_gen
+
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -114,7 +116,8 @@ elif args.func == "test2":
     # testing single test pattern generation 
     temp = circuit.gen_tp()
    
-    # testing generating a file of test patterns 
+    # testing generating a file of test patterns
+
     path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
     circuit.gen_tp_file(args.tp, path)
 
@@ -124,6 +127,7 @@ elif args.func == "test3":
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
+
     circuit.STAFAN_CS(args.tp) 
     circuit.STAFAN_B() 
 
