@@ -69,3 +69,10 @@
 # python3 main_saeed.py -ckt ../data/verilog/cavlc_synV2.v -func test
 # python3 main_saeed.py -ckt ../data/verilog/adder_synV2.v -func test
 
+
+# python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test1
+# python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test2 -tp 3
+# python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test3
+python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test4 -tp 2
+
+
