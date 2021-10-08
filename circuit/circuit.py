@@ -167,15 +167,15 @@ class Circuit:
             raise NameError("Mode is not acceptable")
         fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
         fname = fn if fname==None else fname
-        outfile = open(fname, 'w')
+        outfile = open(fname, 'w+')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
         
         for t in range(test_count):
+            values = ["0","1","X"]
             if mode == "b":
-                pat = [str(random.randint(0,1)) for x in range(len(self.PI))]
+                pat = [values[random.randint(0,1)] for x in range(len(self.PI))]
             elif mode == "x":
-                pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
-                pat = ["X" if x=="2" else x for x in pat]
+                pat = [values[random.randint(0,2)] for x in range(len(self.PI))]
             # print(",".join(pat))
             outfile.write(",".join(pat) + "\n")
         
@@ -1652,7 +1652,7 @@ class Circuit:
         if ptr.ntype == "PI" and ptr.gtype=="IPT":
             None
         
-        # ntype=FB and gtyep=BRCH
+        # ntype=FB and gtype=BRCH
         elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
             unode = self.nodes[attr[3]]
             ptr.unodes.append(unode)
