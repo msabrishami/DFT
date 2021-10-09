@@ -8,6 +8,7 @@ import math
 import time
 import os
 import numpy as np
+import copy
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
@@ -100,8 +101,13 @@ print("======================================================")
 print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
     ckt_name, args.tp, args.tpLoad, args.cpu))
 
+if args.func == "test0":
+    circuit = Circuit(args.ckt)
+    circuit.lev()
+    circuit.STAFAN(300000, 8)
+    circuit.co_ob_info()
 
-if args.func == "test1":
+elif args.func == "test1":
     circuit = Circuit(args.ckt)
     circuit.lev()
     print(circuit)

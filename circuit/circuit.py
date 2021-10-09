@@ -137,12 +137,12 @@ class Circuit:
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
         res.append("#PI: " + str(len(self.PI)) + " >> ") 
-        # res.append("\t" + str([x.num for x in self.PI]))
+        res.append("\t" + str([x.num for x in self.PI]))
         res.append("#PO: " + str(len(self.PO)) + " >> ")
-        # res.append("\t" + str([x.num for x in self.PO]))
+        res.append("\t" + str([x.num for x in self.PO]))
 
-        # for num, node in self.nodes.items():
-        #     res.append(str(node))
+        for node in self.nodes_lev:
+            res.append(str(node))
         return "\n".join(res)
     
 
@@ -333,85 +333,91 @@ class Circuit:
         for node in self.nodes_lev:
             node.one_count = 0
             node.zero_count = 0
-            node.D1_count = 0
-            node.D0_count = 0
             node.sen_count = 0
 
 
     def STAFAN_reset_flags(self):
         for node in self.nodes_lev:
             node.sense = False
-            node.D1 = False
-            node.D0 = False
+    
+    def STAFAN_C_single(self, tp):
+        """ Running STAFAN controllability step for one test pattern 
+        The initialization of nodes' C1 and C0 are done in a prior method 
+
+        Arguments
+        ---------
+        tp : a single test pattern vector 
+        """
+        self.logic_sim(tp)
+        self.STAFAN_reset_flags()
+            
+        for node in self.nodes_lev:
+            node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
+            node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
+
+            # sensitization
+            if node.is_sensible():
+                node.sense = True
+                node.sen_count += 1
+
+        for node in reversed(self.nodes_lev):
+            node.semi_detect()
     
     
-    ## TODO: What about inverter? (what did I mean by this question??!)
     # for now the arguemnts used for parallel processing are not active:
     # tp_fname, limit, detect 
-    def STAFAN_CS(self, num_pattern=None, tp_fname=None, limit=None, detect=False):
-        ''' note:
-        we are generating random input patterns with replacement
-        if u need to test all the patterns, add a new flag
-        initial test showed when 10**7 in 4G patterns, 16M replacements
-        random.choice is very inefficient
-        temporary description: 
-        just running STAFAN_CS I guess?!?!? 
+    def STAFAN_CS(self, tp, limit=None):
+        ''' 
+        STAFAN controllability 
+
+        Arguments: 
+        ----------
+        tp : either the name of a test pattern file (str) or number of test patterns (int)
+            if tp is number of test patterns, they will be generated internally within limit
+        limit : limit of test patterns to be generated
+            if limit is not given, all possible tps can be generated. 
+            every test pattern can be assigned a number by putting binary values of 
+            primary inputs together in the same sequence as in self.PI, and then converting 
+            this value to a decimal one. 
+        
+        Note: random input patterns are generated with replacement (not pseudo-random)
+        Note: random.choice method is very inefficient
         '''
 
-        if num_pattern == None and tp_fname == None:
-            print("Error! num_pattern = tp_fname = None")
-            return 
-        
-        # We need to resent the circuit
-        self.STAFAN_reset_counts()
-        limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
-
-        if tp_fname:
+        if isinstance(tp, str):
             tps = self.load_tp_file(tp_fname)
             num_pattern = len(tps)
+            tp_gen = False 
+        else:
+            tp_gen = True
+            num_pattern = tp
+
+        # We need to reset the circuit
+        self.STAFAN_reset_counts()
+        if limit == None:
+            limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
 
         for t in range(num_pattern):
-            if tp_fname == None:
+            if tp_gen:
                 b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
                 tp = [int(b[j]) for j in range(len(self.PI))]
             else:
                 tp = tps[t]
-            
-            self.logic_sim(tp)
-            self.STAFAN_reset_flags()
-            
-            for node in self.nodes_lev:
-                node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
-                node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
 
-                # sensitization
-                if node.is_sensible():
-                    node.sense = True
-                    node.sen_count += 1
-
-            for node in reversed(self.nodes_lev):
-                node.semi_detect()
+            self.STAFAN_C_single(tp)
 
         # calculate percentage/prob
         for node in self.nodes_lev:
             node.C1 = node.one_count / num_pattern
             node.C0 = node.zero_count / num_pattern
             node.S = node.sen_count / num_pattern
-            node.D0_p = node.D0_count / num_pattern
-            node.D1_p = node.D1_count / num_pattern
 
 
     def STAFAN_B(self):
         # TODO: comment and also the issue of if C1==1
-        # calculate observability
-        # for node in self.PO:
-        #     print(">>", node.num)
-        #     node.B1 = 1.0
-        #     node.B0 = 1.0
         
         for node in reversed(self.nodes_lev):
-            # with checking node==PO we can add one node in the 
-            # .... middle of the circuit as PO, and stefan is still correct
+            print(node)
             if node in self.PO:
                 node.B0 = 1.0
                 node.B1 = 1.0
@@ -751,6 +757,8 @@ class Circuit:
         fw.close()
         print("PFS-Separate completed. \nLog file saved in {}".format(fname_log))
     
+
+
     def pfs_exe(self, in_fl_mode, tp_num=1, mode='rand',fname_fl=None):
         """
         Execute pfs in rand or full mode
@@ -1212,13 +1220,16 @@ class Circuit:
         print(totaltime)
 
 
-    def control_thread(self, conn, c_name, i, total_T,num_proc):
-        circuit = Circuit(c_name)
-        circuit.read_circuit()
+    # @Ghazal this needs to be checked and tested
+    def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
+        circuit = Circuit(self.c_fname)
         circuit.lev()
-        inputnum = len(circuit.input_num_list)
-        circuit.STAFAN_CS(int(total_T/num_proc), [int(pow(2, inputnum)/num_proc)*i,int(pow(2, inputnum)/num_proc)*(i+1)-1])
-        circuit.nodes_lev.sort(key=lambda x: x.num)
+        PI_num = len(circuit.PI)
+        tp_count = int(tot_tp_count / tot_proc)
+        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
+                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
+        circuit.STAFAN_CS(tp_count, limit)
+        # circuit.nodes_lev.sort(key=lambda x: x.num)
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
@@ -1228,36 +1239,35 @@ class Circuit:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
-            D0_count.append(i.D0_count)
-            D1_count.append(i.D1_count)
-        circuit.nodes_lev.sort(key=lambda x: x.lev)
-        conn.send((one_count_list, zero_count_list, sen_count_list, D0_count, D1_count))
+        # circuit.nodes_lev.sort(key=lambda x: x.lev)
+        conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-    """ temporary documentation: 
-    ----> Method has a bug ----> deprecated and needs to be updated 
-    Generating STAFAN ctrl and obsv 
-    this method generates random inpits within itself 
-    total_T: total number of test vectors 
-    num_proc: number of processors that will be used in parallel processing 
-    """
-    def STAFAN(self, total_T, num_proc=1):
+
+    # @Ghazal this needs to be checked and tested 
+    def STAFAN(self, total_tp, num_proc=1):
+        """ temporary documentation: 
+        Generating STAFAN ctrl and obsv in parallel  
+        
+        Arguments:
+        ---------
+        total_T : (int) total number of test vectors 
+        num_proc : (int) number of processors that will be used in parallel processing 
+        """
         start_time = time.time()
         # thread_cnt = 1
         process_list = []
-        for i in range(num_proc):
+        for id_proc in range(num_proc):
         # for idx in process_list:
             parent_conn, child_conn = Pipe()
             p = Process(target = self.control_thread, 
-                    args =(child_conn, self.c_name, i, total_T,num_proc, ))
+                    args =(child_conn, id_proc, total_tp, num_proc))
             p.start()
             process_list.append((p, parent_conn))
 
-        one_count_list = [0] * self.nodes_cnt
-        zero_count_list = [0] * self.nodes_cnt
-        sen_count_list = [0] * self.nodes_cnt
-        D1_count_list = [0] * self.nodes_cnt
-        D0_count_list = [0] * self.nodes_cnt
+        one_count_list = [0] * len(self.nodes_lev) 
+        zero_count_list = [0] * len(self.nodes_lev) 
+        sen_count_list = [0] *  len(self.nodes_lev)
 
         for p, conn in process_list:
             tup = conn.recv()
@@ -1265,20 +1275,15 @@ class Circuit:
                 one_count_list[i] += tup[0][i]
                 zero_count_list[i] += tup[1][i]
                 sen_count_list[i] += tup[2][i]
-                D0_count_list[i] += tup[3][i]
-                D1_count_list[i] += tup[4][i]
             p.join()
-        self.nodes_lev.sort(key=lambda x: x.num)
+        
+        # self.nodes_lev.sort(key=lambda x: x.num)
         for i in range(len(self.nodes_lev)):
-            self.nodes_lev[i].C1 = one_count_list[i] / total_T
-            self.nodes_lev[i].C0 = zero_count_list[i] / total_T
-            self.nodes_lev[i].S = sen_count_list[i] / total_T
-            self.nodes_lev[i].D0_count = D0_count_list[i]
-            self.nodes_lev[i].D1_count = D1_count_list[i]
-            self.nodes_lev[i].D0_p = D0_count_list[i] / total_T
-            self.nodes_lev[i].D1_p = D1_count_list[i] / total_T
+            self.nodes_lev[i].C1 = one_count_list[i] / total_tp
+            self.nodes_lev[i].C0 = zero_count_list[i] / total_tp
+            self.nodes_lev[i].S = sen_count_list[i] / total_tp
 
-        self.nodes_lev.sort(key=lambda x: x.lev)
+        # self.nodes_lev.sort(key=lambda x: x.lev)
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time
@@ -1295,6 +1300,7 @@ class Circuit:
         outfile.close()
         print("Saved circuit with STAFAN values in " + fname)
 
+    
     def save_circuit_entropy(self, fname):
         if not os.path.exists('../data/stafan-data'):
             os.makedirs('../data/stafan-data')
@@ -1348,9 +1354,6 @@ class Circuit:
             G.nodes[n_num_normal]['S'] = n.S
             G.nodes[n_num_normal]['B0'] = n.B0
             G.nodes[n_num_normal]['B1'] = n.B1
-            G.nodes[n_num_normal]['D0_p'] = n.D0_p
-            G.nodes[n_num_normal]['D1_p'] = n.D1_p
-            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(unode.num, n_num_normal)

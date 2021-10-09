@@ -291,8 +291,7 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "BC0", "BC1", "B", "D0%", "D1%",
-                    "SS@0", "SS@1"]
+                    "C1", "S", "B0", "B1", "BC0", "BC1", "B"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -326,10 +325,11 @@ class Node:
             print("{:.2f}\t".format(self.B), end="")
             # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
             # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
-            print("{:.2f}\t".format(self.D0_p), end="")
-            print("{:.2f}\t".format(self.D1_p), end="")
-            print("{}\t".format(self.stat["SS@0"]), end="")
-            print("{}\t".format(self.stat["SS@1"]))
+            # print("{:.2f}\t".format(self.D0_p), end="")
+            # print("{:.2f}\t".format(self.D1_p), end="")
+            # print("{}\t".format(self.stat["SS@0"]), end="")
+            # print("{}\t".format(self.stat["SS@1"]))
+            print()
     
 
 class BUFF(Node):
@@ -412,7 +412,7 @@ class OR(Node):
     
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("OR gate, C0 or C1 is zero")
+            raise ValueError("OR gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             unode.B0 = self.B0 * self.C0 / unode.C0
@@ -447,7 +447,7 @@ class NOR(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("NOR gate, C0 or C1 is zero")
+            raise ValueError("NOR gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
@@ -482,7 +482,7 @@ class AND(Node):
 
     def stafan_b(self):
         if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("AND gate, C0 or C1 is zero")
+            raise ValueError("AND gate, C0 or C1 is zero")
         for unode in self.unodes:
             unode.B1 = self.B1 * self.C1 / unode.C1
             unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
@@ -517,9 +517,10 @@ class NAND(Node):
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
     
     def stafan_b(self):
-        if (self.C1 == 0) or (self.C0 == 0):
-            raise NameError("NAND gate, C0 or C1 is zero")
+        
         for unode in self.unodes:
+            if (unode.C1 == 0) or (unode.C0 == 0):
+                raise ValueError("NAND gate, C0 or C1 is zero")
             unode.B1 = self.B0 * self.C0 / unode.C1
             # Formula in the original paper has a typo
             unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
