@@ -36,8 +36,8 @@ Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 
 [1]: http://sportlab.usc.edu/ 
 [10]: http://sportlab.usc.edu/~msabrishami/
-[11]: http://sportlab.usc.edu/~shahin/
-[12]: http://www.mpedram.com/
+[11]: http://www.mpedram.com/
+[12]: http://sportlab.usc.edu/~shahin/
 [13]: https://www.linkedin.com/in/jiayi-wang-a40473101/
 [14]: https://www.linkedin.com/in/yshen245/
 [15]: https://www.linkedin.com/in/jiaming-li-73b873191/
