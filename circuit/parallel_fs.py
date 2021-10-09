@@ -49,7 +49,6 @@ class PFS(FaultSim):
         
         else:
             raise NameError("fault list type is not accepted")
-
     
    
     def single(self, input_pattern):
