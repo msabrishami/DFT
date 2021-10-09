@@ -78,7 +78,8 @@ def golden_fault_sim():
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-ckt", type=str, required=True, help="circuit name, c17, no extension")
+parser.add_argument("-ckt", type=str, required=False, help="circuit name, c17, no extension")
+parser.add_argument("-v", type=str, required=False, help="verilog file address")
 parser.add_argument("-synv", type=str, required=False , help="syn ver")
 parser.add_argument("-tp", type=int, required=False, help="number of tp for random sim")
 parser.add_argument("-tpLoad", type=int, required=False, help="number tp used in loading STAFAN")
@@ -94,6 +95,7 @@ parser.add_argument("-TPI_num", type=int, required=False, default=None, help="Nu
 args = parser.parse_args()
 
 ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
+verilog_name = args.v + "_" + args.synv if args.synv else args.v
 config.HTO_TH = args.HTO_th if args.HTO_th else config.HTO_TH
 config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
 
@@ -103,14 +105,18 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
     ckt_name, args.tp, args.tpLoad, args.cpu))
 
 
-if args.func == "test1":
+circuit = None
+if args.ckt:
     circuit = Circuit(args.ckt)
+elif args.v:
+    circuit = Circuit(args.v)
+
+if args.func == "test1":
     circuit.lev()
     print(circuit)
 
 
 elif args.func == "test2": 
-    circuit = Circuit(args.ckt)
     circuit.lev()
     
     # testing single test pattern generation 
@@ -123,7 +129,6 @@ elif args.func == "test2":
 
 
 elif args.func == "test3": 
-    circuit = Circuit(args.ckt)
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
@@ -135,7 +140,6 @@ elif args.func == "test3":
 elif args.func == "test4":
 
     time_start = time.time()
-    circuit = Circuit(args.ckt)
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
