@@ -1687,19 +1687,29 @@ class Circuit:
         i_node.unodes.append(u_node)
         i_node.dnodes.append(d_node)
 
+    def all_shortest_distances_to_PO(self):
+        """ Calculates shortest distace from any gate to any PO 
+        using Dijktra algorithm
+        """
+        dist = {} 
+        MAX_WEIGHT = 10**9
+        nodes = list(self.nodes.values()) + self.PO + self.PI
 
-
-
-
-
-
-
-
-
-
-
-
-
+        for node in nodes:
+            dist[node] = MAX_WEIGHT
+            
+        unvisited = []
+        for po in self.PO:
+            dist[po] = min(0,dist[po])
+            unvisited.append(po)
+            
+        while unvisited:
+            for node in unvisited:
+                for unode in node.unodes:
+                    dist[unode] = min(1+dist[node],dist[unode])
+                    unvisited.append(unode)
+                unvisited.remove(node)
+        print('Distances from node to the nearest output:',*[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
 
 # prevent D algorithm deadlock. For debug purposes only
 class Imply_counter:
