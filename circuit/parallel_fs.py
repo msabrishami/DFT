@@ -20,7 +20,6 @@ class PFS(FaultSim):
     def fs_for_atpg(self, faultset, ipt_pattern):
         self.add_fault(mode="atpg", fname=None, faultset = faultset)
         return self.single(ipt_pattern)
-        
     
     
     def add_fault(self, mode="full", fname=None, faultset = None):
@@ -29,9 +28,7 @@ class PFS(FaultSim):
         mode = user: input fault list is given by user as a file name
         """
         if mode == "full":
-            #
             self.circuit.get_full_fault_list()
-            #
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
         elif mode == "user":
@@ -140,35 +137,39 @@ class PFS(FaultSim):
         return fault_set
 
     
-    def fs_exe(self, tp_num, t_mode, r_mode, fault_list_type,fname):
+    def fs_exe(self, tp_num, t_mode, r_mode, fault_list_type, fname):
         """
         Execute pfs in rand or full mode
-        rand: the total faults can be detected by several random patterns
-        full: the faults can be detected by each single pattern; all possible patterns are included
+        Arguments:
+        ---------
+        tp_num : int
+                number of test patterns to be used for fault sim
+        t_mode : string 
+                can be rand or full
+                rand: the total faults can be detected by several random patterns
+                full: the faults can be detected by each single pattern; 
+                all possible patterns are included
         """
-        #fname = 'c17_f0.saf'
-        self.add_fault(fault_list_type,fname)
+        self.add_fault(fault_list_type, fname)
 
         if t_mode == 'rand':
             self.fs_folder(tp_mode='rand', r_mode='b')
-            report_fname = self.circuit.c_name + '_' + str(tp_num) + '_' + self.fs_type + '_'+ r_mode + '.log'
-            tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.txt"
-
-            self.fs_tp_gen(tp_num, t_mode = 'rand', r_mode = r_mode)
-            # tp_fname is bare name, the path is given in the method
+            report_fname = self.circuit.c_name + '_' + str(tp_num) + \
+                    '_' + self.fs_type + '_'+ r_mode + '.log'
+            tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.tp"
+            self.fs_tp_gen(tp_num, t_mode='rand', r_mode=r_mode)
             pattern_list = self.fs_input_fetch(tp_fname)
-            # run pfs multiple
             self.multiple(pattern_list=pattern_list, fname_log=report_fname, mode="b")
 
         elif t_mode == 'full':
             self.fs_folder(tp_mode='rand', r_mode='b')
-            report_fname = self.circuit.c_name + '_full_' + self.fs_type + '_' + r_mode + '.log'
-            tp_fname = self.circuit.c_name + '_full_tp_' + r_mode + '.txt'
-            # generate all possible patterns in order
+            report_fname = self.circuit.c_name + \
+                    '_full_' + self.fs_type + '_' + r_mode + '.log'
+            tp_fname = self.circuit.c_name + '_full_tp_' + r_mode + '.tp'
             self.fs_tp_gen(tp_num, t_mode = 'full', r_mode = r_mode)
             pattern_list = self.fs_input_fetch(tp_fname)
-            # run pfs
-            self.multiple_separate(pattern_list=pattern_list, fname_log=report_fname, mode="b")
+            self.multiple_separate(pattern_list=pattern_list, \
+                    fname_log=report_fname, mode="b")
 
         else:
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
