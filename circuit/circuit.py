@@ -8,6 +8,7 @@ import sys
 from node import gtype
 from node import ntype
 from node import *
+import collections
 # import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import cycle
@@ -145,7 +146,42 @@ class Circuit:
             res.append(str(node))
         return "\n".join(res)
     
+    def print_fanin(self, target_node, depth):
+        queue = collections.deque()
+        queue.append(target_node)
+        min_level = max(0, target_node.lev - depth) 
+        self.print_fanin_rec(queue, min_level)
 
+    def print_fanin_rec(self, queue, min_level):
+        """ prints the nodes in the fanin cone 
+        first time it is called, queue should be a list with target node as its only element
+        this is a simple BFS in the opposite direction of lines
+        
+        Arguments:
+        ----------
+        queue : list
+            a list of nodes, representing our queue for BFS
+        depth : int 
+            search depth for BFS, final node to be printed has depth=zero
+        """
+        print()
+        print("queue is: " + ",".join([node.num for node in queue]))
+        if len(queue) == 0:
+            return 
+        
+        target_node = queue.popleft()
+        print(target_node)
+        
+        if target_node.lev == min_level:
+            return 
+        
+        for node in target_node.unodes:
+            print("added node {} to the queue".format(node.num))
+            queue.append(node)
+
+        self.print_fanin_rec(queue, min_level)
+
+    
     def gen_tp(self):
         """
         Randomly generate a test pattern for input nodes.
@@ -360,12 +396,7 @@ class Circuit:
                 node.sense = True
                 node.sen_count += 1
 
-        for node in reversed(self.nodes_lev):
-            node.semi_detect()
     
-    
-    # for now the arguemnts used for parallel processing are not active:
-    # tp_fname, limit, detect 
     def STAFAN_CS(self, tp, limit=None):
         ''' 
         STAFAN controllability 
@@ -414,10 +445,9 @@ class Circuit:
 
 
     def STAFAN_B(self):
-        # TODO: comment and also the issue of if C1==1
-        
+        """ calculates the STAFAN observability probabilities for all nodes """
+
         for node in reversed(self.nodes_lev):
-            print(node)
             if node in self.PO:
                 node.B0 = 1.0
                 node.B1 = 1.0
@@ -1246,7 +1276,7 @@ class Circuit:
 
     # @Ghazal this needs to be checked and tested 
     def STAFAN(self, total_tp, num_proc=1):
-        """ temporary documentation: 
+        """ 
         Generating STAFAN ctrl and obsv in parallel  
         
         Arguments:
@@ -1284,6 +1314,13 @@ class Circuit:
             self.nodes_lev[i].S = sen_count_list[i] / total_tp
 
         # self.nodes_lev.sort(key=lambda x: x.lev)
+        for node in self.nodes_lev:
+            if node.C0 == 0 or node.C1 == 0:
+                print("----------------------------")
+                self.print_fanin(node, 4)
+                pdb.set_trace()
+
+
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time

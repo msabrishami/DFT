@@ -104,6 +104,7 @@ print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
 if args.func == "test0":
     circuit = Circuit(args.ckt)
     circuit.lev()
+
     circuit.STAFAN(300000, 8)
     circuit.co_ob_info()
 
@@ -130,8 +131,7 @@ elif args.func == "test3":
     circuit.lev()
     circuit.SCOAP_CC()
     circuit.SCOAP_CO()
-    circuit.STAFAN_CS(args.tp) 
-    circuit.STAFAN_B() 
+    circuit.STAFAN(args.tp, 10) 
 
 
 elif args.func == "test4":
@@ -280,8 +280,7 @@ elif args.func == "gen_stil":
     # We read the ckt_name circuit, which is the synthesized version
     # But we read the golden TP from ckt circuit, because we don't have ckt.v and only 
     # have ckt_synVX.v
-    circuit = Circuit(ckt_name)
-    LoadCircuit(circuit, "v")
+    circuit = Circuit(args.ckt)
     circuit.lev()
     tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + str(args.tpLoad) + ".tp"
     stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"

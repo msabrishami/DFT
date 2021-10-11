@@ -135,8 +135,12 @@ class Node:
 
                     
     def __str__(self):
-        return(", ".join([str(self.num), self.ntype, self.gtype, str(self.lev), 
-            str(len(self.unodes)), str(len(self.dnodes))]))
+        res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
+        res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
+        res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
+        res += " C0= {:.4f} C1={:.4f} ".format(self.C0, self.C1)
+        return res
+
     
     def imply(self):
         ''' forward implication for a logic gate ''' 
@@ -411,9 +415,10 @@ class OR(Node):
             unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
     
     def stafan_b(self):
-        if (self.C1 == 0) or (self.C0 == 0):
-            raise ValueError("OR gate, C0 or C1 is zero")
         for unode in self.unodes:
+            if (unode.C1 == 0) or (unode.C0 == 0):
+                print(self)
+                raise ValueError("OR gate, C0 or C1 is zero")
             unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             unode.B0 = self.B0 * self.C0 / unode.C0
 
@@ -446,9 +451,11 @@ class NOR(Node):
             unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
 
     def stafan_b(self):
-        if (self.C1 == 0) or (self.C0 == 0):
-            raise ValueError("NOR gate, C0 or C1 is zero")
+        
         for unode in self.unodes:
+            if (unode.C1 == 0) or (unode.C0 == 0):
+                print(self)
+                raise ValueError("NOR gate, C0 or C1 is zero")
             unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             unode.B0 = self.B1 * self.C1 / unode.C0
 
@@ -481,9 +488,11 @@ class AND(Node):
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
 
     def stafan_b(self):
-        if (self.C1 == 0) or (self.C0 == 0):
-            raise ValueError("AND gate, C0 or C1 is zero")
+        
         for unode in self.unodes:
+            if (unode.C1 == 0) or (unode.C0 == 0):
+                print(self)
+                raise ValueError("AND gate, C0 or C1 is zero")
             unode.B1 = self.B1 * self.C1 / unode.C1
             unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
  
@@ -520,6 +529,7 @@ class NAND(Node):
         
         for unode in self.unodes:
             if (unode.C1 == 0) or (unode.C0 == 0):
+                print(self)
                 raise ValueError("NAND gate, C0 or C1 is zero")
             unode.B1 = self.B0 * self.C0 / unode.C1
             # Formula in the original paper has a typo
