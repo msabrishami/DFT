@@ -178,10 +178,9 @@ class Circuit:
         for node in target_node.unodes:
             print("added node {} to the queue".format(node.num))
             queue.append(node)
-
+            
         self.print_fanin_rec(queue, min_level)
 
-    
     def gen_tp(self):
         """
         Randomly generate a test pattern for input nodes.

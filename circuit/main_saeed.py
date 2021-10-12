@@ -136,12 +136,12 @@ if __name__ == '__main__':
         
         # testing single test pattern generation 
         temp = circuit.gen_tp()
+
     
         # testing generating a file of test patterns
 
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
-
 
     elif args.func == "test3": 
         circuit.lev()
