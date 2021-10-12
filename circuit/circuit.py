@@ -8,6 +8,7 @@ import sys
 from node import gtype
 from node import ntype
 from node import *
+import collections
 # import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import cycle
@@ -137,15 +138,50 @@ class Circuit:
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
         res.append("#PI: " + str(len(self.PI)) + " >> ") 
-        # res.append("\t" + str([x.num for x in self.PI]))
+        res.append("\t" + str([x.num for x in self.PI]))
         res.append("#PO: " + str(len(self.PO)) + " >> ")
-        # res.append("\t" + str([x.num for x in self.PO]))
+        res.append("\t" + str([x.num for x in self.PO]))
 
-        # for num, node in self.nodes.items():
-        #     res.append(str(node))
+        for node in self.nodes_lev:
+            res.append(str(node))
         return "\n".join(res)
     
+    def print_fanin(self, target_node, depth):
+        queue = collections.deque()
+        queue.append(target_node)
+        min_level = max(0, target_node.lev - depth) 
+        self.print_fanin_rec(queue, min_level)
 
+    def print_fanin_rec(self, queue, min_level):
+        """ prints the nodes in the fanin cone 
+        first time it is called, queue should be a list with target node as its only element
+        this is a simple BFS in the opposite direction of lines
+        
+        Arguments:
+        ----------
+        queue : list
+            a list of nodes, representing our queue for BFS
+        depth : int 
+            search depth for BFS, final node to be printed has depth=zero
+        """
+        print()
+        print("queue is: " + ",".join([node.num for node in queue]))
+        if len(queue) == 0:
+            return 
+        
+        target_node = queue.popleft()
+        print(target_node)
+        
+        if target_node.lev == min_level:
+            return 
+        
+        for node in target_node.unodes:
+            print("added node {} to the queue".format(node.num))
+            queue.append(node)
+
+        self.print_fanin_rec(queue, min_level)
+
+    
     def gen_tp(self):
         """
         Randomly generate a test pattern for input nodes.
@@ -167,15 +203,15 @@ class Circuit:
             raise NameError("Mode is not acceptable")
         fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
         fname = fn if fname==None else fname
-        outfile = open(fname, 'w+')
+        outfile = open(fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
         
         for t in range(test_count):
-            values = ["0","1","X"]
             if mode == "b":
-                pat = [values[random.randint(0,1)] for x in range(len(self.PI))]
+                pat = [str(random.randint(0,1)) for x in range(len(self.PI))]
             elif mode == "x":
-                pat = [values[random.randint(0,2)] for x in range(len(self.PI))]
+                pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
+                pat = ["X" if x=="2" else x for x in pat]
             # print(",".join(pat))
             outfile.write(",".join(pat) + "\n")
         
@@ -333,85 +369,85 @@ class Circuit:
         for node in self.nodes_lev:
             node.one_count = 0
             node.zero_count = 0
-            node.D1_count = 0
-            node.D0_count = 0
             node.sen_count = 0
 
 
     def STAFAN_reset_flags(self):
         for node in self.nodes_lev:
             node.sense = False
-            node.D1 = False
-            node.D0 = False
     
+    def STAFAN_C_single(self, tp):
+        """ Running STAFAN controllability step for one test pattern 
+        The initialization of nodes' C1 and C0 are done in a prior method 
+
+        Arguments
+        ---------
+        tp : a single test pattern vector 
+        """
+        self.logic_sim(tp)
+        self.STAFAN_reset_flags()
+            
+        for node in self.nodes_lev:
+            node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
+            node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
+
+            # sensitization
+            if node.is_sensible():
+                node.sense = True
+                node.sen_count += 1
+
     
-    ## TODO: What about inverter? (what did I mean by this question??!)
-    # for now the arguemnts used for parallel processing are not active:
-    # tp_fname, limit, detect 
-    def STAFAN_CS(self, num_pattern=None, tp_fname=None, limit=None, detect=False):
-        ''' note:
-        we are generating random input patterns with replacement
-        if u need to test all the patterns, add a new flag
-        initial test showed when 10**7 in 4G patterns, 16M replacements
-        random.choice is very inefficient
-        temporary description: 
-        just running STAFAN_CS I guess?!?!? 
+    def STAFAN_CS(self, tp, limit=None):
+        ''' 
+        STAFAN controllability 
+
+        Arguments: 
+        ----------
+        tp : either the name of a test pattern file (str) or number of test patterns (int)
+            if tp is number of test patterns, they will be generated internally within limit
+        limit : limit of test patterns to be generated
+            if limit is not given, all possible tps can be generated. 
+            every test pattern can be assigned a number by putting binary values of 
+            primary inputs together in the same sequence as in self.PI, and then converting 
+            this value to a decimal one. 
+        
+        Note: random input patterns are generated with replacement (not pseudo-random)
+        Note: random.choice method is very inefficient
         '''
 
-        if num_pattern == None and tp_fname == None:
-            print("Error! num_pattern = tp_fname = None")
-            return 
-        
-        # We need to resent the circuit
-        self.STAFAN_reset_counts()
-        limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
-
-        if tp_fname:
+        if isinstance(tp, str):
             tps = self.load_tp_file(tp_fname)
             num_pattern = len(tps)
+            tp_gen = False 
+        else:
+            tp_gen = True
+            num_pattern = tp
+
+        # We need to reset the circuit
+        self.STAFAN_reset_counts()
+        if limit == None:
+            limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
 
         for t in range(num_pattern):
-            if tp_fname == None:
+            if tp_gen:
                 b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
                 tp = [int(b[j]) for j in range(len(self.PI))]
             else:
                 tp = tps[t]
-            
-            self.logic_sim(tp)
-            self.STAFAN_reset_flags()
-            
-            for node in self.nodes_lev:
-                node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
-                node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
 
-                # sensitization
-                if node.is_sensible():
-                    node.sense = True
-                    node.sen_count += 1
-
-            for node in reversed(self.nodes_lev):
-                node.semi_detect()
+            self.STAFAN_C_single(tp)
 
         # calculate percentage/prob
         for node in self.nodes_lev:
             node.C1 = node.one_count / num_pattern
             node.C0 = node.zero_count / num_pattern
             node.S = node.sen_count / num_pattern
-            node.D0_p = node.D0_count / num_pattern
-            node.D1_p = node.D1_count / num_pattern
 
 
     def STAFAN_B(self):
-        # TODO: comment and also the issue of if C1==1
-        # calculate observability
-        # for node in self.PO:
-        #     print(">>", node.num)
-        #     node.B1 = 1.0
-        #     node.B0 = 1.0
-        
+        """ calculates the STAFAN observability probabilities for all nodes """
+
         for node in reversed(self.nodes_lev):
-            # with checking node==PO we can add one node in the 
-            # .... middle of the circuit as PO, and stefan is still correct
             if node in self.PO:
                 node.B0 = 1.0
                 node.B1 = 1.0
@@ -751,6 +787,8 @@ class Circuit:
         fw.close()
         print("PFS-Separate completed. \nLog file saved in {}".format(fname_log))
     
+
+
     def pfs_exe(self, in_fl_mode, tp_num=1, mode='rand',fname_fl=None):
         """
         Execute pfs in rand or full mode
@@ -1212,13 +1250,16 @@ class Circuit:
         print(totaltime)
 
 
-    def control_thread(self, conn, c_name, i, total_T,num_proc):
-        circuit = Circuit(c_name)
-        circuit.read_circuit()
+    # @Ghazal this needs to be checked and tested
+    def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
+        circuit = Circuit(self.c_fname)
         circuit.lev()
-        inputnum = len(circuit.input_num_list)
-        circuit.STAFAN_CS(int(total_T/num_proc), [int(pow(2, inputnum)/num_proc)*i,int(pow(2, inputnum)/num_proc)*(i+1)-1])
-        circuit.nodes_lev.sort(key=lambda x: x.num)
+        PI_num = len(circuit.PI)
+        tp_count = int(tot_tp_count / tot_proc)
+        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
+                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
+        circuit.STAFAN_CS(tp_count, limit)
+        # circuit.nodes_lev.sort(key=lambda x: x.num)
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
@@ -1228,36 +1269,35 @@ class Circuit:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
-            D0_count.append(i.D0_count)
-            D1_count.append(i.D1_count)
-        circuit.nodes_lev.sort(key=lambda x: x.lev)
-        conn.send((one_count_list, zero_count_list, sen_count_list, D0_count, D1_count))
+        # circuit.nodes_lev.sort(key=lambda x: x.lev)
+        conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-    """ temporary documentation: 
-    ----> Method has a bug ----> deprecated and needs to be updated 
-    Generating STAFAN ctrl and obsv 
-    this method generates random inpits within itself 
-    total_T: total number of test vectors 
-    num_proc: number of processors that will be used in parallel processing 
-    """
-    def STAFAN(self, total_T, num_proc=1):
+
+    # @Ghazal this needs to be checked and tested 
+    def STAFAN(self, total_tp, num_proc=1):
+        """ 
+        Generating STAFAN ctrl and obsv in parallel  
+        
+        Arguments:
+        ---------
+        total_T : (int) total number of test vectors 
+        num_proc : (int) number of processors that will be used in parallel processing 
+        """
         start_time = time.time()
         # thread_cnt = 1
         process_list = []
-        for i in range(num_proc):
+        for id_proc in range(num_proc):
         # for idx in process_list:
             parent_conn, child_conn = Pipe()
             p = Process(target = self.control_thread, 
-                    args =(child_conn, self.c_name, i, total_T,num_proc, ))
+                    args =(child_conn, id_proc, total_tp, num_proc))
             p.start()
             process_list.append((p, parent_conn))
 
-        one_count_list = [0] * self.nodes_cnt
-        zero_count_list = [0] * self.nodes_cnt
-        sen_count_list = [0] * self.nodes_cnt
-        D1_count_list = [0] * self.nodes_cnt
-        D0_count_list = [0] * self.nodes_cnt
+        one_count_list = [0] * len(self.nodes_lev) 
+        zero_count_list = [0] * len(self.nodes_lev) 
+        sen_count_list = [0] *  len(self.nodes_lev)
 
         for p, conn in process_list:
             tup = conn.recv()
@@ -1265,20 +1305,22 @@ class Circuit:
                 one_count_list[i] += tup[0][i]
                 zero_count_list[i] += tup[1][i]
                 sen_count_list[i] += tup[2][i]
-                D0_count_list[i] += tup[3][i]
-                D1_count_list[i] += tup[4][i]
             p.join()
-        self.nodes_lev.sort(key=lambda x: x.num)
+        
+        # self.nodes_lev.sort(key=lambda x: x.num)
         for i in range(len(self.nodes_lev)):
-            self.nodes_lev[i].C1 = one_count_list[i] / total_T
-            self.nodes_lev[i].C0 = zero_count_list[i] / total_T
-            self.nodes_lev[i].S = sen_count_list[i] / total_T
-            self.nodes_lev[i].D0_count = D0_count_list[i]
-            self.nodes_lev[i].D1_count = D1_count_list[i]
-            self.nodes_lev[i].D0_p = D0_count_list[i] / total_T
-            self.nodes_lev[i].D1_p = D1_count_list[i] / total_T
+            self.nodes_lev[i].C1 = one_count_list[i] / total_tp
+            self.nodes_lev[i].C0 = zero_count_list[i] / total_tp
+            self.nodes_lev[i].S = sen_count_list[i] / total_tp
 
-        self.nodes_lev.sort(key=lambda x: x.lev)
+        # self.nodes_lev.sort(key=lambda x: x.lev)
+        for node in self.nodes_lev:
+            if node.C0 == 0 or node.C1 == 0:
+                print("----------------------------")
+                self.print_fanin(node, 4)
+                pdb.set_trace()
+
+
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time
@@ -1295,6 +1337,7 @@ class Circuit:
         outfile.close()
         print("Saved circuit with STAFAN values in " + fname)
 
+    
     def save_circuit_entropy(self, fname):
         if not os.path.exists('../data/stafan-data'):
             os.makedirs('../data/stafan-data')
@@ -1348,9 +1391,6 @@ class Circuit:
             G.nodes[n_num_normal]['S'] = n.S
             G.nodes[n_num_normal]['B0'] = n.B0
             G.nodes[n_num_normal]['B1'] = n.B1
-            G.nodes[n_num_normal]['D0_p'] = n.D0_p
-            G.nodes[n_num_normal]['D1_p'] = n.D1_p
-            G.nodes[n_num_normal]['D_p'] = n.D0_p + n.D1_p
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(unode.num, n_num_normal)
@@ -1613,82 +1653,8 @@ class Circuit:
         self.PO.append(new_brch)
         self.nodes[new_brch.num] = new_brch
 
-    
-    # This method is deprecated @Ghazal: please double check in circuit_loader 
-    def gtype_translator(self, gate_type):
-        """ input: Verilog gate input formats
-        outputs: gtype corresponding gate name """ 
-
-        if gate_type == 'ipt':
-            return gtype(0).name
-        elif gate_type == 'xor':
-            return gtype(2).name
-        elif gate_type == 'or':
-            return gtype(3).name
-        elif gate_type == 'nor':
-            return gtype(4).name
-        elif gate_type == 'not':
-            return gtype(5).name
-        elif gate_type == 'nand':
-            return gtype(6).name
-        elif gate_type == 'and':
-            return gtype(7).name
-        ## new node type
-        elif gate_type == 'xnor':
-            return gtype(8).name
-        elif gate_type == 'buf':
-            return gtype(9).name
-
-    
-    # This method is deprecated  @Ghazal: please double check in circuit_loader
-    def connect_node(self, line):
-        """ As we move forward, find the upnodes and connects them """ 
-        
-        attr = line.split()
-        ptr = self.nodes[attr[1]]
-        
-        # ntype=PI and gtype=IPT: good -- we need more documentation here
-        # we don't care about #fan-out
-        if ptr.ntype == "PI" and ptr.gtype=="IPT":
-            None
-        
-        # ntype=FB and gtype=BRCH
-        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
-            unode = self.nodes[attr[3]]
-            ptr.unodes.append(unode)
-            unode.dnodes.append(ptr)
-        
-        # ntype=GATE and gtype=BRCH
-        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
-            print("ERROR: gate and branch", ptr.num)
-
-        # ntype=GATE or ntype=PO 
-        # we don't care about #fan-out
-        # some gates have a single input, they are buffer
-        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
-            for unode_num in attr[5:]:
-                unode = self.nodes[unode_num]
-                ptr.unodes.append(unode)
-                unode.dnodes.append(ptr)
-        else:
-            print("ERROR: not known!", ptr.num)
-
-    
-    # This method is deprecated  @Ghazal: please double check in circuit_loader
-    def insert_node(self, u_node, d_node, i_node):
-        """ This function is used for inserting the BRCH node
-        u_node and d_node are connected originally
-        i_node is the node be inserted between u_node and d_node 
-        """ 
-        u_node.dnodes.remove(d_node)
-        u_node.dnodes.append(i_node)
-        d_node.unodes.remove(u_node)
-        d_node.unodes.append(i_node)
-        i_node.unodes.append(u_node)
-        i_node.dnodes.append(d_node)
-
     def all_shortest_distances_to_PO(self):
-        """ Calculates shortest distace from any gate to any PO 
+        """ Calculate shortest distace from any gate to any PO 
         using Dijktra algorithm
         """
         dist = {} 
@@ -1698,26 +1664,15 @@ class Circuit:
         for node in nodes:
             dist[node] = MAX_WEIGHT
             
-        unvisited = []
+        unvisited_nodes = []
         for po in self.PO:
             dist[po] = min(0,dist[po])
-            unvisited.append(po)
+            unvisited_nodes.append(po)
             
-        while unvisited:
-            for node in unvisited:
+        while unvisited_nodes:
+            for node in unvisited_nodes:
                 for unode in node.unodes:
                     dist[unode] = min(1+dist[node],dist[unode])
-                    unvisited.append(unode)
-                unvisited.remove(node)
+                    unvisited_nodes.append(unode)
+                unvisited_nodes.remove(node)
         print('Distances from node to the nearest output:',*[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
-
-# prevent D algorithm deadlock. For debug purposes only
-class Imply_counter:
-    def __init__(self, abort_cnt):
-        self.cnt = 0
-        self.abort_cnt = abort_cnt
-    def increment(self):
-        self.cnt += 1
-    def initialize(self):
-        self.cnt = 0
- 

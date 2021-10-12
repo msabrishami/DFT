@@ -8,6 +8,7 @@ import math
 import time
 import os
 import numpy as np
+import copy
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
@@ -120,7 +121,12 @@ if __name__ == '__main__':
     print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
         circuit.c_fname, args.tp, args.tpLoad, args.cpu))
 
-    if args.func == "test1":
+    if args.func == "test0":
+        circuit.lev()
+        circuit.STAFAN(300000, 8)
+        circuit.co_ob_info()
+
+    elif args.func == "test1":
         circuit.lev()
         print(circuit)
 
@@ -142,8 +148,7 @@ if __name__ == '__main__':
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
 
-        circuit.STAFAN_CS(args.tp) 
-        circuit.STAFAN_B() 
+        circuit.STAFAN(args.tp, 10) 
 
 
     elif args.func == "test4":
@@ -294,7 +299,6 @@ if __name__ == '__main__':
         # But we read the golden TP from ckt circuit, because we don't have ckt.v and only 
         # have ckt_synVX.v
         circuit = Circuit(ckt_name)
-        LoadCircuit(circuit, "v")
         circuit.lev()
         tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + str(args.tpLoad) + ".tp"
         stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
