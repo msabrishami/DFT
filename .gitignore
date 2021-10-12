@@ -1,12 +1,46 @@
+# git ignore
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
+# Saeed:
+**.swp
+data/modelsim/
+data/stafan-data/
+data/graph/*
+data/fault_sim/*
+data/verilog/
+data/EPFL/
+data/patterns/
+data/observations/
+data/tpfc/
+**.png
+**.log
+gnn/notes.txt
+gnn/TEMP_func.py
+circuit/results/
+circuit/exp-results/
+data/ob_stat/
+data/cell_ssta/
 
-### Python ###
+# **.graphml
+**.png
+# python cache file
+__pycache__/:
+*.pyc
+
+# DS_Store file
+*.DS_Store
+._*
+
+# log file
+*.log
+
+
+# from github/gitignore repo
+# https://github.com/github/gitignore/blob/master/Python.gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+circuit/main_personal.py
 
 # C extensions
 *.so
@@ -25,6 +59,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -142,20 +177,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
-
-# Local History for Visual Studio Code
-.history/
-
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
-
-# End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
+# static files generated from Django application using `collectstatic`
+media
+static
