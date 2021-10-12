@@ -168,7 +168,7 @@ if __name__ == '__main__':
         print("Time: \t{:.3}".format(time.time() - time_start))
 
     elif args.func == "sp":
-        circuit.all_shortest_paths_to_PO()
+        circuit.all_shortest_distances_to_PO()
 
     elif args.func == "saveStatTP":
         ## For now, we are only generating the random input vector files, 
