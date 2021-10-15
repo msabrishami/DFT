@@ -178,10 +178,9 @@ class Circuit:
         for node in target_node.unodes:
             print("added node {} to the queue".format(node.num))
             queue.append(node)
-
+            
         self.print_fanin_rec(queue, min_level)
 
-    
     def gen_tp(self):
         """
         Randomly generate a test pattern for input nodes.
@@ -1653,101 +1652,26 @@ class Circuit:
         self.PO.append(new_brch)
         self.nodes[new_brch.num] = new_brch
 
-    
-    # This method is deprecated @Ghazal: please double check in circuit_loader 
-    def gtype_translator(self, gate_type):
-        """ input: Verilog gate input formats
-        outputs: gtype corresponding gate name """ 
+    def all_shortest_distances_to_PO(self):
+        """ Calculate shortest distace from any gate to any PO 
+        using Dijktra algorithm
+        """
+        dist = {} 
+        MAX_WEIGHT = 10**9
+        nodes = list(self.nodes.values()) + self.PO + self.PI
 
-        if gate_type == 'ipt':
-            return gtype(0).name
-        elif gate_type == 'xor':
-            return gtype(2).name
-        elif gate_type == 'or':
-            return gtype(3).name
-        elif gate_type == 'nor':
-            return gtype(4).name
-        elif gate_type == 'not':
-            return gtype(5).name
-        elif gate_type == 'nand':
-            return gtype(6).name
-        elif gate_type == 'and':
-            return gtype(7).name
-        ## new node type
-        elif gate_type == 'xnor':
-            return gtype(8).name
-        elif gate_type == 'buf':
-            return gtype(9).name
-
-    
-    # This method is deprecated  @Ghazal: please double check in circuit_loader
-    def connect_node(self, line):
-        """ As we move forward, find the upnodes and connects them """ 
-        
-        attr = line.split()
-        ptr = self.nodes[attr[1]]
-        
-        # ntype=PI and gtype=IPT: good -- we need more documentation here
-        # we don't care about #fan-out
-        if ptr.ntype == "PI" and ptr.gtype=="IPT":
-            None
-        
-        # ntype=FB and gtyep=BRCH
-        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
-            unode = self.nodes[attr[3]]
-            ptr.unodes.append(unode)
-            unode.dnodes.append(ptr)
-        
-        # ntype=GATE and gtype=BRCH
-        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
-            print("ERROR: gate and branch", ptr.num)
-
-        # ntype=GATE or ntype=PO 
-        # we don't care about #fan-out
-        # some gates have a single input, they are buffer
-        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
-            for unode_num in attr[5:]:
-                unode = self.nodes[unode_num]
-                ptr.unodes.append(unode)
-                unode.dnodes.append(ptr)
-        else:
-            print("ERROR: not known!", ptr.num)
-
-    
-    # This method is deprecated  @Ghazal: please double check in circuit_loader
-    def insert_node(self, u_node, d_node, i_node):
-        """ This function is used for inserting the BRCH node
-        u_node and d_node are connected originally
-        i_node is the node be inserted between u_node and d_node 
-        """ 
-        u_node.dnodes.remove(d_node)
-        u_node.dnodes.append(i_node)
-        d_node.unodes.remove(u_node)
-        d_node.unodes.append(i_node)
-        i_node.unodes.append(u_node)
-        i_node.dnodes.append(d_node)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# prevent D algorithm deadlock. For debug purposes only
-class Imply_counter:
-    def __init__(self, abort_cnt):
-        self.cnt = 0
-        self.abort_cnt = abort_cnt
-    def increment(self):
-        self.cnt += 1
-    def initialize(self):
-        self.cnt = 0
- 
+        for node in nodes:
+            dist[node] = MAX_WEIGHT
+            
+        unvisited_nodes = []
+        for po in self.PO:
+            dist[po] = min(0,dist[po])
+            unvisited_nodes.append(po)
+            
+        while unvisited_nodes:
+            for node in unvisited_nodes:
+                for unode in node.unodes:
+                    dist[unode] = min(1+dist[node],dist[unode])
+                    unvisited_nodes.append(unode)
+                unvisited_nodes.remove(node)
+        print('Distances from node to the nearest output:',*[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')

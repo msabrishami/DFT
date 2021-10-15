@@ -128,11 +128,10 @@ class LoadCircuit:
             # Stack the contniuous lines to each other
             if ';' not in line and 'endmodule' not in line:
                 eff_line = eff_line + line.rstrip()
-                continue
-                        
-            line = eff_line + line.rstrip()
-            eff_line = ''
-            new_lines.append(line)
+            else:
+                line = eff_line + line.rstrip()
+                eff_line = ''
+                new_lines.append(line)
 
         infile.close()
 

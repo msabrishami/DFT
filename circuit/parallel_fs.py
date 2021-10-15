@@ -173,3 +173,4 @@ class PFS(FaultSim):
 
         else:
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
+    
