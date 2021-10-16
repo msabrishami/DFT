@@ -14,7 +14,7 @@ class FaultList:
         """ add faults to the fault list 
         mode = full: fault list will be all SS@ faults 
         mode = user: fault list will be read from file fname
-        """
+        """ 
         if mode == "full":
             circuit.get_full_fault_list()
             self.in_fault_num = self.circuit.fault_node_num

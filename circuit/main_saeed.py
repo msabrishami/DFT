@@ -27,7 +27,8 @@ from load_circuit import LoadCircuit
 from convert import Converter 
 import convert
 import utils 
-
+from parallel_fs import PFS
+from ppsf_sim import PPSF
 
 ### These functions are copied from main_personal.py ### 
 def read_tp_file(fname):
@@ -82,17 +83,21 @@ def pars_args():
     parser.add_argument("-ckt", type=str, required=False, help="ckt file address")
     parser.add_argument("-v", type=str, required=False, help="verilog file address")
     parser.add_argument("-synv", type=str, required=False , help="syn ver")
-    parser.add_argument("-tp", type=int, required=False, help="number of tp for random sim")
-    parser.add_argument("-tpLoad", type=int, required=False, help="number tp used in loading STAFAN")
+    parser.add_argument("-tp", type=int, required=False, help="tp count for random sim")
+    parser.add_argument("-tpLoad", type=int, required=False, help="tp count for loading STAFAN")
     parser.add_argument("-cpu", type=int, required=False, help="number of parallel CPUs")
     parser.add_argument("-func", type=str, required=False, help="What operation you want to run")
     parser.add_argument("-OPIalg", type=str, required=False, help="OPI Algorithm")
-    parser.add_argument("-Bth", type=float, required=False, default=0.1, help="B threshold for OPI")
-    parser.add_argument("-HTO_th", type=float, required=False, default=None, help="HTO-threshold")
-    parser.add_argument("-HTC_th", type=float, required=False, default=None, help="HTC-threshold")
+    parser.add_argument("-Bth", type=float, required=False, default=0.1, 
+            help="Obsv. threshold for OPI candidate selection")
+    parser.add_argument("-HTO_th", type=float, required=False, default=None, 
+            help="Obsv. threshold for OPI candidate selection")
+    parser.add_argument("-HTC_th", type=float, required=False, default=None, 
+            help="Ctrl. threshold for OPI candidate selection")
     parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
     parser.add_argument("-op_fname", type=str, required=False, default=None, help="OP file name")
-    parser.add_argument("-TPI_num", type=int, required=False, default=None, help="Number of TPI candidates specified")
+    parser.add_argument("-TPI_num", type=int, required=False, default=None, 
+            help="Number of TPI candidates specified")
     args = parser.parse_args()
 
     return args
@@ -136,10 +141,8 @@ if __name__ == '__main__':
         
         # testing single test pattern generation 
         temp = circuit.gen_tp()
-
     
         # testing generating a file of test patterns
-
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
 
@@ -147,17 +150,14 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-
         circuit.STAFAN(args.tp, 10) 
 
 
     elif args.func == "test4":
-
         time_start = time.time()
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
         circuit.STAFAN_CS(args.tp, path) 
@@ -167,8 +167,34 @@ if __name__ == '__main__':
         circuit.save_TMs(fname)
         print("Time: \t{:.3}".format(time.time() - time_start))
 
-    elif args.func == "sp":
+    elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
+
+    elif args.func == "pfsp":
+        circuit.lev()
+        pfs = PFS(circuit)
+        # pfs.add_fault("full",None)
+        # print(pfs.single([1,1,1,1,0]))
+        pfs.fs_exe(tp_num=args.tp, t_mode='rand', 
+                r_mode='b', fault_list_type="full", fname = None)
+
+
+    elif args.func == "ppsf":
+
+        utils.bin2int([1, 1, 0, 0])
+        utils.bin2int([1, 0, 1, 0])
+        utils.bin2int([0, 0, 0, 1])
+
+        circuit.lev()
+        tps = []
+        for _ in range(64):
+            tps.append(circuit.gen_tp())
+        fault_sim = PPSF(circuit)
+        print("PPFS loaded")
+        fault_sim.single(tps)
+        Z = fault_sim.circuit.read_PO()
+        print(Z)
+
 
     elif args.func == "saveStatTP":
         ## For now, we are only generating the random input vector files, 

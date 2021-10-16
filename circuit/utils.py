@@ -14,7 +14,14 @@ def ckt_type(cname):
     else:
         raise NameError("Circuit is not known")
 
-
+def bin2int(bin_arr):
+    """ Its the other way around ... """ 
+    int_val = 0
+    print(bin_arr)
+    for idx, val in enumerate(bin_arr):
+        int_val += (val * (2**idx))
+    print(int_val)
+    return int_val
 
 
 #### COPIED FROM StatisticsSTA.utils

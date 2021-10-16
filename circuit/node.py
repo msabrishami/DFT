@@ -642,6 +642,7 @@ class IPT(Node):
         self.value = value
 
     def imply_p(self,bitwise_not, pfs_V):
+        pdb.set_trace()
         self.pfs_V = pfs_V * bitwise_not
 
     def eval_CC(self):

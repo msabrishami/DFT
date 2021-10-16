@@ -27,6 +27,7 @@ class PFS(FaultSim):
         mode = full: input fault list is full fault list
         mode = user: input fault list is given by user as a file name
         """
+        #TODO: why did we overloaded this method from super? 
         if mode == "full":
             self.circuit.get_full_fault_list()
             self.in_fault_num = self.circuit.fault_node_num

@@ -263,6 +263,28 @@ class Circuit:
             else:
                 node.imply()
 
+    def logic_sim_bitwise(self, input_pattern):
+        """
+        Logic simulation bitwise mode:
+        Reads a given pattern and perform the logic simulation bitwise
+        input_pattern is a list of values (currently int) in the ... 
+            ... same order as in self.PI
+        """
+        node_dict = dict(zip([x.num for x in self.PI], input_pattern))
+        # TODO: get rid of this shit! Why did we not implement this within constructor?
+        n = sys.maxsize
+        bitlen = int(math.log2(n))+1
+        bitwise_not = 2**bitlen-1
+
+        for node in self.nodes_lev:
+            if node.gtype == "IPT":
+                node.imply_p(bitwise_not, node_dict[node.num])
+            else:
+                node.imply_p(bitwise_not)
+
+            print(node.num, node.gtype, node.ntype, node.value)
+
+
     
     # Saeed needs to rewrite this method using 'yield' in load_tp_file     
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
@@ -1674,4 +1696,5 @@ class Circuit:
                     dist[unode] = min(1+dist[node],dist[unode])
                     unvisited_nodes.append(unode)
                 unvisited_nodes.remove(node)
-        print('Distances from node to the nearest output:',*[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
+        print('Distances from node to the nearest output:', 
+                *[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
