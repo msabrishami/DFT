@@ -1272,7 +1272,7 @@ class Circuit:
 
 
     # @Ghazal this needs to be checked and tested
-    def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
+    def control_process(self, conn, id_proc, tot_tp_count, tot_proc):
         circuit = Circuit(self.c_fname)
         circuit.lev()
         PI_num = len(circuit.PI)
@@ -1284,8 +1284,7 @@ class Circuit:
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
-        D0_count = []
-        D1_count = []
+
         for i in circuit.nodes_lev:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
@@ -1302,16 +1301,15 @@ class Circuit:
         
         Arguments:
         ---------
-        total_T : (int) total number of test vectors 
+        total_tp : (int) total number of test patterns
         num_proc : (int) number of processors that will be used in parallel processing 
         """
         start_time = time.time()
-        # thread_cnt = 1
         process_list = []
+
         for id_proc in range(num_proc):
-        # for idx in process_list:
             parent_conn, child_conn = Pipe()
-            p = Process(target = self.control_thread, 
+            p = Process(target = self.control_process, 
                     args =(child_conn, id_proc, total_tp, num_proc))
             p.start()
             process_list.append((p, parent_conn))

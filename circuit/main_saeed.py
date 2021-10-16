@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
     if args.func == "test0":
         circuit.lev()
-        circuit.STAFAN(300000, 8)
+        circuit.STAFAN(300000, 16)
         circuit.co_ob_info()
 
     elif args.func == "test1":
