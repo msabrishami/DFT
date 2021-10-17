@@ -124,10 +124,7 @@ class Circuit:
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
                     lev_u = [x.lev for x in node.unodes]
-                    # print(num, lev_u)
-                    if None in lev_u:
-                        continue
-                    else:
+                    if None not in lev_u:
                         node.lev = max(lev_u) + 1
                         flag_change = True
     
@@ -194,7 +191,7 @@ class Circuit:
     
 
     def gen_tp_file(self, test_count, fname=None, mode="b"):
-        """ create single file with multiple input patterns
+        """ Create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         """ 
@@ -205,13 +202,12 @@ class Circuit:
         outfile = open(fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
         
+        bits = ["0","1","X"]
         for t in range(test_count):
             if mode == "b":
-                pat = [str(random.randint(0,1)) for x in range(len(self.PI))]
+                pat = [bits[random.randint(0,1)] for x in range(len(self.PI))]
             elif mode == "x":
-                pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
-                pat = ["X" if x=="2" else x for x in pat]
-            # print(",".join(pat))
+                pat = [bits[random.randint(0,2)] for x in range(len(self.PI))]
             outfile.write(",".join(pat) + "\n")
         
         outfile.close()
@@ -220,9 +216,7 @@ class Circuit:
     # do we need to check the order of the inputs in the file?  
     # this can be done using "yield" or "generate" -- check online 
     def load_tp_file(self, fname):
-        """ create single file with multiple input patterns
-        mode b: generate values in {0, 1}
-        mode x: generate values in {0, 1, X}
+        """ Load single file with multiple input patterns
         """ 
         infile = open(fname, 'r')
         tps = []
@@ -231,7 +225,7 @@ class Circuit:
         # @Ghazal: check the order of inputs in the file is the same as self.PI
         for line in lines[1:]:
             words = line.rstrip().split(',')
-            words = [int(word) for word in words]
+            words = [int(word) if word == '1' or word == '0' else 'X' for word in words]
             tps.append(words)
         infile.close()
         return tps
@@ -399,7 +393,7 @@ class Circuit:
     
     def STAFAN_C_single(self, tp):
         """ Running STAFAN controllability step for one test pattern 
-        The initialization of nodes' C1 and C0 are done in a prior method 
+        The initialization of nodes C1 and C0 are done in the prior method 
 
         Arguments
         ---------
@@ -424,20 +418,20 @@ class Circuit:
 
         Arguments: 
         ----------
-        tp : either the name of a test pattern file (str) or number of test patterns (int)
-            if tp is number of test patterns, they will be generated internally within limit
-        limit : limit of test patterns to be generated
-            if limit is not given, all possible tps can be generated. 
-            every test pattern can be assigned a number by putting binary values of 
+        tp : Either the name of a test pattern file (str) or number of test patterns (int).
+            If tp is number of test patterns, they will be generated internally within limit
+        limit : Limit of test patterns to be generated.
+            If limit is not given, all possible tps can be generated. 
+            Every test pattern can be assigned a number by putting binary values of 
             primary inputs together in the same sequence as in self.PI, and then converting 
             this value to a decimal one. 
         
-        Note: random input patterns are generated with replacement (not pseudo-random)
+        Note: Random input patterns are generated with replacement (not pseudo-random)
         Note: random.choice method is very inefficient
         '''
 
         if isinstance(tp, str):
-            tps = self.load_tp_file(tp_fname)
+            tps = self.load_tp_file(tp)
             num_pattern = len(tps)
             tp_gen = False 
         else:
@@ -447,7 +441,7 @@ class Circuit:
         # We need to reset the circuit
         self.STAFAN_reset_counts()
         if limit == None:
-            limit = [0, pow(2, len(self.PI))-1] if limit==None else limit
+            limit = [0, pow(2, len(self.PI))-1]
 
         for t in range(num_pattern):
             if tp_gen:
@@ -1280,7 +1274,7 @@ class Circuit:
         limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
                 int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
         circuit.STAFAN_CS(tp_count, limit)
-        # circuit.nodes_lev.sort(key=lambda x: x.num)
+
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
@@ -1289,7 +1283,6 @@ class Circuit:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
-        # circuit.nodes_lev.sort(key=lambda x: x.lev)
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
@@ -1297,16 +1290,15 @@ class Circuit:
     # @Ghazal this needs to be checked and tested 
     def STAFAN(self, total_tp, num_proc=1):
         """ 
-        Generating STAFAN ctrl and obsv in parallel  
+        Generating STAFAN controllability and observability in parallel  
         
         Arguments:
         ---------
-        total_tp : (int) total number of test patterns
+        total_tp : (int) total number of test pattern vectors
         num_proc : (int) number of processors that will be used in parallel processing 
         """
         start_time = time.time()
         process_list = []
-
         for id_proc in range(num_proc):
             parent_conn, child_conn = Pipe()
             p = Process(target = self.control_process, 
@@ -1326,13 +1318,11 @@ class Circuit:
                 sen_count_list[i] += tup[2][i]
             p.join()
         
-        # self.nodes_lev.sort(key=lambda x: x.num)
         for i in range(len(self.nodes_lev)):
             self.nodes_lev[i].C1 = one_count_list[i] / total_tp
             self.nodes_lev[i].C0 = zero_count_list[i] / total_tp
             self.nodes_lev[i].S = sen_count_list[i] / total_tp
 
-        # self.nodes_lev.sort(key=lambda x: x.lev)
         for node in self.nodes_lev:
             if node.C0 == 0 or node.C1 == 0:
                 print("----------------------------")
@@ -1669,7 +1659,7 @@ class Circuit:
             new_unodes.append(old_brch)
             target.dnodes[0].unodes = new_unodes
 
-        self.PO.append(new_brch)
+        self.PO.append(new_brch)    
         self.nodes[new_brch.num] = new_brch
 
     def all_shortest_distances_to_PO(self):
@@ -1694,5 +1684,5 @@ class Circuit:
                     dist[unode] = min(1+dist[node],dist[unode])
                     unvisited_nodes.append(unode)
                 unvisited_nodes.remove(node)
-        print('Distances from node to the nearest output:', 
-                *[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
+        # print('Distances from node to the nearest output:', 
+        #         *[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')

@@ -128,7 +128,9 @@ if __name__ == '__main__':
 
     if args.func == "test0":
         circuit.lev()
-        circuit.STAFAN(300000, 16)
+        circuit.SCOAP_CC()
+        circuit.SCOAP_CO()
+        circuit.STAFAN(300000, 8)
         circuit.co_ob_info()
 
     elif args.func == "test1":
@@ -139,12 +141,17 @@ if __name__ == '__main__':
     elif args.func == "test2": 
         circuit.lev()
         
-        # testing single test pattern generation 
+        # test single test pattern generation 
         temp = circuit.gen_tp()
     
-        # testing generating a file of test patterns
+        # test generating a single file of test patterns
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
+        circuit.gen_tp_file(args.tp, path,"x")
+
+        # test load_tp_file()
+        print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
+
 
     elif args.func == "test3": 
         circuit.lev()
@@ -160,7 +167,7 @@ if __name__ == '__main__':
         circuit.SCOAP_CO()
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
-        circuit.STAFAN_CS(args.tp, path) 
+        circuit.STAFAN_CS(path) 
         circuit.STAFAN_B() 
         
         fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
@@ -236,7 +243,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
+        circuit.STAFAN_CS(args.tp, tp=tp_path) 
         circuit.STAFAN_B()
         circuit.CALC_ENTROPY()
         # print("Zeros: \t{}".format(circuit.c_zero_count))
