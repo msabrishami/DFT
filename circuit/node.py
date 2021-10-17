@@ -208,7 +208,7 @@ class Node:
 
     # TODO Move to children later
     def is_sensible(self, count=True):
-        ''' calculates if this node can propagate the gate infront of it.
+        ''' calculates if this node can propagate the gate in front of it.
         i.e. if current value changes, down-node (output gate) value will change.
         '''
         # TODO: implemented on two value system, not sure if it applies to others
