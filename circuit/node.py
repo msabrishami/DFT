@@ -136,9 +136,9 @@ class Node:
                     
     def __str__(self):
         res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
-        res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
-        res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
-        res += " C0= {:.4f} C1={:.4f} ".format(self.C0, self.C1)
+        res += ", FIN: " + " ".join([str(fin.num) for fin in self.unodes])
+        res += ", FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
+        res += ", C0={:.4f}, C1={:.4f} ".format(self.C0, self.C1)
         return res
 
     
@@ -671,8 +671,8 @@ class BRCH(Node):
         self.pfs_V = self.unodes[0].pfs_V
 
     def eval_CC(self):
-        self.CC0 = self.unodes[0].CC0 + 1 
-        self.CC1 = self.unodes[0].CC1 + 1
+        self.CC0 = self.unodes[0].CC0
+        self.CC1 = self.unodes[0].CC1
 
     def eval_CO(self): 
         # CO measurement for a stem is done by it's branches
