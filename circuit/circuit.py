@@ -256,28 +256,48 @@ class Circuit:
             else:
                 node.imply()
 
-    def logic_sim_bitwise(self, input_pattern):
+    def logic_sim_bitwise(self, input_pattern, fault=None):
         """
         Logic simulation bitwise mode:
         Reads a given pattern and perform the logic simulation bitwise
-        input_pattern is a list of values (currently int) in the ... 
-            ... same order as in self.PI
+
+        Arguments
+        ---------
+        input_pattern : list of int 
+            input pattern in the same order as in self.PI
+        fault : str
+            node.num@fault --> example: N43@0 means node N43 single stuck at zero 
+
+        fault
         """
         node_dict = dict(zip([x.num for x in self.PI], input_pattern))
         # TODO: get rid of this shit! Why did we not implement this within constructor?
         n = sys.maxsize
         bitlen = int(math.log2(n))+1
         bitwise_not = 2**bitlen-1
+        
+        if fault:
+            fault_num = fault.split('@')[0]
+            fault_val = fault.split('@')[1]
+            for node in self.nodes_lev:
+                if node.gtype == "IPT":
+                    node.imply_b(node_dict[node.num])
+                else:
+                    node.imply_b()
+                if node.num == fault_num:
+                    if fault.val == '0':
+                        node.value = 0
+                    else:
+                        node.value = node.bitwise_not
+        else:
+            for node in self.nodes_lev:
+                if node.gtype == "IPT":
+                    node.imply_b(node_dict[node.num])
+                else:
+                    node.imply_b()
 
-        for node in self.nodes_lev:
-            if node.gtype == "IPT":
-                node.imply_p(bitwise_not, node_dict[node.num])
-            else:
-                node.imply_p(bitwise_not)
-
-            print(node.num, node.gtype, node.ntype, node.value)
-
-
+            tmp = str(node)
+            print(tmp, " ".join([""]*(60-len(tmp))) + "{:b}".format(node.value) )
     
     # Saeed needs to rewrite this method using 'yield' in load_tp_file     
     def logic_sim_file(self, in_fname, out_fname, stil=False): 

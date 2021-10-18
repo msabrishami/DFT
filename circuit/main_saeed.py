@@ -194,19 +194,16 @@ if __name__ == '__main__':
 
     elif args.func == "ppsf":
 
-        utils.bin2int([1, 1, 0, 0])
-        utils.bin2int([1, 0, 1, 0])
-        utils.bin2int([0, 0, 0, 1])
-
         circuit.lev()
         tps = []
-        for _ in range(64):
-            tps.append(circuit.gen_tp())
         fault_sim = PPSF(circuit)
         print("PPFS loaded")
         fault_sim.single(tps)
+        fault_sim.add_fault("22@0")
+        fault_sim.fs_exe(64)
         Z = fault_sim.circuit.read_PO()
-        print(Z)
+        for key in Z.keys():
+            print(key, "{:b}".format(Z[key]))
 
 
     elif args.func == "saveStatTP":
