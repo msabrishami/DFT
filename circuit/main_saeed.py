@@ -130,7 +130,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(3, 8)
+        circuit.STAFAN(300000, 8)
         circuit.co_ob_info()
 
     elif args.func == "test1":

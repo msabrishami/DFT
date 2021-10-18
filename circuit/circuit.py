@@ -216,13 +216,12 @@ class Circuit:
     # do we need to check the order of the inputs in the file?  
     # this can be done using "yield" or "generate" -- check online 
     def load_tp_file(self, fname):
-        """ Load single file with multiple input patterns
+        """ Load single file with multiple test pattern vectors.
         """ 
         infile = open(fname, 'r')
         tps = []
         lines = infile.readlines()
 
-        # @Ghazal: check the order of inputs in the file is the same as self.PI
         for line in lines[1:]:
             words = line.rstrip().split(',')
             words = [int(word) if word == '1' or word == '0' else 'X' for word in words]
@@ -232,7 +231,7 @@ class Circuit:
 
 
     def read_PO(self):
-        """ reads the values of POs in a dictionary 
+        """ Read the values of POs in a dictionary.
         The key to the dictionary is the PO node and value is the value of node
         """ 
         res = {}
@@ -1294,9 +1293,13 @@ class Circuit:
         
         Arguments:
         ---------
-        total_tp : (int) total number of test pattern vectors
+        total_tp : (int) total number of test pattern vectors(not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
+
+        if total_tp < num_proc:
+            raise ValueError("Total number of test pattern vetors must be at least the same as process numbers")
+
         start_time = time.time()
         process_list = []
         for id_proc in range(num_proc):
@@ -1333,7 +1336,7 @@ class Circuit:
         self.STAFAN_B()
         end_time = time.time()
         duration = end_time - start_time
-        print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
+        print ("Processor count: {}, Test pattern vectors: {}, Time taken: {:.2f} sec".format(num_proc,total_tp ,duration))
 
     
     def save_TMs(self, fname):
