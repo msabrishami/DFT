@@ -3,7 +3,7 @@
 from enum import Enum
 import pdb
 import math 
-#import sys
+import sys
 
 # We are using GNOT, etc. as we may later use X values
 """" GENERAL NOTES AND SUGGESTIONS: 
@@ -76,6 +76,10 @@ class Node:
         self.unodes = []
         self.dnodes = []
 
+        # used for PPSF and SPPF 
+        bitlen = int(math.log2(sys.maxsize))+1
+        self.bitwise_not = 2**bitlen-1
+
         # PFS:
         self.pfs_V = None   # pfs value
         self.pfs_I = None   # mask
@@ -99,23 +103,16 @@ class Node:
         self.one_count = 0      # count
         self.zero_count = 0     # count
         self.sen_count = 0      # count
-        self.D1_count = 0       # Count
-        self.D0_count = 0       # Count
         
-        # STAFAN for every test measures
+        # STAFAN Forward for every test measure
         self.sense = False      # Boolean, maybe redundant
-        self.D1 = False         # Boolean
-        self.D0 = False         # Boolean
-
-        
-        # STAFAN will calculate these
-        # Forward: 
         self.S = None           # prob
         self.C1 = None          # prob
         self.C0 = None          # prob
         self.D0_p = None        # prob
         self.D1_p = None        # prob
-        # Backward
+        
+        # STAFAN Backward
         self.B1 = None          # prob
         self.B0 = None          # prob
         self.CB1 = None          # prob
@@ -125,7 +122,6 @@ class Node:
         #Entropy
         self.Entropy =None      #entropy of the node
 
-        
         # Test Point Insertion Measurements
         self.stat = {}
         
@@ -138,7 +134,8 @@ class Node:
         res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
         res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
-        res += " C0= {:.4f} C1={:.4f} ".format(self.C0, self.C1)
+        if self.C0 and self.C1:
+            res += " C0= {:.4f} C1={:.4f} ".format(self.C0, self.C1)
         return res
 
     
@@ -235,62 +232,6 @@ class Node:
             pdb.set_trace()
 
 
-    def semi_detect(self):
-        ''' checks if a node is detectable with current values
-        logic-sim and sense should be pre-calculated
-        updates D0/D1 flag and D0/D1 count
-        D_count is set to 0 when circuit is initilized
-        semi_detect means if all signals of all nodes (including this node) 
-         .... are independent (so no reconvergence and etc.), 
-         .... the fault on this node can propagate to PO. 
-        D0: this test semi-detects SS@1 for this node
-        D1: this test semi-detects SS@0 for this node
-        '''
-        self.D1 = False
-        self.D0 = False
-
-        if self.ntype == 'PO':
-            self.D1 = True if (self.value == 1) else False
-            self.D0 = True if (self.value == 0) else False
-
-        elif self.sense:
-
-            dn = self.dnodes[0]
-
-            if dn.gtype in ['OR', 'AND', 'BUFF']:
-                self.D1 = (self.value == 1) & (dn.D1)
-                self.D0 = (self.value == 0) & (dn.D0)
-
-            elif dn.gtype in ['NAND', 'NOR', 'NOT']:
-                self.D1 = (self.value == 1) & (dn.D0)
-                self.D0 = (self.value == 0) & (dn.D1)
-
-            elif dn.gtype == 'XOR':
-                if dn.value == 1:
-                    self.D1 = dn.D1
-                    self.D0 = dn.D1
-                elif dn.value == 0:
-                    self.D1 = dn.D0
-                    self.D0 = dn.D0
-
-            elif dn.gtype == 'BRCH':
-                if (self.value == 1):
-                    for branch in self.dnodes:
-                        if branch.D1:
-                            self.D1 = True
-                            break
-                elif (self.value == 0):
-                    for branch in self.dnodes:
-                        if branch.D0:
-                            self.D0 = True
-                            break
-            else:
-                print("gate type is {}".format(self.gtype))
-                print("This gate is not supported yet")
-
-        self.D1_count = (self.D1_count + 1) if self.D1 else self.D1_count
-        self.D0_count = (self.D0_count + 1) if self.D0 else self.D0_count
-
     def print_info(self, get_labels=False, print_labels=True):
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
@@ -308,8 +249,6 @@ class Node:
             # print("S:{:.2f}\t".format(self.S), end="")
             # print("B0:{:.2f}\t".format(self.B0), end="")
             # print("B1:{:.2f}\t".format(self.B1), end="")
-            # print("#D0:{}\t".format(str(self.D0_count).zfill(4)), end="")
-            # print("#D1:{}\t".format(str(self.D1_count).zfill(4)), end="")
             # print("%D0:{:.2f}\t".format(self.D0_p), end="")
             # print("%D1:{:.2f}\t".format(self.D1_p))
         else:
@@ -327,8 +266,6 @@ class Node:
             print("{:.2f}\t".format(self.CB0), end="")
             print("{:.2f}\t".format(self.CB1), end="")
             print("{:.2f}\t".format(self.B), end="")
-            # print("{}\t".format(str(self.D0_count).zfill(4)), end="")
-            # print("{}\t".format(str(self.D1_count).zfill(4)), end="")
             # print("{:.2f}\t".format(self.D0_p), end="")
             # print("{:.2f}\t".format(self.D1_p), end="")
             # print("{}\t".format(self.stat["SS@0"]), end="")
@@ -342,6 +279,9 @@ class BUFF(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
+        self.value = self.unodes[0].value
+
+    def imply_b(self):
         self.value = self.unodes[0].value
 
     def imply_p(self, bitwise_not):
@@ -372,6 +312,9 @@ class NOT(Node):
     def imply(self):
         self.value = 1 if (self.unodes[0].value == 0) else 0
 
+    def imply_b(self):
+        self.value = self.unodes[0].value ^ self.bitwise_not  
+
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
 
@@ -400,6 +343,11 @@ class OR(Node):
 
     def imply(self):
         self.value = 1 if (1 in self.unodes_val()) else 0
+    
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value | unode.value
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -435,6 +383,12 @@ class NOR(Node):
 
     def imply(self):
         self.value = 0 if (1 in self.unodes_val()) else 1
+
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value | unode.value
+        self.value = self.value ^ self.bitwise_not
     
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -473,6 +427,11 @@ class AND(Node):
 
     def imply(self):
         self.value = 0 if (0 in self.unodes_val()) else 1
+
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value & unode.value
     
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -511,6 +470,12 @@ class NAND(Node):
     def imply(self):
         self.value = 1 if (0 in self.unodes_val()) else 0
     
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value & unode.value
+        self.value = self.value ^ self.bitwise_not
+
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
@@ -553,6 +518,11 @@ class XOR(Node):
             print("issue")
             pdb.set_trace()
     
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value ^ unode.value
+
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
@@ -596,6 +566,12 @@ class XNOR(Node):
 
     def imply(self):
         self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
+
+    def imply_b(self):
+        self.value = self.unodes[0].value
+        for unode in self.unodes[1:]:
+            self.value = self.value ^ unode.value
+        self.value = self.value ^ self.bitwise_not
     
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -640,9 +616,11 @@ class IPT(Node):
     
     def imply(self, value):
         self.value = value
+    
+    def imply_b(self, value):
+        self.value = value
 
     def imply_p(self,bitwise_not, pfs_V):
-        pdb.set_trace()
         self.pfs_V = pfs_V * bitwise_not
 
     def eval_CC(self):
@@ -665,6 +643,9 @@ class BRCH(Node):
         Node.__init__(self, n_type, g_type, num)
     
     def imply(self):
+        self.value = self.unodes[0].value
+    
+    def imply_b(self):
         self.value = self.unodes[0].value
 
     def imply_p(self, bitwise_not):
@@ -730,17 +711,11 @@ def dfs_general(node, c_val):
             # for the first controling value, use its FL as initialization
             if first_c == 1:
                 c_FL_set = unode.faultlist_dfs.copy()
-                # print("Here is 1st c val!!!!!!!!!")
-                # print(c_FL_set)
                 first_c = 0
             else:
                 c_FL_set = c_FL_set.intersection(unode.faultlist_dfs)
-                # print("Here is following c val!!!!!!!!!")
-                # print(c_FL_set)        
         else :
             nc_FL_set = nc_FL_set.union(unode.faultlist_dfs)
-            # print("No c val!!!!!!!!!")
-            # print(nc_FL_set)
     
     # none of the inputs are controlling value
     if flag_c == 0:

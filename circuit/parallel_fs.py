@@ -68,8 +68,10 @@ class PFS(FaultSim):
 
         detected_fault_num = []
         detected_fault_value = []
+        pdb.set_trace()
 
         for _pass in range(pass_tot):
+            print("Pass number: {}".format(_pass))
             
             pfs_stuck_values = 0
             read_fault_ind = 0
