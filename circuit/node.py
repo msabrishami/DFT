@@ -104,8 +104,10 @@ class Node:
         
         # STAFAN for every test measures
         self.sense = False      # Boolean, maybe redundant
-        self.D1 = False         # Boolean
-        self.D0 = False         # Boolean
+
+        # Ghazal: These seem redundant
+        # self.D1 = False         # Boolean
+        # self.D0 = False         # Boolean
 
         
         # STAFAN will calculate these
@@ -190,7 +192,7 @@ class Node:
     '''
 
     def get_neighbors(self, value=False, inclusive=False):
-        ''' returns a list of nodes (or the values of ndoes)
+        ''' Returns a list of nodes (or the values of nodes)
         that have the same out gate as this node
         inclusive: if set True, includes this node itself.
         value: if set True, returns the value of neighbors node, by default list of nodes
@@ -198,17 +200,18 @@ class Node:
         # TODO: Check this for all possible gates, specially branch
         # TODO: not tested
         res = []
-        for node in self.dnodes[0].unodes:
-            if self.num == node.num:
-                res = res.append(node) if inclusive else res
-            else:
-                res.append(node)
+        if self.dnodes:
+            for node in self.dnodes[0].unodes:
+                if self.num == node.num and inclusive:
+                    res.append(node)
+                elif self.num != node.num:
+                    res.append(node)
 
         return [n.value for n in res] if value else res
 
     # TODO Move to children later
     def is_sensible(self, count=True):
-        ''' calculates if this node can propagate the gate in front of it.
+        ''' Calculates if this node can propagate the gate in front of it.
         i.e. if current value changes, down-node (output gate) value will change.
         '''
         # TODO: implemented on two value system, not sure if it applies to others

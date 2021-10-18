@@ -133,6 +133,12 @@ if __name__ == '__main__':
         circuit.STAFAN(300000, 8)
         circuit.co_ob_info()
 
+    elif args.func == 'nei':
+        circuit.lev()
+        for node in circuit.nodes_lev:
+            print(node.get_neighbors())
+
+
     elif args.func == "test1":
         circuit.lev()
         print(circuit)
