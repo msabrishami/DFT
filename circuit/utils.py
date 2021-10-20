@@ -3,6 +3,8 @@ import numpy as np
 import config
 import matplotlib.pyplot as plt
 import pdb
+import sys
+import math
 
 def ckt_type(cname):
     print("FIX ME LATER -- CKT TYPE AUTOMATIC DETECTION")
@@ -23,8 +25,34 @@ def bin2int(bin_arr):
     print(int_val)
     return int_val
 
+def int2binList(val, bitwidth):
+    res = [] 
+    for k in range(bitwidth):
+        res.append(val%2)
+        val = int(val/2)
+    return res
+
+def comp_Zg_Zf_bin(Zg, Zf, bitwidth):
+    """ Compare two output dictionaries if the logic values are 
+    binary, like in PPSF fault simulation 
+    Zg and Zf are integer values """ 
+    tps = set()
+    for k in Zg:
+        val_g = bin(Zg[k])[2:]
+        val_f = bin(Zf[k])[2:]
+        val_g = "".join(['0']*(bitwidth - len(val_g))) + val_g
+        val_f = "".join(['0']*(bitwidth - len(val_f))) + val_f
+        for j in range(len(val_g)):
+            if val_g[j] != val_f[j]:
+                tps.add(j)
+    return tps 
+
 
 #### COPIED FROM StatisticsSTA.utils
+
+def print_out_bin(Z):
+    for k in Z:
+        print(k + "\t" + "{:064b}".format(Z[k]))
 
 def smooth_hist(vals, window=5):
     """ Average smoothing over a floating point series, it can be a series of 

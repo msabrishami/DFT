@@ -29,6 +29,8 @@ import convert
 import utils 
 from parallel_fs import PFS
 from ppsf_sim import PPSF
+from fault_sim import FaultList_2
+from multiprocessing import Process, Pipe
 
 ### These functions are copied from main_personal.py ### 
 def read_tp_file(fname):
@@ -39,6 +41,7 @@ def read_tp_file(fname):
         tps.append(line.strip().split(","))
 
     return tps
+
 
 def gen_tps():
     # Gen tps and all the required folder!
@@ -61,6 +64,7 @@ def gen_tps():
                     fname="../data/fault_sim/{}/input/{}_test_count-1_id-{}.tp".format(
                         ckt, ckt, str(idx)))
 
+
 def golden_fault_sim():
     import glob
     for ckt in CKTs: 
@@ -78,12 +82,25 @@ def golden_fault_sim():
             print(fs_fname)
             dfs.multiple(pattern_list = tps, fname_log=fs_fname)
 
+
+
+def ppsf_thread(conn, ckt_name, tp_count, tp_fname, fault_fname):
+    ckt = Circuit(ckt_name)
+    ckt.lev()
+    tps = circuit.gen_tp_file(tp_count, fname=tp_fname)
+    fault_sim = PPSF(circuit)
+    fault_sim.fault_list.add_file(fault_fname)
+    fault_sim.fs_exe(tp_fname)
+    conn.send(fault_sim.fault_list)
+
+
 def pars_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-ckt", type=str, required=False, help="ckt file address")
     parser.add_argument("-v", type=str, required=False, help="verilog file address")
     parser.add_argument("-synv", type=str, required=False , help="syn ver")
     parser.add_argument("-tp", type=int, required=False, help="tp count for random sim")
+    parser.add_argument("-fault", type=int, required=False, help="fault count")
     parser.add_argument("-tpLoad", type=int, required=False, help="tp count for loading STAFAN")
     parser.add_argument("-cpu", type=int, required=False, help="number of parallel CPUs")
     parser.add_argument("-func", type=str, required=False, help="What operation you want to run")
@@ -130,40 +147,20 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(300000, 8)
+        circuit.STAFAN(args.tp, args.cpu)
         circuit.co_ob_info()
-
-    elif args.func == 'nei':
-        circuit.lev()
-        for node in circuit.nodes_lev:
-            print(node.get_neighbors())
-
-
-    elif args.func == "test1":
-        circuit.lev()
         print(circuit)
 
 
     elif args.func == "test2": 
         circuit.lev()
-        
-        # test single test pattern generation 
         temp = circuit.gen_tp()
-    
-        # test generating a single file of test patterns
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
         circuit.gen_tp_file(args.tp, path,"x")
 
         # test load_tp_file()
         print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
-
-
-    elif args.func == "test3": 
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        circuit.STAFAN(args.tp, 10) 
 
 
     elif args.func == "test4":
@@ -175,7 +172,6 @@ if __name__ == '__main__':
         circuit.gen_tp_file(args.tp, path)
         circuit.STAFAN_CS(path) 
         circuit.STAFAN_B() 
-        
         fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
         circuit.save_TMs(fname)
         print("Time: \t{:.3}".format(time.time() - time_start))
@@ -186,24 +182,59 @@ if __name__ == '__main__':
     elif args.func == "pfsp":
         circuit.lev()
         pfs = PFS(circuit)
-        # pfs.add_fault("full",None)
-        # print(pfs.single([1,1,1,1,0]))
         pfs.fs_exe(tp_num=args.tp, t_mode='rand', 
                 r_mode='b', fault_list_type="full", fname = None)
 
 
     elif args.func == "ppsf":
-
         circuit.lev()
-        tps = []
+        circuit.STAFAN(args.tp, 1)
+        tp_fname = circuit.c_name + "-tp-ppsf.tp"
+        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
         fault_sim = PPSF(circuit)
-        print("PPFS loaded")
-        fault_sim.single(tps)
-        fault_sim.add_fault("22@0")
-        fault_sim.fs_exe(64)
-        Z = fault_sim.circuit.read_PO()
-        for key in Z.keys():
-            print(key, "{:b}".format(Z[key]))
+        np.random.seed(13)
+        random_idx = np.random.randint(0, len(circuit.nodes_lev), 5)
+        for x in random_idx:
+            fault_sim.fault_list.add(circuit.nodes_lev[x].num, "1")
+            fault_sim.fault_list.add(circuit.nodes_lev[x].num, "0")
+        fault_sim.fs_exe(tp_fname)
+
+    elif args.func == "ppsf_parallel":
+        time_s = time.time()
+        circuit.lev()
+        tot_fl = FaultList_2()
+        tot_fl.add_random(circuit, args.fault)
+        fault_fname = "../data/fault_list/{}-random{}.fl".format(circuit.c_name, args.fault)
+        tot_fl.write_file(fault_fname)
+        
+        process_list = []
+        for i in range(args.cpu):
+            tp_fname = "../data/patterns/{}-ppsf-tp{}-part{}.tp".format(
+                    circuit.c_name, args.tp, i)
+            parent_conn, child_conn = Pipe()
+            p = Process(target = ppsf_thread, 
+                    args = (child_conn, args.ckt, args.tp, tp_fname, fault_fname))
+            p.start()
+            process_list.append((p, parent_conn))
+
+        fault_lists = []
+        for p, conn in process_list:
+            tup = conn.recv()
+            fault_lists.append(tup)
+            p.join()
+        
+        for fault in tot_fl.faults:
+            fault.D_count = []
+        for fl in fault_lists:
+            for idx in range(len(fl.faults)):
+                tot_fl.faults[idx].D_count.append(fl.faults[idx].D_count)
+        out_fname = "../data/fault_list/{}-ppsf-fault{}-tp{}-cpu{}.fl".format(
+                circuit.c_name, args.fault, args.tp, args.cpu)
+        tot_fl.write_file_extra(out_fname)
+        print("Total time: {:.2f}".format(time.time() - time_s))
+        with open(out_fname, "a") as outfile:
+            outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
+
 
 
     elif args.func == "saveStatTP":
@@ -217,7 +248,8 @@ if __name__ == '__main__':
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
 
-        tp_path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tpLoad)
+        tp_path = "../data/patterns/{}_TP{}.tp".format(
+                circuit.c_name, args.tpLoad)
         if not os.path.exists(tp_path):
             raise NameError("no file found in {}".format(tp_path))
         config.STAFAN_C_MIN = 1.0/(10*args.tp)

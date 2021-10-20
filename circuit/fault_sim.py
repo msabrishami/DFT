@@ -1,14 +1,27 @@
 import config
 import os
+import numpy as np
+
+class Fault:
+    def __init__(self, node_num, stuck_val):
+        self.node_num = str(node_num)
+        self.stuck_val = str(stuck_val)
 
 
-#TODO: DFS does not have any fault list? 
+class Fault_C (Fault):
+    def __init__(self, node_num, stuck_val):
+        super().__init__(node_num, stuck_val)
+        self.D_count = 0
+
+    def __str__(self):
+        return self.node_num + "@" + self.stuck_val
 
 
 class FaultList:
     def __init__(self):
         node = []
         fault = []
+        detected = []
     
     def add_fault(self, circuit, mode="full", fname=None):
         """ add faults to the fault list 
@@ -21,15 +34,62 @@ class FaultList:
             self.in_fault_type = self.circuit.fault_type
         elif fault_list_type == "user":
             fr = open(fname, mode='r')
-            lines = fr.readlines()
-            for line in lines:
-                line=line.rstrip('\n')
-                line_split=line.split('@')
-                self.in_fault_num.append(line_split[0])
-                self.in_fault_type.append(int(line_split[1]))
+            for line in fr:
+                line=line.rstrip('\n').split("@")
+                self.in_fault_num.append(line[0])
+                self.in_fault_type.append(int(line[1]))
         else:
             raise NameError("fault list type is not accepted")
 
+
+
+class FaultList_2:
+    def __init__(self):
+        self.faults = []
+
+    def add(self, node_num, stuck_val):
+        self.faults.append(Fault_C(node_num, stuck_val))
+
+    def add_str(self, fault_str):
+        """ add a fault if the fault format is <node-num>@<stuck value> """ 
+        num, val = fault_str.strip().split("@")
+        self.faults.append(Fault_C(num, val))
+
+    def add_all(self, circuit):
+        for node in circuit.nodes_lev:
+            self.add(node.num, 0)
+            self.add(node.num, 1)
+
+    def add_random(self, circuit, random_num):
+        idx_random = np.random.choice(len(circuit.nodes_lev), random_num, replace=False)
+        for i in range(random_num):
+            self.add(circuit.nodes_lev[idx_random[i]].num, 
+                    np.random.randint(0,2))
+
+    def add_file(self, fname):
+        """ read faults from a file and add it to the fault list 
+        file format: each fault <node-num>@<stuck value> in separate lines
+
+        Arguments
+        ---------
+        fname : str
+            the path and file name of the fault file 
+        """ 
+        with open(fname, "r") as infile:
+            for line in infile:
+                self.add_str(line)
+
+    def write_file(self, fname):
+        with open(fname, "w") as outfile:
+            for fault in self.faults:
+                outfile.write(str(fault) + "\n")
+            print("Fault list is stored in {}".format(fname))
+
+    def write_file_extra(self, fname):
+        with open(fname, "w") as outfile:
+            for fault in self.faults:
+                outfile.write(str(fault) + "," + ",".join([str(x) for x in fault.D_count])+"\n")
+            print("Fault list with D_counts is stored in {}".format(fname))
 
 class FaultSim:
     
