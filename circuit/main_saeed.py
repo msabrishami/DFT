@@ -199,12 +199,13 @@ if __name__ == '__main__':
         circuit.lev()
         tot_fl = FaultList_2()
         tot_fl.add_random(circuit, args.fault)
-        fault_fname = "sample-fault-list.txt"
+        fault_fname = "../data/fault_list/{}-random{}.fl".format(circuit.c_name, args.fault)
         tot_fl.write_file(fault_fname)
         
         process_list = []
         for i in range(args.cpu):
-            tp_fname = "{}-ppsf-part{}.tp".format(circuit.c_name, i)
+            tp_fname = "../data/patterns/{}-ppsf-tp{}-part{}.tp".format(
+                    circuit.c_name, args.tp, i)
             parent_conn, child_conn = Pipe()
             p = Process(target = ppsf_thread, 
                     args = (child_conn, args.ckt, args.tp, tp_fname, fault_fname))
@@ -222,10 +223,10 @@ if __name__ == '__main__':
         for fl in fault_lists:
             for idx in range(len(fl.faults)):
                 tot_fl.faults[idx].D_count.append(fl.faults[idx].D_count)
-        out_fname = "{}-ppsf-fault{}-tp{}-cpu{}.fl".format(
+        out_fname = "../data/fault_list/{}-ppsf-fault{}-tp{}-cpu{}.fl".format(
                 circuit.c_name, args.fault, args.tp, args.cpu)
         tot_fl.write_file_extra(out_fname)
-        print("Total time: {:.2}".format(time.time() - time_s))
+        print("Total time: {:.2f}".format(time.time() - time_s))
         with open(out_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
 
