@@ -204,18 +204,22 @@ class Circuit:
         fname = fn if fname==None else fname
         outfile = open(fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
-        
+        tps = [] 
         for t in range(test_count):
             if mode == "b":
-                pat = [str(random.randint(0,1)) for x in range(len(self.PI))]
+                tp = [random.randint(0,1) for x in range(len(self.PI))]
+                pat = [str(val) for val in tp]
             elif mode == "x":
                 pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
                 pat = ["X" if x=="2" else x for x in pat]
+                tp = pat 
             # print(",".join(pat))
+            tps.append(tp)
             outfile.write(",".join(pat) + "\n")
         
         outfile.close()
         print("Generated {} test patterns and saved in {}".format(test_count, fname))
+        return tps
 
     # do we need to check the order of the inputs in the file?  
     # this can be done using "yield" or "generate" -- check online 
@@ -241,6 +245,7 @@ class Circuit:
         """ reads the values of POs in a dictionary 
         The key to the dictionary is the PO node and value is the value of node
         """ 
+        #TODO: remove out from the output 
         res = {}
         for node in self.PO:
             res["out" + str(node.num)] = node.value
@@ -284,27 +289,32 @@ class Circuit:
         bitwise_not = 2**bitlen-1
         
         if fault:
-            fault_num = fault.split('@')[0]
-            fault_val = fault.split('@')[1]
+            # print("PPSF for faulty circuit")
             for node in self.nodes_lev:
                 if node.gtype == "IPT":
                     node.imply_b(node_dict[node.num])
                 else:
                     node.imply_b()
-                if node.num == fault_num:
-                    if fault.val == '0':
+                if node.num == fault.node_num:
+                    if fault.stuck_val == '0':
                         node.value = 0
                     else:
                         node.value = node.bitwise_not
+                # tmp = str(node)
+                # print(tmp, " ".join([""]*(60-len(tmp))) + "{:064b}".format(
+                #     node.value) )
+
         else:
+            # print("PPSF for good circuit")
             for node in self.nodes_lev:
                 if node.gtype == "IPT":
                     node.imply_b(node_dict[node.num])
                 else:
                     node.imply_b()
 
-            tmp = str(node)
-            print(tmp, " ".join([""]*(60-len(tmp))) + "{:b}".format(node.value) )
+                # tmp = str(node)
+                # print(tmp, " ".join([""]*(60-len(tmp))) + "{:064b}".format(
+                #     node.value) )
     
     # Saeed needs to rewrite this method using 'yield' in load_tp_file     
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
@@ -1293,6 +1303,7 @@ class Circuit:
 
     # @Ghazal this needs to be checked and tested
     def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
+        #TODO: we can have some analysis on variance right here!
         circuit = Circuit(self.c_fname)
         circuit.lev()
         PI_num = len(circuit.PI)
@@ -1304,8 +1315,6 @@ class Circuit:
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
-        D0_count = []
-        D1_count = []
         for i in circuit.nodes_lev:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
@@ -1349,22 +1358,24 @@ class Circuit:
             p.join()
         
         # self.nodes_lev.sort(key=lambda x: x.num)
-        for i in range(len(self.nodes_lev)):
-            self.nodes_lev[i].C1 = one_count_list[i] / total_tp
-            self.nodes_lev[i].C0 = zero_count_list[i] / total_tp
-            self.nodes_lev[i].S = sen_count_list[i] / total_tp
+        for idx, node in enumerate(self.nodes_lev):
+            node.C1 = one_count_list[idx] / total_tp
+            node.C0 = zero_count_list[idx] / total_tp
+            node.S = sen_count_list[idx] / total_tp
 
         # self.nodes_lev.sort(key=lambda x: x.lev)
         for node in self.nodes_lev:
             if node.C0 == 0 or node.C1 == 0:
-                print("----------------------------")
-                self.print_fanin(node, 4)
-                pdb.set_trace()
+                print("Warning: node {} controllability is zero".format(node.num))
 
 
         self.STAFAN_B()
+        for node in self.nodes_lev:
+            node.D1 = node.B0 * node.C0
+            node.D0 = node.B1 * node.C1
         end_time = time.time()
         duration = end_time - start_time
+        
         print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
 
     

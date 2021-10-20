@@ -109,8 +109,8 @@ class Node:
         self.S = None           # prob
         self.C1 = None          # prob
         self.C0 = None          # prob
-        self.D0_p = None        # prob
-        self.D1_p = None        # prob
+        self.D0 = None        # prob
+        self.D1 = None        # prob
         
         # STAFAN Backward
         self.B1 = None          # prob
@@ -249,8 +249,8 @@ class Node:
             # print("S:{:.2f}\t".format(self.S), end="")
             # print("B0:{:.2f}\t".format(self.B0), end="")
             # print("B1:{:.2f}\t".format(self.B1), end="")
-            # print("%D0:{:.2f}\t".format(self.D0_p), end="")
-            # print("%D1:{:.2f}\t".format(self.D1_p))
+            # print("%D0:{:.2f}\t".format(self.D0), end="")
+            # print("%D1:{:.2f}\t".format(self.D1))
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -266,8 +266,8 @@ class Node:
             print("{:.2f}\t".format(self.CB0), end="")
             print("{:.2f}\t".format(self.CB1), end="")
             print("{:.2f}\t".format(self.B), end="")
-            # print("{:.2f}\t".format(self.D0_p), end="")
-            # print("{:.2f}\t".format(self.D1_p), end="")
+            # print("{:.2f}\t".format(self.D0), end="")
+            # print("{:.2f}\t".format(self.D1), end="")
             # print("{}\t".format(self.stat["SS@0"]), end="")
             # print("{}\t".format(self.stat["SS@1"]))
             print()
