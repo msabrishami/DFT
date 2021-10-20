@@ -19,6 +19,7 @@ circuit/results/
 circuit/exp-results/
 data/ob_stat/
 data/cell_ssta/
+data/fault_dict/
 
 # **.graphml
 **.png
