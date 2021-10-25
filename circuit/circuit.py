@@ -201,7 +201,7 @@ class Circuit:
         fname = fn if fname==None else fname
         outfile = open(fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
-<<<<<<< HEAD
+        tps = [] 
         
         bits = ["0","1","X"]
         for t in range(test_count):
@@ -209,19 +209,8 @@ class Circuit:
                 pat = [bits[random.randint(0,1)] for x in range(len(self.PI))]
             elif mode == "x":
                 pat = [bits[random.randint(0,2)] for x in range(len(self.PI))]
-=======
-        tps = [] 
-        for t in range(test_count):
-            if mode == "b":
-                tp = [random.randint(0,1) for x in range(len(self.PI))]
-                pat = [str(val) for val in tp]
-            elif mode == "x":
-                pat = [str(random.randint(0,2)) for x in range(len(self.PI))]
-                pat = ["X" if x=="2" else x for x in pat]
-                tp = pat 
-            # print(",".join(pat))
+            tp = pat 
             tps.append(tp)
->>>>>>> master
             outfile.write(",".join(pat) + "\n")
         
         outfile.close()
@@ -1306,12 +1295,8 @@ class Circuit:
 
 
     # @Ghazal this needs to be checked and tested
-<<<<<<< HEAD
-    def control_process(self, conn, id_proc, tot_tp_count, tot_proc):
-=======
     def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
         #TODO: we can have some analysis on variance right here!
->>>>>>> master
         circuit = Circuit(self.c_fname)
         circuit.lev()
         PI_num = len(circuit.PI)
@@ -1323,10 +1308,6 @@ class Circuit:
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         for i in circuit.nodes_lev:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
@@ -1370,18 +1351,11 @@ class Circuit:
                 sen_count_list[i] += tup[2][i]
             p.join()
         
-<<<<<<< HEAD
-        for i in range(len(self.nodes_lev)):
-            self.nodes_lev[i].C1 = one_count_list[i] / total_tp
-            self.nodes_lev[i].C0 = zero_count_list[i] / total_tp
-            self.nodes_lev[i].S = sen_count_list[i] / total_tp
-=======
         # self.nodes_lev.sort(key=lambda x: x.num)
         for idx, node in enumerate(self.nodes_lev):
             node.C1 = one_count_list[idx] / total_tp
             node.C0 = zero_count_list[idx] / total_tp
             node.S = sen_count_list[idx] / total_tp
->>>>>>> master
 
         for node in self.nodes_lev:
             if node.C0 == 0 or node.C1 == 0:
@@ -1394,12 +1368,7 @@ class Circuit:
             node.D0 = node.B1 * node.C1
         end_time = time.time()
         duration = end_time - start_time
-<<<<<<< HEAD
         print ("Processor count: {}, Test pattern vectors: {}, Time taken: {:.2f} sec".format(num_proc,total_tp ,duration))
-=======
-        
-        print ("Processor count: {}, Time taken: {:.2f} sec".format(num_proc, duration))
->>>>>>> master
 
     
     def save_TMs(self, fname):
