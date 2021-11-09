@@ -127,6 +127,11 @@ class Circuit:
                     # print(num, lev_u)
                     if None in lev_u:
                         continue
+                    elif lev_u == []:
+                        print("Warning! Node {} has zero fanins".format(node.num))
+                        print(node)
+                        print("level of this node is set to zero")
+                        node.lev = 0
                     else:
                         node.lev = max(lev_u) + 1
                         flag_change = True
