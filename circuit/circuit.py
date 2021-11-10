@@ -124,7 +124,15 @@ class Circuit:
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
                     lev_u = [x.lev for x in node.unodes]
-                    if None not in lev_u:
+                    # print(num, lev_u)
+                    if None in lev_u:
+                        continue
+                    elif lev_u == []:
+                        print("Warning! Node {} has zero fanins".format(node.num))
+                        print(node)
+                        print("level of this node is set to zero")
+                        node.lev = 0
+                    else:
                         node.lev = max(lev_u) + 1
                         flag_change = True
     
