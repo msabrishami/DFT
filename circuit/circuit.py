@@ -1295,7 +1295,7 @@ class Circuit:
 
 
     # @Ghazal this needs to be checked and tested
-    def control_thread(self, conn, id_proc, tot_tp_count, tot_proc):
+    def control_process(self, conn, id_proc, tot_tp_count, tot_proc):
         #TODO: we can have some analysis on variance right here!
         circuit = Circuit(self.c_fname)
         circuit.lev()
