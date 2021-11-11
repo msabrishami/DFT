@@ -44,6 +44,8 @@ class FaultList:
 
 
 class FaultList_2:
+    """ Fault list """
+    #TODO: maybe using dictionary or set instead of a list for faults
     def __init__(self):
         self.faults = []
 
@@ -90,15 +92,21 @@ class FaultList_2:
             for fault in self.faults:
                 outfile.write(str(fault) + "," + ",".join([str(x) for x in fault.D_count])+"\n")
             print("Fault list with D_counts is stored in {}".format(fname))
+    
+    def calc_fc(self):
+        detected_count = 0
+        for fault in self.faults:
+            if fault.D_count > 0:
+                detected_count += 1
+        return detected_count / len(self.faults)
+    
 
 class FaultSim:
     
     def __init__(self, circuit):
         self.circuit = circuit
-        self.flist = FaultList()
-        # fault sim type: dfs / pfs
+        self.fault_list = FaultList_2()
         self.fs_type = ""
-        # 12.1 added
         self.fault_set_all = set()
         for node in self.circuit.nodes_lev:
             self.fault_set_all.add((node.num,0))
@@ -106,25 +114,28 @@ class FaultSim:
         self.fault_set_rest = self.fault_set_all
      
 
-    def fs_folder(self, tp_mode='rand', r_mode='b'):
-        '''
-        Create all directories required for fault simulation
-        '''
-        # create folder for whole fault sim of the given circuit
+    def fs_folder(self):
+        """
+        Creating the required directories for fault simulation
+        """
         paths = [config.FAULT_SIM_DIR, config.FAULT_DICT_DIR, 
                 config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/', 
                 config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/', 
+                # TODO
                 config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/dfs/', 
+                # TODO
                 config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/pfs/', 
                 config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/compare/']
         
         for path in paths:
             if not os.path.exists(path):
-                print("Creating dir in {}".format(path))
+                print("Creating directory {}".format(path))
                 os.mkdir(path)
                
 
+    # TODO: deprecate this method
     def fs_tp_gen(self, tp_num, t_mode, r_mode='b'):
+        raise NameError("Error: This method is deprecated!")
         '''
         Generate test patterns for DFS/PFS
         Arguments:
@@ -161,8 +172,9 @@ class FaultSim:
     def fs_tp_gen_golden(self, tp_num=1, no=1, t_mode='rand', r_mode='b'):
         print("Error: this method is deprecated")
 
-
+    
     def fs_input_fetch(self, fname_tp):
+        raise NameError("Error: This method is deprecated!")
         '''
         Fetch input pattern list from a input file
         pattern_list = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
@@ -182,121 +194,25 @@ class FaultSim:
 
 
     def single(self, input_pattern):
-        '''DFS/PFS for single test pattern'''
+        """ Single pass of simulation. 
+        DFS/PFSP: single test pattern
+        PPSF: single fault
+        """
         raise NotImplementedError()
 
 
     def fs_for_atpg(self):
-        '''DFS/PFS for ATPG use'''
+        """ DFS/PFS for ATPG use """ 
         raise NotImplementedError()
-
-
-    def multiple_separate(self, pattern_list, fname_log, mode="b"):
-        """ 
-        new dfs/pfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")  
-
-        fname_out = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + \
-                self.fs_type + '/' + fname_log
-        fw = open(fname_out, mode='w')
-        for sub_pattern in pattern_list:
-            fault_subset = self.single(sub_pattern)
-            pattern_str = map(str,sub_pattern)
-            pattern_str = ",".join(pattern_str)
-            fw.write(pattern_str + '\n')
-            fault_coverage = float(len(fault_subset) / (2*len(self.circuit.nodes_lev)))
-            for fault in fault_subset:
-                fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
-            fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
-            fw.write('\n')
-        fw.close()
-        print(self.fs_type + " (Separate mode) completed. ")
-        print("Log file saved in {}".format(fname_out))
-
-
-    def multiple(self, pattern_list, fname_log, mode="b"):
-        """ 
-        new dfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-        output_path = "{}/{}/{}/{}".format(config.FAULT_SIM_DIR, 
-                self.circuit.c_name, self.fs_type, fname_log)
-
-        fw = open(output_path, mode='w')
-        fault_set = set()
-        for sub_pattern in pattern_list:
-            fault_subset = self.single(sub_pattern)
-            fault_set = fault_set.union(fault_subset)
-            self.fault_set_rest = self.fault_set_rest.difference(fault_set)
-        fault_coverage = float(len(fault_set) / (2*len(self.circuit.nodes_lev)))
-        for fault in fault_set:
-            fw.write(str(fault[0]) + '@' + str(fault[1]) + '\n')
         
-        fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
-        fw.close()
-        print("{}-Multiple completed. \nLog file saved in {}".format(
-            self.fs_type, output_path))
-    
 
     def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
         """ Defined in children: DFS, PFS """
         raise NotImplementedError()
 
 
-    # 12.1 added
     def return_rest_fault(self):
         return self.fault_set_rest
 
-    def FD_new_generator(self):
-        """
-        Creat a new FD in excel using dfs results
-        """
-        # output golden file
-        fw_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/'
-        fr_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/dfs/'
-        fr = open(fr_path + self.circuit.c_name + '_full_dfs_b.log','r')
-        # To create Workbook
-        workbook = xlwt.Workbook()   
-        sheet = workbook.add_sheet("Sheet Name")  
-        # Specifying style 
-        # style = xlwt.easyxf('font: bold 1')     
-        # Specifying column 
-        PI_string = ""
-        for node in self.circuit.PI:
-            PI_string = PI_string + node.num + ','
-        PI_string = PI_string[:-1]
-        print(PI_string)
-        # print(self.nodes)
-        sheet.write(0, 0, PI_string)
-        i = 1
-        fault_mapping = {}
-        for node in self.circuit.nodes_lev:
-            sheet.write(0, i, node.num + '@' + '0')
-            fault_mapping[node.num + '@' + '0'] = i
-            sheet.write(0, i+1, node.num + '@' + '1')
-            fault_mapping[node.num + '@' + '1'] = i+1
-            print(0, i, node.num + '@' + '0')
-            print(0, i+1, node.num + '@' + '1')
-            i = i + 2
-        j = 1
-        sheet.write(j, 0, fr.readline()) 
-        for line in fr.readlines():
-            if line == '\n':
-                j = j + 1
-            elif '@' in line:
-                sheet.write(j, fault_mapping[line[:-1]], 'X')
-            else:
-                sheet.write(j, 0, line)
 
-        workbook.save(os.path.join(fw_path, self.circuit.c_name + '_FD_new.xls'))
+    

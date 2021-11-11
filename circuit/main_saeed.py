@@ -176,22 +176,27 @@ if __name__ == '__main__':
 
     elif args.func == "pfsp":
         circuit.lev()
+        tp_fname = circuit.c_name + "-tp-pfs.tp"
+        # tp_fname = "./c1-tp-pfs.tp"
+        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
         pfs = PFS(circuit)
-        pfs.fs_exe(tp_num=args.tp, t_mode='rand', 
-                r_mode='b', fault_list_type="full", fname = None)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname, fault_list_type="full")
 
 
     elif args.func == "ppsf":
         circuit.lev()
-        circuit.STAFAN(args.tp, 1)
+        # circuit.STAFAN(args.tp, 1)
         tp_fname = circuit.c_name + "-tp-ppsf.tp"
+        # tp_fname = "./c1-tp-pfs.tp"
         tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
         fault_sim = PPSF(circuit)
-        np.random.seed(13)
-        random_idx = np.random.randint(0, len(circuit.nodes_lev), 5)
-        for x in random_idx:
-            fault_sim.fault_list.add(circuit.nodes_lev[x].num, "1")
-            fault_sim.fault_list.add(circuit.nodes_lev[x].num, "0")
+        # np.random.seed(13)
+        # random_idx = np.random.randint(0, len(circuit.nodes_lev), 5)
+        # for x in random_idx:
+        #     fault_sim.fault_list.add(circuit.nodes_lev[x].num, "1")
+        #     fault_sim.fault_list.add(circuit.nodes_lev[x].num, "0")
+        fault_sim.fault_list.add_all(circuit)
         fault_sim.fs_exe(tp_fname)
 
     elif args.func == "ppsf_parallel":
