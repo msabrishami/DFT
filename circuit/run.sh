@@ -75,7 +75,7 @@
 # python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test3
 # python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test4 -tp 2
 # python3 main_saeed.py -v ../data/verilog/c4.v -func test1
-python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func sp
+python3 FC_test.py -ckt ../data/ckt/c1.ckt -func fctp -tp 100
 
 
 
