@@ -269,7 +269,7 @@ class Circuit:
             else:
                 node.imply()
 
-    def logic_sim_bitwise(self, input_pattern, fault=None):
+    def logic_sim_bitwise(self, input_pattern, test_len,fault=None):
         """
         Logic simulation bitwise mode:
         Reads a given pattern and perform the logic simulation bitwise
@@ -285,8 +285,11 @@ class Circuit:
         """
         node_dict = dict(zip([x.num for x in self.PI], input_pattern))
         # TODO: get rid of this shit! Why did we not implement this within constructor?
+        # print(max(input_pattern))
         n = sys.maxsize
-        bitlen = int(math.log2(n))+1
+        # bitlen = min(math.log2(n)+1,test_len)
+        bitlen = math.log2(n)+1
+
         bitwise_not = 2**bitlen-1
         
         if fault:
@@ -649,6 +652,7 @@ class Circuit:
 
         n = sys.maxsize
         bitlen = int(math.log2(n))+1
+        # bitlen = min(math.log2(n)+1,test_len)
         bitwise_not = 2**bitlen-1
 
         pass_tot = math.ceil(float(faultnum) / float(bitlen-1))

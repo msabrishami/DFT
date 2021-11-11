@@ -188,7 +188,6 @@ if __name__ == '__main__':
         pfs.fault_list.add_all(circuit)
         pfs.fs_exe(tp_fname=tp_fname, fault_list_type="full")
 
-
     elif args.func == "ppsf":
         circuit.lev()
         # circuit.STAFAN(args.tp, 1)
@@ -203,6 +202,22 @@ if __name__ == '__main__':
         #     fault_sim.fault_list.add(circuit.nodes_lev[x].num, "0")
         fault_sim.fault_list.add_all(circuit)
         fault_sim.fs_exe(tp_fname)
+
+    elif args.func == 'compare_psfp_ppsf':
+        circuit.lev()
+        tp_fname = '../data/fault_list/'+circuit.c_name + "-tp-compare_psfp_ppsf.tp"
+        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
+
+        # PSFP
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname, fault_list_type="full")
+        
+        #PPSF
+        fault_sim = PPSF(circuit)
+        fault_sim.fault_list.add_all(circuit)
+        fault_sim.fs_exe(tp_fname)
+
 
     elif args.func == "ppsf_parallel":
         time_s = time.time()
