@@ -88,3 +88,46 @@ class DFS(FaultSim):
 
         else:
             raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
+
+    def FD_new_generator(self):
+        """
+        Creat a new FD in excel using dfs results
+        """
+        # output golden file
+        fw_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/'
+        fr_path = config.FAULT_DICT_DIR + '/' + self.circuit.c_name + '/dfs/'
+        fr = open(fr_path + self.circuit.c_name + '_full_dfs_b.log','r')
+        # To create Workbook
+        workbook = xlwt.Workbook()   
+        sheet = workbook.add_sheet("Sheet Name")  
+        # Specifying style 
+        # style = xlwt.easyxf('font: bold 1')     
+        # Specifying column 
+        PI_string = ""
+        for node in self.circuit.PI:
+            PI_string = PI_string + node.num + ','
+        PI_string = PI_string[:-1]
+        print(PI_string)
+        # print(self.nodes)
+        sheet.write(0, 0, PI_string)
+        i = 1
+        fault_mapping = {}
+        for node in self.circuit.nodes_lev:
+            sheet.write(0, i, node.num + '@' + '0')
+            fault_mapping[node.num + '@' + '0'] = i
+            sheet.write(0, i+1, node.num + '@' + '1')
+            fault_mapping[node.num + '@' + '1'] = i+1
+            print(0, i, node.num + '@' + '0')
+            print(0, i+1, node.num + '@' + '1')
+            i = i + 2
+        j = 1
+        sheet.write(j, 0, fr.readline()) 
+        for line in fr.readlines():
+            if line == '\n':
+                j = j + 1
+            elif '@' in line:
+                sheet.write(j, fault_mapping[line[:-1]], 'X')
+            else:
+                sheet.write(j, 0, line)
+
+        workbook.save(os.path.join(fw_path, self.circuit.c_name + '_FD_new.xls'))

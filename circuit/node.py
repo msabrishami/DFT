@@ -81,9 +81,9 @@ class Node:
         self.bitwise_not = 2**bitlen-1
 
         # PFS:
-        self.pfs_V = None   # pfs value
-        self.pfs_I = None   # mask
-        #self.pfs_S = None   # stuck values of fault for each pass
+        self.pfs_V = None   # PFS value
+        self.pfs_I = None   # PFS mask
+        #self.pfs_S = None  # stuck values of fault for each pass
 
         # Saeed does not confirm
         # self.cpt = 0
@@ -155,7 +155,7 @@ class Node:
         ''' forward parallel implication for a logic gate ''' 
         raise NotImplementedError()
 
-    def insert_f(self, bitwise_not,pfs_S):
+    def insert_f(self, bitwise_not, pfs_S):
         """ insert a fault for pdf in this node """ 
         pfs_I_bar = self.pfs_I ^ bitwise_not
         self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
@@ -629,7 +629,7 @@ class IPT(Node):
     def imply_b(self, value):
         self.value = value
 
-    def imply_p(self,bitwise_not, pfs_V):
+    def imply_p(self, bitwise_not, pfs_V):
         self.pfs_V = pfs_V * bitwise_not
 
     def eval_CC(self):
