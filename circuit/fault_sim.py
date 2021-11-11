@@ -16,6 +16,9 @@ class Fault_C (Fault):
     def __str__(self):
         return self.node_num + "@" + self.stuck_val
 
+    def __repr__(self):
+        return self.node_num + "@" + self.stuck_val
+
 
 class FaultList:
     def __init__(self):

@@ -202,6 +202,7 @@ class Circuit:
         """ Create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
+        returns a list of test patterns
         """ 
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
