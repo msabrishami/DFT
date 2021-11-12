@@ -4,11 +4,13 @@ import math
 import utils 
 import time
 from multiprocessing import Process, Pipe
-import pdb
+import os
 
 from circuit import Circuit
 from node import Node
 from fault_sim import FaultSim
+import config
+import pdb
 
 
 class PPSF(FaultSim):
@@ -21,10 +23,6 @@ class PPSF(FaultSim):
         self.fs_type = "ppsf"
         self.wordlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**self.wordlen-1
-
-    def add_fault(self, fault):
-        """ add a single fault to the fault list """ 
-        self.fault_list.add(fault)
 
  
     def single(self, tps, fault):
@@ -55,7 +53,11 @@ class PPSF(FaultSim):
         Zg = self.circuit.read_PO()
         self.circuit.logic_sim_bitwise(tps_bin, test_len=len(tps),fault = fault)
         Zf = self.circuit.read_PO()
+<<<<<<< HEAD
         res = utils.comp_Zg_Zf_bin(Zg, Zf, min(self.wordlen,len(tps)))
+=======
+        res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
+>>>>>>> master
         
         # The order of tp and res are reversed
         res_fixed = set()
@@ -64,41 +66,31 @@ class PPSF(FaultSim):
         
         return res_fixed
 
-    def fs_exe(self, tp_fname): 
+    def fs_exe(self, tp_fname, log_fname=None): 
         """ 
         Runs PPSF for the fault in the fault list, given the tp file. 
         For each fault, it counts the number of times it has been detected.
+        tp_num : int 
         """ 
         self.fs_folder()
-        print("PPSF for tp file: {}".format(tp_fname))
         tps = self.circuit.load_tp_file(tp_fname)
-        print(tps)
-        print("----------------------")
+        fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/ppsf/"
+        fn += tp_fname.split("/")[-1].replace(".tp", ".log")
+        log_fname = fn if log_fname==None else log_fname
+
+        print("PPSF for tp file: {}".format(tp_fname))
         
         for fault in self.fault_list.faults:
-
             tot_pass = math.ceil(len(tps)/self.wordlen)
-
             for _pass in range(tot_pass):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
                 res = self.single(tps_pass, fault)
                 fault.D_count += len(res)
+<<<<<<< HEAD
                 
+=======
+        
+>>>>>>> master
         print("PPFS completed")
-        for fault in self.fault_list.faults:
-            if fault.D_count > 0:
-                print(fault, fault.D_count)
         print("FC={:.4f}%, tot-faults={}".format(
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
-   
-            # D_p = fault.D_count / len(tps)
-            # node = self.circuit.nodes[fault.node_num]
-            # if fault.stuck_val == '0':
-            #     err = 100*(D_p - node.D0)/D_p
-            #     print("{}\tD0_ppsf={:.4f}\tD0={:.4f}\terror={:.2f}%".format(
-            #         str(fault), D_p, node.D0, err))
-            # elif fault.stuck_val == '1':
-            #     err =100* (D_p - node.D1)/D_p
-            #     print("{}\tD1_ppsf={:.4f}\tD0={:.4f}\terror={:.2f}%".format(
-            #         str(fault), D_p, node.D1, err))
-

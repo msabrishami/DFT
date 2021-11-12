@@ -198,32 +198,56 @@ class Circuit:
         return rand_input_val_list
     
 
-    def gen_tp_file(self, test_count, fname=None, mode="b"):
-        """ Create single file with multiple input patterns
+    def gen_tp_file(self, tp_count, tp_fname=None, mode="b"):
+        """ create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
-        returns a list of test patterns
+        mention what it returns 
+        mention the sequence of inputs and tps
         """ 
+        # @Ghazal: this is modified, needs to be tested! 
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
-        fn = "./" + self.c_name + "_" + str(test_count) + "_tp_" + mode + ".txt"
-        fname = fn if fname==None else fname
-        outfile = open(fname, 'w')
+        fn = os.path.join(config.PATTERN_DIR, 
+                self.c_name + "_" + str(tp_count) + "_tp_" + mode + ".tp")
+        tp_fname = fn if tp_fname==None else tp_fname
+        outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
         tps = [] 
         
         bits = ["0","1","X"]
-        for t in range(test_count):
+        for t in range(tp_count):
             if mode == "b":
                 pat = [bits[random.randint(0,1)] for x in range(len(self.PI))]
             elif mode == "x":
                 pat = [bits[random.randint(0,2)] for x in range(len(self.PI))]
             tp = pat 
             tps.append(tp)
-            outfile.write(",".join(pat) + "\n")
+            outfile.write(",".join(tp) + "\n")
         
         outfile.close()
-        print("Generated {} test patterns and saved in {}".format(test_count, fname))
+        print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
+        return tps
+    
+
+    def gen_tp_file_full(self, tp_fname=None):
+        """ create a single file including all possible tps """ 
+        # @Ghazal: this is modified, needs to be tested! 
+        if len(self.PI) > 12:
+            print("Error: cannot generate full tp file for circuits with PI > 12")
+            return []
+        fn = os.path.join(config.PATTERN_DIR, self.c_name + "_tp_full.tp")
+        tp_fname = fn if tp_fname==None else tp_fname
+        outfile = open(tp_fname, 'w')
+        outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
+        tps = [] 
+        for t in range(2**len(self.PI)):
+            tp = [str(random.randint(0,1)) for x in range(len(self.PI))]
+            tp = "{:{}b}".format(t, len(self.PI)).replace(" ", "0")
+            tps.append(tp)
+            outfile.write(",".join(list(tp)) + "\n")
+        outfile.close()
+        print("Generated full test patterns and saved in {}".format(tp_fname))
         return tps
 
     # do we need to check the order of the inputs in the file?  
@@ -285,8 +309,7 @@ class Circuit:
         fault
         """
         node_dict = dict(zip([x.num for x in self.PI], input_pattern))
-        # TODO: get rid of this shit! Why did we not implement this within constructor?
-        # print(max(input_pattern))
+        # TODO: get rid of this! Why did we not implement this within constructor?
         n = sys.maxsize
         # bitlen = min(math.log2(n)+1,test_len)
         bitlen = math.log2(n)+1
@@ -294,7 +317,6 @@ class Circuit:
         bitwise_not = 2**bitlen-1
         
         if fault:
-            # print("PPSF for faulty circuit")
             for node in self.nodes_lev:
                 if node.gtype == "IPT":
                     node.imply_b(node_dict[node.num])
@@ -305,21 +327,14 @@ class Circuit:
                         node.value = 0
                     else:
                         node.value = node.bitwise_not
-                # tmp = str(node)
-                # print(tmp, " ".join([""]*(60-len(tmp))) + "{:064b}".format(
-                #     node.value) )
 
         else:
-            # print("PPSF for good circuit")
             for node in self.nodes_lev:
                 if node.gtype == "IPT":
                     node.imply_b(node_dict[node.num])
                 else:
                     node.imply_b()
 
-                # tmp = str(node)
-                # print(tmp, " ".join([""]*(60-len(tmp))) + "{:064b}".format(
-                #     node.value) )
     
     # Saeed needs to rewrite this method using 'yield' in load_tp_file     
     def logic_sim_file(self, in_fname, out_fname, stil=False): 

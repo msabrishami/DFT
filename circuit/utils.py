@@ -38,8 +38,8 @@ def comp_Zg_Zf_bin(Zg, Zf, bitwidth):
     Zg and Zf are integer values """ 
     tps = set()
     for k in Zg:
-        val_g = bin(Zg[k])[2:]
-        val_f = bin(Zf[k])[2:]
+        val_g = bin(Zg[k])[2:][-bitwidth:]
+        val_f = bin(Zf[k])[2:][-bitwidth:]
         val_g = "".join(['0']*(bitwidth - len(val_g))) + val_g
         val_f = "".join(['0']*(bitwidth - len(val_f))) + val_f
         for j in range(len(val_g)):
