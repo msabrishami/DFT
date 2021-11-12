@@ -171,33 +171,68 @@ if __name__ == '__main__':
         circuit.save_TMs(fname)
         print("Time: \t{:.3}".format(time.time() - time_start))
 
+    elif args.func == "test-tp-gen":
+        # testing tp generation methods
+        circuit.lev()
+        tps = circuit.gen_tp_file_full()
+        # print(tps)
+        tps = circuit.gen_tp_file(args.tp, mode="b")
+        # print(tps)
+        tps = circuit.gen_tp_file(args.tp, mode="x")
+        # print(tps)
+
     elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
 
-    elif args.func == "pfsp":
+    elif args.func == "pfs":
         circuit.lev()
-        tp_fname = circuit.c_name + "-tp-pfs.tp"
-        # tp_fname = "./c1-tp-pfs.tp"
-        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
+        tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
+        tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+        # tps = circuit.gen_tp_file_full()
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, fault_list_type="full")
-
+        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)
 
     elif args.func == "ppsf":
         circuit.lev()
-        # circuit.STAFAN(args.tp, 1)
-        tp_fname = circuit.c_name + "-tp-ppsf.tp"
-        # tp_fname = "./c1-tp-pfs.tp"
-        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
-        fault_sim = PPSF(circuit)
-        # np.random.seed(13)
-        # random_idx = np.random.randint(0, len(circuit.nodes_lev), 5)
-        # for x in random_idx:
-        #     fault_sim.fault_list.add(circuit.nodes_lev[x].num, "1")
-        #     fault_sim.fault_list.add(circuit.nodes_lev[x].num, "0")
-        fault_sim.fault_list.add_all(circuit)
-        fault_sim.fs_exe(tp_fname)
+        # tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
+        # tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+        tps = circuit.gen_tp_file_full()
+        ppsf = PPSF(circuit)
+        ppsf.fault_list.add_all(circuit)
+        ppsf.fs_exe(tp_fname)
+
+    elif args.func == "pfs-vs-ppsf":
+        circuit.lev()
+        if len(circuit.PI) < 12:
+            tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+            tps = circuit.gen_tp_file_full()
+        else:
+            tp_fname = "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
+            tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname)
+        
+        ppsf = PPSF(circuit)
+        ppsf.fault_list.add_all(circuit)
+        ppsf.fs_exe(tp_fname)
+
+        pfs_res = dict()
+        for fault in pfs.fault_list.faults:
+            pfs_res[str(fault)] = fault.D_count
+        error = False
+        for fault in ppsf.fault_list.faults:
+            if fault.D_count != pfs_res[str(fault)]:
+                error = True
+                print("Error: Fault={} PFS={} PPSF={}".format(
+                    str(fault), pfs_res[str(fault)], fault.D_count))
+        if not error:
+            print("PFS and PPSF results match!")
+
 
     elif args.func == "ppsf_parallel":
         time_s = time.time()
