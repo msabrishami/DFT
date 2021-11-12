@@ -13,9 +13,6 @@ class Fault_coverage():
         elif fault_mode == 'file':
             self.fault_list.add_file(fname)
 
-
-
-
 class Fault_coverage_estimation(Fault_coverage):
     """
     Calculate fault coverage estimation using STAFAN parameters. 
