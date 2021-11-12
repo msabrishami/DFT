@@ -174,7 +174,7 @@ if __name__ == '__main__':
             print(i)
             draw_graph(x = tps_sequence,y = fc_sequence)
 
-            plt.show()
+        plt.show()
 
     if args.func == "fcfs":
         pass
