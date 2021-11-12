@@ -147,7 +147,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(args.tp, args.cpu)
+        circuit.STAFAN(args.tp, arsgs.cpu)
         circuit.co_ob_info()
         print(circuit)
 
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     elif args.func == 'compare_psfp_ppsf':
         circuit.lev()
         tp_fname = '../data/fault_list/'+circuit.c_name + "-tp-compare_psfp_ppsf.tp"
-        tmp = circuit.gen_tp_file(args.tp, fname=tp_fname)
+        tmp = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
 
         # PSFP
         pfs = PFS(circuit)

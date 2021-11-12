@@ -36,7 +36,7 @@ class FaultList:
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
 
-        elif fault_list_type == "user":
+        elif mode == "user":
             fr = open(fname, mode='r')
             for line in fr:
                 line=line.rstrip('\n').split("@")

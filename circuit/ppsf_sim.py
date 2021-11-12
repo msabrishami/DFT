@@ -53,11 +53,7 @@ class PPSF(FaultSim):
         Zg = self.circuit.read_PO()
         self.circuit.logic_sim_bitwise(tps_bin, test_len=len(tps),fault = fault)
         Zf = self.circuit.read_PO()
-<<<<<<< HEAD
-        res = utils.comp_Zg_Zf_bin(Zg, Zf, min(self.wordlen,len(tps)))
-=======
         res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
->>>>>>> master
         
         # The order of tp and res are reversed
         res_fixed = set()
@@ -86,11 +82,7 @@ class PPSF(FaultSim):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
                 res = self.single(tps_pass, fault)
                 fault.D_count += len(res)
-<<<<<<< HEAD
-                
-=======
         
->>>>>>> master
         print("PPFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
