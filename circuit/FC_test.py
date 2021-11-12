@@ -1,30 +1,17 @@
-import utils
-from convert import Converter
-from fault_coverage import FC_fault_simulation, FC_test_pattern
-from multiprocessing import Process, Pipe
-from fault_sim import FaultList_2
 from ppsf_sim import PPSF
 from parallel_fs import PFS
-import convert
 from load_circuit import LoadCircuit
-from observation import OPI
-import observation
-from checker_logicsim import Checker
+from fault_coverage import Fault_coverage_estimation
 import config
 import argparse
-import pdb
 import networkx as nx
 import math
-import time
-import os
 import numpy as np
-import copy
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 from circuit import Circuit
-from modelsim_simulator import Modelsim
-
-from regular_tp_gen import regular_tp_gen
-
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -122,10 +109,11 @@ def pars_args():
                         default=None, help="OP file name")
     parser.add_argument("-TPI_num", type=int, required=False, default=None,
                         help="Number of TPI candidates specified")
+    parser.add_argument("-fault_count", type=int, required=False, default=None,
+                        help="Number of faults")
     args = parser.parse_args()
 
     return args
-
 
 def read_circuit(args):
     circuit = None
@@ -136,6 +124,13 @@ def read_circuit(args):
         circuit = Circuit(args.v)
     return circuit
 
+def draw_graph(x,y):
+    sns.scatterplot(x=x, y=y)
+    t = sns.lineplot(x=x, y=y)
+
+    t.set_ylabel(f'Fault Coverage (FC%)')
+    t.set_xlabel('Test Pattern Count #TP')
+    t.set_title(f'Dependency of fault coverage on random test patterns')
 
 if __name__ == '__main__':
 
@@ -153,15 +148,33 @@ if __name__ == '__main__':
 
     if args.func == "fctp":
         circuit.lev()
-        path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
-        tps = circuit.gen_tp_file(args.tp, path)
-        circuit.STAFAN_CS(tp = args.tp) 
-        circuit.STAFAN_B() 
-        # circuit.STAFAN(args.tp)
+        limit = (2<<len(circuit.PI))
 
-        fctp = FC_test_pattern(
-            circuit=circuit, fault_mode='full', fault_list=[],tps_count=len(tps))
-        fctp.calculate()
+        for i in range(50):
+            tps_count = 2
+            fc_sequence = [0]
+            tps_sequence = [0]
+
+            while tps_count <= limit:
+                path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, tps_count)
+                tps = circuit.gen_tp_file(tps_count, path)
+                circuit.STAFAN_CS(tp = path) 
+                try:
+                    circuit.STAFAN_B() 
+                except:
+                    continue
+
+                fctp = Fault_coverage_estimation(
+                    circuit=circuit, fault_mode='full',tps_count=tps_count)
+                
+                fc_sequence.append(fctp.calculate())
+                tps_sequence.append(tps_count)
+                tps_count*=2
+
+            print(i)
+            draw_graph(x = tps_sequence,y = fc_sequence)
+
+            plt.show()
 
     if args.func == "fcfs":
         pass

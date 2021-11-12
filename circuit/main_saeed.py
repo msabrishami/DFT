@@ -247,7 +247,7 @@ if __name__ == '__main__':
         # PSFP
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, fault_list_type="full")
+        pfs.fs_exe(tp_fname=tp_fname)
         
         #PPSF
         fault_sim = PPSF(circuit)

@@ -124,7 +124,6 @@ class Circuit:
             for num, node in self.nodes.items():
                 if node.lev == None: # not levelized yet
                     lev_u = [x.lev for x in node.unodes]
-                    # print(num, lev_u)
                     if None in lev_u:
                         continue
                     elif lev_u == []:
@@ -202,7 +201,7 @@ class Circuit:
         """ create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
-        mention what it returns 
+        returns the list of geneted test patterns
         mention the sequence of inputs and tps
         """ 
         # @Ghazal: this is modified, needs to be tested! 
@@ -294,7 +293,7 @@ class Circuit:
             else:
                 node.imply()
 
-    def logic_sim_bitwise(self, input_pattern, test_len,fault=None):
+    def logic_sim_bitwise(self, input_pattern, fault=None):
         """
         Logic simulation bitwise mode:
         Reads a given pattern and perform the logic simulation bitwise
@@ -311,7 +310,6 @@ class Circuit:
         node_dict = dict(zip([x.num for x in self.PI], input_pattern))
         # TODO: get rid of this! Why did we not implement this within constructor?
         n = sys.maxsize
-        # bitlen = min(math.log2(n)+1,test_len)
         bitlen = math.log2(n)+1
 
         bitwise_not = 2**bitlen-1
