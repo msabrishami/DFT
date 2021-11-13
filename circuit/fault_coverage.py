@@ -35,9 +35,8 @@ class Fault_coverage_estimation(Fault_coverage):
             elif fault.stuck_val == '0':
                 detectability = node.C0 * node.B0
             expected_value_of_fault_coverage -= math.exp(
-                -detectability*self.tps_count)/len(self.fault_list.faults)
+                -detectability*self.tps_count)/total_faults_no
 
-        # print("Expected value of fault coverage =",expected_value_of_fault_coverage)
         return expected_value_of_fault_coverage
 
 class Fault_coverage_simulation(Fault_coverage):
@@ -45,3 +44,6 @@ class Fault_coverage_simulation(Fault_coverage):
         super().__init__(circuit, fault_list, fault_mode)
         self.tps_count = tps_count
         self.fc_type = 'fs'
+    
+    def calculate(self):
+        pass

@@ -162,6 +162,7 @@ if __name__ == '__main__':
                 try:
                     circuit.STAFAN_B() 
                 except:
+                    tps_count*=2
                     continue
 
                 fctp = Fault_coverage_estimation(
@@ -169,6 +170,7 @@ if __name__ == '__main__':
                 
                 fc_sequence.append(fctp.calculate())
                 tps_sequence.append(tps_count)
+
                 tps_count*=2
 
             print(i)

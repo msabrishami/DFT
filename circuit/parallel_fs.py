@@ -44,7 +44,6 @@ class PFS(FaultSim):
 
             if fault_drop:    
                 ptr1 = ptr0
-                print(len(faults_pass, self.wordlen-1),'******')
                 while(len(faults_pass) < self.wordlen-1 and \
                         ptr1 != len(self.fault_list.faults)):
                     fault = self.fault_list.faults[ptr1]
@@ -52,7 +51,6 @@ class PFS(FaultSim):
                         faults_pass.append(fault)
                         faults_pass_idx.append(ptr1)
                     ptr1 += 1
-                    print(ptr1)
             else:
                 ptr1 = min(ptr0+self.wordlen-2, len(self.fault_list.faults)-1)
                 for x in range(ptr0, ptr1+1):
@@ -140,6 +138,7 @@ class PFS(FaultSim):
             fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
         """
 
+        #Ghazal: these two lines are redundant
         for tp in tps:
             detected_faults = self.single(tp, fault_drop)
         
