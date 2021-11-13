@@ -16,9 +16,6 @@ from circuit import Circuit
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 
-### These functions are copied from main_personal.py ###
-
-
 def read_tp_file(fname):
     infile = open(fname)
     lines = infile.readlines()
@@ -150,15 +147,14 @@ if __name__ == '__main__':
         circuit.lev()
         limit = (2<<len(circuit.PI))
 
-        for i in range(50):
+        for i in range(5):
             tps_count = 2
             fc_sequence = [0]
             tps_sequence = [0]
 
             while tps_count <= limit:
-                path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, tps_count)
-                tps = circuit.gen_tp_file(tps_count, path)
-                circuit.STAFAN_CS(tp = path) 
+                circuit.STAFAN_CS(tp = tps_count) 
+
                 try:
                     circuit.STAFAN_B() 
                 except:
