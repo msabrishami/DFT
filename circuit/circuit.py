@@ -185,17 +185,34 @@ class Circuit:
             
         self.print_fanin_rec(queue, min_level)
 
-    def gen_tp(self):
+    def gen_single_tp(self,mode="b"):
+        """ Randomly generate a single input pattern.
+        mode b: generate values in {0, 1}
+        mode x: generate values in {0, 1, X}
+        returns a single input pattern
         """
-        Randomly generate a test pattern for input nodes.
-        Could be used to check the validity of logic simulation
-        and deductive fault simulation.
-        """
-        rand_input_val_list = []
-        for i in range(len(self.PI)):
-            rand_input_val_list.append(random.randint(0,1))
-        return rand_input_val_list
+        if mode not in ["b", "x"]:
+            raise NameError("Mode is not acceptable")
+
+        bits = ["0","1","X"]
+        pat = None
+        if mode == "b":
+            pat = [bits[random.randint(0,1)] for _ in range(len(self.PI))]
+        elif mode == "x":
+            pat = [bits[random.randint(0,2)] for _ in range(len(self.PI))]
+        
+        return pat
     
+    def gen_multiple_tp(self,tp_count,mode="b"):
+        """ Generates multiple input patterns
+        mode b: generate values in {0, 1}
+        mode x: generate values in {0, 1, X}
+        returns the list of geneted test patterns
+        mention the sequence of inputs and tps
+        """
+        tps = [self.gen_single_tp(mode) for _ in range(tp_count)] 
+            
+        return tps
 
     def gen_tp_file(self, tp_count, tp_fname=None, mode="b"):
         """ create single file with multiple input patterns
@@ -204,24 +221,14 @@ class Circuit:
         returns the list of geneted test patterns
         mention the sequence of inputs and tps
         """ 
-        # @Ghazal: this is modified, needs to be tested! 
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
         fn = os.path.join(config.PATTERN_DIR, 
                 self.c_name + "_" + str(tp_count) + "_tp_" + mode + ".tp")
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
-        tps = [] 
-        
-        bits = ["0","1","X"]
-        for t in range(tp_count):
-            if mode == "b":
-                pat = [bits[random.randint(0,1)] for x in range(len(self.PI))]
-            elif mode == "x":
-                pat = [bits[random.randint(0,2)] for x in range(len(self.PI))]
-            tp = pat 
-            tps.append(tp)
+
+        tps = self.gen_multiple_tp(tp_count=tp_count,mode=mode)
+        for tp in tps:
             outfile.write(",".join(tp) + "\n")
         
         outfile.close()
@@ -231,7 +238,6 @@ class Circuit:
 
     def gen_tp_file_full(self, tp_fname=None):
         """ create a single file including all possible tps """ 
-        # @Ghazal: this is modified, needs to be tested! 
         if len(self.PI) > 12:
             print("Error: cannot generate full tp file for circuits with PI > 12")
             return []
@@ -488,7 +494,8 @@ class Circuit:
             tps = self.load_tp_file(tp)
             num_pattern = len(tps)
             tp_gen = False 
-        else:
+
+        elif isinstance(tp,int):
             tp_gen = True
             num_pattern = tp
 
