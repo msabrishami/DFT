@@ -145,10 +145,11 @@ if __name__ == '__main__':
 
     if args.func == "fctp":
         circuit.lev()
-        limit = (2<<len(circuit.PI))
+        limit = (2<<19) # Choose according to the size of PI
 
-        for i in range(5):
-            tps_count = 2
+        for i in range(9):
+            tps_count = 2 # Choose according to the size of PI
+            factor = 16 # Choose according to the size of PI
             fc_sequence = [0]
             tps_sequence = [0]
 
@@ -158,7 +159,7 @@ if __name__ == '__main__':
                 try:
                     circuit.STAFAN_B() 
                 except:
-                    tps_count*=2
+                    tps_count*=factor
                     continue
 
                 fctp = Fault_coverage_estimation(
@@ -167,7 +168,7 @@ if __name__ == '__main__':
                 fc_sequence.append(fctp.calculate())
                 tps_sequence.append(tps_count)
 
-                tps_count*=2
+                tps_count*=factor
 
             print(i)
             draw_graph(x = tps_sequence,y = fc_sequence)
