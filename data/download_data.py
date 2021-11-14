@@ -1,7 +1,3 @@
-
-
-
-
 #TODO: if file already exists, it creates a new copy, 
 # like circuit.v.1 instead of overwriting on circuit.v
 
@@ -66,4 +62,8 @@ def download_syn(dataset_name, syn_version):
                 sc = sc.replace("$$CKT$$", ckt_name)
                 print(sc)
                 os.system(sc)
+
+if __name__ == '__main__':
+    # download_syn(dataset_name="ISCAS85")
+    download_primitive("ISCAS85","v")
 

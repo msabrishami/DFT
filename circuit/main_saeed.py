@@ -147,7 +147,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(args.tp, args.cpu)
+        circuit.STAFAN(args.tp, arsgs.cpu)
         circuit.co_ob_info()
         print(circuit)
 
@@ -157,6 +157,11 @@ if __name__ == '__main__':
         temp = circuit.gen_tp()
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
+        circuit.gen_tp_file(args.tp, path,"x")
+
+        # test load_tp_file()
+        print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
+
 
     elif args.func == "test4":
         time_start = time.time()
@@ -165,7 +170,7 @@ if __name__ == '__main__':
         circuit.SCOAP_CO()
         path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
         circuit.gen_tp_file(args.tp, path)
-        circuit.STAFAN_CS(args.tp, path) 
+        circuit.STAFAN_CS(path) 
         circuit.STAFAN_B() 
         fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
         circuit.save_TMs(fname)
@@ -232,6 +237,22 @@ if __name__ == '__main__':
                     str(fault), pfs_res[str(fault)], fault.D_count))
         if not error:
             print("PFS and PPSF results match!")
+
+
+    elif args.func == 'compare_psfp_ppsf':
+        circuit.lev()
+        tp_fname = '../data/fault_list/'+circuit.c_name + "-tp-compare_psfp_ppsf.tp"
+        tmp = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+
+        # PSFP
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname)
+        
+        #PPSF
+        fault_sim = PPSF(circuit)
+        fault_sim.fault_list.add_all(circuit)
+        fault_sim.fs_exe(tp_fname)
 
 
     elif args.func == "ppsf_parallel":
@@ -313,7 +334,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN_CS(args.tp, tp_fname=tp_path) 
+        circuit.STAFAN_CS(args.tp, tp=tp_path) 
         circuit.STAFAN_B()
         circuit.CALC_ENTROPY()
         # print("Zeros: \t{}".format(circuit.c_zero_count))

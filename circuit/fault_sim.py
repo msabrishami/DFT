@@ -16,6 +16,9 @@ class Fault_C (Fault):
     def __str__(self):
         return self.node_num + "@" + self.stuck_val
 
+    def __repr__(self):
+        return self.node_num + "@" + self.stuck_val
+
 
 class FaultList:
     def __init__(self):
@@ -32,12 +35,14 @@ class FaultList:
             circuit.get_full_fault_list()
             self.in_fault_num = self.circuit.fault_node_num
             self.in_fault_type = self.circuit.fault_type
-        elif fault_list_type == "user":
+
+        elif mode == "user":
             fr = open(fname, mode='r')
             for line in fr:
                 line=line.rstrip('\n').split("@")
                 self.in_fault_num.append(line[0])
                 self.in_fault_type.append(int(line[1]))
+
         else:
             raise NameError("fault list type is not accepted")
 
@@ -82,7 +87,7 @@ class FaultList_2:
                 self.add_str(line)
 
     def write_file(self, fname):
-        with open(fname, "w") as outfile:
+        with open(fname, "+w") as outfile:
             for fault in self.faults:
                 outfile.write(str(fault) + "\n")
             print("Fault list is stored in {}".format(fname))

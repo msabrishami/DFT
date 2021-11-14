@@ -106,6 +106,14 @@ class Node:
         
         # STAFAN Forward for every test measure
         self.sense = False      # Boolean, maybe redundant
+
+        # Ghazal: These seem redundant
+        # self.D1 = False         # Boolean
+        # self.D0 = False         # Boolean
+
+        
+        # STAFAN will calculate these
+        # Forward: 
         self.S = None           # prob
         self.C1 = None          # prob
         self.C0 = None          # prob
@@ -135,7 +143,7 @@ class Node:
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
         res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
         if self.C0 and self.C1:
-            res += " C0= {:.4f} C1={:.4f} ".format(self.C0, self.C1)
+            res += " C0={:.4f} C1={:.4f}".format(self.C0, self.C1)
         return res
 
     
@@ -187,7 +195,7 @@ class Node:
     '''
 
     def get_neighbors(self, value=False, inclusive=False):
-        ''' returns a list of nodes (or the values of ndoes)
+        ''' Returns a list of nodes (or the values of nodes)
         that have the same out gate as this node
         inclusive: if set True, includes this node itself.
         value: if set True, returns the value of neighbors node, by default list of nodes
@@ -195,17 +203,18 @@ class Node:
         # TODO: Check this for all possible gates, specially branch
         # TODO: not tested
         res = []
-        for node in self.dnodes[0].unodes:
-            if self.num == node.num:
-                res = res.append(node) if inclusive else res
-            else:
-                res.append(node)
+        if self.dnodes:
+            for node in self.dnodes[0].unodes:
+                if self.num == node.num and inclusive:
+                    res.append(node)
+                elif self.num != node.num:
+                    res.append(node)
 
         return [n.value for n in res] if value else res
 
     # TODO Move to children later
     def is_sensible(self, count=True):
-        ''' calculates if this node can propagate the gate infront of it.
+        ''' Calculates if this node can propagate the gate in front of it.
         i.e. if current value changes, down-node (output gate) value will change.
         '''
         # TODO: implemented on two value system, not sure if it applies to others
@@ -652,8 +661,8 @@ class BRCH(Node):
         self.pfs_V = self.unodes[0].pfs_V
 
     def eval_CC(self):
-        self.CC0 = self.unodes[0].CC0 + 1 
-        self.CC1 = self.unodes[0].CC1 + 1
+        self.CC0 = self.unodes[0].CC0
+        self.CC1 = self.unodes[0].CC1
 
     def eval_CO(self): 
         # CO measurement for a stem is done by it's branches

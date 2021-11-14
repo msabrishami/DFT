@@ -138,6 +138,7 @@ class PFS(FaultSim):
             fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
         """
 
+        #Ghazal: these two lines are redundant
         for tp in tps:
             detected_faults = self.single(tp, fault_drop)
         

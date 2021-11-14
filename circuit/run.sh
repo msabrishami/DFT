@@ -73,10 +73,15 @@
 # python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test1
 # python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test2 -tp 3
 # python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test3
-# python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func test4 -tp 2
+# python3 main_saeed.py -ckt ../data/ckt/c17.ckt -func test4 -tp 2
 # python3 main_saeed.py -v ../data/verilog/c4.v -func test1
-python3 main_saeed.py -ckt ../data/ckt/c2.ckt -func sp
+# python3 main_saeed.py -ckt ../data/ckt/c1.ckt -func test0
+# python3 main_saeed.py -ckt ../data/ckt/c1.ckt -func nei
 
+# read -p 'Test counts? ' TEST_COUNT
+# python3 main_saeed.py -ckt  ../data/ckt/c1.ckt -func pfsp -tp $TEST_COUNT
+# python3 main_saeed.py -ckt  ../data/ckt/c1.ckt -func ppsf -tp $TEST_COUNT
+# python3 main_saeed.py -ckt  ../data/ckt/c3.ckt -func pfs-vs-ppsf -tp $TEST_COUNT
+# python3 main_saeed.py -ckt ../data/ckt/c3.ckt -func pfs -tp $TEST_COUNT
 
-
-
+python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp

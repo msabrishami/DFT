@@ -29,7 +29,7 @@ class PPSF(FaultSim):
         """ 
         One pass of fault simulation for test patterns over a single fault. 
         Number of tps should be less than the system's word length. 
-        If a fault is given, injects the fault and then runs logic simulation (bitwise)
+        If a fault is given, injects the fault and then runs logic simulation (bitwise).
 
         Arguments
         ---------
@@ -43,13 +43,15 @@ class PPSF(FaultSim):
         if len(tps) > self.wordlen:
             print("Error: number of tps should be wordlen")
             return None
+
         tps_bin = [0] * len(self.circuit.PI)
         for i in range(len(tps_bin)):  #5 
             for j in range(len(tps)): 
                 tps_bin[i] += (tps[j][i]*(2**j))
-        self.circuit.logic_sim_bitwise(tps_bin)
+
+        self.circuit.logic_sim_bitwise(tps_bin,test_len=len(tps))
         Zg = self.circuit.read_PO()
-        self.circuit.logic_sim_bitwise(tps_bin, fault)
+        self.circuit.logic_sim_bitwise(tps_bin, test_len=len(tps),fault = fault)
         Zf = self.circuit.read_PO()
         res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
         
