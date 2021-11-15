@@ -128,7 +128,7 @@ class PFS(FaultSim):
         print("Log file saved in {}".format(log_fname))
 
 
-    def tpfc(self, tps, log_fname=None, fault_drop=None):
+    def tpfc(self, tps, log_fname=None, fault_drop=None, verbose=False):
         """ 
         Calculate the FC for each TP
         Arguments: 
@@ -136,17 +136,18 @@ class PFS(FaultSim):
         tps : list of lists 
         """
         tpfc = []
-        for tp in tps:
+        for idx, tp in enumerate(tps):
             tpfc.append(len(self.single(tp, fault_drop)))
-            print("New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
-                        tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
+            if verbose:
+                print("{:4} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
+                    idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
         fault_coverage = self.fault_list.calc_fc() 
         if log_fname:
             outfile = open(log_fname, mode='w')
             for k in range(len(tpfc)):
-                outfile.write("New: {} \t Total: {} \t FC: {:.4f}%\n".format(
-                    tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
-            outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
+                outfile.write("{:3} \t New: {} \t Total: {} \t FC: {:.4f}%\n".format(
+                    k, tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
+            outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
             outfile.close()
             print("Log file saved in {}".format(log_fname))
 
