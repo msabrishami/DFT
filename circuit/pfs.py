@@ -108,7 +108,6 @@ class PFS(FaultSim):
         FS for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
             input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        No fault dropping is implemented yet. 
         """ 
         outfile = open(log_fname, mode='w')
 
@@ -129,32 +128,30 @@ class PFS(FaultSim):
         print("Log file saved in {}".format(log_fname))
 
 
-    def multiple(self, tps, log_fname, fault_drop=None):
+    def tpfc(self, tps, log_fname=None, fault_drop=None):
         """ 
-        PFS for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [('1','0'),('1','1'),('8','0'),('5','1'),('6','1')]
+        Calculate the FC for each TP
+        Arguments: 
+        ----------
+        tps : list of lists 
         """
-
-        #Ghazal: these two lines are redundant
+        tpfc = []
         for tp in tps:
-            detected_faults = self.single(tp, fault_drop)
-        
+            tpfc.append(len(self.single(tp, fault_drop)))
+            print("New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
+                        tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
         fault_coverage = self.fault_list.calc_fc() 
-        
-        output_path = "{}/{}/{}/{}".format(config.FAULT_SIM_DIR, 
-                self.circuit.c_name, self.fs_type, log_fname)
-        outfile = open(output_path, mode='w')
-        for fault in self.fault_list.faults:
-            if fault.D_count > 0:
-                outfile.write(str(fault) + '\n')
-        outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
-        outfile.close()
-        print("Fault coverage = {:.2f}%".format(fault_coverage*100))
-        print("{}-Multiple completed. \nLog file saved in {}".format(
-            self.fs_type, output_path))
+        if log_fname:
+            outfile = open(log_fname, mode='w')
+            for k in range(len(tpfc)):
+                outfile.write("New: {} \t Total: {} \t FC: {:.4f}%\n".format(
+                    tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
+            outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
+            outfile.close()
+            print("Log file saved in {}".format(log_fname))
+
+        print("TPFC completed. ".format(self.fs_type))
+        return tpfc 
 
     
     def fs_exe(self, tp_fname, log_fname=None, fault_drop=None):
@@ -171,10 +168,9 @@ class PFS(FaultSim):
 
         print("PFS for tp file: {}".format(tp_fname))
 
-        self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
-        
+        # self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
+        tpfc = self.tpfc(tps=tps, log_fname=log_fname, fault_drop=1)
         print("PFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
-
     

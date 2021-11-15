@@ -84,4 +84,25 @@
 # python3 main_saeed.py -ckt  ../data/ckt/c3.ckt -func pfs-vs-ppsf -tp $TEST_COUNT
 # python3 main_saeed.py -ckt ../data/ckt/c3.ckt -func pfs -tp $TEST_COUNT
 
-python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
+# python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
+
+
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "001" &  
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "002" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "003" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "004" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "005" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "006" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "007" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "008" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "009" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "010" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "011" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "012" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "013" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "014" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "015" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "016" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "017" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "018" & 
+python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "019" & 

@@ -9,6 +9,7 @@ import time
 import os
 import numpy as np
 import copy
+import matplotlib.pyplot as plt
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
@@ -27,8 +28,8 @@ from load_circuit import LoadCircuit
 from convert import Converter 
 import convert
 import utils 
-from parallel_fs import PFS
-from ppsf_sim import PPSF
+from pfs import PFS
+from ppsf import PPSF
 from fault_sim import FaultList_2
 from multiprocessing import Process, Pipe
 
@@ -162,7 +163,6 @@ if __name__ == '__main__':
         # test load_tp_file()
         print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
 
-
     elif args.func == "test4":
         time_start = time.time()
         circuit.lev()
@@ -291,7 +291,34 @@ if __name__ == '__main__':
         with open(out_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
 
+    elif args.func == "tpfc":
+        circuit.lev()
+        tp_fname =  "../data/patterns/{}_tp_{}_{}.tp".format(circuit.c_name, 
+                args.tp, args.op_fname)
+        tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+        # tps = circuit.gen_tp_file_full()
+        log_fname = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+        log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.op_fname + ".log"
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)
 
+    elif args.func == "tpfc-fig":
+        path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+        path += "tpfc_tp-" + str(args.tp) 
+        for i in range(1,20):
+            tmp = str(i)
+            for i in range(3-len(tmp)):
+                tmp = "0" + tmp
+            log_fname = "{}_{}.log".format(path, tmp)
+            print(log_fname)
+            infile = open(log_fname, "r")
+            lines = infile.readlines()
+            fc = [float(line.split()[-1][:-1]) for line in lines]
+            plt.plot(fc[:-1])
+        plt.savefig("results-tpfc.pdf")
+        plt.close()
 
     elif args.func == "saveStatTP":
         ## For now, we are only generating the random input vector files, 
