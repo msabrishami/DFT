@@ -102,6 +102,7 @@ def pars_args():
     parser.add_argument("-synv", type=str, required=False , help="syn ver")
     parser.add_argument("-tp", type=int, required=False, help="tp count for random sim")
     parser.add_argument("-fault", type=int, required=False, help="fault count")
+    parser.add_argument("-code", type=str, required=False, help="code for general use")
     parser.add_argument("-tpLoad", type=int, required=False, help="tp count for loading STAFAN")
     parser.add_argument("-cpu", type=int, required=False, help="number of parallel CPUs")
     parser.add_argument("-func", type=str, required=False, help="What operation you want to run")
@@ -152,7 +153,6 @@ if __name__ == '__main__':
         circuit.co_ob_info()
         print(circuit)
 
-
     elif args.func == "test2": 
         circuit.lev()
         temp = circuit.gen_tp()
@@ -185,6 +185,15 @@ if __name__ == '__main__':
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="x")
         # print(tps)
+
+    elif args.func == "stafan-save-load":
+        circuit.lev()
+        circuit.SCOAP_CC()
+        circuit.SCOAP_CO()
+        # circuit.STAFAN(args.tp, arsgs.cpu)
+        # circuit.save_TMs()
+        circuit.load_TMs("../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad))
+        print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.fc_estimation_stafan(args.tp)))
 
     elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
@@ -292,14 +301,17 @@ if __name__ == '__main__':
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
 
     elif args.func == "tpfc":
+        """ Generating random test patterns and running fault simulation, using parallel 
+        fault simulation with fault drop equal to 1. 
+        Result is the Test pattern count fault coverage (TPFC) values stored in log files. 
+        args.code is used to differentiate between tp files  
+        """
         circuit.lev()
-        tp_fname =  "../data/patterns/{}_tp_{}_{}.tp".format(circuit.c_name, 
-                args.tp, args.op_fname)
-        tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-        # tps = circuit.gen_tp_file_full()
+        tp_fname = os.path.join(config.PATTERN_DIR, 
+                "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
+        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
         log_fname = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
-        log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.op_fname + ".log"
+        log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
         pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)

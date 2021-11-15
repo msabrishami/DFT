@@ -195,13 +195,12 @@ class Circuit:
             raise NameError("Mode is not acceptable")
 
         bits = ["0","1","X"]
-        pat = None
         if mode == "b":
-            pat = [bits[random.randint(0,1)] for _ in range(len(self.PI))]
+            tp = [int(bits[random.randint(0,1)]) for _ in range(len(self.PI))]
         elif mode == "x":
-            pat = [bits[random.randint(0,2)] for _ in range(len(self.PI))]
+            tp = [bits[random.randint(0,2)] for _ in range(len(self.PI))]
         
-        return pat
+        return tp 
     
     def gen_multiple_tp(self,tp_count,mode="b"):
         """ Generates multiple input patterns
@@ -211,7 +210,6 @@ class Circuit:
         mention the sequence of inputs and tps
         """
         tps = [self.gen_single_tp(mode) for _ in range(tp_count)] 
-            
         return tps
 
     def gen_tp_file(self, tp_count, tp_fname=None, mode="b"):
@@ -226,10 +224,10 @@ class Circuit:
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
-
         tps = self.gen_multiple_tp(tp_count=tp_count,mode=mode)
         for tp in tps:
-            outfile.write(",".join(tp) + "\n")
+            tp_str = [str(val) for val in tp]
+            outfile.write(",".join(tp_str) + "\n")
         
         outfile.close()
         print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
@@ -538,6 +536,20 @@ class Circuit:
             node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
                     (node.C0*math.log(node.C0, 2.0)))
 
+    def fc_estimation_stafan(self, tp_count):
+        """ Estimation of fault coverage for all faults 
+        All faults include all nodes, SS@0 and SS@1 
+        pd stands for probability of detection 
+        Arguments: 
+        ----------
+        tp_count : int
+            number of test patterns, used in the FC estimation formula 
+        """
+        nfc = 0
+        for node in self.nodes_lev:
+            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
+            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
+        return 1 - nfc/(2*len(self.nodes)) 
 
 
     def co_ob_info(self):
@@ -1361,7 +1373,7 @@ class Circuit:
         """
 
         if total_tp < num_proc:
-            raise ValueError("Total number of test pattern vetors must be at least the same as process numbers")
+            raise ValueError("Total TPs should be higher than process numbers")
 
         start_time = time.time()
         process_list = []
@@ -1384,7 +1396,6 @@ class Circuit:
                 sen_count_list[i] += tup[2][i]
             p.join()
         
-        # self.nodes_lev.sort(key=lambda x: x.num)
         for idx, node in enumerate(self.nodes_lev):
             node.C1 = one_count_list[idx] / total_tp
             node.C0 = zero_count_list[idx] / total_tp
@@ -1394,40 +1405,28 @@ class Circuit:
             if node.C0 == 0 or node.C1 == 0:
                 print("Warning: node {} controllability is zero".format(node.num))
 
-
         self.STAFAN_B()
         for node in self.nodes_lev:
             node.D1 = node.B0 * node.C0
             node.D0 = node.B1 * node.C1
         end_time = time.time()
         duration = end_time - start_time
-        print ("Processor count: {}, Test pattern vectors: {}, Time taken: {:.2f} sec".format(num_proc,total_tp ,duration))
+        print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
+            num_proc,total_tp ,duration))
 
     
     def save_TMs(self, fname):
         outfile = open(fname, "w")
         for node in self.nodes_lev:
-            arr = [node.num,node.C0,node.C1,node.B0,node.B1,node.S,node.CB0,node.CB1, node.B] 
+            arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
+                    node.CB0, node.CB1, node.B] 
             arr = [str(x) for x in arr]
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
         print("Saved circuit with STAFAN values in " + fname)
-
     
-    def save_circuit_entropy(self, fname):
-        if not os.path.exists('../data/stafan-data'):
-            os.makedirs('../data/stafan-data')
-        outfile = open(fname, "w")
-        for node in self.nodes_lev:
-            arr = [node.num,node.Entropy] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
-        outfile.close()
-
-
-    def load_circuit(self, fname):
+    def load_TMs(self, fname):
         infile = open(fname)
         for line in infile:
             words = line.strip().split(",")
@@ -1440,7 +1439,18 @@ class Circuit:
             node.CB0 =  float(words[6]) 
             node.CB1 =  float(words[7]) 
             node.B =    float(words[8]) 
-        # print("Circuit loaded: " + fname)
+        print("Circuit TMs loaded: " + fname)
+    
+    def save_circuit_entropy(self, fname):
+        if not os.path.exists('../data/stafan-data'):
+            os.makedirs('../data/stafan-data')
+        outfile = open(fname, "w")
+        for node in self.nodes_lev:
+            arr = [node.num,node.Entropy] 
+            arr = [str(x) for x in arr]
+            ss = ",".join(arr)
+            outfile.write(ss + "\n")
+        outfile.close()
 
     def make_num_int(self):
         node2int = dict()

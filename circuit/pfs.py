@@ -57,9 +57,7 @@ class PFS(FaultSim):
                     faults_pass.append(self.fault_list.faults[x])
                     faults_pass_idx.append(x)
             
-            # print("processing faults from {}-{}".format(ptr0, ptr1))
             ptr0 = ptr1+1
-
             for i in range(len(faults_pass)):
                 pfs_stuck_values += int(faults_pass[i].stuck_val) * (2**i)
 
@@ -99,7 +97,6 @@ class PFS(FaultSim):
 
         for fault in detected_faults:
             fault.D_count += 1
-        # print("Done PFS single, detected {} faults".format(len(detected_faults)))
         return list(detected_faults)
 
 
@@ -166,9 +163,7 @@ class PFS(FaultSim):
         fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
         fn += tp_fname.split("/")[-1].replace(".tp", ".log")
         log_fname = fn if log_fname==None else log_fname
-
         print("PFS for tp file: {}".format(tp_fname))
-
         # self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
         tpfc = self.tpfc(tps=tps, log_fname=log_fname, fault_drop=1)
         print("PFS completed")

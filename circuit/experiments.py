@@ -64,19 +64,3 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     circuit.lev()
     check_c432_logicsim(circuit, tp, mode)
 
-
-def someOtherExp():
-    print("not now")
-    # fault_stat(circuit, HTO_th=config.HTO_TH, HTC_th=config.HTC_TH)
-    # nodes_HTO = []
-    # for node in circuit.nodes_lev:
-    #     if (node.stat["SS@1"]=="HTO") or (node.stat["SS@1"]=="HTO"):
-    #         nodes_HTO.append(node)
-    # print("Initial HTO count: {}".format(len(nodes_HTO)))
-
-    # for target in nodes_HTO: 
-    #     print("Target: {}\tB1={:.2f} B2={:.2f} \tdelta={}".format(
-    #         target.num, target.B1, target.B0, 
-    #         NVIDIA_count(circuit, target, 0.05, 0.05)))
-
-
