@@ -22,6 +22,7 @@ import os
 import utils
 import config
 #import xlwt
+
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
 #   ... for example, if we find all cell types in one method, later we should 
@@ -32,7 +33,7 @@ import config
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 import load_circuit
-from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
+
 
 
 """
@@ -78,36 +79,21 @@ class Circuit:
         """ 
         Parameters
         ----------
+        c_fname : str
+            the name of the circuit with path and format
         c_name : str
-            the full name of the circuit with path and format 
+            the full name of the circuit without path and format 
         """
 
         self.c_fname = netlist_fname 
         self.c_name = netlist_fname.split('/')[-1].split('.')[0]
-
         self.nodes = {}     # dict of all nodes, key is now string node-num
         self.nodes_lev = [] # list of all nodes, ordered by level
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
 
         load_circuit.LoadCircuit(self, netlist_fname)
-        
-        # Saeed does not confirm using these attributes
-        self.fault_name = []
-        self.fault_node_num = []
-        self.fault_type = [] # fault type for each node in fault list, s-a-1 or s-a-0
-        self.fd_data = None
-        self.pass_cnt = 0
-        self.rfl_node = []
-        self.rfl_ftype = []
-        # PFS: 
-        self.in_fault_node_num = [] # input fault num, string format
-        self.in_fault_node_type = [] # input fault type, integer format
-        
-    
-    def add_node(self, line):
-        raise NameError("This method is deprecated")
-    
+       
     
     def lev(self):
         """
@@ -150,12 +136,14 @@ class Circuit:
             res.append(str(node))
         return "\n".join(res)
     
+    
     def print_fanin(self, target_node, depth):
         queue = collections.deque()
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
         self.print_fanin_rec(queue, min_level)
 
+    
     def print_fanin_rec(self, queue, min_level):
         """ prints the nodes in the fanin cone 
         first time it is called, queue should be a list with target node as its only element
@@ -185,7 +173,7 @@ class Circuit:
             
         self.print_fanin_rec(queue, min_level)
 
-    def gen_single_tp(self,mode="b"):
+    def gen_single_tp(self, mode="b"):
         """ Randomly generate a single input pattern.
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -253,11 +241,11 @@ class Circuit:
         print("Generated full test patterns and saved in {}".format(tp_fname))
         return tps
 
-    # do we need to check the order of the inputs in the file?  
-    # this can be done using "yield" or "generate" -- check online 
+    
     def load_tp_file(self, fname):
-        """ Load single file with multiple test pattern vectors.
-        """ 
+        """ Load single file with multiple test pattern vectors. """ 
+        # do we need to check the order of the inputs in the file?  
+        # this can be done using "yield" or "generate" -- check online 
         infile = open(fname, 'r')
         tps = []
         lines = infile.readlines()
@@ -338,7 +326,7 @@ class Circuit:
                     node.imply_b()
 
     
-    # Saeed needs to rewrite this method using 'yield' in load_tp_file     
+
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
         """
         logic simulation with given input vectors from a file
@@ -346,6 +334,7 @@ class Circuit:
         - read a input file in input folder
         - generate a output file in output folder by using logic_sim() function
         """
+        # Saeed needs to rewrite this method using 'yield' in load_tp_file     
         fr = open(in_fname, mode='r')
         fw = open(out_fname, mode='w')
         fw.write('Inputs: ')
@@ -393,10 +382,11 @@ class Circuit:
                 outfile.write("; } \n")
             outfile.close()
 
-    # Saeed: this needs to be tested by myself later
+
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
         #  ... provided a golden input/output file
+        # Saeed: this needs to be tested by myself later
         infile = open(golden_io_filename, "r")
         lines = infile.readlines()
         PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
@@ -428,7 +418,6 @@ class Circuit:
         for node in self.nodes_lev:
             node.eval_CC()
     
-
     def SCOAP_CO(self):
         """ Calculates combinational observability based on SCOAP measure """ 
         for node in self.PO:
@@ -437,13 +426,11 @@ class Circuit:
         for node in reversed(self.nodes_lev):
             node.eval_CO()
 
-
     def STAFAN_reset_counts(self):
         for node in self.nodes_lev:
             node.one_count = 0
             node.zero_count = 0
             node.sen_count = 0
-
 
     def STAFAN_reset_flags(self):
         for node in self.nodes_lev:
@@ -530,13 +517,110 @@ class Circuit:
             node.CB0 = node.C0 * node.B0
             node.B = (node.B0*node.C0) + (node.B1*node.C1)
 
+    
+    def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
+        circuit = Circuit(self.c_fname)
+        circuit.lev()
+        PI_num = len(circuit.PI)
+        tp_count = int(tot_tp_count / tot_proc)
+        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
+                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
+        circuit.STAFAN_CS(tp_count, limit)
 
-    def CALC_ENTROPY(self):
+        one_count_list = []
+        zero_count_list = []
+        sen_count_list = []
+        for i in circuit.nodes_lev:
+            one_count_list.append(i.one_count)
+            zero_count_list.append(i.zero_count)
+            sen_count_list.append(i.sen_count)
+        conn.send((one_count_list, zero_count_list, sen_count_list))
+        conn.close()
+
+
+    def STAFAN(self, total_tp, num_proc=1):
+        """ 
+        Generating STAFAN controllability and observability in parallel. 
+        Random TPs are generated within the method itself and are not stored. 
+        
+        Arguments:
+        ---------
+        total_tp : (int) total number of test pattern vectors(not less than num_proc)
+        num_proc : (int) number of processors that will be used in parallel processing 
+        """
+
+        if total_tp < num_proc:
+            raise ValueError("Total TPs should be higher than process numbers")
+
+        start_time = time.time()
+        process_list = []
+        for id_proc in range(num_proc):
+            parent_conn, child_conn = Pipe()
+            p = Process(target = self.STAFAN_ctrl_process, 
+                    args =(child_conn, id_proc, total_tp, num_proc))
+            p.start()
+            process_list.append((p, parent_conn))
+
+        one_count_list = [0] * len(self.nodes_lev) 
+        zero_count_list = [0] * len(self.nodes_lev) 
+        sen_count_list = [0] *  len(self.nodes_lev)
+
+        for p, conn in process_list:
+            tup = conn.recv()
+            for i in range(len(tup[0])):
+                one_count_list[i] += tup[0][i]
+                zero_count_list[i] += tup[1][i]
+                sen_count_list[i] += tup[2][i]
+            p.join()
+        
+        for idx, node in enumerate(self.nodes_lev):
+            node.C1 = one_count_list[idx] / total_tp
+            node.C0 = zero_count_list[idx] / total_tp
+            node.S = sen_count_list[idx] / total_tp
+
         for node in self.nodes_lev:
-            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
-                    (node.C0*math.log(node.C0, 2.0)))
+            if node.C0 == 0 or node.C1 == 0:
+                print("Warning: node {} controllability is zero".format(node.num))
 
-    def fc_estimation_stafan(self, tp_count):
+        self.STAFAN_B()
+        for node in self.nodes_lev:
+            node.D1 = node.B0 * node.C0
+            node.D0 = node.B1 * node.C1
+        end_time = time.time()
+        duration = end_time - start_time
+        print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
+            num_proc,total_tp ,duration))
+
+    
+    def save_TMs(self, fname):
+        outfile = open(fname, "w")
+        for node in self.nodes_lev:
+            arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
+                    node.CB0, node.CB1, node.B] 
+            arr = [str(x) for x in arr]
+            ss = ",".join(arr)
+            outfile.write(ss + "\n")
+        outfile.close()
+        print("Saved circuit with STAFAN values in " + fname)
+    
+
+    def load_TMs(self, fname):
+        infile = open(fname)
+        for line in infile:
+            words = line.strip().split(",")
+            node = self.nodes[words[0]]
+            node.C0 =   float(words[1])  
+            node.C1 =   float(words[2]) 
+            node.B0 =   float(words[3]) 
+            node.B1 =   float(words[4]) 
+            node.S  =   float(words[5]) 
+            node.CB0 =  float(words[6]) 
+            node.CB1 =  float(words[7]) 
+            node.B =    float(words[8]) 
+        print("Circuit TMs loaded: " + fname)
+
+
+    def STAFAN_FC(self, tp_count):
         """ Estimation of fault coverage for all faults 
         All faults include all nodes, SS@0 and SS@1 
         pd stands for probability of detection 
@@ -550,6 +634,12 @@ class Circuit:
             nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
             nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
         return 1 - nfc/(2*len(self.nodes)) 
+
+
+    def CALC_ENTROPY(self):
+        for node in self.nodes_lev:
+            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
+                    (node.C0*math.log(node.C0, 2.0)))
 
 
     def co_ob_info(self):
@@ -630,309 +720,7 @@ class Circuit:
         self.PO = self.PO[:-1]
         return count
 
-
-    def get_full_fault_list(self):
-        """
-        Generate a list of all SSAFs in the circuit.
-        Given N nodes, there should be 2N SSAFs.
-        """
-        for node in self.nodes_lev:
-            sa0_str = "{}@0".format(node.num)
-            self.fault_name.append(sa0_str)
-            self.fault_node_num.append(node.num)
-            self.fault_type.append(0)
-
-            sa1_str = "{}@1".format(node.num)
-            self.fault_name.append(sa1_str)
-            self.fault_node_num.append(node.num)
-            self.fault_type.append(1)
-
-    def pfs_in_fault_list(self,fname_fl):
-        """
-        Parallel Fault Simulation:
-        For a given input fault list
-        generate two lists: in_fault_node_num, in_fault_node_type.
-        """
-        fr = open(fname_fl, mode='r')
-        lines = fr.readlines()
-        self.in_fault_node_num = []
-        self.in_fault_node_type = []
-        for line in lines:
-            line=line.rstrip('\n')
-            line_split=line.split('@')
-            self.in_fault_node_num.append(line_split[0])
-            self.in_fault_node_type.append(int(line_split[1]))
-
     
-    def pfs_single(self, input_pattern,in_fl_mode):
-        """
-        Parallel Fault Simulation:
-        For a given test pattern
-        faults in self.fault_node_num 
-        PFS simulates a set of faults detected by the test pattern.
-        """
-        
-        pfs_fault_val = []
-        pfs_fault_num = []
-        if in_fl_mode == 1:
-            faultnum = len(self.fault_node_num)
-            pfs_fault_num = self.fault_node_num.copy()
-            pfs_fault_val = self.fault_type.copy()
-        else:
-            faultnum = len(self.in_fault_node_num)
-            pfs_fault_num = self.in_fault_node_num.copy()
-            pfs_fault_val = self.in_fault_node_type.copy()
-
-        n = sys.maxsize
-        bitlen = int(math.log2(n))+1
-        # bitlen = min(math.log2(n)+1,test_len)
-        bitwise_not = 2**bitlen-1
-
-        pass_tot = math.ceil(float(faultnum) / float(bitlen-1))
-
-        detected_fault_num = []
-        detected_fault_value = []
-
-        while (pass_tot != 0):
-            pass_tot -= 1
-            pfs_stuck_values = 0
-            read_fault_ind = 0
-
-            # fault list for one pass
-            fault_num = []
-            fault_val = []
-            mask_dict = {}  # {key: fault_num, value: mask}
-
-            # save bitlen -1 fault
-            while(1):
-                if len(pfs_fault_num)==0:
-                    break
-
-                fault_val.append(pfs_fault_val.pop())
-                fault_num.append(pfs_fault_num.pop())
-
-                read_fault_ind = read_fault_ind + 1
-                if read_fault_ind == bitlen - 1:
-                    break
-            
-            # calculate stuck values of faults in this pass of PFS, and mask for each fault_num
-            for i in range(len(fault_val)):
-                pfs_stuck_values = pfs_stuck_values + fault_val[i]*2**i
-
-                if fault_num[i] in mask_dict:
-                    mask_dict[fault_num[i]] = mask_dict[fault_num[i]] + 2**i
-                else:
-                    mask_dict[fault_num[i]] = 2**i
-            
-            # pfs for one pass
-            node_dict = dict(zip([x.num for x in self.PI], input_pattern))
-            for node in self.nodes_lev:
-                node.pfs_I = 0
-                node.pfs_S = pfs_stuck_values
-
-                # if fault should be inserted in this node
-                if node.num in mask_dict:
-                    node.pfs_I = mask_dict[node.num]
-
-                if node.gtype == "IPT":
-                    node.imply_p(bitwise_not,node_dict[node.num])
-                else:
-                    node.imply_p(bitwise_not)
-                node.insert_f(bitwise_not)
-            
-            # output result
-            for i in self.nodes_lev:
-                if i.ntype == 'PO':
-                    # if some faults can be detected
-                    if (i.pfs_V != 0) and (i.pfs_V != bitwise_not):
-                        pfs_V_str = format(i.pfs_V,"b").zfill(bitlen)
-                        msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
-                        for j in range(bitlen-1):
-                            #if j == len(fault_num):
-                                #break
-                            if pfs_V_str[bitlen-1-j] != msb_pfs_V:
-                                detected_fault_num.append(fault_num[j])
-                                detected_fault_value.append(fault_val[j])
-
-        fault_set = set()
-        for k in range(len(detected_fault_num)):
-            fault_set = fault_set.union({(detected_fault_num[k],detected_fault_value[k])})
-
-        return fault_set
-
-    def pfs_multiple_separate(self, fname_tp, fname_log, in_fl_mode, mode="b"):
-        """ 
-        new pfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [(1,0),(1,1),(8,0),(5,1),(6,1)]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-        # if os.path.exists('../data/fault_sim/') == False:
-        #     os.mkdir('../data/fault_sim/')
-        # input_path = '../data/modelsim/' + self.c_name + '/input/'
-        # if os.path.exists(input_path) == False:
-        #     os.mkdir(input_path)
-        # output_path = '../data/fault_sim/' + self.c_name + '/'
-        # if os.path.exists(output_path) == False:
-        #     os.mkdir(output_path)
-        output_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/pfs/'
-        input_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/input/'
-        if not os.path.exists(output_path):
-                os.mkdir(output_path)
-        if not os.path.exists(input_path):
-            raise NameError("No test pattern folder!")
-        fr = open(input_path + fname_tp, mode='r')
-        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw = open(output_path + fname_log, mode='w')
-        
-        lines = fr.readlines()
-        # obtain a multiple test patterns list from the input file
-        pattern_list = []
-        for line in lines[1:]:
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        for sub_pattern in pattern_list:
-            fault_subset = self.pfs_single(sub_pattern,in_fl_mode)
-            fault_sublist = list(fault_subset)
-            updated_fault_sublist = []
-            for subset in fault_sublist:
-                if '-' in subset[0]:
-                    updated_fault_sublist.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
-                else:
-                    updated_fault_sublist.append((subset[0], '0', subset[1]))
-            updated_fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
-            pattern_str = map(str,sub_pattern)
-            pattern_str = ",".join(pattern_str)
-            fw.write(pattern_str + '\n')
-            fault_coverage = float(len(fault_sublist) / (2*len(self.nodes_lev)))
-            for fault in updated_fault_sublist:
-                if fault[1] == '0':
-                    fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
-                else:
-                    fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
-            fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
-            fw.write('\n')
-        fr.close()
-        fw.close()
-        print("PFS-Separate completed. \nLog file saved in {}".format(fname_log))
-
-
-    def pfs_multiple(self, fname_tp, fname_log, in_fl_mode, mode="b"):
-        """ 
-        new pfs for multiple input patterns
-        the pattern list is obtained as a list consists of sublists of each pattern like:
-            input_file = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        fault_list should be like the following format: (string in the tuples)
-            fault_list = [(1,0),(1,1),(8,0),(5,1),(6,1)]
-        """
-        if mode not in ["b", "x"]:
-            raise NameError("Mode is not acceptable")
-
-        output_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/pfs/'
-        input_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/input/'
-        if not os.path.exists(output_path):
-                os.mkdir(output_path)
-        if not os.path.exists(input_path):
-            raise NameError("No test pattern folder!")
-        fr = open(input_path + fname_tp, mode='r')
-        # output_path = output_path + fname.rstrip('tp_b.txt') + '_dfs_out.txt'
-        fw = open(output_path + fname_log, mode='w')
-        
-        lines = fr.readlines()
-        # obtain a multiple test patterns list from the input file
-        pattern_list = []
-        for line in lines[1:]:
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        fault_set = set()
-        for sub_pattern in pattern_list:
-            fault_subset = self.pfs_single(sub_pattern,in_fl_mode)
-            fault_set = fault_set.union(fault_subset)
-        fault_list = list(fault_set)
-        updated_fault_sublist = []
-        for subset in fault_list:
-            if '-' in subset[0]:
-                updated_fault_sublist.append((subset[0].split('-')[0], subset[0].split('-')[1], subset[1]))
-            else:
-                updated_fault_sublist.append((subset[0], '0', subset[1]))
-        updated_fault_sublist.sort(key=lambda x: (int(x[0]), int(x[1]), int(x[2])))
-        fault_coverage = float(len(fault_list) / (2*len(self.nodes_lev)))
-        for fault in updated_fault_sublist:
-            if fault[1] == '0':
-                fw.write(str(fault[0]) + '@' + str(fault[2]) + '\n')
-            else:
-                fw.write(str(fault[0]) + '-' + str(fault[1]) + '@' + str(fault[2]) + '\n')
-        fw.write("Fault Coverage = " + str(fault_coverage) + '\n')
-        fr.close()
-        fw.close()
-        print("PFS-Separate completed. \nLog file saved in {}".format(fname_log))
-    
-
-
-    def pfs_exe(self, in_fl_mode, tp_num=1, mode='rand',fname_fl=None):
-        """
-        Execute pfs in rand or full mode
-        rand: the total faults can be detected by several random patterns
-        full: the faults can be detected by each single pattern; all possible patterns are included
-        """
-        if in_fl_mode == 1:
-            self.get_full_fault_list()
-        else:
-            self.pfs_in_fault_list(fname_fl)
-        if mode == 'rand':
-            pfs_report_fname = self.c_name + '_' + str(tp_num) + '_pfs_b.log'
-            tp_path = config.FAULT_SIM_DIR
-            if not os.path.exists(tp_path):
-                os.mkdir(tp_path)
-            tp_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/'
-            if not os.path.exists(tp_path):
-                os.mkdir(tp_path)
-            tp_path = config.FAULT_SIM_DIR + '/' + self.c_name + '/input/'
-            if not os.path.exists(tp_path):
-                os.mkdir(tp_path)
-            #tp_fname = tp_path + self.c_name + '_' + str(tp_num) + "_tp_b.txt"
-            #tp_fname_bare = self.c_name + '_' + str(tp_num) + "_tp_b.txt"
-            # generate given number random patterns
-            '''
-            self.gen_tp_file(
-            tp_num, 
-            fname=tp_fname,
-            mode = "b")
-            '''
-            # run pfs
-            self.pfs_multiple(
-            fname_tp = self.tp_fname_bare,
-            fname_log=pfs_report_fname,
-            in_fl_mode = in_fl_mode,
-            mode='b')
-
-        elif mode == 'full':
-            pfs_report_fname = self.c_name + "_full_pfs_b.log"
-            tp_fname_bare = self.c_name + '_full_tp_b.txt'
-            # generate all possible patterns in order
-            self.regular_tp_gen()
-            # run pfs
-            self.pfs_multiple_separate(
-            fname_tp = tp_fname_bare,
-            fname_log=pfs_report_fname,
-            in_fl_mode = in_fl_mode,
-            mode='b')
-
-        else:
-            raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
-
-
-   
-
     def gen_fault_dic(self):
         """
         Fault Dictionary:
@@ -1027,62 +815,6 @@ class Circuit:
                 fo.write('\n')
         print("thread #{} of {} threads finished".format(idx, thread_cnt))
 
-    def get_reduced_fault_list(self):
-        """
-        Using checkpoint theorem,
-        generate reduced fault list
-        Warning: Checkpoint theorem does not apply to XOR/XNOR gates
-        """
-        faults_fanout = []
-        for i in range(len(self.nodes)):
-            if (self.nodes[i].cpt == 1):
-                #print self.nodes[i].num
-                for j in range(self.nodes[i].fout):
-                    faults_fanout.append(self.nodes[i].dnodes[j].index)
-                self.nodes[i].sa0 = 1
-                self.nodes[i].sa1 = 1
-        # uniquefanout = sorted(set(faults_fanout))
-        # print uniquefanout
-        for i in range(len(faults_fanout)):
-            cptflag = 0
-            if ((self.nodes[faults_fanout[i]].gtype == 'NOR') or (self.nodes[faults_fanout[i]].gtype == 'OR')):
-                for j in range(self.nodes[faults_fanout[i]].fin):
-                    if self.nodes[faults_fanout[i]].unodes[j].cpt == 1:
-                        if cptflag == 0:
-                            cptflag = 1
-                        else: self.nodes[faults_fanout[i]].unodes[j].sa1 = 0
-            elif ((self.nodes[faults_fanout[i]].gtype == 'NAND') or (self.nodes[faults_fanout[i]].gtype == 'AND')):
-                for j in range(self.nodes[faults_fanout[i]].fin):
-                    if self.nodes[faults_fanout[i]].unodes[j].cpt == 1:
-                        if cptflag == 0:
-                            cptflag = 1
-                        else: self.nodes[faults_fanout[i]].unodes[j].sa0 = 0
-        for i in range(len(self.nodes)):
-            if self.nodes[i].sa0 == 1:
-                self.rfl_node.append(self.nodes[i].num)
-                self.rfl_ftype.append(0)
-            if self.nodes[i].sa1 == 1:
-                self.rfl_node.append(self.nodes[i].num)
-                self.rfl_ftype.append(1)
-
-
-    def D_alg(self, fault_index, imply_counter):
-        """
-        Given a fault, returns whether it can be detected,
-        if can, returns a test pattern.
-        """
-        res = D_alg(self.nodes, fault_index, imply_counter)
-        return res
-    
-    
-    def podem(self, i):
-        """
-        Given a fault, returns whether it can be detected,
-        if can, returns a test pattern.
-        """
-        res = podem(self.fault_node_num[i], self.fault_type[i], self.nodes, self.nodes_lev)
-        return res
-
     
     def read_fault_dict(self):
         """read already generated fault dictionary"""
@@ -1090,356 +822,6 @@ class Circuit:
         self.fd_data = fd.read()
         fd.close()
 
-    
-    def get_patterns(self, test_pattern):
-        """
-        Given a test pattern with "X"s,
-        generate all possible patterns represent by that pattern.
-        """
-        xidx = []
-        xcnt = 0
-        for i in range(len(test_pattern)):
-            if test_pattern[i] == 'X':
-                xidx.append(i)
-                xcnt += 1
-
-        fmt_str = '{0:0%db}'%(xcnt)
-        bit = []
-
-        plist = []
-        for i in range(2 ** (xcnt)):
-            bit = [int(j) for j in fmt_str.format(i)]
-            plist.append(bit)
-
-        search = []
-        for p in plist:
-            binary_patterns = test_pattern
-            for i in range(xcnt):
-                binary_patterns[xidx[i]] = p[i]
-            search.append(''. join(map(str, binary_patterns)))
-        return search
-
-
-    def check_failure(self, fault_name):
-        """
-        Check if the fault is undetected by searching the fault dictionary
-        called for small circuit with fault fictionary only.
-        """
-        srch_str = '\s{}'.format(fault_name)
-        if re.findall(srch_str, self.fd_data):
-            return False
-        else:
-            return True
-
-
-    def check_success(self, fault_name, search_patterns):
-        """
-        Check if the returned pattern can detected the given fault
-        by searching the fault dictionary.
-        called for small circuit with fault fictionary only.
-        """
-        pattern_found = 0
-        for p in search_patterns:
-            srch_str = '{}.*?\s{}'.format(p, fault_name)
-            # print (srch_str)
-            res = re.findall(srch_str, self.fd_data)
-            if res:
-                pattern_found = 1
-            else:
-                pattern_found = 0
-        if pattern_found:
-            return True
-        else:
-            return False
-
-    def get_Xless_pattern(self, pattern):
-        """
-        For big circuit with too many Xs,
-        randomly assign 1 or 0 to each X and returns a pattern.
-        """
-        pattern_Xless = []
-        for v in pattern:
-            if v == 'X':
-                entry = random.getrandbits(1)
-            else:
-                entry = v
-            pattern_Xless.append(entry)
-        return pattern_Xless
-
-
-    def get_d_correctness(self):
-        """
-        Check correctness of D algorithm for both detected and undetected faults.
-        Called for small circuit.
-        """
-        self.read_fault_dict()
-        d_error_cnt = 0
-        # run the faults in full fault list
-        for j in range(len(self.fault_node_num)):
-            fault_index = -1
-            for i in range(len(self.nodes_lev)):
-                self.nodes_lev[i].value = five_value.X.value
-                if self.nodes_lev[i].num == self.fault_node_num[j]:
-                    # stuck at 0
-                    if self.fault_type[j] == 0:
-                        self.nodes_lev[i].value = five_value.D.value
-                        fault_index = i
-                    # stuck at 1
-                    elif self.fault_type[j] == 1:
-                        self.nodes_lev[i].value = five_value.D_BAR.value
-                        fault_index = i
-                    else:
-                        print("operator error")
-            imply_counter = Imply_counter(8000)
-            res = self.D_alg(fault_index, imply_counter)
-
-            # If the fault is detectable in
-            if res.result == 1:
-                # print("D_alg SUCCESS")
-                search_patterns = self.get_patterns(res.pattern)
-                pattern_found = self.check_success(self.fault_name[j], search_patterns)
-                if pattern_found == 0:
-                    print("D algorithm Error at fault {}, type SUCCESS".format(self.fault_name[j]))
-                    d_error_cnt += 1
-                else:
-                    pass
-
-            else:
-                # print("D_alg FAILURE")
-                error_not_found = self.check_failure(self.fault_name[j])
-                if error_not_found == 0:
-                    print("D algorithm Error at fault {}, type FAILURE".format(self.fault_name[j]))
-                    d_error_cnt += 1
-                else:
-                    pass
-        d_correctness_rate = ((len(self.fault_node_num) - d_error_cnt) / 
-                len(self.fault_node_num)) * 100
-        print ("D algorithm correctness rate: {}%".format(d_correctness_rate))
-
-
-    def get_d_coverage(self):
-        """
-        Count the percentage of faults in the full fault list D algorithm claimed as detected.
-        Further revise the coverage by passing the test pattern returned by D to DFS to see
-        if the given fault is in the detected fault set.
-        called for big circuits
-        """
-        failure_fault_list = []
-        check_cnt = 0
-        self.pass_cnt = 0
-
-        for j in range(len(self.fault_node_num)):
-            fault_index = -1
-            for i in range(len(self.nodes)):
-                if self.nodes[i].num == self.fault_node_num[j]:
-                    # stuck at 0
-                    if self.fault_type[j] == 0:
-                        self.nodes[i].d_value.append(five_value.D.value)
-                        fault_index = i
-                    # stuck at 1
-                    elif self.fault_type[j] == 1:
-                        self.nodes[i].d_value.append(five_value.D_BAR.value)
-                        fault_index = i
-                    else:
-                        print("operator error")
-                else:
-                    self.nodes[i].d_value.append(five_value.X.value)
-            imply_counter = Imply_counter(8000)
-            res = self.D_alg(fault_index, imply_counter)
-
-            if res.result == 1:
-                self.pass_cnt += 1
-
-            else:
-                failure_fault_list.append(self.fault_name[j])
-
-
-            check_cnt += 1
-            print ("check_cnt={}".format(check_cnt))
-        d_coverage = (self.pass_cnt / len(self.fault_node_num)) * 100
-        print ("D algorithm fault coverage: {}".format(d_coverage))
-        self.pass_cnt = 0
-        return failure_fault_list
-
-
-    def get_podem_correctness(self):
-        """
-        Check correctness of Podem for both detected and undetected faults.
-        Called for small circuit.
-        """
-        self.read_fault_dict()
-        pd_error_cnt = 0
-        for i in range(len(self.fault_node_num)):
-            res = self.podem(i)
-            if res.result == 1:
-                search_patterns = self.get_patterns(res.pattern)
-                pattern_found = self.check_success(self.fault_name[i], search_patterns)
-                if pattern_found == 0:
-                    print("Podem algorithm Error at fault {}, type SUCCESS".format(
-                        self.fault_name[i]))
-                    pd_error_cnt += 1
-                else:
-                    pass
-            else:
-                # print("Podem_alg FAILURE")
-                error_not_found = self.check_failure(self.fault_name[i])
-                if error_not_found == 0:
-                    print("Podem algorithm Error at fault {}, type FAILURE".format(
-                        self.fault_name[i]))
-                    pd_error_cnt += 1
-                else:
-                    pass
-        pd_correctness_rate = 100 *( (len(self.fault_node_num) - pd_error_cnt) / 
-                len(self.fault_node_num) )
-        print ("Podem algorithm correctness rate: {}%".format(pd_correctness_rate))
-
-
-    def get_podem_coverage(self):
-        """
-        Count the percentage of faults in the full fault list Podem claimed as detected.
-        Further revise the coverage by passing the test pattern returned by Podem to DFS to see
-        if the given fault is in the detected fault set.
-        called for big circuits
-        """
-        self.pass_cnt = 0
-        for i in range(len(self.fault_node_num)):
-            res = self.podem(i)
-            if res.result == 1:
-                self.pass_cnt += 1
-                pattern = res.pattern
-                input_pattern = self.get_Xless_pattern(pattern)
-                # print(input_pattern)
-                self.logic_sim(input_pattern)
-                fault_set = self.dfs()
-                fault = (self.fault_node_num[i],self.fault_type[i])
-                if fault in fault_set:
-                    pass
-                else:
-                    self.pass_cnt -= 1
-                    print("Test Pattern error for Podem at fault {}".format(fault))
-            else:
-                pass
-        pd_coverage = self.pass_cnt / len(self.fault_node_num) * 100
-        self.pass_cnt = 0
-        print ("Podem algorithm fault coverage: {}%".format(pd_coverage))
-
-
-    def podem_single_test(self, fault_node_num, fault_type):
-        res = podem(fault_node_num, fault_type, self.nodes, self.nodes_lev)
-        return res
-
-
-    def time_for_podem(self):
-        totaltime = 0
-        for i in range(len(self.fault_node_num)):
-            starttime = time.time()
-            res = self.podem_single_test(self.fault_node_num[i], self.fault_type[i])
-            endtime = time.time()
-            totaltime = totaltime + (endtime - starttime)
-        print(totaltime)
-
-
-    # @Ghazal this needs to be checked and tested
-    def control_process(self, conn, id_proc, tot_tp_count, tot_proc):
-        #TODO: we can have some analysis on variance right here!
-        circuit = Circuit(self.c_fname)
-        circuit.lev()
-        PI_num = len(circuit.PI)
-        tp_count = int(tot_tp_count / tot_proc)
-        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
-                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
-        circuit.STAFAN_CS(tp_count, limit)
-
-        one_count_list = []
-        zero_count_list = []
-        sen_count_list = []
-        for i in circuit.nodes_lev:
-            one_count_list.append(i.one_count)
-            zero_count_list.append(i.zero_count)
-            sen_count_list.append(i.sen_count)
-        conn.send((one_count_list, zero_count_list, sen_count_list))
-        conn.close()
-
-
-    # @Ghazal this needs to be checked and tested 
-    def STAFAN(self, total_tp, num_proc=1):
-        """ 
-        Generating STAFAN controllability and observability in parallel  
-        
-        Arguments:
-        ---------
-        total_tp : (int) total number of test pattern vectors(not less than num_proc)
-        num_proc : (int) number of processors that will be used in parallel processing 
-        """
-
-        if total_tp < num_proc:
-            raise ValueError("Total TPs should be higher than process numbers")
-
-        start_time = time.time()
-        process_list = []
-        for id_proc in range(num_proc):
-            parent_conn, child_conn = Pipe()
-            p = Process(target = self.control_process, 
-                    args =(child_conn, id_proc, total_tp, num_proc))
-            p.start()
-            process_list.append((p, parent_conn))
-
-        one_count_list = [0] * len(self.nodes_lev) 
-        zero_count_list = [0] * len(self.nodes_lev) 
-        sen_count_list = [0] *  len(self.nodes_lev)
-
-        for p, conn in process_list:
-            tup = conn.recv()
-            for i in range(len(tup[0])):
-                one_count_list[i] += tup[0][i]
-                zero_count_list[i] += tup[1][i]
-                sen_count_list[i] += tup[2][i]
-            p.join()
-        
-        for idx, node in enumerate(self.nodes_lev):
-            node.C1 = one_count_list[idx] / total_tp
-            node.C0 = zero_count_list[idx] / total_tp
-            node.S = sen_count_list[idx] / total_tp
-
-        for node in self.nodes_lev:
-            if node.C0 == 0 or node.C1 == 0:
-                print("Warning: node {} controllability is zero".format(node.num))
-
-        self.STAFAN_B()
-        for node in self.nodes_lev:
-            node.D1 = node.B0 * node.C0
-            node.D0 = node.B1 * node.C1
-        end_time = time.time()
-        duration = end_time - start_time
-        print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
-            num_proc,total_tp ,duration))
-
-    
-    def save_TMs(self, fname):
-        outfile = open(fname, "w")
-        for node in self.nodes_lev:
-            arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
-                    node.CB0, node.CB1, node.B] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
-        outfile.close()
-        print("Saved circuit with STAFAN values in " + fname)
-    
-    def load_TMs(self, fname):
-        infile = open(fname)
-        for line in infile:
-            words = line.strip().split(",")
-            node = self.nodes[words[0]]
-            node.C0 =   float(words[1])  
-            node.C1 =   float(words[2]) 
-            node.B0 =   float(words[3]) 
-            node.B1 =   float(words[4]) 
-            node.S  =   float(words[5]) 
-            node.CB0 =  float(words[6]) 
-            node.CB1 =  float(words[7]) 
-            node.B =    float(words[8]) 
-        print("Circuit TMs loaded: " + fname)
     
     def save_circuit_entropy(self, fname):
         if not os.path.exists('../data/stafan-data'):
@@ -1451,6 +833,7 @@ class Circuit:
             ss = ",".join(arr)
             outfile.write(ss + "\n")
         outfile.close()
+
 
     def make_num_int(self):
         node2int = dict()
@@ -1493,222 +876,7 @@ class Circuit:
 
         return data
 
-
-    def ssta_pmf(self):
-        # all gate distributions are pmf and all process is numerical on pmfs 
-        for node in self.nodes_lev:
-            # if int(node.num) > 10:
-            #     return 
-            # print("-----------------------------------------------")
-            # print(node)
-
-            # Initiate the PIs first:
-            if node.ntype == "PI":
-                node.dd_node = Normal(0, 1)
-            elif node.ntype == "FB":
-                node.dd_node = node.unodes[0].dd_node
-            elif node.ntype in ["GATE", "PO"]:
-                opmax = MaxOp()
-                dd_node_unodes = [unode.dd_node for unode in node.unodes]
-                dd_node_max = dd_node_unodes[0]
-                for n in range(1, len(dd_node_unodes)):
-                    dd_node_max = opmax.max_num(dd_node_max, dd_node_unodes[n])
-
-                opsum = SumOp()
-                dd_cell = self.cell_ssta[node.gtype]
-                node.dd_node = opsum.sum_num(dd_cell, dd_node_max)
-
-
-    def ssta_plot(self, fname, select="gate"):
-        """ Saves the plot of the delay distribution of the nodes 
-        It can be modified to only plot the internal gates and outputs
-        
-        Parameters
-        ---------
-        fname : str 
-            output file name 
-        select : string
-            what nodes should be plotted
-            all plots all nodes
-            gate plots only gates and POs, no PI, FB
-            output plots only outputs
-        """
-        if select not in ["gate", "all", "output"]:
-            raise NameError("Error (ssta_plot): select arg is not valid")
-        
-        cmap = utils.get_cmap(20)
-        plt.figure(figsize=(20,10))
-        cnt = 0
-        lines = ["-","--","-.",":"]
-        linecycler = cycle(lines)
-
-        for idx, node in enumerate(self.nodes_lev):
-            if select == "output" and node.ntype != "PO":
-                continue
-            elif select == "gate" and node.ntype not in ["GATE", "PO"]:
-                continue
-
-            if isinstance(node.dd_node, NumDist):
-                T, f_T = node.dd_node.pmf()
-            elif isinstance(node.dd_node, Distribution):
-                T, f_T = node.dd_node.pmf(samples=config.SAMPLES)
-            else:
-                print("Warning: a tuple distribution is found in circuit!")
-                T = node.dd_node[0]
-                f_T = node.dd_node[1]
-            plt.plot(T, f_T, linewidth=3, color=cmap(cnt), \
-                    alpha=0.5, linestyle=next(linecycler), label=node.num)
-            cnt += 1
-        
-        plt.grid()
-        plt.legend(loc=1, prop={'size': 10})
-        # plt.xlim([-5,25])
-        plt.savefig("{}".format(fname))
-        plt.close()
-        print("Circuit SSTA plot saved in {}".format(fname))
-    
-
-    def set_cell_ssta_delay(self, src="mcraw", tech=config.TECH, pvs=config.PVS):
-        """ Reads Monte Carlo simulation results and generates ssta delay for cells 
-        
-        Parameters
-        ----------
-        src : str
-            mcraw > raw data of MC simulations results
-            mchist > Monte Carlo histogram, it can be filtered or cut before
-            text > not implemented yet, txt file with distribution info 
-        tech : str 
-            the name of the technology, e.g. MOSFET_45nm_HP
-        pvs : str
-            process variation specifier, refer to CSM package
-            e.g. vth0-N0.05_lg-N0.05_w-N0.10_toxe-N0.10_MC1000
-        """ 
-        cell_ssta_delay = dict()
-        for node in self.nodes_lev:
-            if node.ntype in ["PI", "FB"]: #TODO: delay of inputs and FB?
-                node.cell_name = node.ntype
-                continue
-            
-            cell_name = utils.get_node_gtype_fin(node) # gate name with fin 
-            node.cell_name = cell_name
-            if cell_name in cell_ssta_delay:
-                continue
-            
-            # Store the delay distribution for this cell in circuit
-            if src == "mchist":
-                fname = tech + "_" + cell_name + "_" + pvs + "." + src 
-                fname = os.path.join(config.SSTA_DATA_DIR, src + "/" + fname)
-                print("Loading mchist file for {}: {}".format(cell_name, fname))
-                T, h_T = utils.load_mchist(fname)
-                h_T = utils.smooth_hist(h_T, 11) #TODO: mchist smooth hard-coded
-                T, f_T = utils.hist2pmf(T, h_T)
-                print("\tArea: {}".format(Distribution.area_pmf(T, f_T)))
-                utils.plot_pmf(NumDist(T,f_T), fname=cell_name+".pdf")
-                cell_ssta_delay[cell_name] = NumDist(T, f_T)
-            
-            elif src == "default":
-                cell_ssta_delay[cell_name] = self.get_cell_delay(node.gtype)
-            
-            elif src == "mcraw":
-                fname = tech + "_" + cell_name + "_" + pvs + "." + src 
-                fname = os.path.join(config.SSTA_DATA_DIR, src + "/" + fname)
-                print("Loading mcraw file for {}: {}".format(cell_name, fname))
-                delays = utils.load_mcraw(fname)
-                T, f_T = utils.mcraw2mchist(delays, 200, pad=3)
-                f_T = utils.smooth_hist(f_T, window=5) 
-                print("\tArea: {}".format(Distribution.area_pmf(T, f_T)))
-                # utils.plot_pmf(NumDist(T,f_T), fname=cell_name+".pdf")
-                cell_ssta_delay[cell_name] = NumDist(T, f_T)
-
-            else:
-                raise NameError("WRONG VALUES -- still developing")
-        self.cell_ssta_delay = cell_ssta_delay
-        
-
-    def ssta_sim(self, mode, src, samples):
-        """ Runs SSTA on the circuit. Currently the cell distributions are hard-coded
-
-        Parameters
-        ----------
-        mode : str
-            SSTA mode for statistical operations
-            alt, analytical
-            num, numerical 
-        samples : int
-            number of samples used for the numerical statistical operations
-
-        Note: the delay of PI and FB is considered as 0
-        """
-
-        # First, what is the delay distribution of each gate? (num/alt)
-        self.set_cell_ssta_delay(src, tech=config.TECH, pvs=config.PVS)
-        for node in self.nodes_lev:
-            if node.ntype in ["PI", "FB"]:
-                node.dd_cell = 0 
-            elif node.ntype in ["GATE", "PO"]:
-                node.dd_cell = self.cell_ssta_delay[node.cell_name] 
-
-        # Second, go over each gate and run a MAX-SUM simulation
-        print("Node\tLevel\tMean\tSTD")
-        for node in self.nodes_lev:
-            t_s = time.time()
-            print("Node: {}\t".format(node.num))
-            if node.ntype == "PI":
-                node.dd_node = 0 
-            elif node.ntype == "FB":
-                node.dd_node = node.unodes[0].dd_node
-            elif node.ntype in ["GATE", "PO"]:
-                opmax = MaxOp()
-                dd_unodes = [unode.dd_node for unode in node.unodes]
-                dd_max = dd_unodes[0]
-                for n in range(1, len(dd_unodes)):
-                    if mode == "alt":
-                        dd_max = opmax.max_alt(dd_max, dd_unodes[n])
-                    elif mode == "num":
-                        print("\t- unode: {}".format(node.unodes[n].num))
-                        dd_max = opmax.max_num(dd_max, dd_unodes[n], samples=samples, 
-                            eps_error_area=0.01)
-                        if dd_max != 0:
-                            print("\tArea: {:.5f}".format(dd_max.area()))
-                
-                print("\tMAX time: {:2.4f}".format(time.time() - t_s))
-                if dd_max != 0:
-                    print("\tMAX Area: {:.5f}".format(dd_max.area()))
-                t_s = time.time()
-                opsum = SumOp()
-                if mode == "alt":
-                    node.dd_node = opsum.sum_alt(node.dd_cell, dd_max)
-                elif mode == "num":
-                    node.dd_node = opsum.sum_num(node.dd_cell, dd_max, samples=samples)
-                    print("\tSUM time: {:3.4f}".format(time.time() - t_s))
-
-                print("\tSUM Area: {:.5f}".format(node.dd_node.area()))
-                utils.plot_pmf(node.dd_node, fname=self.c_name + "-" + node.num + ".pdf")
-
-    def get_cell_delay(self):
-        """ This method assigns temporary distributions to cells """ 
-        cell_dg = {}
-        # cell_dg["NOT"] = Normal(1, 1)
-        # cell_dg["NAND"] = Normal(3, 1)
-        # cell_dg["AND"] = Normal(4.2, 1)
-        # cell_dg["NOR"] = Normal(3, 1)
-        # cell_dg["OR"] = Normal(4.2, 1)
-        # cell_dg["XOR"] = Normal(8, 1)
-        # cell_dg["XNOR"] = Normal(8, 1)
-        # cell_dg["BUFF"] = Normal(2, 1)
-        cell_dg["NOT"] =    SkewNormal(1,   1, 10)
-        cell_dg["NAND"] =   SkewNormal(4,   1, 10)
-        cell_dg["AND"] =    SkewNormal(4.2, 1, 10)
-        cell_dg["NOR"] =    SkewNormal(3,   1, 10)
-        cell_dg["OR"] =     SkewNormal(4.2, 1, 10)
-        cell_dg["XOR"] =    SkewNormal(8,   1, 10)
-        cell_dg["XNOR"] =   SkewNormal(8,   1, 10)
-        cell_dg["BUFF"] =   SkewNormal(2,   1, 10)
-        return cell_dg
-
-
-   
-    
+  
     def make_PO(self, target):
         """ connects this target node to a PO using a branch 
         """

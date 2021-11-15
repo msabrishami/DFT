@@ -186,14 +186,21 @@ if __name__ == '__main__':
         tps = circuit.gen_tp_file(args.tp, mode="x")
         # print(tps)
 
-    elif args.func == "stafan-save-load":
+    elif args.func == "stafan-save":
+        """ Running STAFAN with random TPs and saving TPs into file """ 
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        # circuit.STAFAN(args.tp, arsgs.cpu)
-        # circuit.save_TMs()
+        time_start = time.time()
+        circuit.STAFAN(args.tp, args.cpu)
+        fname = "../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tp)
+        circuit.save_TMs(fname)
+        print("Time: \t{:.3}".format(time.time() - time_start))
+            
+    elif args.func == "stafan-load":
+        circuit.lev()
         circuit.load_TMs("../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad))
-        print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.fc_estimation_stafan(args.tp)))
+        print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.STAFAN_FC(args.tp)))
 
     elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
@@ -333,63 +340,23 @@ if __name__ == '__main__':
         plt.close()
 
     elif args.func == "saveStatTP":
-        ## For now, we are only generating the random input vector files, 
-        # Later we need to add read from file 
         """ generate stafan stat file based on reading TPs from file
         The version must be added to the name of .stat file"""
-        
-        circuit = Circuit(args.ckt)
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-
-        tp_path = "../data/patterns/{}_TP{}.tp".format(
-                circuit.c_name, args.tpLoad)
-        if not os.path.exists(tp_path):
-            raise NameError("no file found in {}".format(tp_path))
-        config.STAFAN_C_MIN = 1.0/(10*args.tp)
         time_start = time.time()
-        # circuit.STAFAN_CS(args.tp, tp_path) 
-        circuit.STAFAN_CS(args.tp) 
-        circuit.STAFAN_B() 
-        # print("Zeros: \t{}".format(circuit.c_zero_count))
+        circuit.STAFAN(args.tp, args.cpu)
         fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
         circuit.save_TMs(fname)
         print("Time: \t{:.3}".format(time.time() - time_start))
 
 
-    # Double check later 
-    elif args.func == "saveEntropyTP":
-        """ generate stafan stat file based on orig-TPs, and given tp 
-        The version must be added to the name of .stat file"""
-
-        tp_path = "../data/patterns/{}_TP{}.tp".format(args.ckt, args.tpLoad)
-        tpi_num = args.TPI_num
-        if not os.path.exists(tp_path):
-            raise NameError("no file found in {}".format(tp_path))
-        config.STAFAN_C_MIN = 1.0/(10*args.tp)
-        time_start = time.time()
-        circuit = read_circuit(args)
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        circuit.STAFAN_CS(args.tp, tp=tp_path) 
-        circuit.STAFAN_B()
-        circuit.CALC_ENTROPY()
-        # print("Zeros: \t{}".format(circuit.c_zero_count))
-        print("Time: \t{:.3}".format(time.time() - time_start))
-        fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".ent"
-        print("Saving circuit with Entropy values in " + fname)
-        circuit.CALC_TPI(tpi_num, fname + "TP")  
-        circuit.save_circuit_entropy(fname)
-
-    
     elif args.func == "writeOB":
         # circuit.co_ob_info()
         path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)
         print("Saving ob info in {}".format(path))
         circuit.write_ob_info(path)
-
 
     elif args.func == "analysisOB":
         TPs = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
@@ -412,7 +379,6 @@ if __name__ == '__main__':
             report.write(str(real_TP[idx]) + "," + ",".join(data[idx]) + "\n")
 
         print("Report file generated in {}".format(report_path))
-
 
 
     elif args.func == "histOB":
@@ -438,8 +404,6 @@ if __name__ == '__main__':
         print(log)
 
 
-
-
     elif args.func in  ["deltaP", "deltaHTO"]:
         conv = Converter(ckt_name, "EPFL") 
         # TODO: be cautious about passing args
@@ -463,7 +427,8 @@ if __name__ == '__main__':
         # have ckt_synVX.v
         circuit = Circuit(ckt_name)
         circuit.lev()
-        tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + str(args.tpLoad) + ".tp"
+        tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + \
+                str(args.tpLoad) + ".tp"
         stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
         # circuit.gen_tp_file(args.tp, fname=tp_fname)
         circuit.logic_sim_file(tp_fname, stil_fname, out_format="STIL", tp_count = args.tp)
@@ -486,7 +451,8 @@ if __name__ == '__main__':
         tp_fname = os.path.join(config.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
-        OPs_fname = "../data/observations/" + args.ckt + "_" + args.OPIalg + "_B-" + str(args.Bth) 
+        OPs_fname = "../data/observations/" + args.ckt + "_" + \
+                args.OPIalg + "_B-" + str(args.Bth) 
         OPs_fname += "_Count-" + str(args.opCount) + ".op"
         conv.nodes2tmax_OP(ops, OPs_fname)
         print("Stored Synopsys observation file in     \t{}".format(fname))
@@ -531,7 +497,8 @@ if __name__ == '__main__':
         tp_fname = os.path.join(config.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
-        OPs_fname = "../data/observations/" + args.ckt + "_" + args.OPIalg + "_B-" + str(args.Bth) 
+        OPs_fname = "../data/observations/" + args.ckt + "_" + \
+                args.OPIalg + "_B-" + str(args.Bth) 
         OPs_fname += "_Count-" + str(args.opCount) + ".op"
         conv.nodes2tmax_OP(ops, OPs_fname)
         print("Stored Synopsys observation file in     \t{}".format(fname))
@@ -546,7 +513,8 @@ if __name__ == '__main__':
             print("Original verilog netlist is: \t\t\t {}".format(path_in))
             
             ### Step 1: Continuously modifying a verilog file
-            cname_mod = args.ckt + "_OP_" + args.OPIalg + "_B-" + str(args.Bth) + "_Acc" + str(idx+1)
+            cname_mod = args.ckt + "_OP_" + args.OPIalg + "_B-" + \
+                    str(args.Bth) + "_Acc" + str(idx+1)
             path_out = os.path.join(config.VERILOG_DIR, cname_mod + ".v")
             convert.add_OP_verilog(
                     path_in=path_in,
@@ -569,7 +537,6 @@ if __name__ == '__main__':
             # convert.replace_primitive2cell(path_out) 
         
         print("".join(["-"]*100))
-
 
 
     elif args.func == "genV_TMAXOP":
