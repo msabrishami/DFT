@@ -143,7 +143,7 @@ class Node:
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
         res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
         if self.C0 and self.C1:
-            res += " C0={:.4f} C1={:.4f}".format(self.C0, self.C1)
+            res += " C0={:.4f} C1={:.4f} B0={:.4f} B1={:.4f}".format(self.C0, self.C1, self.B0, self.B1)
         return res
 
     

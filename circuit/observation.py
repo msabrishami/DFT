@@ -40,13 +40,12 @@ def stat_HTO(circuit, HTO_th, HTC_th):
     print("Number of HTO nodes are {}".format(count))
     return count
 
+
 def make_OP(circuit, op):
     """ adds an observation point, updates STAFAN_B """ 
     circuit.PO.append(op)
     op.ntype = "PO"
     circuit.STAFAN_B()
-
-
 
 
 def deltaHTO(circuit, op, HTO_th, HTC_th):
