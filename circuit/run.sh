@@ -84,4 +84,6 @@
 # python3 main_saeed.py -ckt  ../data/ckt/c3.ckt -func pfs-vs-ppsf -tp $TEST_COUNT
 # python3 main_saeed.py -ckt ../data/ckt/c3.ckt -func pfs -tp $TEST_COUNT
 
-python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
+# python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
+python3 FC_test.py -ckt ../data/ckt/c1.ckt -func fcfs
+

@@ -121,12 +121,13 @@ class PFS(FaultSim):
             # outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
             # outfile.write('\n')
             outfile.write("------------\n")
-        fc = self.fault_list.calc_fc()
-        outfile.write("Fault Coverage = {:.2f}%\n".format(fc*100))
+        fault_coverage = self.fault_list.calc_fc()
+        outfile.write("Fault Coverage = {:.2f}%\n".format(fault_coverage*100))
         outfile.close()
         print(self.fs_type + " (Separate mode) completed. ")
-        print("Fault coverage = {:.2f}%".format(fc*100))
         print("Log file saved in {}".format(log_fname))
+
+        return fault_coverage
 
 
     def multiple(self, tps, log_fname, fault_drop=None):
@@ -152,9 +153,11 @@ class PFS(FaultSim):
                 outfile.write(str(fault) + '\n')
         outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
         outfile.close()
-        print("Fault coverage = {:.2f}%".format(fault_coverage*100))
+        # print("Fault coverage = {:.2f}%".format(fault_coverage*100))
         print("{}-Multiple completed. \nLog file saved in {}".format(
             self.fs_type, output_path))
+        
+        return fault_coverage
 
     
     def fs_exe(self, tp_fname, log_fname=None, fault_drop=None):
@@ -171,10 +174,10 @@ class PFS(FaultSim):
 
         print("PFS for tp file: {}".format(tp_fname))
 
-        self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
+        fault_coverage = self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
         
         print("PFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
-            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
-
-    
+            100*fault_coverage, len(self.fault_list.faults)))
+        
+        return fault_coverage

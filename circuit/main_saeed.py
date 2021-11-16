@@ -27,8 +27,8 @@ from load_circuit import LoadCircuit
 from convert import Converter 
 import convert
 import utils 
-from parallel_fs import PFS
-from ppsf_sim import PPSF
+from pfs import PFS
+from ppsf import PPSF
 from fault_sim import FaultList_2
 from multiprocessing import Process, Pipe
 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(args.tp, arsgs.cpu)
+        circuit.STAFAN(args.tp, args.cpu)
         circuit.co_ob_info()
         print(circuit)
 
@@ -159,7 +159,6 @@ if __name__ == '__main__':
         circuit.gen_tp_file(args.tp, path)
         circuit.gen_tp_file(args.tp, path,"x")
 
-        # test load_tp_file()
         print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
 
 
@@ -193,8 +192,6 @@ if __name__ == '__main__':
         circuit.lev()
         tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
         tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-        # tps = circuit.gen_tp_file_full()
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
         pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)

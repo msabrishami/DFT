@@ -1,5 +1,5 @@
-from ppsf_sim import PPSF
-from parallel_fs import PFS
+from ppsf import PPSF
+from pfs import PFS
 from load_circuit import LoadCircuit
 from fault_coverage import Fault_coverage_estimation
 import config
@@ -176,4 +176,11 @@ if __name__ == '__main__':
         plt.show()
 
     if args.func == "fcfs":
-        pass
+        circuit.lev()
+        tps_count = 1000_000
+        # tps  = circuit.gen_multiple_tp(tp_count)
+        tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
+        tps  = circuit.gen_tp_file(tps_count, tp_fname=tp_fname)
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)
