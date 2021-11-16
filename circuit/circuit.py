@@ -269,15 +269,15 @@ class Circuit:
         return res
 
 
-    def logic_sim(self, input_pattern):
+    def logic_sim(self, tp):
         """
         Logic simulation:
         Reads a given pattern and perform the logic simulation
         Currently just works with binary logic
-        input_pattern is a list of values (currently int) in the ... 
+        tp is a list of values (currently int) in the ... 
             ... same order as in self.PI
         """
-        node_dict = dict(zip([x.num for x in self.PI], input_pattern))
+        node_dict = dict(zip([x.num for x in self.PI], tp))
 
         for node in self.nodes_lev:
             if node.gtype == "IPT":
@@ -285,21 +285,21 @@ class Circuit:
             else:
                 node.imply()
 
-    def logic_sim_bitwise(self, input_pattern, fault=None):
+    def logic_sim_bitwise(self, tp, fault=None):
         """
         Logic simulation bitwise mode:
         Reads a given pattern and perform the logic simulation bitwise
 
         Arguments
         ---------
-        input_pattern : list of int 
+        tp : list of int 
             input pattern in the same order as in self.PI
         fault : str
             node.num@fault --> example: N43@0 means node N43 single stuck at zero 
 
         fault
         """
-        node_dict = dict(zip([x.num for x in self.PI], input_pattern))
+        node_dict = dict(zip([x.num for x in self.PI], tp))
         # TODO: get rid of this! Why did we not implement this within constructor?
         n = sys.maxsize
         bitlen = math.log2(n)+1
@@ -592,7 +592,15 @@ class Circuit:
             num_proc,total_tp ,duration))
 
     
-    def save_TMs(self, fname):
+    def save_TMs(self, fname=None, tp=None):
+        if fname == None:
+            if not os.path.exists(config.STAFAN_DIR):
+                os.system("mkdir {}".format(config.STAFAN_DIR))
+            fname = os.path.join(config.STAFAN_DIR, self.c_name)
+            if not os.path.exists(fname):
+                os.system("mkdir {}".format(fname))
+            fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
+
         outfile = open(fname, "w")
         for node in self.nodes_lev:
             arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
@@ -602,7 +610,6 @@ class Circuit:
             outfile.write(ss + "\n")
         outfile.close()
         print("Saved circuit with STAFAN values in " + fname)
-    
 
     def load_TMs(self, fname):
         infile = open(fname)
@@ -760,7 +767,7 @@ class Circuit:
 
         fault_dict_result.write(' as sequence of inputs')
         fault_dict_result.write('\n')
-        fault_dict_result.write('input_patterns\t\t\tdetected_faults\n')
+        fault_dict_result.write('tps\t\t\tdetected_faults\n')
         for i in range(total_pattern):
             #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
             b = ('{:0%db}'%inputnum).format(i)
@@ -806,7 +813,7 @@ class Circuit:
                     fo.write('%d' % self.input_num_list[i])
             fo.write(' as sequence of inputs')
             fo.write('\n')
-            fo.write('input_patterns\t\t\tdetected_faults\n')
+            fo.write('tps\t\t\tdetected_faults\n')
             for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
                 b = ('{:0%db}'%len(self.PI)).format(i)
                 fo.write('%s\t\t\t\t' % b)

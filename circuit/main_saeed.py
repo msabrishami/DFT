@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 import argparse
 import pdb
 import networkx as nx
@@ -13,9 +12,7 @@ import matplotlib.pyplot as plt
 
 from circuit import Circuit
 from modelsim_simulator import Modelsim
-
 from regular_tp_gen import regular_tp_gen
-
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -23,7 +20,7 @@ import config
 from checker_logicsim import Checker
 import observation
 from observation import OPI
-import experiments 
+import experiments as exp 
 from load_circuit import LoadCircuit
 from convert import Converter 
 import convert
@@ -32,67 +29,6 @@ from pfs import PFS
 from ppsf import PPSF
 from fault_sim import FaultList_2
 from multiprocessing import Process, Pipe
-
-### These functions are copied from main_personal.py ### 
-def read_tp_file(fname):
-    infile = open(fname)
-    lines = infile.readlines()
-    tps = []
-    for line in lines[1:]:
-        tps.append(line.strip().split(","))
-
-    return tps
-
-
-def gen_tps():
-    # Gen tps and all the required folder!
-    for ckt in CKTs: 
-        print(ckt)
-        circuit = Circuit(ckt)
-        LoadCircuit(circuit, "ckt")
-        circuit.lev()
-        dfs = DFS(circuit)
-        dfs.fs_folder()
-        for idx in range(3):
-            if len(circuit.PI) < 6:
-                test_count = 4
-            else:
-                test_count = 10
-            circuit.gen_tp_file(test_count = test_count, 
-                    fname="../data/fault_sim/{}/input/{}_test_count-{}_id-{}.tp".format(
-                        ckt, ckt, str(test_count), str(idx)))
-            circuit.gen_tp_file(test_count = 1, 
-                    fname="../data/fault_sim/{}/input/{}_test_count-1_id-{}.tp".format(
-                        ckt, ckt, str(idx)))
-
-
-def golden_fault_sim():
-    import glob
-    for ckt in CKTs: 
-        print(ckt)
-        circuit = Circuit(ckt)
-        LoadCircuit(circuit, "ckt")
-        circuit.lev()
-        dfs = DFS(circuit) 
-        files = glob.glob("../data/fault_sim/{}/input/*.tp".format(ckt))
-        files.sort()
-        for tp_fname in files:
-            tps = read_tp_file(tp_fname)
-            tps = [[int(x) for x in tp] for tp in tps]
-            fs_fname = tp_fname.split("/")[-1][:-2] + "fs"
-            print(fs_fname)
-            dfs.multiple(pattern_list = tps, fname_log=fs_fname)
-
-
-
-def ppsf_thread(conn, ckt_name, tp_count, tp_fname, fault_fname):
-    ckt = Circuit(ckt_name)
-    ckt.lev()
-    tps = circuit.gen_tp_file(tp_count, fname=tp_fname)
-    fault_sim = PPSF(circuit)
-    fault_sim.fault_list.add_file(fault_fname)
-    fault_sim.fs_exe(tp_fname)
-    conn.send(fault_sim.fault_list)
 
 
 def pars_args():
@@ -194,12 +130,14 @@ if __name__ == '__main__':
         time_start = time.time()
         circuit.STAFAN(args.tp, args.cpu)
         fname = "../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tp)
-        circuit.save_TMs(fname)
+        # circuit.save_TMs(fname)
+        circuit.save_TMs(tp=args.tp)
         print("Time: \t{:.3}".format(time.time() - time_start))
             
     elif args.func == "stafan-load":
         circuit.lev()
-        circuit.load_TMs("../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad))
+        fname = config.STAFAN_DIR + "/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad) 
+        circuit.load_TMs(fname)
         print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.STAFAN_FC(args.tp)))
 
     elif args.func == "backward-level":
@@ -217,10 +155,10 @@ if __name__ == '__main__':
 
     elif args.func == "ppsf":
         circuit.lev()
-        # tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
-        # tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-        tps = circuit.gen_tp_file_full()
+        tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
+        tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+        # tps = circuit.gen_tp_file_full()
         ppsf = PPSF(circuit)
         ppsf.fault_list.add_all(circuit)
         ppsf.fs_exe(tp_fname)
@@ -253,23 +191,6 @@ if __name__ == '__main__':
                     str(fault), pfs_res[str(fault)], fault.D_count))
         if not error:
             print("PFS and PPSF results match!")
-
-
-    elif args.func == 'compare_psfp_ppsf':
-        circuit.lev()
-        tp_fname = '../data/fault_list/'+circuit.c_name + "-tp-compare_psfp_ppsf.tp"
-        tmp = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-
-        # PSFP
-        pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname)
-        
-        #PPSF
-        fault_sim = PPSF(circuit)
-        fault_sim.fault_list.add_all(circuit)
-        fault_sim.fs_exe(tp_fname)
-
 
     elif args.func == "ppsf_parallel":
         time_s = time.time()
@@ -338,19 +259,9 @@ if __name__ == '__main__':
             plt.plot(fc[:-1])
         plt.savefig("results-tpfc.pdf")
         plt.close()
-
-    elif args.func == "saveStatTP":
-        """ generate stafan stat file based on reading TPs from file
-        The version must be added to the name of .stat file"""
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        time_start = time.time()
-        circuit.STAFAN(args.tp, args.cpu)
-        fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
-        circuit.save_TMs(fname)
-        print("Time: \t{:.3}".format(time.time() - time_start))
-
+    
+    elif args.func == "ppp":
+        exp.compare_ppsf_stafan(circuit, args)
 
     elif args.func == "writeOB":
         # circuit.co_ob_info()

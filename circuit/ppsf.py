@@ -49,9 +49,9 @@ class PPSF(FaultSim):
             for j in range(len(tps)): 
                 tps_bin[i] += (tps[j][i]*(2**j))
 
-        self.circuit.logic_sim_bitwise(tps_bin,test_len=len(tps))
+        self.circuit.logic_sim_bitwise(tps_bin)
         Zg = self.circuit.read_PO()
-        self.circuit.logic_sim_bitwise(tps_bin, test_len=len(tps),fault = fault)
+        self.circuit.logic_sim_bitwise(tps_bin, fault)
         Zf = self.circuit.read_PO()
         res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
         

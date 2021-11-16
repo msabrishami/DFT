@@ -10,9 +10,10 @@ PATTERN_DIR ="../data/patterns"
 # in each modelsim prj directory where inputs will be stored
 ## TODO for Ting-Yu: read a good description for these constants
 
-FAULT_DICT_DIR = "../data/fault_dict_new"
+FAULT_DICT_DIR = "../data/fault_dict"
 FAULT_SIM_DIR = "../data/fault_sim"
 CKT_DIR = "../data/ckt"
+STAFAN_DIR = "../data/stafan-data"
 # TEST POINT INSERTION PROBLEM:
 HTO_TH = 0.1
 HTC_TH = 0.05
