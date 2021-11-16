@@ -457,7 +457,7 @@ class Circuit:
                 node.sen_count += 1
 
     
-    def STAFAN_CS(self, tp, limit=None):
+    def STAFAN_C(self, tp, limit=None):
         ''' 
         STAFAN controllability 
 
@@ -525,7 +525,7 @@ class Circuit:
         tp_count = int(tot_tp_count / tot_proc)
         limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
                 int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
-        circuit.STAFAN_CS(tp_count, limit)
+        circuit.STAFAN_C(tp_count, limit)
 
         one_count_list = []
         zero_count_list = []
@@ -602,18 +602,17 @@ class Circuit:
             fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
 
         outfile = open(fname, "w")
+        outfile.write("Node,C0,C1,B0,B1,S\n")
         for node in self.nodes_lev:
-            arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
-                    node.CB0, node.CB1, node.B] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
+            ss = [str(x) for x in [node.num, node.C0, node.C1, node.B0, node.B1, node.S]]
+            outfile.write(",".join(ss) + "\n")
         outfile.close()
-        print("Saved circuit with STAFAN values in " + fname)
+        print("Saved circuit STAFAN TMs in {}".format(fname))
 
+    
     def load_TMs(self, fname):
-        infile = open(fname)
-        for line in infile:
+        infile = open(fname).readlines()[1:]
+        for line in lines:
             words = line.strip().split(",")
             node = self.nodes[words[0]]
             node.C0 =   float(words[1])  
@@ -621,10 +620,7 @@ class Circuit:
             node.B0 =   float(words[3]) 
             node.B1 =   float(words[4]) 
             node.S  =   float(words[5]) 
-            node.CB0 =  float(words[6]) 
-            node.CB1 =  float(words[7]) 
-            node.B =    float(words[8]) 
-        print("Circuit TMs loaded: " + fname)
+        print("Circuit STAFAN TMs loaded: " + fname)
 
 
     def STAFAN_FC(self, tp_count):

@@ -75,6 +75,7 @@ if __name__ == '__main__':
     config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
     
     circuit = read_circuit(args)
+    circuit.lev()
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
     print("======================================================")
@@ -88,43 +89,20 @@ if __name__ == '__main__':
         circuit.STAFAN(args.tp, arsgs.cpu)
         circuit.co_ob_info()
         print(circuit)
-
-    elif args.func == "test2": 
-        circuit.lev()
-        temp = circuit.gen_tp()
-        path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
-        circuit.gen_tp_file(args.tp, path)
-        circuit.gen_tp_file(args.tp, path,"x")
-
-        # test load_tp_file()
-        print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
-
-    elif args.func == "test4":
-        time_start = time.time()
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
-        circuit.gen_tp_file(args.tp, path)
-        circuit.STAFAN_CS(path) 
-        circuit.STAFAN_B() 
-        fname = "../data/stafan-data/" + circuit.c_name + "-TP" + str(args.tp) + ".stafan"
-        circuit.save_TMs(fname)
-        print("Time: \t{:.3}".format(time.time() - time_start))
-
+    
     elif args.func == "test-tp-gen":
         # testing tp generation methods
-        circuit.lev()
         tps = circuit.gen_tp_file_full()
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="b")
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="x")
         # print(tps)
+        tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
+        # print(tps)
 
     elif args.func == "stafan-save":
         """ Running STAFAN with random TPs and saving TPs into file """ 
-        circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
         time_start = time.time()
