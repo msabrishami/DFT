@@ -620,7 +620,7 @@ class Circuit:
             node.B0 =   float(words[3]) 
             node.B1 =   float(words[4]) 
             node.S  =   float(words[5]) 
-        print("Circuit STAFAN TMs loaded: " + fname)
+        print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
 
     def STAFAN_FC(self, tp_count):
