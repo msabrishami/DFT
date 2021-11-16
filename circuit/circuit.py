@@ -604,14 +604,14 @@ class Circuit:
         outfile = open(fname, "w")
         outfile.write("Node,C0,C1,B0,B1,S\n")
         for node in self.nodes_lev:
-            ss = [str(x) for x in [node.num, node.C0, node.C1, node.B0, node.B1, node.S]]
-            outfile.write(",".join(ss) + "\n")
+            ss = ["{:e}".format(x) for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
+            outfile.write(",".join([node.num] + ss) + "\n")
         outfile.close()
         print("Saved circuit STAFAN TMs in {}".format(fname))
 
     
     def load_TMs(self, fname):
-        infile = open(fname).readlines()[1:]
+        lines = open(fname).readlines()[1:]
         for line in lines:
             words = line.strip().split(",")
             node = self.nodes[words[0]]

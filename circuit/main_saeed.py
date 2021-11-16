@@ -114,6 +114,7 @@ if __name__ == '__main__':
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
+        circuit.co_ob_info()
         print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.STAFAN_FC(args.tp)))
 
     elif args.func == "backward-level":
