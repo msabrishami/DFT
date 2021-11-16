@@ -178,6 +178,4 @@ class PFS(FaultSim):
         
         print("PFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
-            100*fault_coverage, len(self.fault_list.faults)))
-        
-        return fault_coverage
+            100*self.fault_list.calc_fc(), len(self.fault_list.faults))) 

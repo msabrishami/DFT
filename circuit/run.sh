@@ -85,5 +85,28 @@
 # python3 main_saeed.py -ckt ../data/ckt/c3.ckt -func pfs -tp $TEST_COUNT
 
 # python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
-python3 FC_test.py -ckt ../data/ckt/c1.ckt -func fcfs
+# python3 FC_test.py -ckt ../data/ckt/c1.ckt -func fcfs
 
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "002"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "003"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "004"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "005"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "006"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "007"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "008"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "009"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "010"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "011"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "012"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "013"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "014"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "015"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "016"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "017"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "018"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "019"  -code 'g'
+
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "001"  -code 'g'
+# python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc-fig -tp 500 -op_fname "001" -code 'g'
+
+python3 FC_test.py -ckt ../data/verilog/c432_synV0.v -func tpfc-fig -tp 500 -code 'g'

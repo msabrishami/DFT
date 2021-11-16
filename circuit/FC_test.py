@@ -4,9 +4,8 @@ from load_circuit import LoadCircuit
 from fault_coverage import Fault_coverage_estimation
 import config
 import argparse
-import networkx as nx
-import math
-import numpy as np
+import os
+import re
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -108,6 +107,11 @@ def pars_args():
                         help="Number of TPI candidates specified")
     parser.add_argument("-fault_count", type=int, required=False, default=None,
                         help="Number of faults")
+    # parser.add_argument("-op_fname", type=str, required=False,
+    #                     default=None, help="OP file name")
+    parser.add_argument("-code", type=str, required=False,
+                        help="code for general use")
+
     args = parser.parse_args()
 
     return args
@@ -123,11 +127,11 @@ def read_circuit(args):
 
 def draw_graph(x,y):
     sns.scatterplot(x=x, y=y)
-    t = sns.lineplot(x=x, y=y)
+    plot = sns.lineplot(x=x, y=y)
 
-    t.set_ylabel(f'Fault Coverage (FC%)')
-    t.set_xlabel('Test Pattern Count #TP')
-    t.set_title(f'Dependency of fault coverage on random test patterns')
+    plot.set_ylabel(f'Fault Coverage Estimation Using STAFAN(FC%)')
+    plot.set_xlabel('Test Pattern Count #TP')
+    plot.set_title(f'Dependency of fault coverage on random test patterns')
 
 if __name__ == '__main__':
 
@@ -175,12 +179,40 @@ if __name__ == '__main__':
 
         plt.show()
 
-    if args.func == "fcfs":
+    if args.func == "tpfc-fig":
         circuit.lev()
-        tps_count = 1000_000
-        # tps  = circuit.gen_multiple_tp(tp_count)
-        tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
-        tps  = circuit.gen_tp_file(tps_count, tp_fname=tp_fname)
-        pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)
+        op_fname = []
+        tests_count = 20
+        for i in range(1,tests_count+1):
+            t = str(i)
+            op_fname.append("0"*(3-len(t))+t)
+
+        for ofn in op_fname:
+            tp_fname = os.path.join(config.PATTERN_DIR,
+                                    "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
+            tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+            log_fname = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+            log_fname += "tpfc_tp-" + \
+                str(args.tp) + "_" + args.code + "_"+ofn+".log"
+            pfs = PFS(circuit)
+            pfs.fault_list.add_all(circuit)
+            pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)
+
+            path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+            path += "tpfc_tp-" + str(args.tp) + "_"+args.code
+            for i in range(1, 20):
+
+                log_fname = "{}_{}.log".format(path, ofn)
+                infile = open(log_fname, "r")
+                lines = infile.readlines()
+                fc_sequence = []
+                for line in lines[:-1]:
+                    tp_num, new_fault, total_fault, fc = re.findall(
+                        r"\s*(\d+)\s*New:\s*(\d+)\s*Total:\s*(\d+)\s*FC:\s*(\d+\.\d+)%", line)[0]
+                    fc_sequence.append(float(fc))
+                plot = sns.lineplot(x=range(len(fc_sequence)),y=fc_sequence,linewidth = 0.5)
+        
+        plot.set_ylabel(f'Fault Coverage Using Fault Simluation(FC%)')
+        plot.set_xlabel('Test Pattern Count #TP')
+        plot.set_title(f'Dependency of fault coverage on random test patterns')
+        plt.show()
