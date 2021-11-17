@@ -19,7 +19,7 @@ from checker_logicsim import *
 from regular_tp_gen import *
 from checker_dfs import *
 from fault_sim import *
-from parallel_fs import *
+from pfs import *
 
 def check_gate_netlist(circuit, total_T=1):
 

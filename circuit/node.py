@@ -77,6 +77,7 @@ class Node:
         self.dnodes = []
 
         # used for PPSF and SPPF 
+        # TODO
         bitlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**bitlen-1
 
@@ -86,13 +87,7 @@ class Node:
         #self.pfs_S = None  # stuck values of fault for each pass
 
         # Saeed does not confirm
-        # self.cpt = 0
-        # self.sa0 = 0
-        # self.sa1 = 0
-        # self.index = 0 # should be removed
         self.faultlist_dfs = set() # will be aset
-        # self.parallel_value = 0
-        # self.d_value = []
 
         # SCOAP measures
         self.CC0 = None
@@ -107,25 +102,14 @@ class Node:
         # STAFAN Forward for every test measure
         self.sense = False      # Boolean, maybe redundant
 
-        # Ghazal: These seem redundant
-        # self.D1 = False         # Boolean
-        # self.D0 = False         # Boolean
-
-        
-        # STAFAN will calculate these
-        # Forward: 
+        # STAFAN 
         self.S = None           # prob
         self.C1 = None          # prob
         self.C0 = None          # prob
-        self.D0 = None        # prob
-        self.D1 = None        # prob
-        
-        # STAFAN Backward
         self.B1 = None          # prob
         self.B0 = None          # prob
-        self.CB1 = None          # prob
-        self.CB0 = None          # prob
-        self.B = None          # prob
+        self.D0 = None          # prob
+        self.D1 = None          # prob
 
         #Entropy
         self.Entropy =None      #entropy of the node
@@ -245,7 +229,7 @@ class Node:
         # TODO: two if/else is wrong, create strings and print once
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1", "BC0", "BC1", "B"]
+                    "C1", "S", "B0", "B1"]
         if print_labels:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
@@ -253,13 +237,11 @@ class Node:
             print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
             print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
             print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
-            # print("C0:{:.2f}\t".format(self.C0), end="")
-            # print("C1:{:.2f}\t".format(self.C1), end="")
-            # print("S:{:.2f}\t".format(self.S), end="")
-            # print("B0:{:.2f}\t".format(self.B0), end="")
-            # print("B1:{:.2f}\t".format(self.B1), end="")
-            # print("%D0:{:.2f}\t".format(self.D0), end="")
-            # print("%D1:{:.2f}\t".format(self.D1))
+            print("C0:{:e}\t".format(self.C0), end="")
+            print("C1:{:e}\t".format(self.C1), end="")
+            print("S:{:e}\t".format(self.S), end="")
+            print("B0:{:e}\t".format(self.B0), end="")
+            print("B1:{:e}\t".format(self.B1), end="")
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -267,18 +249,11 @@ class Node:
             print("{}\t".format(str(self.CC0).zfill(3)), end="")
             print("{}\t".format(str(self.CC1).zfill(3)), end="")
             print("{}\t".format(str(self.CO).zfill(3)), end="")
-            print("{:.2f}\t".format(self.C0), end="")
-            print("{:.2f}\t".format(self.C1), end="")
-            print("{:.2f}\t".format(self.S), end="")
-            print("{:.2f}\t".format(self.B0), end="")
-            print("{:.2f}\t".format(self.B1), end="")
-            print("{:.2f}\t".format(self.CB0), end="")
-            print("{:.2f}\t".format(self.CB1), end="")
-            print("{:.2f}\t".format(self.B), end="")
-            # print("{:.2f}\t".format(self.D0), end="")
-            # print("{:.2f}\t".format(self.D1), end="")
-            # print("{}\t".format(self.stat["SS@0"]), end="")
-            # print("{}\t".format(self.stat["SS@1"]))
+            print("{:e}\t".format(self.C0), end="")
+            print("{:e}\t".format(self.C1), end="")
+            print("{:e}\t".format(self.S), end="")
+            print("{:e}\t".format(self.B0), end="")
+            print("{:e}\t".format(self.B1), end="")
             print()
     
 

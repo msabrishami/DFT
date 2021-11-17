@@ -13,6 +13,7 @@ PATTERN_DIR ="../data/patterns"
 FAULT_DICT_DIR = "../data/fault_dict_new"
 FAULT_SIM_DIR = "../data/fault_sim"
 CKT_DIR = "../data/ckt"
+FIG_DIR = "../data/figures"
 # TEST POINT INSERTION PROBLEM:
 HTO_TH = 0.1
 HTC_TH = 0.05

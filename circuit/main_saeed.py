@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import utils
+from convert import Converter
+import experiments as exp
+from multiprocessing import Process, Pipe
+from fault_sim import FaultList_2
+from ppsf import PPSF
+from pfs import PFS
+import convert
+from load_circuit import LoadCircuit
+from observation import OPI
+import observation
+from checker_logicsim import Checker
+import config
 import argparse
 import pdb
 import networkx as nx
@@ -18,19 +31,6 @@ from regular_tp_gen import regular_tp_gen
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
-import config
-from checker_logicsim import Checker
-import observation
-from observation import OPI
-import experiments as exp 
-from load_circuit import LoadCircuit
-from convert import Converter 
-import convert
-import utils 
-from pfs import PFS
-from ppsf import PPSF
-from fault_sim import FaultList_2
-from multiprocessing import Process, Pipe
 
 
 def pars_args():
@@ -43,21 +43,31 @@ def pars_args():
     parser.add_argument("-tp", type=int, required=False,
                         help="tp count for random sim")
     parser.add_argument("-fault", type=int, required=False, help="fault count")
-    parser.add_argument("-code", type=str, required=False, help="code for general use")
-    parser.add_argument("-tpLoad", type=int, required=False, help="tp count for loading STAFAN")
-    parser.add_argument("-cpu", type=int, required=False, help="number of parallel CPUs")
-    parser.add_argument("-func", type=str, required=False, help="What operation you want to run")
-    parser.add_argument("-OPIalg", type=str, required=False, help="OPI Algorithm")
-    parser.add_argument("-Bth", type=float, required=False, default=0.1, 
-            help="Obsv. threshold for OPI candidate selection")
-    parser.add_argument("-HTO_th", type=float, required=False, default=None, 
-            help="Obsv. threshold for OPI candidate selection")
-    parser.add_argument("-HTC_th", type=float, required=False, default=None, 
-            help="Ctrl. threshold for OPI candidate selection")
-    parser.add_argument("-opCount", type=int, required=False, default=None, help="OP count")
-    parser.add_argument("-op_fname", type=str, required=False, default=None, help="OP file name")
-    parser.add_argument("-TPI_num", type=int, required=False, default=None, 
-            help="Number of TPI candidates specified")
+    parser.add_argument("-code", type=str, required=False,
+                        help="code for general use")
+    parser.add_argument("-tpLoad", type=int, required=False,
+                        help="tp count for loading STAFAN")
+    parser.add_argument("-cpu", type=int, required=False,
+                        help="number of parallel CPUs")
+    parser.add_argument("-func", type=str, required=False,
+                        help="What operation you want to run")
+    parser.add_argument("-OPIalg", type=str,
+                        required=False, help="OPI Algorithm")
+    parser.add_argument("-Bth", type=float, required=False, default=0.1,
+                        help="Obsv. threshold for OPI candidate selection")
+    parser.add_argument("-HTO_th", type=float, required=False, default=None,
+                        help="Obsv. threshold for OPI candidate selection")
+    parser.add_argument("-HTC_th", type=float, required=False, default=None,
+                        help="Ctrl. threshold for OPI candidate selection")
+    parser.add_argument("-opCount", type=int, required=False,
+                        default=None, help="OP count")
+    parser.add_argument("-op_fname", type=str, required=False,
+                        default=None, help="OP file name")
+    parser.add_argument("-TPI_num", type=int, required=False, default=None,
+                        help="Number of TPI candidates specified")
+    parser.add_argument("-times", type=int, required=False,
+                        help="Repetition count for figures")
+
     args = parser.parse_args()
 
     return args
@@ -81,6 +91,8 @@ if __name__ == '__main__':
     config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
 
     circuit = read_circuit(args)
+    circuit.lev()
+
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
     print("======================================================")
@@ -88,69 +100,44 @@ if __name__ == '__main__':
         circuit.c_fname, args.tp, args.tpLoad, args.cpu))
 
     if args.func == "test0":
-        circuit.lev()
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
         circuit.STAFAN(args.tp, args.cpu)
         circuit.co_ob_info()
         print(circuit)
 
-    elif args.func == "test2": 
-        circuit.lev()
-        temp = circuit.gen_tp()
-        path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
-        circuit.gen_tp_file(args.tp, path)
-        circuit.gen_tp_file(args.tp, path, "x")
-
-        print(circuit.load_tp_file('../data/patterns/c2_TP3.tp'))
-
-    elif args.func == "test4":
-        time_start = time.time()
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        path = "../data/patterns/{}_TP{}.tp".format(circuit.c_name, args.tp)
-        circuit.gen_tp_file(args.tp, path)
-        circuit.STAFAN_CS(path)
-        circuit.STAFAN_B()
-        fname = "../data/stafan-data/" + circuit.c_name + \
-            "-TP" + str(args.tp) + ".stafan"
-        circuit.save_TMs(fname)
-        print("Time: \t{:.3}".format(time.time() - time_start))
-
     elif args.func == "test-tp-gen":
         # testing tp generation methods
-        circuit.lev()
         tps = circuit.gen_tp_file_full()
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="b")
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="x")
         # print(tps)
+        tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
+        # print(tps)
 
     elif args.func == "stafan-save":
-        """ Running STAFAN with random TPs and saving TPs into file """ 
-        circuit.lev()
-        circuit.SCOAP_CC()
-        circuit.SCOAP_CO()
-        time_start = time.time()
+        """ Running STAFAN with random TPs and saving TPs into file """
+        time_s = time.time()
         circuit.STAFAN(args.tp, args.cpu)
-        fname = "../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tp)
+        # fname = "../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tp)
         # circuit.save_TMs(fname)
         circuit.save_TMs(tp=args.tp)
-        print("Time: \t{:.3}".format(time.time() - time_start))
-            
+        print("Time: \t{:.3}".format(time.time() - time_s))
+
     elif args.func == "stafan-load":
-        circuit.lev()
-        fname = config.STAFAN_DIR + "/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad) 
+        fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+            circuit.c_name, circuit.c_name, args.tpLoad)
         circuit.load_TMs(fname)
-        print("E[FC] (T={}) = {:.2f} % ".format(args.tp, 100*circuit.STAFAN_FC(args.tp)))
+        circuit.co_ob_info()
+        print("E[FC] (T={}) = {:.2f} % ".format(
+            args.tp, 100*circuit.STAFAN_FC(args.tp)))
 
     elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
 
     elif args.func == "pfs":
-        circuit.lev()
         tp_fname = "../data/patterns/{}_tp_{}.tp".format(
             circuit.c_name, args.tp)
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
@@ -161,9 +148,9 @@ if __name__ == '__main__':
         pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)
 
     elif args.func == "ppsf":
-        circuit.lev()
-        tp_fname =  "../data/patterns/{}_tp_{}.tp".format(circuit.c_name, args.tp)
-        tps  = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        tp_fname = "../data/patterns/{}_tp_{}.tp".format(
+            circuit.c_name, args.tp)
+        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
         # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
         # tps = circuit.gen_tp_file_full()
         ppsf = PPSF(circuit)
@@ -171,7 +158,6 @@ if __name__ == '__main__':
         ppsf.fs_exe(tp_fname)
 
     elif args.func == "pfs-vs-ppsf":
-        circuit.lev()
         if len(circuit.PI) < 12:
             tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
             tps = circuit.gen_tp_file_full()
@@ -243,9 +229,8 @@ if __name__ == '__main__':
         Result is the Test pattern count fault coverage (TPFC) values stored in log files. 
         args.code is used to differentiate between tp files  
         """
-        circuit.lev()
-        tp_fname = os.path.join(config.PATTERN_DIR, 
-                "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
+        tp_fname = os.path.join(config.PATTERN_DIR,
+                                "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
         log_fname = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
         log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
@@ -255,8 +240,8 @@ if __name__ == '__main__':
 
     elif args.func == "tpfc-fig":
         path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
-        path += "tpfc_tp-" + str(args.tp) 
-        for i in range(1,20):
+        path += "tpfc_tp-" + str(args.tp)
+        for i in range(1, 20):
             tmp = str(i)
             for i in range(3-len(tmp)):
                 tmp = "0" + tmp
@@ -268,7 +253,11 @@ if __name__ == '__main__':
             plt.plot(fc[:-1])
         plt.savefig("results-tpfc.pdf")
         plt.close()
-    
+
+    elif args.func == "fc-es-fig":
+
+        exp.fc_estimation_fig(circuit=circuit, times=args.times)
+
     elif args.func == "ppp":
         exp.compare_ppsf_stafan(circuit, args)
 
@@ -323,9 +312,8 @@ if __name__ == '__main__':
         log += ckt_name + "," + ",".join(temp)
         print(log)
 
-
-    elif args.func in  ["deltaP", "deltaHTO"]:
-        conv = Converter(ckt_name, "EPFL") 
+    elif args.func in ["deltaP", "deltaHTO"]:
+        conv = Converter(ckt_name, "EPFL")
         # TODO: be cautious about passing args
         ops = OPI(circuit, args.func, count_op=args.opCount, args=args)
         fname = "../data/observations/" + ckt_name + \
@@ -345,11 +333,10 @@ if __name__ == '__main__':
         # We read the ckt_name circuit, which is the synthesized version
         # But we read the golden TP from ckt circuit, because we don't have ckt.v and only
         # have ckt_synVX.v
-        circuit = Circuit(ckt_name)
-        circuit.lev()
         tp_fname = "../data/patterns/" + args.ckt + args.synv + "deltaP_TP" + \
-                str(args.tpLoad) + ".tp"
-        stil_fname = "../data/patterns/" + args.ckt + "_" + str(args.tp) + ".raw-stil"
+            str(args.tpLoad) + ".tp"
+        stil_fname = "../data/patterns/" + \
+            args.ckt + "_" + str(args.tp) + ".raw-stil"
         # circuit.gen_tp_file(args.tp, fname=tp_fname)
         circuit.logic_sim_file(tp_fname, stil_fname,
                                out_format="STIL", tp_count=args.tp)
@@ -373,7 +360,7 @@ if __name__ == '__main__':
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
         OPs_fname = "../data/observations/" + args.ckt + "_" + \
-                args.OPIalg + "_B-" + str(args.Bth) 
+            args.OPIalg + "_B-" + str(args.Bth)
         OPs_fname += "_Count-" + str(args.opCount) + ".op"
         conv.nodes2tmax_OP(ops, OPs_fname)
         print("Stored Synopsys observation file in     \t{}".format(fname))
@@ -419,7 +406,7 @@ if __name__ == '__main__':
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
         OPs_fname = "../data/observations/" + args.ckt + "_" + \
-                args.OPIalg + "_B-" + str(args.Bth) 
+            args.OPIalg + "_B-" + str(args.Bth)
         OPs_fname += "_Count-" + str(args.opCount) + ".op"
         conv.nodes2tmax_OP(ops, OPs_fname)
         print("Stored Synopsys observation file in     \t{}".format(fname))
@@ -432,10 +419,10 @@ if __name__ == '__main__':
 
             print("Generating modified verilog for {} ops.".format(idx+1))
             print("Original verilog netlist is: \t\t\t {}".format(path_in))
-            
-            ### Step 1: Continuously modifying a verilog file
+
+            # Step 1: Continuously modifying a verilog file
             cname_mod = args.ckt + "_OP_" + args.OPIalg + "_B-" + \
-                    str(args.Bth) + "_Acc" + str(idx+1)
+                str(args.Bth) + "_Acc" + str(idx+1)
             path_out = os.path.join(config.VERILOG_DIR, cname_mod + ".v")
             convert.add_OP_verilog(
                 path_in=path_in,

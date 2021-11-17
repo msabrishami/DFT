@@ -457,7 +457,7 @@ class Circuit:
                 node.sen_count += 1
 
     
-    def STAFAN_CS(self, tp, limit=None):
+    def STAFAN_C(self, tp, limit=None):
         ''' 
         STAFAN controllability 
 
@@ -525,7 +525,7 @@ class Circuit:
         tp_count = int(tot_tp_count / tot_proc)
         limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
                 int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
-        circuit.STAFAN_CS(tp_count, limit)
+        circuit.STAFAN_C(tp_count, limit)
 
         one_count_list = []
         zero_count_list = []
@@ -548,7 +548,6 @@ class Circuit:
         total_tp : (int) total number of test pattern vectors(not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
-
         if total_tp < num_proc:
             raise ValueError("Total TPs should be higher than process numbers")
 
@@ -593,27 +592,29 @@ class Circuit:
 
     
     def save_TMs(self, fname=None, tp=None):
+        #TODO: Check if the directory exists. If not, generate
         if fname == None:
-            if not os.path.exists(config.STAFAN_DIR):
-                os.system("mkdir {}".format(config.STAFAN_DIR))
-            fname = os.path.join(config.STAFAN_DIR, self.c_name)
+            path = config.STAFAN_DIR+"/"+self.c_name
+            if not os.path.exists(path):
+                os.mkdir(path)
+            fname = os.path.join(path, self.c_name)
             if not os.path.exists(fname):
-                os.system("mkdir {}".format(fname))
+                os.mkdir(fname)
             fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
+        print(fname)
 
         outfile = open(fname, "w")
+        outfile.write("Node,C0,C1,B0,B1,S\n")
         for node in self.nodes_lev:
-            arr = [node.num, node.C0, node.C1, node.B0, node.B1, node.S, 
-                    node.CB0, node.CB1, node.B] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
+            ss = ["{:e}".format(x) for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
+            outfile.write(",".join([node.num] + ss) + "\n")
         outfile.close()
-        print("Saved circuit with STAFAN values in " + fname)
+        print("Saved circuit STAFAN TMs in {}".format(fname))
 
+    
     def load_TMs(self, fname):
-        infile = open(fname)
-        for line in infile:
+        lines = open(fname).readlines()[1:]
+        for line in lines:
             words = line.strip().split(",")
             node = self.nodes[words[0]]
             node.C0 =   float(words[1])  
@@ -621,25 +622,27 @@ class Circuit:
             node.B0 =   float(words[3]) 
             node.B1 =   float(words[4]) 
             node.S  =   float(words[5]) 
-            node.CB0 =  float(words[6]) 
-            node.CB1 =  float(words[7]) 
-            node.B =    float(words[8]) 
-        print("Circuit TMs loaded: " + fname)
+            node.D0 = node.C1 * node.B1
+            node.D1 = node.C0 * node.B0
+
+        print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
 
     def STAFAN_FC(self, tp_count):
         """ Estimation of fault coverage for all faults 
         All faults include all nodes, SS@0 and SS@1 
         pd stands for probability of detection 
+
         Arguments: 
         ----------
         tp_count : int
-            number of test patterns, used in the FC estimation formula 
+            number of test patterns, used in the fault coverage estimation formula 
         """
+
         nfc = 0
         for node in self.nodes_lev:
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
+            nfc += math.exp(-1 * node.D1 * tp_count) 
+            nfc += math.exp(-1 * node.D0 * tp_count) 
         return 1 - nfc/(2*len(self.nodes)) 
 
 
