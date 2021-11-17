@@ -145,7 +145,7 @@ def compare_ppsf_stafan(circuit, args):
         print("{}\t{:.6f}\t{}\t{}\t{}\t{}\t{}".format(fl, stafan, pd, 
             node.C0, node.C1, node.B0, node.B1))
 
-def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100,tp_load=100):
+def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_load=100):
     """
     Fault coverage estimation
     Choose tp_count, factor and the limit according to the size of PI
@@ -167,9 +167,10 @@ def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100
         fc_sequence = [0]
         tp_sequence = [0]
 
-        while tpc<=limit:
+        # while tpc<=limiht:
+        for tpc in range(200):
             try:
-                fc_sequence.append(circuit.STAFAN_FC(tpc))
+                fc_sequence.append(circuit.STAFAN_FC(tpc)*100)
                 tp_sequence.append(tpc)
                 tpc*=factor
 
@@ -179,9 +180,10 @@ def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100
 
         plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.7)
 
-    plot.set_ylabel(f'Fault Coverage Estimation Using STAFAN(FC%)')
-    plot.set_xlabel('Test Pattern Count #TP')
-    plot.set_title(f'Dependency of fault coverage on random test patterns')
+    plot.set_ylabel(f'Fault Coverage FC%)')
+    plot.set_xlabel('Test Pattern Count #TP',fontsize=10)
+    plot.set_title(f'Dependency of fault coverage on random test patterns\n{circuit.c_name}')
+    # plt.figtext(f"The experiment is carried out {times} times.")
 
     path = f"{config.FIG_DIR}/{circuit.c_name}/"
     if not os.path.exists(path):
