@@ -145,7 +145,7 @@ def compare_ppsf_stafan(circuit, args):
         print("{}\t{:.6f}\t{}\t{}\t{}\t{}\t{}".format(fl, stafan, pd, 
             node.C0, node.C1, node.B0, node.B1))
 
-def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100):
+def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100,tp_load=100):
     """
     Fault coverage estimation
     Choose tp_count, factor and the limit according to the size of PI
@@ -155,10 +155,10 @@ def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.mkdir(path)
-        fname = f"{path}/{circuit.c_name}-TP{tp}-{i}.stafan"
+        fname = f"{path}/{circuit.c_name}-TP{tp_load}-{i}.stafan"
         if not os.path.exists(fname):
-            circuit.STAFAN(tp)
-            circuit.save_TMs(tp=tp,fname = fname)
+            circuit.STAFAN(tp_load)
+            circuit.save_TMs(tp=tp_load,fname = fname)
         else:
             circuit.load_TMs(fname)
 
@@ -177,7 +177,7 @@ def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100
                 tpc*=factor
                 continue
 
-        plot = sns.lineplot(x=tp_sequence, y=fc_sequence, color = 'green',alpha = 0.7)
+        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.7)
 
     plot.set_ylabel(f'Fault Coverage Estimation Using STAFAN(FC%)')
     plot.set_xlabel('Test Pattern Count #TP')
@@ -189,7 +189,7 @@ def fc_estimation_fig(circuit,tp_count=2,factor=8,limit=(2<<15),times = 1,tp=100
 
     fname = path+f"{limit}-fc-estimation.pdf"
 
-    plt.savefig(fname)
+    plt.savefig(fname)  
     plt.show()
 
 def fc_tp():

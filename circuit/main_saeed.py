@@ -256,7 +256,7 @@ if __name__ == '__main__':
 
     elif args.func == "fc-es-fig":
 
-        exp.fc_estimation_fig(circuit=circuit, times=args.times)
+        exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad)
 
     elif args.func == "ppp":
         exp.compare_ppsf_stafan(circuit, args)

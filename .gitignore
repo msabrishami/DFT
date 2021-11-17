@@ -24,6 +24,7 @@ data/fault_list/
 
 # **.graphml
 **.png
+*.pdf
 # python cache file
 __pycache__/:
 *.pyc
