@@ -209,9 +209,9 @@ if __name__ == '__main__':
         """ Generating random test patterns and running fault simulation, using parallel 
         fault simulation with fault drop equal to 1. 
         Result is the Test pattern count fault coverage (TPFC) values stored in log files. 
-        args.code is used to differentiate between tp files  
+        We may want to run this function many times, that is why we have code to avoid 
+            overwriting tp files. 
         """
-        circuit.lev()
         tp_fname = os.path.join(config.PATTERN_DIR, 
                 "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
@@ -240,6 +240,27 @@ if __name__ == '__main__':
     elif args.func == "ppp":
         exp.compare_ppsf_stafan(circuit, args)
 
+    elif args.func == "qqq":
+        fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+                circuit.c_name, circuit.c_name, args.tpLoad) 
+        circuit.load_TMs(fname)
+        PDs = []
+        for node in circuit.nodes_lev:
+            PDs.append(node.C0 * node.B0)
+            PDs.append(node.C1 * node.B1)
+
+        PDs_sorted_idx = np.argsort(PDs)
+        for idx in PDs_sorted_idx:
+            node_idx = int(idx/2)
+            node = circuit.nodes_lev[node_idx]
+            # print(node)
+            deltaP = observation.deltaP_2(circuit, node)
+            node_str = "".join([" " for x in range(10-len(node.num))]) + node.num
+            print("{}\t{}\t{:.4f}".format(node_str, node.lev, deltaP))
+            # print("-------------------------------------------------------")
+        
+        pdb.set_trace()
+    
     elif args.func == "writeOB":
         # circuit.co_ob_info()
         path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)

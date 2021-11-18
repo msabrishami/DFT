@@ -86,7 +86,8 @@ def compare_ppsf_stafan(circuit, args):
     time_s = time.time()
     circuit.lev()
     # Check if the STAFAN results are available 
-    fname = config.STAFAN_DIR + "/{}-TP{}.stafan".format(circuit.c_name, args.tpLoad) 
+    fname = "{}/{}/{}-TP{}.stafan".format(
+            config.STAFAN_DIR, circuit.c_name, circuit.c_name, args.tpLoad) 
     if not os.path.exists(fname):
         print("STAFAN data for CKT={} with TP={} is not available".format(
             circuit.c_name, args.tpLoad))
@@ -96,7 +97,9 @@ def compare_ppsf_stafan(circuit, args):
     for node in circuit.nodes_lev:
         PDs.append(node.C0 * node.B0)
         PDs.append(node.C1 * node.B1)
-    bins = np.linspace(min(PDs), max(PDs), 10)
+    print("STAFAN PDs: min={:.2e} max={:.2e}".format(min(PDs), max(PDs)))
+    bins = np.logspace(np.log10(min(PDs)), np.log10(max(PDs)), 10)
+    print("Bins: ", bins)
     count = [0]*10
     selected_faults = FaultList_2()
     for node in circuit.nodes_lev:
@@ -139,10 +142,19 @@ def compare_ppsf_stafan(circuit, args):
     print("Total time: {:.2f}".format(time.time() - time_s))
     with open(out_fname, "a") as outfile:
         outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
+    
+    # print("       Fault\tEstimation\tPPSF-sim\tC0\t\tC1\t\tB0\t\tB1")
+    print("       Fault\tEstimation\tPPSF-sim\tError")
     for fl in selected_faults.faults:
         node = circuit.nodes[fl.node_num]
         stafan = node.C0*node.B0 if fl.stuck_val==1 else node.C1*node.B1
         pd = sum(fl.D_count)/(args.tp*args.cpu)
-        print("{}\t{:.6f}\t{}\t{}\t{}\t{}\t{}".format(fl, stafan, pd, 
-            node.C0, node.C1, node.B0, node.B1))
+        tmp = "".join([" " for x in range(12-len(str(fl)))]) + str(fl)
+        # print("{}\t{:.2e}\t{:.2e}\t{:.2e}\t{:.2e}\t{:.2e}\t{:.2e}".format(tmp, stafan, pd, 
+        #     node.C0, node.C1, node.B0, node.B1))
+        print("{}\t{:.2e}\t{:.2e}\t{:.2f}%".format(tmp, stafan, pd, 100*np.abs(stafan-pd)/pd))
 
+
+def OP_site_impact(circuit, OP_node):
+    fanin_nodesO = [OP_node]
+    circuit.make_PO(OP_node)

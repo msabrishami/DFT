@@ -62,7 +62,7 @@ class PPSF(FaultSim):
         
         return res_fixed
 
-    def fs_exe(self, tp_fname, log_fname=None): 
+    def fs_exe(self, tp_fname, log_fname=None, verbose=False): 
         """ 
         Runs PPSF for the fault in the fault list, given the tp file. 
         For each fault, it counts the number of times it has been detected.
@@ -74,7 +74,8 @@ class PPSF(FaultSim):
         fn += tp_fname.split("/")[-1].replace(".tp", ".log")
         log_fname = fn if log_fname==None else log_fname
 
-        print("PPSF for tp file: {}".format(tp_fname))
+        if verbose:
+            print("PPSF for tp file: {}".format(tp_fname))
         
         for fault in self.fault_list.faults:
             tot_pass = math.ceil(len(tps)/self.wordlen)
@@ -82,7 +83,7 @@ class PPSF(FaultSim):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
                 res = self.single(tps_pass, fault)
                 fault.D_count += len(res)
-        
-        print("PPFS completed")
-        print("FC={:.4f}%, tot-faults={}".format(
-            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+        if verbose: 
+            print("PPFS completed")
+            print("FC={:.4f}%, tot-faults={}".format(
+                100*self.fault_list.calc_fc(), len(self.fault_list.faults)))

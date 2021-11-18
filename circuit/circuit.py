@@ -644,7 +644,6 @@ class Circuit:
             node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
                     (node.C0*math.log(node.C0, 2.0)))
 
-
     def co_ob_info(self):
         print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
         for node in self.nodes_lev:
