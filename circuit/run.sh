@@ -109,4 +109,4 @@
 # python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc -tp 500 -op_fname "001"  -code 'g'
 # python3 main_saeed.py -ckt ../data/verilog/c432_synV0.v -func tpfc-fig -tp 500 -op_fname "001" -code 'g'
 
-python3 main_saeed.py -v ../data/verilog/int2float_synV1.v -func fc-es-fig -tpLoad 10000 -tp 100 -times 15 -code 'fig'
+python3 main_saeed.py -v ../data/verilog/int2float_synV1.v -func fc-es-fig -tpLoad 10000 -tp 2000 -times 15 -code 'fig'
