@@ -192,7 +192,7 @@ def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_
     plt.savefig(fname)  
     plt.show()
 
-def tpfc():
+def tpfc    ():
     """
     Fault coverage using fault simulation
     """
