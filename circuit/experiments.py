@@ -166,7 +166,7 @@ def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_
 
         fc_sequence = [0]
         tp_sequence = [0]
-        for tpc in range(limit):
+        for tpc in range(tp):
             try:
                 fc_sequence.append(circuit.STAFAN_FC(tpc)*100)
                 tp_sequence.append(tpc)
@@ -175,7 +175,7 @@ def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_
             except:
                 continue
 
-        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.7)
+        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.5)
 
     plot.set_ylabel(f'Fault Coverage (FC%)',fontsize=13)
     plot.set_xlabel('Test Pattern Count #TP',fontsize=13)
