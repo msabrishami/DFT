@@ -108,6 +108,8 @@ class Node:
         self.C0 = None          # prob
         self.B1 = None          # prob
         self.B0 = None          # prob
+        self.D0 = None          # prob
+        self.D1 = None          # prob
 
         #Entropy
         self.Entropy =None      #entropy of the node

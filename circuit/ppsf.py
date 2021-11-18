@@ -6,7 +6,6 @@ import time
 from multiprocessing import Process, Pipe
 import os
 
-from circuit import Circuit
 from node import Node
 from fault_sim import FaultSim
 import config
@@ -64,7 +63,7 @@ class PPSF(FaultSim):
 
     def fs_exe(self, tp_fname, log_fname=None, verbose=False): 
         """ 
-        Runs PPSF for the fault in the fault list, given the tp file. 
+        Run PPSF for the fault in the fault list, given the tp file. 
         For each fault, it counts the number of times it has been detected.
         tp_num : int 
         """ 

@@ -548,7 +548,6 @@ class Circuit:
         total_tp : (int) total number of test pattern vectors(not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
-
         if total_tp < num_proc:
             raise ValueError("Total TPs should be higher than process numbers")
 
@@ -593,13 +592,16 @@ class Circuit:
 
     
     def save_TMs(self, fname=None, tp=None):
+        #TODO: Check if the directory exists. If not, generate
         if fname == None:
-            if not os.path.exists(config.STAFAN_DIR):
-                os.system("mkdir {}".format(config.STAFAN_DIR))
-            fname = os.path.join(config.STAFAN_DIR, self.c_name)
+            path = config.STAFAN_DIR+"/"+self.c_name
+            if not os.path.exists(path):
+                os.mkdir(path)
+            fname = os.path.join(path, self.c_name)
             if not os.path.exists(fname):
-                os.system("mkdir {}".format(fname))
+                os.mkdir(fname)
             fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
+        print(fname)
 
         outfile = open(fname, "w")
         outfile.write("Node,C0,C1,B0,B1,S\n")
@@ -620,6 +622,9 @@ class Circuit:
             node.B0 =   float(words[3]) 
             node.B1 =   float(words[4]) 
             node.S  =   float(words[5]) 
+            node.D0 = node.C1 * node.B1
+            node.D1 = node.C0 * node.B0
+
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
 
@@ -627,15 +632,17 @@ class Circuit:
         """ Estimation of fault coverage for all faults 
         All faults include all nodes, SS@0 and SS@1 
         pd stands for probability of detection 
+
         Arguments: 
         ----------
         tp_count : int
-            number of test patterns, used in the FC estimation formula 
+            number of test patterns, used in the fault coverage estimation formula 
         """
+
         nfc = 0
         for node in self.nodes_lev:
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
+            nfc += math.exp(-1 * node.D1 * tp_count) 
+            nfc += math.exp(-1 * node.D0 * tp_count) 
         return 1 - nfc/(2*len(self.nodes)) 
 
 

@@ -1,4 +1,3 @@
-
 LIB_CELLS_PATH = "../data/library"
 MODELSIM_DIR = "../data/modelsim"
 MODELSIM_INPUT_DIR = "input" 
@@ -14,6 +13,7 @@ FAULT_DICT_DIR = "../data/fault_dict"
 FAULT_SIM_DIR = "../data/fault_sim"
 CKT_DIR = "../data/ckt"
 STAFAN_DIR = "../data/stafan-data"
+FIG_DIR = "../data/figures"
 # TEST POINT INSERTION PROBLEM:
 HTO_TH = 0.1
 HTC_TH = 0.05

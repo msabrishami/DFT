@@ -8,11 +8,15 @@ import time
 from circuit import Circuit
 from observation import *
 from random import randint
-from c432_logic_sim import c432_sim
+# from c432_logic_sim import c432_sim
 from load_circuit import LoadCircuit
 from pfs import PFS
 from ppsf import PPSF 
 from fault_sim import FaultList_2
+import config
+
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 import pdb
 
@@ -50,9 +54,6 @@ def check_c432_logicsim(circuit, tp=1, mode="ckt"):
         circuit.c_name, tp))
     return True
 
-
-
-
 def exp_check_verilog_modelsim():
     for ckt in ["c17", "c432", "c499", "c880", "c1908"]:
         print("\nCircuit: " + ckt)
@@ -61,7 +62,6 @@ def exp_check_verilog_modelsim():
         circuit.lev()
         path = "../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
         circuit.golden_test(path)
-
 
 def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     if mode not in ["ckt", "v"]:
@@ -80,7 +80,6 @@ def ppsf_thread(conn, ckt_name, tp_count, tp_fname, fault_fname):
     fault_sim.fault_list.add_file(fault_fname)
     fault_sim.fs_exe(tp_fname)
     conn.send(fault_sim.fault_list)
-
 
 def compare_ppsf_stafan(circuit, args):
     time_s = time.time()
@@ -154,7 +153,58 @@ def compare_ppsf_stafan(circuit, args):
         #     node.C0, node.C1, node.B0, node.B1))
         print("{}\t{:.2e}\t{:.2e}\t{:.2f}%".format(tmp, stafan, pd, 100*np.abs(stafan-pd)/pd))
 
+def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_load=100):
+    """
+    Fault coverage estimation
+    Choose tp_count, factor and the limit according to the size of PI
+    """
+    for i in range(times):
+        tpc = tp_count
+        path = f"{config.STAFAN_DIR}/{circuit.c_name}"
+        if not os.path.exists(path):
+            os.mkdir(path)
+        fname = f"{path}/{circuit.c_name}-TP{tp_load}-{i}.stafan"
+        if not os.path.exists(fname):
+            circuit.STAFAN(tp_load)
+            circuit.save_TMs(tp=tp_load,fname = fname)
+        else:
+            circuit.load_TMs(fname)
 
-def OP_site_impact(circuit, OP_node):
-    fanin_nodesO = [OP_node]
-    circuit.make_PO(OP_node)
+        limit = min(limit, (2<<len(circuit.PI)))
+
+        fc_sequence = [0]
+        tp_sequence = [0]
+        for tpc in range(tp):
+            try:
+                fc_sequence.append(circuit.STAFAN_FC(tpc)*100)
+                tp_sequence.append(tpc)
+                tpc*=factor
+
+            except:
+                continue
+
+        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.5)
+
+    plot.set_ylabel(f'Fault Coverage (FC%)',fontsize=13)
+    plot.set_xlabel('Test Pattern Count #TP',fontsize=13)
+    plot.set_title(f'Dependency of fault coverage on random test patterns\nfor circuit {circuit.c_name}',fontsize=13)
+    plt.subplots_adjust(top=0.835,bottom=0.25,left=0.125,right=0.9,hspace=0.195,wspace=0.2)
+    plt.figtext(0.5, 0.04, f"The experiment is carried out {times} times.", wrap=True, horizontalalignment='center', fontsize=12)
+
+    path = f"{config.FIG_DIR}/{circuit.c_name}/"
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    fname = path+f"{limit}-fc-estimation.pdf"
+
+    plt.savefig(fname)  
+    plt.show()
+
+def tpfc    ():
+    """
+    Fault coverage using fault simulation
+    """
+    pass
+
+def compare_fc_tp_estimation():
+    pass

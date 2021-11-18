@@ -117,12 +117,13 @@ class PFS(FaultSim):
             # outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
             # outfile.write('\n')
             outfile.write("------------\n")
-        fc = self.fault_list.calc_fc()
-        outfile.write("Fault Coverage = {:.2f}%\n".format(fc*100))
+        fault_coverage = self.fault_list.calc_fc()
+        outfile.write("Fault Coverage = {:.2f}%\n".format(fault_coverage*100))
         outfile.close()
         print(self.fs_type + " (Separate mode) completed. ")
-        print("Fault coverage = {:.2f}%".format(fc*100))
         print("Log file saved in {}".format(log_fname))
+
+        return fault_coverage
 
 
     def tpfc(self, tps, log_fname=None, fault_drop=None, verbose=False):
