@@ -200,7 +200,7 @@ class Circuit:
         tps = [self.gen_single_tp(mode) for _ in range(tp_count)] 
         return tps
 
-    def gen_tp_file(self, tp_count, tp_fname=None, mode="b"):
+    def gen_tp_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
         """ create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -218,7 +218,8 @@ class Circuit:
             outfile.write(",".join(tp_str) + "\n")
         
         outfile.close()
-        print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
+        if verbose:
+            print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
         return tps
     
 
@@ -538,7 +539,7 @@ class Circuit:
         conn.close()
 
 
-    def STAFAN(self, total_tp, num_proc=1):
+    def STAFAN(self, total_tp, num_proc=1, verbose=False):
         """ 
         Generating STAFAN controllability and observability in parallel. 
         Random TPs are generated within the method itself and are not stored. 
@@ -576,23 +577,23 @@ class Circuit:
             node.C1 = one_count_list[idx] / total_tp
             node.C0 = zero_count_list[idx] / total_tp
             node.S = sen_count_list[idx] / total_tp
-
+        
         for node in self.nodes_lev:
             if node.C0 == 0 or node.C1 == 0:
                 print("Warning: node {} controllability is zero".format(node.num))
-
+        print("\n\nBefore calling STAFAN_B\n\n")
         self.STAFAN_B()
         for node in self.nodes_lev:
             node.D1 = node.B0 * node.C0
             node.D0 = node.B1 * node.C1
         end_time = time.time()
         duration = end_time - start_time
-        print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
-            num_proc,total_tp ,duration))
+        if verbose:
+            print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
+                num_proc,total_tp ,duration))
 
     
     def save_TMs(self, fname=None, tp=None):
-        #TODO: Check if the directory exists. If not, generate
         if fname == None:
             path = config.STAFAN_DIR+"/"+self.c_name
             if not os.path.exists(path):
@@ -601,7 +602,6 @@ class Circuit:
             if not os.path.exists(fname):
                 os.mkdir(fname)
             fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
-        print(fname)
 
         outfile = open(fname, "w")
         outfile.write("Node,C0,C1,B0,B1,S\n")
