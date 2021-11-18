@@ -41,7 +41,7 @@ def stat_HTO(circuit, HTO_th, HTC_th):
     return count
 
 
-def make_OP(circuit, op):
+def make_OP_deprecated(circuit, op):
     """ adds an observation point, updates STAFAN_B """ 
     circuit.PO.append(op)
     op.ntype = "PO"
@@ -93,7 +93,48 @@ def circuit_deltaHTO(circuit, B_th, ops, args):
     return res
 
 
-def deltaP(circuit, op):
+
+def deltaP_2(circuit, op, verbose=False):
+    """ count the number of nodes that change from HTO to ETO when op is made observation point 
+    returns:
+    aggregated amount of change op's fan-in cone, arithmetic and geometeric
+    all amounts of change in the op's fan-in cone
+    """
+    circuit.STAFAN_B()
+    
+    p_pre = []
+    p_post = []
+    for node in circuit.nodes_lev: 
+        p_pre.append([node.B0 * node.C0, node.B1 * node.C1])
+    
+    # Make op as observation point, add it to circuit outputs, run STAFAN again
+    orig_ntype = op.ntype
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    circuit.STAFAN_B()
+    if verbose: print("node\tlevel\td-CB0\td-CB1")
+    for idx, node in enumerate(circuit.nodes_lev):
+        p_post.append([node.C0 * node.B0, node.C1 * node.B1])
+        if verbose:
+            if (p_post[idx][0] != p_pre[idx][0] or p_post[idx][1] != p_pre[idx][1]):
+                print("{}\t{}\t{:.4f}\t{:.4f}".format(node.num, node.lev,
+                    p_post[idx][0] - p_pre[idx][0], p_post[idx][1] - p_pre[idx][1]))
+    
+    deltaP_tot= 0 
+    for idx in range(len(p_post)):
+        deltaP_tot += (p_post[idx][0]-p_pre[idx][0])
+        deltaP_tot += (p_post[idx][1]-p_pre[idx][1])
+
+    op.ntype = orig_ntype
+    circuit.PO = circuit.PO[:-1]
+    circuit.STAFAN_B()
+
+    return deltaP_tot
+
+
+
+
+def deltaP(circuit, op, verbose=False):
     """ count the number of nodes that change from HTO to ETO when op is made observation point 
     returns:
     aggregated amount of change op's fan-in cone, arithmetic and geometeric
@@ -135,7 +176,15 @@ def deltaP(circuit, op):
             stat_arit_agg[x] += (changed[x] - stat_init[idx][x])
             stat_geom_agg[x] += ((changed[x] / stat_init[idx][x]) - 1)
         # print("info:\t", idx, node.num, temp, stat_arit_all[idx])
-
+    if verbose:
+        print("Target node is: {}".format(str(op))) 
+        print("node\tlev\tCB0-post\tCB0-pre\tCB1-post\tCB1-pre")
+        for idx, node in enumerate(circuit.nodes_lev):
+            if stat_init[idx][2] != node.B:
+                print("{}\t{}".format(node.num, node.lev), end="")
+                print("\t\t {:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(
+                    node.CB0, stat_init[idx][3], node.CB1, stat_init[idx][4],
+                    (node.CB0-stat_init[idx][3]) + (node.CB1- stat_init[idx][4])))
     op.ntype = orig_ntype
     circuit.PO = circuit.PO[:-1]
 

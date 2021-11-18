@@ -87,22 +87,22 @@
 # python3 FC_test.py -ckt ../data/ckt/c432.ckt -func fctp
 
 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "001" &  
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "002" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "003" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "004" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "005" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "006" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "007" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "008" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "009" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "010" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "011" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "012" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "013" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "014" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "015" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "016" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "017" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "018" & 
-python3 main_saeed.py -ckt ../data/verilog/sin_synV1.v -func tpfc -tp 500 -op_fname "019" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "001" &  
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "002" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "003" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "004" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "005" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "006" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "007" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "008" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "009" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "010" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "011" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "012" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "013" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "014" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "015" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "016" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "017" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "018" & 
+python3 main_saeed.py -ckt ../data/verilog/c1355_synV1.v -func tpfc -tp 100 -code "019" & 
