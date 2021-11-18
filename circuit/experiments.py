@@ -208,3 +208,60 @@ def tpfc    ():
 
 def compare_fc_tp_estimation():
     pass
+
+
+
+def ppsf_parallel(circuit, args):
+    time_s = time.time()
+    tot_fl = FaultList_2()
+    if not os.path.exists("../data/fault_list/"):
+        os.system("mkdir ../data/fault_list/")
+    if not os.path.exists("../data/fault_list/{}/".format(circuit.c_name)):
+        os.system("mkdir ../data/fault_list/{}/".format(circuit.c_name))
+
+
+    if args.fault:
+        tot_fl.add_random(circuit, args.fault)
+        fault_fname = "../data/fault_list/{}/{}-random{}.fl".format(
+            circuit.c_name, circuit.c_name, args.fault)
+    else:
+        tot_fl.add_all(circuit)
+        fault_fname = "../data/fault_list/{}/{}-all.fl".format(
+            circuit.c_name, circuit.c_name)
+    
+    tot_fl.write_file(fault_fname)
+
+    process_list = []
+    for i in range(args.cpu):
+        tp_fname = "../data/patterns/{}-ppsf-tp{}-part{}.tp".format(
+            circuit.c_name, args.tp, i)
+        parent_conn, child_conn = Pipe()
+        p = Process(target=ppsf_thread,
+                    args=(child_conn, args.ckt, args.tp, tp_fname, fault_fname))
+        p.start()
+        process_list.append((p, parent_conn))
+
+    fault_lists = []
+    for p, conn in process_list:
+        tup = conn.recv()
+        fault_lists.append(tup)
+        p.join()
+
+    for fault in tot_fl.faults:
+        fault.D_count = []
+    for fl in fault_lists:
+        for idx in range(len(fl.faults)):
+            tot_fl.faults[idx].D_count.append(fl.faults[idx].D_count)
+    
+    if args.fault:
+        out_fname = "../data/fault_list/{}/{}-ppsf-fault{}-tp{}-cpu{}.ppsf".format(
+            circuit.c_name, circuit.c_name, args.fault, args.tp, args.cpu)
+    else:
+        out_fname = "../data/fault_list/{}/{}-ppsf-all-tp{}-cpu{}.ppsf".format(
+            circuit.c_name, circuit.c_name, args.tp, args.cpu)
+
+    tot_fl.write_file_extra(out_fname)
+    print("Total time: {:.2f}".format(time.time() - time_s))
+    with open(out_fname, "a") as outfile:
+        outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
+

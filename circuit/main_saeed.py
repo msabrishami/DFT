@@ -117,6 +117,26 @@ if __name__ == '__main__':
         tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
         # print(tps)
 
+    elif args.func == "stafan-save-coded":
+        """ Running STAFAN with random TPs and saving TPs into file """
+
+        path = config.STAFAN_DIR + "/" + circuit.c_name
+        if not os.path.exists(path):
+            os.mkdir(path)
+        fname = os.path.join(path, circuit.c_name)
+        if not os.path.exists(fname):
+            os.mkdir(fname)
+
+
+        for ite in range(int(args.code)):
+            time_s = time.time()
+            circuit.STAFAN(args.tp, args.cpu)
+            fname = config.STAFAN_DIR+ "/" + circuit.c_name + "/"
+            fname += "{}-TP{}-{}.stafan".format(circuit.c_name, args.tp, ite)
+            circuit.save_TMs(fname)
+            print("Time: \t{:.3}".format(time.time() - time_s))
+
+
     elif args.func == "stafan-save":
         """ Running STAFAN with random TPs and saving TPs into file """
         time_s = time.time()
@@ -185,8 +205,10 @@ if __name__ == '__main__':
                     str(fault), pfs_res[str(fault)], fault.D_count))
         if not error:
             print("PFS and PPSF results match!")
-
     elif args.func == "ppsf_parallel":
+        exp.ppsf_parallel(circuit, args)
+
+    elif args.func == "ppsf_parallel_old":
         time_s = time.time()
         circuit.lev()
         tot_fl = FaultList_2()
