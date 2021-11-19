@@ -120,12 +120,10 @@ if __name__ == '__main__':
     elif args.func == "stafan-save-coded":
         """ Running STAFAN with random TPs and saving TPs into file """
 
-        path = config.STAFAN_DIR + "/" + circuit.c_name
-        if not os.path.exists(path):
-            os.mkdir(path)
-        fname = os.path.join(path, circuit.c_name)
-        if not os.path.exists(fname):
-            os.mkdir(fname)
+        if not os.path.exists(config.STAFAN_DIR):
+            os.mkdir(config.STAFAN_DIR)
+        if not os.path.exists(os.path.join(config.STAFAN_DIR, circuit.c_name)):
+            os.mkdir(os.path.join(config.STAFAN_DIR, circuit.c_name))
 
 
         for ite in range(int(args.code)):
