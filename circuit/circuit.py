@@ -546,7 +546,7 @@ class Circuit:
         
         Arguments:
         ---------
-        total_tp : (int) total number of test pattern vectors(not less than num_proc)
+        total_tp : (int) total number of test pattern vectors (not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
         if total_tp < num_proc:
@@ -577,12 +577,16 @@ class Circuit:
             node.C1 = one_count_list[idx] / total_tp
             node.C0 = zero_count_list[idx] / total_tp
             node.S = sen_count_list[idx] / total_tp
-        
-        for node in self.nodes_lev:
-            if node.C0 == 0 or node.C1 == 0:
-                print("Warning: node {} controllability is zero".format(node.num))
-        print("\n\nBefore calling STAFAN_B\n\n")
-        self.STAFAN_B()
+
+        if verbose: 
+            for node in self.nodes_lev:
+                if node.C0 == 0 or node.C1 == 0:
+                    print("Warning: node {} controllability is zero".format(node.num))
+        try: 
+            self.STAFAN_B()
+        except ZeroDivisionError:
+            print("Node Ctrl is zero")
+            pdb.set_trace()
         for node in self.nodes_lev:
             node.D1 = node.B0 * node.C0
             node.D0 = node.B1 * node.C1

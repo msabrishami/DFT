@@ -237,11 +237,12 @@ class Node:
             print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
             print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
             print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
-            print("C0:{:e}\t".format(self.C0), end="")
-            print("C1:{:e}\t".format(self.C1), end="")
-            print("S:{:e}\t".format(self.S), end="")
-            print("B0:{:e}\t".format(self.B0), end="")
-            print("B1:{:e}\t".format(self.B1), end="")
+            print("C0:{:.2e}\t".format(self.C0), end="")
+            print("C1:{:.2e}\t".format(self.C1), end="")
+            print("S:{:.2e}\t".format(self.S), end="")
+            print("B0:{:.2e}\t".format(self.B0), end="")
+            print("B1:{:.2e}\t".format(self.B1), end="")
+            print()
         else:
             print("N:{}\t".format(str(self.num).zfill(4)), end="")
             print("{}\t".format(str(self.lev).zfill(2)), end="")
@@ -249,11 +250,11 @@ class Node:
             print("{}\t".format(str(self.CC0).zfill(3)), end="")
             print("{}\t".format(str(self.CC1).zfill(3)), end="")
             print("{}\t".format(str(self.CO).zfill(3)), end="")
-            print("{:e}\t".format(self.C0), end="")
-            print("{:e}\t".format(self.C1), end="")
-            print("{:e}\t".format(self.S), end="")
-            print("{:e}\t".format(self.B0), end="")
-            print("{:e}\t".format(self.B1), end="")
+            print("{:.2e}\t".format(self.C0), end="")
+            print("{:.2e}\t".format(self.C1), end="")
+            print("{:.2e}\t".format(self.S), end="")
+            print("{:.2e}\t".format(self.B0), end="")
+            print("{:.2e}\t".format(self.B1), end="")
             print()
     
 
@@ -348,11 +349,31 @@ class OR(Node):
     
     def stafan_b(self):
         for unode in self.unodes:
-            if (unode.C1 == 0) or (unode.C0 == 0):
-                print(self)
-                raise ValueError("OR gate, C0 or C1 is zero")
-            unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
-            unode.B0 = self.B0 * self.C0 / unode.C0
+            try: 
+                unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
+            except ZeroDivisionError:
+                print("Warning (OR.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C0)), end="\t")
+                if 0 in ne_C0:
+                    raise ValueError("Error (OR.stafan_b): unresolved issue")
+                unode.B1 = self.B1
+                for x in ne_C0:
+                    unode.B1 *= x
+                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+                
+            try:
+                unode.B0 = self.B0 * self.C0 / unode.C0
+            except ZeroDivisionError:
+                print("Warning (OR.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C0)), end="\t")
+                if 0 in ne_C0:
+                    raise ValueError("Error (OR.stafan_b): unresolved issue")
+                unode.B0 = self.B0
+                for x in ne_C0:
+                    unode.B0 *= x
+                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
 
     def dfs(self):
         self.faultlist_dfs.clear()
@@ -391,11 +412,33 @@ class NOR(Node):
     def stafan_b(self):
         
         for unode in self.unodes:
-            if (unode.C1 == 0) or (unode.C0 == 0):
-                print(self)
-                raise ValueError("NOR gate, C0 or C1 is zero")
-            unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
-            unode.B0 = self.B1 * self.C1 / unode.C0
+            try:
+                unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
+            except ZeroDivisionError:
+                print("Warning (NOR.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C0)), end="\t")
+                if 0 in ne_C0:
+                    raise ValueError("Error (NOR.stafan_b): unresolved issue")
+                unode.B1 = self.B0 
+                for x in ne_C0:
+                    unode.B1 *= x
+                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+
+            try:
+                unode.B0 = self.B1 * self.C1 / unode.C0
+            except ZeroDivisionError:
+                print("Warning (NOR.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C0)), end="\t")
+                if 0 in ne_C0:
+                    raise ValueError("Error (NOR.stafan_b): unresolved issue")
+                unode.B0 = self.B1
+                for x in ne_C0:
+                    unode.B0 *= x
+                print(" ==> B0 ~ {:.2e}".format(unode.B0))
+                    
+
 
     def dfs(self):
         # the controling value of NOR is 1
@@ -431,14 +474,32 @@ class AND(Node):
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
 
     def stafan_b(self):
-        
         for unode in self.unodes:
-            if (unode.C1 == 0) or (unode.C0 == 0):
-                print(self)
-                raise ValueError("AND gate, C0 or C1 is zero")
-            unode.B1 = self.B1 * self.C1 / unode.C1
-            unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
- 
+            try:
+                unode.B1 = self.B1 * self.C1 / unode.C1
+            except ZeroDivisionError:
+                print("Warning (AND.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C1)), end="\t")
+                if 0 in ne_C1:
+                    raise ValueError("Error (AND.stafan_b): unresolved issue")
+                unode.B1 = self.B1
+                for x in ne_C1:
+                    unode.B1 *= x 
+                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+            try:
+                unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
+            except ZeroDivisionError:
+                print("Warning (AND.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C1)), end="\t")
+                if 0 in ne_C1:
+                    raise ValueError("Error (NAND.stafan_b): unresolved issue")
+                unode.B0 = self.B0
+                for x in ne_C1:
+                    unode.B0 *= x 
+                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
+
     def dfs(self):
         # the controling value of AND is 0
         self.faultlist_dfs.clear()
@@ -475,14 +536,32 @@ class NAND(Node):
             unode.CO = sum([unode.CC1 for unode in self.unodes]) - unode.CC1 + self.CO + 1
     
     def stafan_b(self):
-        
+        # Note: Formula in the original paper has a typo
         for unode in self.unodes:
-            if (unode.C1 == 0) or (unode.C0 == 0):
-                print(self)
-                raise ValueError("NAND gate, C0 or C1 is zero")
-            unode.B1 = self.B0 * self.C0 / unode.C1
-            # Formula in the original paper has a typo
-            unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
+            try: 
+                unode.B1 = self.B0 * self.C0 / unode.C1
+            except ZeroDivisionError:
+                print("Warning (NAND.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C1)), end="\t")
+                if 0 in ne_C1:
+                    raise ValueError("Error (NAND.stafan_b): unresolved issue")
+                unode.B1 = self.B0
+                for x in ne_C1:
+                    unode.B1 *= x 
+                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+            try:
+                unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
+            except ZeroDivisionError:
+                print("Warning (NAND.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
+                print("|ne|={}".format(len(ne_C1)), end="\t")
+                if 0 in ne_C1:
+                    raise ValueError("Error (NAND.stafan_b): unresolved issue")
+                unode.B0 = self.B1
+                for x in ne_C1:
+                    unode.B0 *= x 
+                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
 
     def dfs(self):
         # the controling value of NAND is 0
