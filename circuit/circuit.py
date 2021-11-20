@@ -135,9 +135,20 @@ class Circuit:
         for node in self.nodes_lev:
             res.append(str(node))
         return "\n".join(res)
+
+    def get_rand_nodes(self, count=1):
+        if count > len(self.nodes):
+            print("Error: count should be less than count of total nodes")
+            return None
+        res = set() 
+        while len(res) < count:
+            idx = randint(0, len(self.nodes))
+            res.add(self.nodes_lev[idx])
+        return list(res)[0] if count==1 else res
     
     
     def print_fanin(self, target_node, depth):
+        # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
         queue = collections.deque()
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
@@ -145,6 +156,7 @@ class Circuit:
 
     
     def print_fanin_rec(self, queue, min_level):
+        # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
         """ prints the nodes in the fanin cone 
         first time it is called, queue should be a list with target node as its only element
         this is a simple BFS in the opposite direction of lines

@@ -75,6 +75,8 @@ class Node:
         self.inv = None
         self.unodes = []
         self.dnodes = []
+        self.flagA = None
+        self.flagB = None
 
         # used for PPSF and SPPF 
         # TODO
