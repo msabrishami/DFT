@@ -14,12 +14,12 @@ netlists_ISCAS = ["c432","c499","c880","c1355","c1908","c3540","c5315","c6288","
 # all_netlists = netlists_ISCAS
 # all_netlists.extend(netlists_EPFL_EZ)
 
-netlists_ISCAS = ["c432","c3540","c5315","c6288"] # 1K patterns
+# netlists_ISCAS = ["c432","c3540","c5315","c6288"] # 1K patterns
 # netlists_ISCAS = ["c432","c499","c880","c1355","c1908","c3540","c5315","c6288"] # 5K patterns
 
 all_netlists = netlists_ISCAS
 # all_netlists = ["priority_syn", "int2float_syn", "dec_syn", "cavlc_syn", "adder_syn"] 
-tps = [1000, 2000]
+tps = [2000, 5000, 10000, 20000]
 
 
 ########################################
@@ -29,10 +29,11 @@ tps = [1000, 2000]
 # all_netlists = [x + ".v" for x in all_netlists]
 script = "python3 main_saeed.py -ckt \t$CKT$ -tp $TP$ -func genTP \t&"
 script = "python3  main_saeed.py -ckt ../data/verilog/$CKT$ -tp $TP$ -func test4 "
-script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-save-coded -tp {} -cpu 10 -code 20"
+# script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-save-coded -tp {} -cpu 10 -code 20"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-save -tp {} -cpu 10"
 
-for ckt in all_netlists:
-    for tp in tps:
+for tp in tps:
+    for ckt in all_netlists[1:]:
         for ver in [0, 1, 2]:
             # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
             #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))

@@ -1,6 +1,7 @@
 
 import config
 import pdb
+import utils
 
 
 def fault_stat(circuit, HTO_th, HTC_th):
@@ -95,7 +96,8 @@ def circuit_deltaHTO(circuit, B_th, ops, args):
 
 
 def deltaP_2(circuit, op, verbose=False):
-    """ count the number of nodes that change from HTO to ETO when op is made observation point 
+    """ 
+    TODO: what was this one again?! 
     returns:
     aggregated amount of change op's fan-in cone, arithmetic and geometeric
     all amounts of change in the op's fan-in cone
@@ -133,10 +135,42 @@ def deltaP_2(circuit, op, verbose=False):
 
 
 
+def deltaP(circuit, op, verbose=False): 
+    """ Calculating the changes in the sum of detection probability of the nodes
+    in the circuit when node OP is used as an observation point 
+    Parameters
+    ----------
+    circuit : Circuit before adding op
+    op : Node 
+    
+    Returns
+    -------
+    float     
+    """
+    circuit.STAFAN_B()
+    fanin_cone = utils.get_fanin_BFS(circuit, op)
+    PDs_init = []
+    for node in fanin_cone:
+        PDs_init.append(node.C0 * node.B0)
+        PDs_init.append(node.C1 * node.B1)
+    
+    # temporary adding op as a primary output and redoing STAFAN_B
+    orig_ntype = op.ntype
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    circuit.STAFAN_B()
+    PDs_new = []
+    for node in fanin_cone:
+        PDs_new.append(node.C0 * node.B0)
+        PDs_new.append(node.C1 * node.B1)
 
-def deltaP(circuit, op, verbose=False):
-    """ count the number of nodes that change from HTO to ETO when op is made observation point 
-    returns:
+    delta_PDs = [PDs_new[i] - PDs_init[i] for i in range(len(PDs_new))]
+    return delta_PDs
+
+
+def deltaP_old(circuit, op, verbose=False):
+    """ 
+    This method is deprecated! 
     aggregated amount of change op's fan-in cone, arithmetic and geometeric
     all amounts of change in the op's fan-in cone
     """

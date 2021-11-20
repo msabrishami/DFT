@@ -120,12 +120,10 @@ if __name__ == '__main__':
     elif args.func == "stafan-save-coded":
         """ Running STAFAN with random TPs and saving TPs into file """
 
-        path = config.STAFAN_DIR + "/" + circuit.c_name
-        if not os.path.exists(path):
-            os.mkdir(path)
-        fname = os.path.join(path, circuit.c_name)
-        if not os.path.exists(fname):
-            os.mkdir(fname)
+        if not os.path.exists(config.STAFAN_DIR):
+            os.mkdir(config.STAFAN_DIR)
+        if not os.path.exists(os.path.join(config.STAFAN_DIR, circuit.c_name)):
+            os.mkdir(os.path.join(config.STAFAN_DIR, circuit.c_name))
 
 
         for ite in range(int(args.code)):
@@ -205,6 +203,7 @@ if __name__ == '__main__':
                     str(fault), pfs_res[str(fault)], fault.D_count))
         if not error:
             print("PFS and PPSF results match!")
+    
     elif args.func == "ppsf_parallel":
         exp.ppsf_parallel(circuit, args)
 
@@ -281,30 +280,30 @@ if __name__ == '__main__':
 
         exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad,tp=args.tp)
 
-    elif args.func == "ppp":
-        exp.compare_ppsf_stafan(circuit, args)
-
-    elif args.func == "qqq":
+    elif args.func == "msa":
+        node = circuit.get_rand_nodes()
+        print(node)
+        res_DFS = utils.get_fanin(circuit, node)
+        print(len(res_DFS))
+        res_BFS = utils.get_fanin_BFS(circuit, node)
+        print(len(res_BFS))
+        # TODO: check if the results of BFS and DFS are the same 
+        
+        node = circuit.nodes_lev[int(0.8*len(circuit.nodes))]
+        print(node)
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
-        PDs = []
-        for node in circuit.nodes_lev:
-            PDs.append(node.C0 * node.B0)
-            PDs.append(node.C1 * node.B1)
 
-        PDs_sorted_idx = np.argsort(PDs)
-        for idx in PDs_sorted_idx:
-            node_idx = int(idx/2)
-            node = circuit.nodes_lev[node_idx]
-            # print(node)
-            deltaP = observation.deltaP_2(circuit, node)
-            node_str = "".join([" " for x in range(10-len(node.num))]) + node.num
-            print("{}\t{}\t{:.4f}".format(node_str, node.lev, deltaP))
-            # print("-------------------------------------------------------")
-        
+        circuit.load_TMs
+        deltaP = observation.deltaP(circuit, node)
+        print("\t".join(["{:.5f}".format(x) for x in deltaP]))
         pdb.set_trace()
-    
+
+    elif args.func == "ppp":
+        exp.compare_ppsf_stafan(circuit, args)
+
+        
     elif args.func == "writeOB":
         # circuit.co_ob_info()
         path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)
