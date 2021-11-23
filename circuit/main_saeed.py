@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
-    print("======================================================")
+    print("\n-----------------------------------------------")
     print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
         circuit.c_fname, args.tp, args.tpLoad, args.cpu))
 
@@ -205,45 +205,51 @@ if __name__ == '__main__':
             print("PFS and PPSF results match!")
     
     elif args.func == "ppsf_parallel":
-        exp.ppsf_parallel(circuit, args)
+        # exp.ppsf_parallel(circuit, args)
+        exp.ppsf_parallel(circuit, args, [20, 50, 100, 200, 500, 1000, 2000, 5000], 2)
 
-    elif args.func == "ppsf_parallel_old":
-        time_s = time.time()
-        circuit.lev()
-        tot_fl = FaultList_2()
-        tot_fl.add_random(circuit, args.fault)
-        fault_fname = "../data/fault_list/{}-random{}.fl".format(
-            circuit.c_name, args.fault)
-        tot_fl.write_file(fault_fname)
+    elif args.func == "ppsf_analysis":
+        mu = {}
+        std = {}
+        # TPs = [10, 20, 50, 100, 200, 500, 1000, 2000]
+        # TPs = [x*10 for x in range(1,20)]
+        # TPs.extend([x*100 for x in range(1,10)])
+        # TPs.extend([2000])
+        TPs = [10, 20, 30, 40, 50, 100, 200, 500, 1000]
 
-        process_list = []
-        for i in range(args.cpu):
-            tp_fname = "../data/patterns/{}-ppsf-tp{}-part{}.tp".format(
-                circuit.c_name, args.tp, i)
-            parent_conn, child_conn = Pipe()
-            p = Process(target=ppsf_thread,
-                        args=(child_conn, args.ckt, args.tp, tp_fname, fault_fname))
-            p.start()
-            process_list.append((p, parent_conn))
-
-        fault_lists = []
-        for p, conn in process_list:
-            tup = conn.recv()
-            fault_lists.append(tup)
-            p.join()
-
-        for fault in tot_fl.faults:
-            fault.D_count = []
-        for fl in fault_lists:
-            for idx in range(len(fl.faults)):
-                tot_fl.faults[idx].D_count.append(fl.faults[idx].D_count)
-        out_fname = "../data/fault_list/{}-ppsf-fault{}-tp{}-cpu{}.fl".format(
-            circuit.c_name, args.fault, args.tp, args.cpu)
-        tot_fl.write_file_extra(out_fname)
-        print("Total time: {:.2f}".format(time.time() - time_s))
-        with open(out_fname, "a") as outfile:
-            outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
-
+        for tp in TPs: 
+            args.tp = tp
+            res = exp.ppsf_analysis(circuit, args)
+            faults = list(res.keys())
+            # mu = [100*x[0]/args.tp for x in res.values() if (x[0]/args.tp < float(args.code))]
+            # std = [x[1] for x in res.values()]
+            # print("Removed {}/{} elements, PD>{}".format(
+            #     len(res)-len(mu), len(mu), args.code))
+            # plt.figure(figsize=(10, 8), dpi=300)
+            # plt.hist(mu, bins=40)
+            # plt.savefig("ppsf-hist-{}-tp{}.png".format(circuit.c_name, args.tp))
+            # plt.close()
+            mu[tp] = [x[0]/args.tp for x in res.values()]
+            std[tp] = [x[1]/args.tp for x in res.values()]
+        ind_sorted = np.argsort(mu[TPs[-1]])
+        res = ""
+        # for idx in ind_sorted:
+        #     if idx%20 != 0:
+        #         continue
+        #     res = ["{:.2f}/{:.2f}> {:.1f}".format(
+        #         mu[tp][idx]*100, std[tp][idx]*100, mu[tp][idx]/std[tp][idx]) for tp in TPs]
+        #     print("{}: \t{}".format(faults[idx], "\t".join(res)))
+        print("\t0.7(75%)\t0.9(80%)\t1.0(84%)\t1.3(90%)\t1.5(93%)\t2.0(97%)\t2.1(98%)\t2.3(99%)")
+        for tp in TPs:
+            print("TP={}\t".format(tp), end="")
+            for r in [0.7, 0.9, 1.0, 1.3, 1.5, 2.0, 2.1, 2.3]: 
+                drops = [(mu[tp][idx]/std[tp][idx] > r) for idx in range(len(std[tp]))]
+                ratio = sum(drops)/len(drops)
+                print("{:.1f}%".format(ratio*100), end="\t\t")
+            print()
+            # print("TP={}\t (mu/std > 2.0) = {:.1f}% \t{:.1f}".format(
+            #     tp, 100*ratio, 1/(1-ratio)))
+    
     elif args.func == "tpfc":
         """ Generating random test patterns and running fault simulation, using parallel 
         fault simulation with fault drop equal to 1. 
@@ -260,6 +266,7 @@ if __name__ == '__main__':
         pfs.fault_list.add_all(circuit)
         pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)
 
+    
     elif args.func == "tpfc-fig":
         path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
         path += "tpfc_tp-" + str(args.tp)
@@ -277,9 +284,9 @@ if __name__ == '__main__':
         plt.close()
 
     elif args.func == "fc-es-fig":
-
         exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad,tp=args.tp)
 
+    
     elif args.func == "msa":
         node = circuit.get_rand_nodes()
         print(node)
@@ -294,16 +301,10 @@ if __name__ == '__main__':
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
-
-        circuit.load_TMs
         deltaP = observation.deltaP(circuit, node)
         print("\t".join(["{:.5f}".format(x) for x in deltaP]))
-        pdb.set_trace()
 
-    elif args.func == "ppp":
-        exp.compare_ppsf_stafan(circuit, args)
-
-        
+       
     elif args.func == "writeOB":
         # circuit.co_ob_info()
         path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)

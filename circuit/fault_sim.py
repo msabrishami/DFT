@@ -72,7 +72,10 @@ class FaultList_2:
         for i in range(random_num):
             self.add(circuit.nodes_lev[idx_random[i]].num, 
                     np.random.randint(0,2))
-
+    
+    def add_fault(self, fault):
+        self.faults.append(fault)
+    
     def add_file(self, fname):
         """ read faults from a file and add it to the fault list 
         file format: each fault <node-num>@<stuck value> in separate lines
@@ -86,17 +89,19 @@ class FaultList_2:
             for line in infile:
                 self.add_str(line)
 
-    def write_file(self, fname):
+    def write_file(self, fname, verbose=False):
         with open(fname, "+w") as outfile:
             for fault in self.faults:
                 outfile.write(str(fault) + "\n")
-            print("Fault list is stored in {}".format(fname))
+            if verbose:
+                print("Fault list is stored in {}".format(fname))
 
-    def write_file_extra(self, fname):
+    def write_file_extra(self, fname, verbose=False):
         with open(fname, "w") as outfile:
             for fault in self.faults:
                 outfile.write(str(fault) + "," + ",".join([str(x) for x in fault.D_count])+"\n")
-            print("Fault list with D_counts is stored in {}".format(fname))
+            if verbose:
+                print("Fault list with D_counts is stored in {}".format(fname))
     
     def calc_fc(self):
         detected_count = 0
@@ -124,13 +129,14 @@ class FaultSim:
         Creating the required directories for fault simulation
         """
         paths = [config.FAULT_SIM_DIR, config.FAULT_DICT_DIR, 
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/', 
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/', 
+                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/', 
+                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/', 
                 # TODO
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/dfs/', 
+                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/dfs/', 
                 # TODO
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/pfs/', 
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/compare/']
+                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/compare/',
+                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/pfs/'
+                ]
         
         for path in paths:
             if not os.path.exists(path):
