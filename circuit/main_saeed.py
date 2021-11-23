@@ -206,7 +206,7 @@ if __name__ == '__main__':
     
     elif args.func == "ppsf_parallel":
         # exp.ppsf_parallel(circuit, args)
-        exp.ppsf_parallel(circuit, args, [20, 50, 100, 200, 500, 1000, 2000, 5000], 3)
+        exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5000, 10000], 3)
 
     elif args.func == "ppsf_analysis":
         mu = {}

@@ -146,7 +146,7 @@ def compare_fc_tp_estimation():
     pass
 
 
-def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None):
+def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=False):
     """ Running ppsf in parallel for one step given test patterns and fault list, 
         counts the number of times faults are detected. The test patterns are 
         generated in each process separately, but are not stored by default.
@@ -181,7 +181,6 @@ def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None):
         tup = conn.recv()
         fault_lists.append(tup)
         p.join()
-    
     for fault in tot_fl.faults:
         fault.D_count = []
     for fl in fault_lists:
@@ -229,7 +228,8 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
         temp_fl = FaultList()
         fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
         tot_fl.write_file(fl_fname)
-        tot_fl = ppsf_parallel_step(circuit, tot_fl, tp, args.cpu, log_fname=None)
+        tot_fl = ppsf_parallel_step(circuit, tot_fl, tp, args.cpu, log_fname=None, 
+                count_cont=True)
         fault_completed = []
         outfile.write("#TP={}\n".format(tp))
         for fault in tot_fl.faults:
@@ -249,6 +249,14 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
         tot_fl = temp_fl
         if len(tot_fl.faults) == 0:
             break
+    # Writing down the remaining faults 
+    outfile.write("#TP: (remaining faults)\n")
+    for fault in tot_fl.faults:
+        mu = np.mean(fault.D_count) 
+        std = np.std(fault.D_count)
+        outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
+    outfile.close()
+
 
 def ppsf_parallel(circuit, args, steps=None, confidence=None):
     if steps == None:
