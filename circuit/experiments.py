@@ -165,10 +165,10 @@ def ppsf_parallel_step(circuit, fl_fname, tot_fl, tp, cpu, log_fname=None):
     
     if log_fname:
         tot_fl.write_file_extra(log_fname)
-        print("Total time: {:.2f}".format(time.time() - time_s))
         with open(log_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
     
+    # print("Total time: {:.2f}".format(time.time() - time_s))
     return tot_fl
 
 def ppsf_parallel_basic(circuit, tp, cpu, fault_count=None):
@@ -201,6 +201,7 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
     print("Log for step based PPSF is being stored in {}".format(log_fname))
     outfile = open(log_fname, "w")
     for tp in tp_steps:
+        time_s = time.time()
         temp_fl = FaultList_2()
         fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
         tot_fl.write_file(fl_fname)
@@ -219,7 +220,8 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
                 # temp_fl.add_fault(fault)
                 temp_fl.add_str(str(fault))
 
-        print("TP={} #FL={} -> #FL={}".format(tp, len(tot_fl.faults), len(temp_fl.faults)))
+        print("TP={} #FL={} -> #FL={}\ttime={:.2f}".format(
+            tp, len(tot_fl.faults), len(temp_fl.faults), time.time()-time_s))
         tot_fl = temp_fl
         if len(tot_fl.faults) == 0:
             break
