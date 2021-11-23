@@ -11,7 +11,7 @@ from random import randint
 from load_circuit import LoadCircuit
 from pfs import PFS
 from ppsf import PPSF 
-from fault_sim import FaultList_2
+from fault_sim import FaultList
 import config as cfg
 
 import seaborn as sns
@@ -71,13 +71,21 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     circuit.lev()
     check_c432_logicsim(circuit, tp, mode)
 
-def ppsf_thread(conn, ckt_name, tp_count, tp_fname, fault_fname):
-    ckt = Circuit(ckt_name)
+def ppsf_thread_old(conn, ckt_name, tp_count, tp_fname, fl_fname):
+    ckt = Circuit(ckt_name) 
     ckt.lev()
-    tps = ckt.gen_tp_file(tp_count, tp_fname=tp_fname)
+    tps = ckt.gen_multiple_tp(tp_count)
     fault_sim = PPSF(ckt)
-    fault_sim.fault_list.add_file(fault_fname)
-    fault_sim.fs_exe(tp_fname)
+    fault_sim.fault_list.add_file(fl_fname)
+    fault_sim.fs_exe(tps)
+    conn.send(fault_sim.fault_list)
+
+
+def ppsf_thread(conn, ckt, tp_count, fault_list):
+    tps = ckt.gen_multiple_tp(tp_count)
+    fault_sim = PPSF(ckt)
+    fault_sim.fault_list = fault_list
+    fault_sim.fs_exe(tps)
     conn.send(fault_sim.fault_list)
 
 
@@ -138,16 +146,33 @@ def compare_fc_tp_estimation():
     pass
 
 
-def ppsf_parallel_step(circuit, fl_fname, tot_fl, tp, cpu, log_fname=None):
-    """ faults: number of random faults per each bin""" 
+def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None):
+    """ Running ppsf in parallel for one step given test patterns and fault list, 
+        counts the number of times faults are detected. The test patterns are 
+        generated in each process separately, but are not stored by default.
+    Parameters
+    ----------
+    circuit : Circuit 
+    fl : FaultList 
+    tp : number of test patterns for each process  
+    cpu : count of parallel processes
+    log_fname : fname for the final log file 
+
+    Return
+    ------
+    The final fault list 
+    """
     time_s = time.time()
     process_list = []
     for i in range(cpu):
         tp_fname = os.path.join(cfg.PATTERN_DIR, "{}-ppsf-tp{}-part{}.tp".format(
             circuit.c_name, tp, i))
         parent_conn, child_conn = Pipe()
+        # p = Process(target=ppsf_thread,
+        #             args=(child_conn, circuit.c_fname, tp, tp_fname, fl_fname))
         p = Process(target=ppsf_thread,
-                    args=(child_conn, circuit.c_fname, tp, tp_fname, fl_fname))
+                    args=(child_conn, circuit, tp, tot_fl))
+
         p.start()
         process_list.append((p, parent_conn))
 
@@ -156,7 +181,7 @@ def ppsf_parallel_step(circuit, fl_fname, tot_fl, tp, cpu, log_fname=None):
         tup = conn.recv()
         fault_lists.append(tup)
         p.join()
-
+    
     for fault in tot_fl.faults:
         fault.D_count = []
     for fl in fault_lists:
@@ -168,32 +193,31 @@ def ppsf_parallel_step(circuit, fl_fname, tot_fl, tp, cpu, log_fname=None):
         with open(log_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
     
-    # print("Total time: {:.2f}".format(time.time() - time_s))
+    print("Total time: {:.2f}".format(time.time() - time_s))
     return tot_fl
 
 def ppsf_parallel_basic(circuit, tp, cpu, fault_count=None):
     
-    tot_fl = FaultList_2()
-    
-    fault_fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    log_fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name) 
+    tot_fl = FaultList()
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     if fault_count:
         tot_fl.add_random(circuit, args.fault)
-        fault_fname = os.path.join(fault_fname, "{}-rand{}.fl".format(
+        fl_fname = os.path.join(path, "{}-rand{}.fl".format(
             circuit.c_name, fault_count))
-        log_fname = os.path.join(log_fname, "{}-ppsf-fault{}-tp{}-cpu{}.ppsf".format(
+        log_fname = os.path.join(path, "{}-ppsf-fpb{}-tp{}-cpu{}.ppsf".format(
             circuit.c_name, fault_count, tp, cpu))
     else:
         tot_fl.add_all(circuit)
-        fault_fname = os.path.join(fault_fname, "{}-all.fl".format(circuit.c_name))
-        log_fname = os.path.join(log_fname, "{}-ppsf-all-tp{}-cpu{}.ppsf".format(
+        fl_fname = os.path.join(path, "{}-all.fl".format(circuit.c_name))
+        log_fname = os.path.join(path, "{}-ppsf-all-tp{}-cpu{}.ppsf".format(
             circuit.c_name, tp, cpu))
 
-    tot_fl.write_file(fault_fname)
-    return ppsf_parallel_step(circuit, fault_fname, tot_fl, tp, cpu, log_fname)
+    tot_fl.write_file(fl_fname)
+    return ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname)
+
 
 def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
-    tot_fl = FaultList_2()
+    tot_fl = FaultList()
     tot_fl.add_all(circuit)
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     log_fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
@@ -202,10 +226,10 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
     outfile = open(log_fname, "w")
     for tp in tp_steps:
         time_s = time.time()
-        temp_fl = FaultList_2()
+        temp_fl = FaultList()
         fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
         tot_fl.write_file(fl_fname)
-        tot_fl = ppsf_parallel_step(circuit, fl_fname, tot_fl, tp, args.cpu, log_fname=None)
+        tot_fl = ppsf_parallel_step(circuit, tot_fl, tp, args.cpu, log_fname=None)
         fault_completed = []
         outfile.write("#TP={}\n".format(tp))
         for fault in tot_fl.faults:
@@ -214,7 +238,7 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
             if mu==0 and std==0:
                 temp_fl.add_str(str(fault))
             elif mu/std > confidence:
-                outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault.node_num, mu, std))
+                outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
             else:
                 #TODO: we maybe need to extend D_count, not just overwrite it! 
                 # temp_fl.add_fault(fault)
@@ -227,17 +251,10 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
             break
 
 def ppsf_parallel(circuit, args, steps=None, confidence=None):
-    
-    if not os.path.exists(cfg.FAULT_SIM_DIR):
-        os.system("mkdir {}".format(cfg.FAULT_SIM_DIR))
-    if not os.path.exists(os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)):
-        os.system("mkdir {}".format(os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)))
-
     if steps == None:
-        ppsf_parallel_basic(circuit, args.tp, args.cpu, args.fault)
+        ppsf_parallel_basic(circuit, args.tp, args.cpu, args.fault_per_bin)
     else:
         ppsf_parallel_confidence(circuit, args, steps, confidence)
-        print("Here")
 
     # This is for log fname 
     # out_fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name) 

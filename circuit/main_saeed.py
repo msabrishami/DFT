@@ -4,7 +4,7 @@ import utils
 from convert import Converter
 import experiments as exp
 from multiprocessing import Process, Pipe
-from fault_sim import FaultList_2
+from fault_sim import FaultList
 from ppsf import PPSF
 from pfs import PFS
 import convert
@@ -42,7 +42,7 @@ def pars_args():
     parser.add_argument("-synv", type=str, required=False, help="syn ver")
     parser.add_argument("-tp", type=int, required=False,
                         help="tp count for random sim")
-    parser.add_argument("-fault", type=int, required=False, help="fault count")
+    parser.add_argument("-fault_per_bin", type=int, required=False, help="faults per bin")
     parser.add_argument("-code", type=str, required=False,
                         help="code for general use")
     parser.add_argument("-tpLoad", type=int, required=False,
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     
     elif args.func == "ppsf_parallel":
         # exp.ppsf_parallel(circuit, args)
-        exp.ppsf_parallel(circuit, args, [20, 50, 100, 200, 500, 1000, 2000, 5000], 2)
+        exp.ppsf_parallel(circuit, args, [20, 50, 100, 200, 500, 1000, 2000, 5000], 3)
 
     elif args.func == "ppsf_analysis":
         mu = {}

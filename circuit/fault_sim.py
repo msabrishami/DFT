@@ -21,34 +21,6 @@ class Fault_C (Fault):
 
 
 class FaultList:
-    def __init__(self):
-        node = []
-        fault = []
-        detected = []
-    
-    def add_fault(self, circuit, mode="full", fname=None):
-        """ add faults to the fault list 
-        mode = full: fault list will be all SS@ faults 
-        mode = user: fault list will be read from file fname
-        """ 
-        if mode == "full":
-            circuit.get_full_fault_list()
-            self.in_fault_num = self.circuit.fault_node_num
-            self.in_fault_type = self.circuit.fault_type
-
-        elif mode == "user":
-            fr = open(fname, mode='r')
-            for line in fr:
-                line=line.rstrip('\n').split("@")
-                self.in_fault_num.append(line[0])
-                self.in_fault_type.append(int(line[1]))
-
-        else:
-            raise NameError("fault list type is not accepted")
-
-
-
-class FaultList_2:
     """ Fault list """
     #TODO: maybe using dictionary or set instead of a list for faults
     def __init__(self):
@@ -115,7 +87,7 @@ class FaultSim:
     
     def __init__(self, circuit):
         self.circuit = circuit
-        self.fault_list = FaultList_2()
+        self.fault_list = FaultList()
         self.fs_type = ""
         self.fault_set_all = set()
         for node in self.circuit.nodes_lev:
@@ -128,82 +100,14 @@ class FaultSim:
         """
         Creating the required directories for fault simulation
         """
-        paths = [config.FAULT_SIM_DIR, config.FAULT_DICT_DIR, 
-                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/', 
-                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/', 
-                # TODO
-                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/dfs/', 
-                # TODO
-                # config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/compare/',
-                config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/pfs/'
-                ]
+        paths = [config.FAULT_SIM_DIR, 
+                config.FAULT_SIM_DIR + '/' + self.circuit.c_name]
         
         for path in paths:
             if not os.path.exists(path):
                 print("Creating directory {}".format(path))
                 os.mkdir(path)
                
-
-    # TODO: deprecate this method
-    def fs_tp_gen(self, tp_num, t_mode, r_mode='b'):
-        raise NameError("Error: This method is deprecated!")
-        '''
-        Generate test patterns for DFS/PFS
-        Arguments:
-        ----------
-        tp_num : int
-                number of test patterns to generate, only used in "rand" mode
-        t_mode : str
-                rand : random mode, create certain number of random test pattterns
-                full : create all possible test patterns in order
-        '''
-        tp_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/'
-        tp_fname = tp_path + self.circuit.c_name
-        
-        if t_mode == 'rand':
-            tp_fname += '_' + str(tp_num) + '_tp_' + r_mode + '.tp'
-            self.circuit.gen_tp_file(tp_num, fname = tp_fname, mode = "b")
-        
-        elif t_mode == 'full':
-            tp_fname += '_full_tp_' + r_mode + '.tp'
-            times = pow(2, len(self.circuit.PI))
-            fw = open(tp_fname, mode='w')
-            PI_string = ','.join([node.num for node in self.circuit.PI])
-            fw.write(PI_string + '\n')
-            for i in range(times):
-                pattern = list(bin(i)[2:].zfill(num))
-                pattern_str = ",".join(pattern)
-                fw.write(pattern_str + '\n')
-        else: 
-            raise NameError("Mode is not acceptable! Mode = 'rand' or 'full'!")
-
-        print("Test patterns were saved in {}".format(tp_fname))
-
-
-    def fs_tp_gen_golden(self, tp_num=1, no=1, t_mode='rand', r_mode='b'):
-        print("Error: this method is deprecated")
-
-    
-    def fs_input_fetch(self, fname_tp):
-        raise NameError("Error: This method is deprecated!")
-        '''
-        Fetch input pattern list from a input file
-        pattern_list = [[1,1,0,0,1],[1,0,1,0,0],[0,0,0,1,1],[1,0,0,1,0]]
-        '''
-        input_path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/input/'
-        fr = open(input_path + fname_tp, mode='r')
-        lines = fr.readlines()
-        pattern_list = []
-        for line in lines[1:]:
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            pattern_list.append(line_split)
-        fr.close()
-        return pattern_list
-
-
     def single(self, input_pattern):
         """ Single pass of simulation. 
         DFS/PFSP: single test pattern
@@ -225,5 +129,3 @@ class FaultSim:
     def return_rest_fault(self):
         return self.fault_set_rest
 
-
-    

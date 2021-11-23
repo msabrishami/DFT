@@ -61,17 +61,17 @@ class PPSF(FaultSim):
         
         return res_fixed
 
-    def fs_exe(self, tp_fname, log_fname=None, verbose=False): 
+    def fs_exe(self, tps, log_fname=None, verbose=False): 
         """ 
         Run PPSF for the fault in the fault list, given the tp file. 
         For each fault, it counts the number of times it has been detected.
-        tp_num : int 
+        tps : str or list of tps, if tps is str, it is the fname of a tp file
         """ 
         self.fs_folder()
-        tps = self.circuit.load_tp_file(tp_fname)
-        fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/ppsf/"
-        fn += tp_fname.split("/")[-1].replace(".tp", ".log")
-        log_fname = fn if log_fname==None else log_fname
+        if isinstance(tps, str):
+            tps = self.circuit.load_tp_file(tps)
+        else:
+            assert(isinstance(tps, list), "tps type shoud be str or list")
 
         if verbose:
             print("PPSF for tp file: {}".format(tp_fname))

@@ -207,7 +207,7 @@ class Circuit:
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         returns the list of geneted test patterns
-        mention the sequence of inputs and tps
+        does not store the generated tps in file 
         """
         tps = [self.gen_single_tp(mode) for _ in range(tp_count)] 
         return tps
