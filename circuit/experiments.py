@@ -192,7 +192,7 @@ def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=Fals
         with open(log_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
     
-    print("Total time: {:.2f}".format(time.time() - time_s))
+    # print("Total time: {:.2f}".format(time.time() - time_s))
     return tot_fl
 
 def ppsf_parallel_basic(circuit, tp, cpu, fault_count=None):

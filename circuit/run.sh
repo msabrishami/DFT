@@ -1,23 +1,9 @@
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 10 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 20 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 30 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 40 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 60 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 70 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 80 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 90 -cpu  80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 110 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 120 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 130 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 140 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 150 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 160 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 170 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 180 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 190 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 300 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 400 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 600 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 700 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 800 -cpu 80
-python3 main_saeed.py -ckt ../data/verilog/c499_synV1.v -func ppsf_parallel -tp 900 -cpu 80
+# python3 main_saeed.py -ckt ../data/verilog/c3540_synV0.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c3540_synV1.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c3540_synV2.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c5315_synV0.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c5315_synV1.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c5315_synV2.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c6288_synV0.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c6288_synV1.v -func ppsf_parallel -cpu  50
+python3 main_saeed.py -ckt ../data/verilog/c6288_synV2.v -func ppsf_parallel -cpu  50

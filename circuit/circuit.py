@@ -202,14 +202,15 @@ class Circuit:
         
         return tp 
     
-    def gen_multiple_tp(self,tp_count,mode="b"):
+    def gen_multiple_tp(self, tp_count, mode="b"):
         """ Generates multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         returns the list of geneted test patterns
         does not store the generated tps in file 
+        converts tp_count to int, as sometimes we pass fps (e.g. 1e6)
         """
-        tps = [self.gen_single_tp(mode) for _ in range(tp_count)] 
+        tps = [self.gen_single_tp(mode) for _ in range(int(tp_count))] 
         return tps
 
     def gen_tp_file(self, tp_count, tp_fname=None, mode="b", verbose=False):

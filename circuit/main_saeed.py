@@ -148,9 +148,24 @@ if __name__ == '__main__':
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad)
         circuit.load_TMs(fname)
-        circuit.co_ob_info()
-        print("E[FC] (T={}) = {:.2f} % ".format(
-            args.tp, 100*circuit.STAFAN_FC(args.tp)))
+        PDs = []
+        for node in circuit.nodes_lev:
+            PDs.append(node.D0)
+            PDs.append(node.D1)
+        if min(PDs) == 0:
+            PDs = [x for x in PDs if x!=0]
+        pdb.set_trace()
+        bins = np.logspace(np.floor(np.log10(min(PDs))), np.log10(max(PDs)), 20)
+        plt.figure(figsize=(14,8), dpi=300) 
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.hist(PDs, bins=bins)
+        plt.title("Detection probability histogram based on STAFAN\n{}".format(circuit.c_name))
+        plt.tight_layout()
+        plt.savefig("stafan-hist-{}".format(circuit.c_name))
+        # circuit.co_ob_info()
+        # print("E[FC] (T={}) = {:.2f} % ".format(
+        #     args.tp, 100*circuit.STAFAN_FC(args.tp)))
 
     elif args.func == "backward-level":
         circuit.all_shortest_distances_to_PO()
@@ -206,7 +221,8 @@ if __name__ == '__main__':
     
     elif args.func == "ppsf_parallel":
         # exp.ppsf_parallel(circuit, args)
-        exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5000, 10000], 3)
+        exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5e3, 1e4, 
+                2e4, 5e4, 1e5, 2e5, 5e5, 1e6], 3)
 
     elif args.func == "ppsf_analysis":
         mu = {}
