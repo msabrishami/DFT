@@ -120,7 +120,16 @@ def get_fanin_BFS(circuit, node):
     
     print("Done")
     return res
-
-
     
-    
+   
+def load_ppsf_parallel(fname):
+    """ loads a ppsf_parallel simulated log file 
+    the last line is time """ 
+    lines = open(fname, "r").readlines()
+    res = {}
+    for line in lines[:-1]:
+        words = line.strip().split(",")
+        res[words[0]] = [int(x) for x in words[1:]]
+    return res
+
+        
