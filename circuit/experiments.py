@@ -284,7 +284,33 @@ def ppsf_analysis(circuit, args):
 
     return res
 
+def compare_ppsf_step_stafan_hist(circuit, args, confidence):
+    # STEP #1: load stafan data into the circuit nodes
+    fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+            circuit.c_name, circuit.c_name, args.tpLoad)
+    circuit.load_TMs(fname)
 
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+            circuit.c_name, confidence, args.cpu))
+    res_ppsf = utils.load_ppsf_parallel_step(fname)
+    
+    stafan_pd = []
+    ppsf_pd = [x for x in res_ppsf.values()]
+    for node in circuit.nodes_lev:
+        stafan_pd.extend([node.D0, node.D1])
+    
+    bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
+    plt.figure(figsize=(10, 8), dpi=300)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.hist(stafan_pd, bins=bins, color="r", alpha=0.2, label="STAFAN")
+    plt.hist(ppsf_pd,  bins=bins, color="b", alpha=0.2, label="PPSF")
+    plt.title("Detection probability histogram\n{}-tp={}".format(
+        circuit.c_name, args.tpLoad))
+    plt.legend()
+    plt.savefig("ppsf-vs-stafan-{}-tp{}.png".format(circuit.c_name, args.tpLoad))
+    plt.close()
 
 
 

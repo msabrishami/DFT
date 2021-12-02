@@ -132,4 +132,20 @@ def load_ppsf_parallel(fname):
         res[words[0]] = [int(x) for x in words[1:]]
     return res
 
-        
+def load_ppsf_parallel_step(fname):
+    """ loads a ppsf_parallel_step simulated log file 
+    """ 
+    lines = open(fname, "r").readlines()
+    res = {}
+    for line in lines:
+        if line.startswith("#TP="):
+            current_tp = float(line.split("=")[-1])
+            continue
+        if line.startswith("#TP: (remaining"):
+            # TODO: check this out, we are not returning any info about remaining faults
+            print("Fault simulation was not completed for some nodes!")
+            break
+        words = line.split()
+        res[words[0]] = float(words[1])/current_tp
+    return res
+

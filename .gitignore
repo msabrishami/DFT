@@ -1,5 +1,7 @@
 # git ignore
 
+circuit/run.sh
+
 # Saeed:
 **.swp
 data/modelsim/
