@@ -146,7 +146,7 @@ def compare_fc_tp_estimation():
     pass
 
 
-def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=False):
+def ppsf_parallel_step(circuit, fl_curr, tp, cpu, log_fname=None, count_cont=False):
     """ Running ppsf in parallel for one step given test patterns and fault list, 
         counts the number of times faults are detected. The test patterns are 
         generated in each process separately, but are not stored by default.
@@ -171,7 +171,7 @@ def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=Fals
         # p = Process(target=ppsf_thread,
         #             args=(child_conn, circuit.c_fname, tp, tp_fname, fl_fname))
         p = Process(target=ppsf_thread,
-                    args=(child_conn, circuit, tp, tot_fl))
+                    args=(child_conn, circuit, tp, fl_curr))
 
         p.start()
         process_list.append((p, parent_conn))
@@ -181,11 +181,13 @@ def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=Fals
         tup = conn.recv()
         fault_lists.append(tup)
         p.join()
-    for fault in tot_fl.faults:
+
+    
+    for fault in fl_curr.faults:
         fault.D_count = []
     for fl in fault_lists:
-        for idx in range(len(fl.faults)):
-            tot_fl.faults[idx].D_count.append(fl.faults[idx].D_count)
+        for idx in range(len(fl_curr.faults)):
+            fl_curr.faults[idx].D_count.append(fl.faults[idx].D_count)
     
     if log_fname:
         tot_fl.write_file_extra(log_fname)
@@ -193,7 +195,7 @@ def ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname=None, count_cont=Fals
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
     
     # print("Total time: {:.2f}".format(time.time() - time_s))
-    return tot_fl
+    return fl_curr 
 
 def ppsf_parallel_basic(circuit, tp, cpu, fault_count=None):
     
@@ -215,43 +217,55 @@ def ppsf_parallel_basic(circuit, tp, cpu, fault_count=None):
     return ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname)
 
 
-def ppsf_parallel_confidence(circuit, args, tp_steps, confidence):
-    tot_fl = FaultList()
-    tot_fl.add_all(circuit)
+def ppsf_parallel_confidence(circuit, args, tp_steps, confidence, full_log=False):
+    fl_cont = FaultList()
+    fl_curr = FaultList()
+    fl_cont.add_all(circuit)
+    fl_curr.add_all(circuit)
+    fault_idx = {}
+    for idx, fault in enumerate(fl_cont.faults):
+        fault_idx[str(fault)] = idx
+        # fault.D_count = [0] * args.cpu
+        fault.D_count = [0] * args.cpu
+
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     log_fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
             circuit.c_name, confidence, args.cpu))
     print("Log for step based PPSF is being stored in {}".format(log_fname))
     outfile = open(log_fname, "w")
+    
     for tp in tp_steps:
         time_s = time.time()
-        temp_fl = FaultList()
-        fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
-        tot_fl.write_file(fl_fname)
-        tot_fl = ppsf_parallel_step(circuit, tot_fl, tp, args.cpu, log_fname=None, 
+        fl_temp = FaultList()
+        # fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
+        # fl_cont.write_file(fl_fname)
+        fl_curr = ppsf_parallel_step(circuit, fl_curr, tp, args.cpu, log_fname=None, 
                 count_cont=True)
         fault_completed = []
         outfile.write("#TP={}\n".format(tp))
-        for fault in tot_fl.faults:
-            mu = np.mean(fault.D_count) 
-            std = np.std(fault.D_count)
+        for fault in fl_curr.faults:
+            fault_cont = fl_cont.faults[fault_idx[str(fault)]]
+            fault_cont.D_count.extend( np.array(fault.D_count)/tp )
+            mu = np.mean(fault_cont.D_count) 
+            std = np.std(fault_cont.D_count)
             if mu==0 and std==0:
-                temp_fl.add_str(str(fault))
+                fl_temp.add_str(str(fault))
             elif mu/std > confidence:
                 outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
+                if full_log:
+                    outfile.write(",".join(fl_cont.faultsD_count
             else:
-                #TODO: we maybe need to extend D_count, not just overwrite it! 
-                # temp_fl.add_fault(fault)
-                temp_fl.add_str(str(fault))
+                fl_temp.add_str(str(fault))
 
         print("TP={} #FL={} -> #FL={}\ttime={:.2f}".format(
-            tp, len(tot_fl.faults), len(temp_fl.faults), time.time()-time_s))
-        tot_fl = temp_fl
-        if len(tot_fl.faults) == 0:
+            tp, len(fl_curr.faults), len(fl_temp.faults), time.time()-time_s))
+        fl_curr = fl_temp 
+        if len(fl_curr.faults) == 0:
             break
+    
     # Writing down the remaining faults 
     outfile.write("#TP: (remaining faults)\n")
-    for fault in tot_fl.faults:
+    for fault in fl_curr.faults:
         mu = np.mean(fault.D_count) 
         std = np.std(fault.D_count)
         outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
@@ -284,7 +298,33 @@ def ppsf_analysis(circuit, args):
 
     return res
 
+def compare_ppsf_step_stafan_hist(circuit, args, confidence):
+    # STEP #1: load stafan data into the circuit nodes
+    fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+            circuit.c_name, circuit.c_name, args.tpLoad)
+    circuit.load_TMs(fname)
 
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+            circuit.c_name, confidence, args.cpu))
+    res_ppsf = utils.load_ppsf_parallel_step(fname)
+    
+    stafan_pd = []
+    ppsf_pd = [x for x in res_ppsf.values()]
+    for node in circuit.nodes_lev:
+        stafan_pd.extend([node.D0, node.D1])
+    
+    bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
+    plt.figure(figsize=(10, 8), dpi=300)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.hist(stafan_pd, bins=bins, color="r", alpha=0.2, label="STAFAN")
+    plt.hist(ppsf_pd,  bins=bins, color="b", alpha=0.2, label="PPSF")
+    plt.title("Detection probability histogram\n{}-tp={}".format(
+        circuit.c_name, args.tpLoad))
+    plt.legend()
+    plt.savefig("ppsf-vs-stafan-{}-tp{}.png".format(circuit.c_name, args.tpLoad))
+    plt.close()
 
 
 

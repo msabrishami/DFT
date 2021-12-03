@@ -19,7 +19,7 @@ netlists_ISCAS = ["c432","c499","c880","c1355","c1908","c3540","c5315","c6288","
 
 all_netlists = netlists_ISCAS
 # all_netlists = ["priority_syn", "int2float_syn", "dec_syn", "cavlc_syn", "adder_syn"] 
-tps = [2000, 5000, 10000, 20000]
+tps = [1000, 10000, 100000]
 
 
 ########################################
@@ -31,19 +31,21 @@ tps = [2000, 5000, 10000, 20000]
 # script = "python3  main_saeed.py -ckt ../data/verilog/$CKT$ -tp $TP$ -func test4 "
 # script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-save-coded -tp {} -cpu 10 -code 20"
 # script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-save -tp {} -cpu 10"
-script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_parallel -cpu  50"
+# script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_parallel -cpu  50"
 # script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-load -tpLoad 1000000"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_vs_stafan -tpLoad {} -cpu 50"
+# script = "scp viterbi2:/home/viterbi/00/abri442/workspace/DFT/data/fault_sim/{}/*step* ../data/fault_sim/{}/"
 
 for tp in tps:
-    for ckt in all_netlists[5:8]:
+    for ckt in all_netlists[:-1]:
         for ver in [0, 1, 2]:
             # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
             #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
             #     continue
-            sc = script.format(ckt + "_synV" + str(ver) + ".v")
+            ckt_name = ckt + "_synV" + str(ver) + ".v" 
+            sc = script.format(ckt_name, tp)
+            # os.system(sc)
             print(sc)
-    break
-
 exit()
 
 
