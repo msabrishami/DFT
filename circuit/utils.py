@@ -140,9 +140,11 @@ def load_ppsf_parallel_step(fname):
     """ 
     lines = open(fname, "r").readlines()
     res = {}
+    current_tp = 0
     for line in lines:
         if line.startswith("#TP="):
-            current_tp = float(line.split("=")[-1])
+            current_tp += float(line.split("=")[-1])
+            print(current_tp)
             continue
         if line.startswith("#TP: (remaining"):
             if lines[-1] == line:
@@ -152,5 +154,18 @@ def load_ppsf_parallel_step(fname):
             break
         words = line.split()
         res[words[0]] = float(words[1])/current_tp
+
     return res
+
+def load_ppsf_parallel_step_D(circuit, args, confidence):
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+            circuit.c_name, confidence, args.cpu))
+    print("Loading ppsf results file from {} into node.D values".format(fname))
+    res_ppsf = utils.load_ppsf_parallel_step(fname)
+    for fault, prob in res_ppsf.items():
+        if fault[-1] == "1":
+            circuit.nodes[fault[:-2]].D1 = prob
+        else:
+            circuit.nodes[fault[:-2]].D0 = prob
 

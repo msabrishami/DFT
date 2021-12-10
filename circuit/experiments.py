@@ -356,16 +356,3 @@ def compare_ppsf_step_stafan_hist(circuit, args, confidence):
     plt.close()
 
 
-def msa_ppsf_load(circuit, args, confidence):
-    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
-            circuit.c_name, confidence, args.cpu))
-    print("Loading ppsf results file from {}".format(fname))
-    res_ppsf = utils.load_ppsf_parallel_step(fname)
-    for fault, prob in res_ppsf.items():
-        if fault[-1] == "1":
-            circuit.nodes[fault[:-2]].D1 = prob
-        else:
-            circuit.nodes[fault[:-2]].D0 = prob
-    pdb.set_trace()
-

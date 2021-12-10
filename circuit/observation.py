@@ -135,7 +135,7 @@ def deltaP_2(circuit, op, verbose=False):
     return deltaP_tot
 
 
-def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None): 
+def deltaFC(circuit, op, tps, ref="STAFAN", verbose=False, cut_bfs=None): 
     """ Calculating the changes in the FC estimation of the nodes
     in the circuit when node OP is used as an observation point. 
     Detection probability is estimated using STAFAN values.
@@ -150,14 +150,20 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
     -------
     float     
     """
+    assert ref in ["STAFAN", "PPSF"], "reference should be either STAFAN or PPSF"
+    
     circuit.STAFAN_B()
+    
     fanin_cone = utils.get_fanin_BFS(circuit, op)
     if cut_bfs:
         fanin_cone = fanin_cone[:cut_bfs]
+    
     PDs_init = []
     for node in fanin_cone:
-        PDs_init.append(node.C0 * node.B0)
-        PDs_init.append(node.C1 * node.B1)
+        if ref == "STAFAN":
+            PDs_init.append(node.C0 * node.B0)
+            PDs_init.append(node.C1 * node.B1)
+
     
     # temporary adding op as a primary output and redoing STAFAN_B
     orig_ntype = op.ntype
@@ -211,8 +217,6 @@ def deltaP(circuit, op, verbose=False, cut_bfs=None):
     for node in fanin_cone:
         PDs_init.append(node.C0 * node.B0)
         PDs_init.append(node.C1 * node.B1)
-        # PDs_init["{}@1".format(node.num)] = (node.C0 * node.B0) 
-        # PDs_init["{}@0".format(node.num)] = (node.C1 * node.B1)
     
     # temporary adding op as a primary output and redoing STAFAN_B
     orig_ntype = op.ntype
@@ -221,14 +225,6 @@ def deltaP(circuit, op, verbose=False, cut_bfs=None):
     circuit.STAFAN_B()
     PDs_new = []
     for node in fanin_cone:
-        D0_init = node.D0
-        D1_init = node.D1
-        node.D0 = node.C1 * node.B1
-        node.D1 = node.C0 * node.B0 
-        # print("{:10}@0\tinit={:.4f}\tpost={:.4f}\tdelta={:.4f}".format(
-        #     node.num, D0_init, node.D0, (node.D0-D0_init)/D0_init ))
-        # print("{:10}@1\tinit={:.4f}\tpost={:.4f}\tdetal={:.4f}".format(
-        #     node.num, D1_init, node.D1, (node.D1-D1_init)/D1_init ))
         PDs_new.append(node.C0 * node.B0)
         PDs_new.append(node.C1 * node.B1)
 

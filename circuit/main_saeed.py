@@ -227,7 +227,6 @@ if __name__ == '__main__':
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args, 3)
-        # exp.msa_ppsf_load(circuit, args, 3)
 
     elif args.func == "ppsf_analysis":
         mu = {}
@@ -317,17 +316,24 @@ if __name__ == '__main__':
         # TODO: check if the results of BFS and DFS are the same 
 
     elif args.func == "msa":
-
         samples = args.opCount 
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
         nodes = circuit.get_rand_nodes(samples)
+
+        """ just a test """ 
+        temp = []
+        for node in nodes:
+            temp.append(len(utils.get_fanin_BFS(circuit, node)))
         pdb.set_trace()
+        exit()
         df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1", "deltaP"])
         TPs = [x*200 for x in range(1, 16)]# [100, 200, 300, 400, 500, 1000]
+        
         for tp in TPs:
             print("TP = {:04d} => FC = {:.2f}%".format(tp, 100*circuit.STAFAN_FC(tp)))
+        
         for node in nodes:
             row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, 
                     "C0":node.C0, "D0":node.D0, "D1":node.D1}
