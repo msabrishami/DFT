@@ -95,16 +95,19 @@ def get_fanin(circuit, node):
     get_fanin_rec(circuit, node, res)
     return res
     
-def get_fanin_BFS(circuit, node):
+def get_fanin_BFS(circuit, node, lev_depth=None):
     """ Finds the nodes in the fanin-cone of a node in a circuit
     returns an ordered list of nodes
     Using BFS approach 
+    lev_depth : int 
+        depth of search based on level 
     TODO: is this really BFS, because we are considering levels, and not depth
     """
     q = deque()
     res = []
     visited = set()
-
+    lev_depth = len(circuit.nodes) if lev_depth==None else lev_depth
+    lev_max = node.lev - lev_depth
     q.append(node)
     visited.add(node.num)
     
@@ -113,12 +116,11 @@ def get_fanin_BFS(circuit, node):
         # print(current_node)
         res.append(current_node)
         for unode in current_node.unodes:
-            if unode.num in visited:
+            if (unode.num in visited) or (unode.lev < lev_max) :
                 continue
             visited.add(unode.num)
             q.append(unode)
     
-    print("Done")
     return res
     
    
@@ -133,6 +135,7 @@ def load_ppsf_parallel(fname):
     return res
 
 def load_ppsf_parallel_step(fname):
+    #TODO: ppsf-step is based on accumulated TPs now, wrong load 
     """ loads a ppsf_parallel_step simulated log file 
     """ 
     lines = open(fname, "r").readlines()
@@ -142,6 +145,8 @@ def load_ppsf_parallel_step(fname):
             current_tp = float(line.split("=")[-1])
             continue
         if line.startswith("#TP: (remaining"):
+            if lines[-1] == line:
+                break
             # TODO: check this out, we are not returning any info about remaining faults
             print("Fault simulation was not completed for some nodes!")
             break

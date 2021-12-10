@@ -2,6 +2,7 @@
 import config
 import pdb
 import utils
+import numpy as np
 
 
 def fault_stat(circuit, HTO_th, HTC_th):
@@ -134,8 +135,62 @@ def deltaP_2(circuit, op, verbose=False):
     return deltaP_tot
 
 
+def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None): 
+    """ Calculating the changes in the FC estimation of the nodes
+    in the circuit when node OP is used as an observation point. 
+    Detection probability is estimated using STAFAN values.
+    FC estimation formula is Sum_FL( exp(-D_pre*tp) - exp(-D_post*tp) ). 
+    Parameters
+    ----------
+    circuit : Circuit before adding op
+    op : node used for observation point insertion 
+    tps : the number of test patterns, it can be a list of tps
+    
+    Returns
+    -------
+    float     
+    """
+    circuit.STAFAN_B()
+    fanin_cone = utils.get_fanin_BFS(circuit, op)
+    if cut_bfs:
+        fanin_cone = fanin_cone[:cut_bfs]
+    PDs_init = []
+    for node in fanin_cone:
+        PDs_init.append(node.C0 * node.B0)
+        PDs_init.append(node.C1 * node.B1)
+    
+    # temporary adding op as a primary output and redoing STAFAN_B
+    orig_ntype = op.ntype
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    circuit.STAFAN_B()
+    PDs_new = []
 
-def deltaP(circuit, op, verbose=False): 
+    for node in fanin_cone:
+        PDs_new.append(node.C0 * node.B0)
+        PDs_new.append(node.C1 * node.B1)
+
+    if isinstance(tps, int):
+        deltaFC = 0
+        for idx in range(len(PDs_new)):
+            deltaFC += (np.exp(-PDs_init[idx]*tps) - np.exp(-PDs_new[idx]*tps))
+    
+    elif isinstance(tps, list):
+        deltaFCs = []
+        for tp in tps:
+            deltaFC = 0
+            for idx in range(len(PDs_new)):
+                deltaFC += (np.exp(-PDs_init[idx]*tp) - np.exp(-PDs_new[idx]*tp))
+            deltaFCs.append(deltaFC)
+        deltaFC = deltaFCs
+
+    op.ntype = orig_ntype
+    circuit.PO = circuit.PO[:-1]
+    return deltaFC
+
+
+
+def deltaP(circuit, op, verbose=False, cut_bfs=None): 
     """ Calculating the changes in the sum of detection probability of the nodes
     in the circuit when node OP is used as an observation point 
     Parameters
@@ -149,10 +204,15 @@ def deltaP(circuit, op, verbose=False):
     """
     circuit.STAFAN_B()
     fanin_cone = utils.get_fanin_BFS(circuit, op)
+    if cut_bfs:
+        fanin_cone = fanin_cone[:cut_bfs]
     PDs_init = []
+    # PDs_init = {} 
     for node in fanin_cone:
         PDs_init.append(node.C0 * node.B0)
         PDs_init.append(node.C1 * node.B1)
+        # PDs_init["{}@1".format(node.num)] = (node.C0 * node.B0) 
+        # PDs_init["{}@0".format(node.num)] = (node.C1 * node.B1)
     
     # temporary adding op as a primary output and redoing STAFAN_B
     orig_ntype = op.ntype
@@ -161,101 +221,23 @@ def deltaP(circuit, op, verbose=False):
     circuit.STAFAN_B()
     PDs_new = []
     for node in fanin_cone:
+        D0_init = node.D0
+        D1_init = node.D1
+        node.D0 = node.C1 * node.B1
+        node.D1 = node.C0 * node.B0 
+        # print("{:10}@0\tinit={:.4f}\tpost={:.4f}\tdelta={:.4f}".format(
+        #     node.num, D0_init, node.D0, (node.D0-D0_init)/D0_init ))
+        # print("{:10}@1\tinit={:.4f}\tpost={:.4f}\tdetal={:.4f}".format(
+        #     node.num, D1_init, node.D1, (node.D1-D1_init)/D1_init ))
         PDs_new.append(node.C0 * node.B0)
         PDs_new.append(node.C1 * node.B1)
 
     delta_PDs = [PDs_new[i] - PDs_init[i] for i in range(len(PDs_new))]
-    return delta_PDs
-
-
-def deltaP_old(circuit, op, verbose=False):
-    """ 
-    This method is deprecated! 
-    aggregated amount of change op's fan-in cone, arithmetic and geometeric
-    all amounts of change in the op's fan-in cone
-    """
-    circuit.STAFAN_B()
-    # fault_stat(circuit, HTO_th=HTO_th, HTC_th=HTC_th)
-    stat_arit_all = [] # [[1,1,1]] * len(circuit.nodes_lev)
-    stat_geom_all = [] # [[0,0,0]] * len(circuit.nodes_lev)
-    stat_arit_agg = [0, 0, 0, 0, 0]
-    stat_geom_agg = [0, 0, 0, 0, 0]
-    stat_init = []
-
-    for node in circuit.nodes_lev: 
-        stat_init.append([node.B0, node.B1, node.B, node.CB0, node.CB1, node.num, node.lev])
-        stat_arit_all.append([0, 0, 0, 0, 0])
-        stat_geom_all.append([0, 0, 0, 0, 0])
     
-    # Make op as observation point, add it to circuit outputs, run STAFAN again
-    orig_ntype = op.ntype
-    circuit.PO.append(op)
-    op.ntype = "PO"
-    circuit.STAFAN_B()
-
-    for idx, node in enumerate(circuit.nodes_lev):
-        changed = [node.B0, node.B1, node.B, node.CB0, node.CB1]
-        for x in range(5):
-            
-            # if no change was made, and still node observation is zero! 
-            if stat_init[idx][x] == 0 and changed[x]==0:
-                # Both arithmetic and geometric are not changed 
-                continue
-            # if it changed, but initial value was zero
-            elif stat_init[idx][x] == 0:
-                stat_init[idx][x] = config.STAFAN_B_MIN
-
-            stat_arit_all[idx][x] = changed[x] - stat_init[idx][x]
-            stat_geom_all[idx][x] = (changed[x] / stat_init[idx][x]) - 1
-            stat_arit_agg[x] += (changed[x] - stat_init[idx][x])
-            stat_geom_agg[x] += ((changed[x] / stat_init[idx][x]) - 1)
-        # print("info:\t", idx, node.num, temp, stat_arit_all[idx])
-    if verbose:
-        print("Target node is: {}".format(str(op))) 
-        print("node\tlev\tCB0-post\tCB0-pre\tCB1-post\tCB1-pre")
-        for idx, node in enumerate(circuit.nodes_lev):
-            if stat_init[idx][2] != node.B:
-                print("{}\t{}".format(node.num, node.lev), end="")
-                print("\t\t {:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(
-                    node.CB0, stat_init[idx][3], node.CB1, stat_init[idx][4],
-                    (node.CB0-stat_init[idx][3]) + (node.CB1- stat_init[idx][4])))
     op.ntype = orig_ntype
     circuit.PO = circuit.PO[:-1]
+    return delta_PDs
 
-    return stat_arit_all, stat_geom_all, stat_arit_agg, stat_geom_agg
-
-
-def circuit_deltaP(circuit, B_th=0.1, ops=None):
-    """ measuring the change made in the fan-in cone nodes if made PO 
-    Calculates this for all the nodes
-    returns a ranked list of nodes based on value of B
-    Note: we are not considering branch nodes 
-    """
-    
-    res_arit = {}
-    res_geom = {}
-
-    for op in ops:
-        node = circuit.nodes[op]
-
-        if (node.B > B_th) or (node.ntype in ["FB", "PI"]):
-            continue
-        
-        a_all, g_all, a_agg, g_agg = deltaP(circuit, node)
-        res_arit[node.num] = a_agg
-        res_geom[node.num] = g_agg
-    
-    guide = {"B0":0, "B1":1, "B":2, "CB0":3, "CB1":4}
-
-    _arit = {}
-    _geom = {}
-    for key in res_arit.keys():
-        _arit[key] = res_arit[key][guide["B"]]
-        _geom[key] = res_geom[key][guide["B"]]
-    arit_sort = {k: v for k,v in sorted(_arit.items(), key=lambda item: item[1], reverse=True)}
-    # geom_sort = {k: v for k,v in sorted(_geom.items(), key=lambda item: item[1], reverse=True)}
-
-    return arit_sort
 
 
 def OPI(circuit, alg, count_op, args):

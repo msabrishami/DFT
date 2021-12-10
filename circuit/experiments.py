@@ -225,16 +225,16 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence, full_log=False
     fault_idx = {}
     for idx, fault in enumerate(fl_cont.faults):
         fault_idx[str(fault)] = idx
-        # fault.D_count = [0] * args.cpu
-        fault.D_count = [0] * args.cpu
+        fault.D_count = np.zeros(args.cpu) 
 
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     log_fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
             circuit.c_name, confidence, args.cpu))
     print("Log for step based PPSF is being stored in {}".format(log_fname))
     outfile = open(log_fname, "w")
-    
+    tp_tot = 0 
     for tp in tp_steps:
+        tp_tot += tp
         time_s = time.time()
         fl_temp = FaultList()
         # fl_fname = os.path.join(path, "{}-steps-temp.fl".format(circuit.c_name))
@@ -245,15 +245,13 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, confidence, full_log=False
         outfile.write("#TP={}\n".format(tp))
         for fault in fl_curr.faults:
             fault_cont = fl_cont.faults[fault_idx[str(fault)]]
-            fault_cont.D_count.extend( np.array(fault.D_count)/tp )
+            fault_cont.D_count += np.array(fault.D_count)
             mu = np.mean(fault_cont.D_count) 
             std = np.std(fault_cont.D_count)
             if mu==0 and std==0:
                 fl_temp.add_str(str(fault))
             elif mu/std > confidence:
                 outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
-                if full_log:
-                    outfile.write(",".join(fl_cont.faultsD_count
             else:
                 fl_temp.add_str(str(fault))
 
@@ -299,11 +297,12 @@ def ppsf_analysis(circuit, args):
     return res
 
 def compare_ppsf_step_stafan_hist(circuit, args, confidence):
-    # STEP #1: load stafan data into the circuit nodes
+    # STEP 1: load stafan data into the circuit nodes
     fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad)
     circuit.load_TMs(fname)
 
+    # Step 2: load ppsf parallel step based values
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
             circuit.c_name, confidence, args.cpu))
@@ -312,8 +311,11 @@ def compare_ppsf_step_stafan_hist(circuit, args, confidence):
     stafan_pd = []
     ppsf_pd = [x for x in res_ppsf.values()]
     for node in circuit.nodes_lev:
-        stafan_pd.extend([node.D0, node.D1])
+        # stafan_pd.extend([node.D0, node.D1]) # D0 & D1 are not used for STAFAN anymore
+        stafan_pd.extend([node.C1*node.B1, node.C0*node.B0])
     
+    # Figure 1: histogram of STAFAN and PPSF probabilities 
+    pdb.set_trace()
     bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
     plt.figure(figsize=(10, 8), dpi=300)
     plt.xscale("log")
@@ -325,6 +327,45 @@ def compare_ppsf_step_stafan_hist(circuit, args, confidence):
     plt.legend()
     plt.savefig("ppsf-vs-stafan-{}-tp{}.png".format(circuit.c_name, args.tpLoad))
     plt.close()
+    
+    # Figure 2: relative error based on the PPSF value
+    X = []
+    Y = []
+    for fault, prob in res_ppsf.items():
+
+        node = circuit.nodes[fault[:-2]]
+        if fault[-1] == 1:
+            D = node.C0 * node.B0
+        else:
+            D = node.C1 * node.B1 
+        if D==prob:
+            continue
+        X.append(prob)
+        Y.append( abs(D-prob)/prob ) 
+        # Y.append(D)
+    
+    plt.xscale("log")
+    plt.yscale('log')
+    plt.scatter(X, Y, s=2)
+    plt.ylim(max(min(Y), 0.001), max(Y)*1.1)
+    # plt.xlim(0,0.2)
+    plt.title("Error in detection probability (D) STAFAN vs PPSF\n{}".format(circuit.c_name))
+    plt.xlabel("Detection Probability (PPSF)")
+    plt.ylabel("(D_STAFAN - D_PPSF)/D_PPSF")
+    plt.savefig("./results/STAFAN-Error-{}.png".format(circuit.c_name))
+    plt.close()
 
 
+def msa_ppsf_load(circuit, args, confidence):
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+            circuit.c_name, confidence, args.cpu))
+    print("Loading ppsf results file from {}".format(fname))
+    res_ppsf = utils.load_ppsf_parallel_step(fname)
+    for fault, prob in res_ppsf.items():
+        if fault[-1] == "1":
+            circuit.nodes[fault[:-2]].D1 = prob
+        else:
+            circuit.nodes[fault[:-2]].D0 = prob
+    pdb.set_trace()
 

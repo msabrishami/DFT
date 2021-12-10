@@ -142,7 +142,7 @@ class Circuit:
             return None
         res = set() 
         while len(res) < count:
-            idx = randint(0, len(self.nodes))
+            idx = randint(0, len(self.nodes)-1)
             res.add(self.nodes_lev[idx])
         return list(res)[0] if count==1 else res
     
@@ -527,10 +527,6 @@ class Circuit:
                 node.B0 = 1.0
                 node.B1 = 1.0
             node.stafan_b()
-            node.CB1 = node.C1 * node.B1
-            node.CB0 = node.C0 * node.B0
-            node.B = (node.B0*node.C0) + (node.B1*node.C1)
-
     
     def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
         circuit = Circuit(self.c_fname)
@@ -655,6 +651,7 @@ class Circuit:
         tp_count : int
             number of test patterns, used in the fault coverage estimation formula 
         """
+        #TODO: where are node.D0 and node.D1 initialized?
 
         nfc = 0
         for node in self.nodes_lev:

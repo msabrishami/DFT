@@ -15,6 +15,7 @@ from checker_logicsim import Checker
 import config
 import argparse
 import pdb
+import pandas as pd
 import networkx as nx
 import math
 import time
@@ -226,6 +227,7 @@ if __name__ == '__main__':
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args, 3)
+        # exp.msa_ppsf_load(circuit, args, 3)
 
     elif args.func == "ppsf_analysis":
         mu = {}
@@ -305,8 +307,7 @@ if __name__ == '__main__':
     elif args.func == "fc-es-fig":
         exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad,tp=args.tp)
 
-    
-    elif args.func == "msa":
+    elif args.func == "BFS-DFS":
         node = circuit.get_rand_nodes()
         print(node)
         res_DFS = utils.get_fanin(circuit, node)
@@ -314,16 +315,69 @@ if __name__ == '__main__':
         res_BFS = utils.get_fanin_BFS(circuit, node)
         print(len(res_BFS))
         # TODO: check if the results of BFS and DFS are the same 
-        
-        node = circuit.nodes_lev[int(0.8*len(circuit.nodes))]
-        print(node)
+
+    elif args.func == "msa":
+
+        samples = args.opCount 
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
-        deltaP = observation.deltaP(circuit, node)
-        print("\t".join(["{:.5f}".format(x) for x in deltaP]))
+        nodes = circuit.get_rand_nodes(samples)
+        pdb.set_trace()
+        df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1", "deltaP"])
+        TPs = [x*200 for x in range(1, 16)]# [100, 200, 300, 400, 500, 1000]
+        for tp in TPs:
+            print("TP = {:04d} => FC = {:.2f}%".format(tp, 100*circuit.STAFAN_FC(tp)))
+        for node in nodes:
+            row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, 
+                    "C0":node.C0, "D0":node.D0, "D1":node.D1}
+            row["deltaP"] = sum(observation.deltaP(circuit, node, cut_bfs=20))
+            temp  = observation.deltaFC(circuit, node, TPs, cut_bfs=20)
+            for idx, tp in enumerate(TPs):
+                row["deltaFC-tp{:04d}".format(tp)] = temp[idx]
+            df = df.append(row, ignore_index=True)
+            
+        df2 = pd.DataFrame()
+        df2["Node"] = df["Node"]
+        cols = df.columns.values.tolist()[1:]
+        for col in cols:
+            if col != "Node":
+                df2[col] = df[col].rank(ascending=1)
+        print("\t", end="")
+        for col in cols:
+            print("\t{}".format(col.split("-")[-1].strip()), end="")
+        print()
+        for i in range(len(cols)):
+            print("{:15}".format(cols[i].split("-")[-1]), end="")
+            for j in range(len(cols)):
+                print("{:.2f}".format(df2[cols[i]].corr(df2[cols[j]])), end="\t")
+            print()
+        for tp in TPs:
+            # tp = 500
+            col = "deltaFC-tp{:04d}".format(tp)
+            # plt.scatter(df["D0"], df[col])
+            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D0", col, samples))
+            # plt.close()
+            # plt.scatter(df["D1"], df[col])
+            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D1", col, samples))
+            # plt.close()
+            # plt.scatter(df["B0"], df[col])
+            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B0", col, samples))
+            # plt.close()
+            # plt.scatter(df["B1"], df[col])
+            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B1", col, samples))
+            # plt.close()
+            plt.scatter(df[["B0", "B1"]].min(axis=1), df[col])
+            plt.xscale("log")
+            plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minB", col, samples))
+            plt.close()
+            
+            plt.scatter(df[["D0", "D1"]].min(axis=1), df[col])
+            plt.xscale("log")
+            plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minD", col, samples))
+            plt.close()
 
-       
+
     elif args.func == "writeOB":
         # circuit.co_ob_info()
         path = "../data/ob_stat/{}_TP{}.obs".format(ckt_name, args.tpLoad)

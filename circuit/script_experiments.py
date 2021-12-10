@@ -35,6 +35,7 @@ tps = [1000, 10000, 100000]
 # script = "python3 main_saeed.py -ckt ../data/verilog/{} -func stafan-load -tpLoad 1000000"
 script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_vs_stafan -tpLoad {} -cpu 50"
 # script = "scp viterbi2:/home/viterbi/00/abri442/workspace/DFT/data/fault_sim/{}/*step* ../data/fault_sim/{}/"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_vs_stafan -cpu 50 -tpLoad 100000"
 
 for tp in tps:
     for ckt in all_netlists[:-1]:
@@ -46,6 +47,7 @@ for tp in tps:
             sc = script.format(ckt_name, tp)
             # os.system(sc)
             print(sc)
+    break
 exit()
 
 
