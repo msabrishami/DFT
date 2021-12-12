@@ -3,7 +3,10 @@ import config
 import pdb
 import utils
 import numpy as np
+import os
 
+import config as cfg
+import experiments as exp
 
 def fault_stat(circuit, HTO_th, HTC_th):
     """ categorizes all the nodes in the circuit based on obs and ctrl
@@ -115,6 +118,7 @@ def deltaP_2(circuit, op, verbose=False):
     circuit.PO.append(op)
     op.ntype = "PO"
     circuit.STAFAN_B()
+
     if verbose: print("node\tlevel\td-CB0\td-CB1")
     for idx, node in enumerate(circuit.nodes_lev):
         p_post.append([node.C0 * node.B0, node.C1 * node.B1])
@@ -135,7 +139,7 @@ def deltaP_2(circuit, op, verbose=False):
     return deltaP_tot
 
 
-def deltaFC(circuit, op, tps, ref="STAFAN", verbose=False, cut_bfs=None): 
+def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None): 
     """ Calculating the changes in the FC estimation of the nodes
     in the circuit when node OP is used as an observation point. 
     Detection probability is estimated using STAFAN values.
@@ -150,19 +154,16 @@ def deltaFC(circuit, op, tps, ref="STAFAN", verbose=False, cut_bfs=None):
     -------
     float     
     """
-    assert ref in ["STAFAN", "PPSF"], "reference should be either STAFAN or PPSF"
     
     circuit.STAFAN_B()
-    
     fanin_cone = utils.get_fanin_BFS(circuit, op)
     if cut_bfs:
         fanin_cone = fanin_cone[:cut_bfs]
     
     PDs_init = []
     for node in fanin_cone:
-        if ref == "STAFAN":
-            PDs_init.append(node.C0 * node.B0)
-            PDs_init.append(node.C1 * node.B1)
+        PDs_init.append(node.C0 * node.B0)
+        PDs_init.append(node.C1 * node.B1)
 
     
     # temporary adding op as a primary output and redoing STAFAN_B
@@ -194,6 +195,24 @@ def deltaFC(circuit, op, tps, ref="STAFAN", verbose=False, cut_bfs=None):
     circuit.PO = circuit.PO[:-1]
     return deltaFC
 
+
+def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps):
+    orig_ntype = op.ntype
+    circuit.PO.append(op)
+    op.ntype = "PO"
+    p_op = exp.ppsf_parallel(circuit, args, op=op, 
+            steps=steps)
+    _deltaFC = [0] * len(TPs)
+    _deltaP = 0 
+    for key in p_op.keys():
+        _deltaP += p_op[key] - p_init[key]
+        for idx, tp in enumerate(TPs):
+            _deltaFC[idx] +=  ( np.exp(-p_init[key]*tp) - np.exp(-p_op[key]*tp) ) 
+    
+    op.ntype = orig_ntype
+    circuit.PO = circuit.PO[:-1]
+
+    return {"deltaP":_deltaP, "deltaFC":_deltaFC}
 
 
 def deltaP(circuit, op, verbose=False, cut_bfs=None): 

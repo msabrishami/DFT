@@ -4,6 +4,8 @@ circuit/run.sh
 
 # Saeed:
 **.swp
+**.csv
+circuit/run.sh
 data/modelsim/
 data/stafan-data/
 data/graph/*

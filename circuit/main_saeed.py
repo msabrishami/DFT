@@ -68,6 +68,9 @@ def pars_args():
                         help="Number of TPI candidates specified")
     parser.add_argument("-times", type=int, required=False,
                         help="Repetition count for figures")
+    # TODO: args.ci is now an integer because the way we saved current files
+    parser.add_argument("-ci", type=int, required=False,
+                        help="Confidence value (mu/std)")
 
     args = parser.parse_args()
 
@@ -155,7 +158,6 @@ if __name__ == '__main__':
             PDs.append(node.D1)
         if min(PDs) == 0:
             PDs = [x for x in PDs if x!=0]
-        pdb.set_trace()
         bins = np.logspace(np.floor(np.log10(min(PDs))), np.log10(max(PDs)), 20)
         plt.figure(figsize=(14,8), dpi=300) 
         plt.xscale("log")
@@ -226,7 +228,7 @@ if __name__ == '__main__':
                 2e4, 5e4, 1e5, 2e5, 5e5, 1e6], 3)
     
     elif args.func == "ppsf_vs_stafan":
-        exp.compare_ppsf_step_stafan_hist(circuit, args, 3)
+        exp.compare_ppsf_step_stafan_hist(circuit, args)
 
     elif args.func == "ppsf_analysis":
         mu = {}
@@ -315,19 +317,63 @@ if __name__ == '__main__':
         print(len(res_BFS))
         # TODO: check if the results of BFS and DFS are the same 
 
+    elif args.func == "fanin-analysis":
+        exp.fanin_analysis(circuit, args)
+    
     elif args.func == "msa":
+
+        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+                circuit.c_name, args.ci, args.cpu))
+        print("Loading ppsf results file from {} into node.D values".format(fname))
+        p_init = utils.load_ppsf_parallel_step(fname)
+        
+        deltaFC = dict() 
+        deltaP  = dict()
+        nodes = circuit.get_rand_nodes(3)
+        steps = [50, 100, 200, 5e2, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5]
+        TPs = [100, 200, 300, 400, 500, 1000]
+
+        for op in nodes:
+            orig_ntype = op.ntype
+            circuit.PO.append(op)
+            op.ntype = "PO"
+            p_op = exp.ppsf_parallel(circuit, args, op=op, 
+                    steps=steps)
+            _deltaFC = [0] * len(TPs)
+            _deltaP = 0 
+            for key in p_op.keys():
+                _deltaP += p_op[key] - p_init[key]
+                for idx, tp in enumerate(TPs):
+                    _deltaFC[idx] +=  ( np.exp(-p_init[key]*tp) - np.exp(-p_op[key]*tp) ) 
+                # print("{:10}\t\t{:.1e}\t\t{:.1e}\t\t{:.1e}".format(
+                #     key, res_new[key], res_ppsf[key], res_new[key]-res_ppsf[key]))
+            # print("\nFinal deltaFC for {} = {}".format(op.num, _deltaFC))
+            deltaFC[op.num] = _deltaFC
+            deltaP[op.num] = _deltaP
+            
+        pdb.set_trace()
+        for key in deltaP.keys():
+            print("{:10}\t{:.2f}\t".format(key, deltaP[key]), end="")
+            print("{}".format("\t".join(["{:.3f}".format(x) for x in deltaFC[key]])))
+
+    elif args.func == "msa2":
+        """ calculating deltaFC based on STAFAN """ 
+        ## To be replaced with OPI_analysis
+        time_s = time.time()
+        df = exp.OPI_analysis(circuit, args)
+        print("Total time = {:.2f}".format(time.time() - time_s))
+        print(df)
+        exit()
+
         samples = args.opCount 
+        nodes = circuit.get_rand_nodes(samples)
+        
+        # Reading characterized STAFAN values 
         fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
                 circuit.c_name, circuit.c_name, args.tpLoad) 
         circuit.load_TMs(fname)
-        nodes = circuit.get_rand_nodes(samples)
-
-        """ just a test """ 
-        temp = []
-        for node in nodes:
-            temp.append(len(utils.get_fanin_BFS(circuit, node)))
-        pdb.set_trace()
-        exit()
+        
         df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1", "deltaP"])
         TPs = [x*200 for x in range(1, 16)]# [100, 200, 300, 400, 500, 1000]
         
@@ -359,7 +405,6 @@ if __name__ == '__main__':
                 print("{:.2f}".format(df2[cols[i]].corr(df2[cols[j]])), end="\t")
             print()
         for tp in TPs:
-            # tp = 500
             col = "deltaFC-tp{:04d}".format(tp)
             # plt.scatter(df["D0"], df[col])
             # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D0", col, samples))
@@ -373,13 +418,24 @@ if __name__ == '__main__':
             # plt.scatter(df["B1"], df[col])
             # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B1", col, samples))
             # plt.close()
+            
             plt.scatter(df[["B0", "B1"]].min(axis=1), df[col])
             plt.xscale("log")
+            plt.title("deltaFC based on STAFAN vs. observability (B)\n{}".format(
+                circuit.c_name))
+            plt.xlabel("Min of STAFAN B0 and B1 for every node")
+            plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
+
             plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minB", col, samples))
             plt.close()
             
             plt.scatter(df[["D0", "D1"]].min(axis=1), df[col])
             plt.xscale("log")
+            plt.title("deltaFC based on STAFAN vs. detection probability (D)\n{}".format(
+                circuit.c_name))
+            plt.xlabel("Min of STAFAN D0 and D1 for every node")
+            plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
+
             plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minD", col, samples))
             plt.close()
 

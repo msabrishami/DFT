@@ -1,19 +1,21 @@
 
 import numpy as np
-import config
 import matplotlib.pyplot as plt
 import pdb
 import sys
 import math
 from multiprocessing import Process, Pipe
 from collections import deque
+import os
+
+import config as cfg
 
 def ckt_type(cname):
     print("FIX ME LATER -- CKT TYPE AUTOMATIC DETECTION")
     return "EPFL"
-    if cname in config.ALL_ISCAS85:
+    if cname in cfg.ALL_ISCAS85:
         return "ISCAS85"
-    elif cname in config.ALL_EPFL:
+    elif cname in cfg.ALL_EPFL:
         return "EPFL"
     else:
         raise NameError("Circuit is not known")
@@ -144,7 +146,6 @@ def load_ppsf_parallel_step(fname):
     for line in lines:
         if line.startswith("#TP="):
             current_tp += float(line.split("=")[-1])
-            print(current_tp)
             continue
         if line.startswith("#TP: (remaining"):
             if lines[-1] == line:
@@ -157,15 +158,26 @@ def load_ppsf_parallel_step(fname):
 
     return res
 
-def load_ppsf_parallel_step_D(circuit, args, confidence):
+def load_ppsf_parallel_step_D(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
-            circuit.c_name, confidence, args.cpu))
+            circuit.c_name, args.ci, args.cpu))
     print("Loading ppsf results file from {} into node.D values".format(fname))
-    res_ppsf = utils.load_ppsf_parallel_step(fname)
+    res_ppsf = load_ppsf_parallel_step(fname)
     for fault, prob in res_ppsf.items():
         if fault[-1] == "1":
             circuit.nodes[fault[:-2]].D1 = prob
         else:
             circuit.nodes[fault[:-2]].D0 = prob
 
+    return res_ppsf
+
+def estimate_FC(circuit, tp):
+    """ estimating the fault coverage of a circuit based on all the faults
+    the detection probability is read from node.D0 and node.D1 values """ 
+    temp = 0
+    for node in circuit.nodes_lev:
+        temp += np.exp(-node.D0 * tp)
+        temp += np.exp(-node.D1 * tp)
+
+    return 1 - temp/(2*len(circuit.nodes_lev))

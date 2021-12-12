@@ -596,9 +596,7 @@ class Circuit:
         except ZeroDivisionError:
             print("Node Ctrl is zero")
             pdb.set_trace()
-        for node in self.nodes_lev:
-            node.D1 = node.B0 * node.C0
-            node.D0 = node.B1 * node.C1
+        
         end_time = time.time()
         duration = end_time - start_time
         if verbose:
@@ -635,8 +633,6 @@ class Circuit:
             node.B0 =   float(words[3]) 
             node.B1 =   float(words[4]) 
             node.S  =   float(words[5]) 
-            node.D0 = node.C1 * node.B1
-            node.D1 = node.C0 * node.B0
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
@@ -651,12 +647,10 @@ class Circuit:
         tp_count : int
             number of test patterns, used in the fault coverage estimation formula 
         """
-        #TODO: where are node.D0 and node.D1 initialized?
-
         nfc = 0
         for node in self.nodes_lev:
-            nfc += math.exp(-1 * node.D1 * tp_count) 
-            nfc += math.exp(-1 * node.D0 * tp_count) 
+            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
+            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
         return 1 - nfc/(2*len(self.nodes)) 
 
 

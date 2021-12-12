@@ -81,7 +81,12 @@ class FaultList:
             if fault.D_count > 0:
                 detected_count += 1
         return detected_count / len(self.faults)
-    
+   
+    def get_D_count(self):
+        res = {}
+        for fault in self.faults:
+            res[str(fault)] = fault.D_count
+        return res
 
 class FaultSim:
     
