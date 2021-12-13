@@ -20,6 +20,9 @@ HTC_TH = 0.05
 STAFAN_B_MIN = 0.0001
 STAFAN_C_MIN = 0.001
 
+PPSF_STEPS = [50, 100, 200, 500, 
+        1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 
+        1e5, 2e5, 5e5, 1e6, 2e6, 5e6]
 SAMPLES = 100
 
 V_FORMATS = ["EPFL", "ISCAS85"]

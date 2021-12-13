@@ -90,7 +90,7 @@ def ppsf_thread(conn, ckt, tp_count, fault_list):
     conn.send(fault_sim.fault_list)
 
 
-def fc_estimation_fig(circuit,tp_count=2,factor=2,limit=200,times = 1,tp=100,tp_load=100):
+def fc_estimation_fig(circuit, tp_count=2, factor=2, limit=200, times=1, tp=100, tp_load=100):
     """
     Fault coverage estimation
     Choose tp_count, factor and the limit according to the size of PI
@@ -395,14 +395,49 @@ def fanin_analysis(circuit, args):
     plt.close()
 
 
+def FCTP_analysis(circuit, args):
+    # Loading STAFAN data
+    fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+            circuit.c_name, circuit.c_name, args.tpLoad) 
+    circuit.load_TMs(fname)
+    
+    # Loading PPSF data
+    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+        circuit.c_name, args.ci, args.cpu))
+    p_init = utils.load_ppsf_parallel_step_D(circuit, args)
+
+    FC_stafan = []
+    FC_ppsf = []
+    TPs_base = [x*50 for x in range(1, 200)]
+    TPs = []
+    for tp in TPs_base:
+        FC_stafan.append(100*circuit.STAFAN_FC(tp))
+        FC_ppsf.append(100*utils.estimate_FC(circuit, tp))
+        print("TP = {:04d}\tFC-STAFAN={:.2f}%\tFC-PPSF={:.2f}%".format(
+            tp, FC_stafan[-1], FC_ppsf[-1]))
+        TPs.append(tp)
+        if len(FC_stafan) > 5:
+            if (FC_stafan[-1]-FC_stafan[-5] < 0.05 ) and (FC_ppsf[-1]-FC_ppsf[-5] < 0.05):
+                break
+    plt.plot(TPs, FC_stafan, color='b', label="STAFAN")
+    plt.plot(TPs, FC_ppsf, color='r', label="Fault Simulation (PPSF)")
+    plt.title("FC estimation based on fault detection probabilities\n{}".format(
+        circuit.c_name))
+    plt.xlabel("Test Pattern Count")
+    plt.ylabel("Fault Coverage (%)")
+    plt.legend()
+    plt.savefig("./results/figures/FCTP-STA-FS-{}.png".format(circuit.c_name))
+    plt.close()
+
 
 def OPI_analysis(circuit, args):
 
     samples = args.opCount 
     nodes = circuit.get_rand_nodes(samples)
-    df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1", "deltaP"])
+    df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1"])
     TPs = [x*100 for x in range(1, 11)]# [100, 200, 300, 400, 500, 1000]
-    steps = [50, 1e2, 2e2, 5e2, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5]
+    steps = cfg.PPSF_STEPS 
     
     # Reading and loading characterized STAFAN values 
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
@@ -422,10 +457,10 @@ def OPI_analysis(circuit, args):
         row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, 
                 "C0":node.C0, "D0":node.D0, "D1":node.D1}
 
-        res_stafan  = obsv.deltaFC(circuit, node, TPs, cut_bfs=20)
+        res_stafan  = obsv.deltaFC(circuit, node, TPs) #cut_BFS=None
         res_ppsf = obsv.deltaFC_PPSF(circuit, node, p_init, TPs, args, steps) 
         row["P-FS"] = res_ppsf["deltaP"]
-        row["P-ST"] = sum(obsv.deltaP(circuit, node, cut_bfs=20))
+        row["P-ST"] = sum(obsv.deltaP(circuit, node)) #cut_BFS=None
 
         for idx, tp in enumerate(TPs):
             row["FC-ST-tp{:04d}".format(tp)] = res_stafan[idx]

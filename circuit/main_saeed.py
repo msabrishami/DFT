@@ -1,36 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import utils
-from convert import Converter
-import experiments as exp
+import os
 from multiprocessing import Process, Pipe
-from fault_sim import FaultList
-from ppsf import PPSF
-from pfs import PFS
-import convert
-from load_circuit import LoadCircuit
-from observation import OPI
-import observation
-from checker_logicsim import Checker
-import config
 import argparse
-import pdb
 import pandas as pd
 import networkx as nx
 import math
 import time
-import os
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
 import seaborn as sns
 import re
+import sys
+import pdb
 
 from circuit import Circuit
-from modelsim_simulator import Modelsim
-from regular_tp_gen import regular_tp_gen
+import utils
+import convert
+import experiments as exp
+import config as cfg
+from fault_sim import FaultList
+from ppsf import PPSF
+from pfs import PFS
+from load_circuit import LoadCircuit
+import observation
 
-import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 
 
@@ -91,8 +86,8 @@ if __name__ == '__main__':
 
     args = pars_args()
 
-    config.HTO_TH = args.HTO_th if args.HTO_th else config.HTO_TH
-    config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
+    cfg.HTO_TH = args.HTO_th if args.HTO_th else cfg.HTO_TH
+    cfg.HTC_TH = args.HTC_th if args.HTC_th else cfg.HTC_TH
 
     circuit = read_circuit(args)
     circuit.lev()
@@ -124,16 +119,16 @@ if __name__ == '__main__':
     elif args.func == "stafan-save-coded":
         """ Running STAFAN with random TPs and saving TPs into file """
 
-        if not os.path.exists(config.STAFAN_DIR):
-            os.mkdir(config.STAFAN_DIR)
-        if not os.path.exists(os.path.join(config.STAFAN_DIR, circuit.c_name)):
-            os.mkdir(os.path.join(config.STAFAN_DIR, circuit.c_name))
+        if not os.path.exists(cfg.STAFAN_DIR):
+            os.mkdir(cfg.STAFAN_DIR)
+        if not os.path.exists(os.path.join(cfg.STAFAN_DIR, circuit.c_name)):
+            os.mkdir(os.path.join(cfg.STAFAN_DIR, circuit.c_name))
 
 
         for ite in range(int(args.code)):
             time_s = time.time()
             circuit.STAFAN(args.tp, args.cpu)
-            fname = config.STAFAN_DIR+ "/" + circuit.c_name + "/"
+            fname = cfg.STAFAN_DIR+ "/" + circuit.c_name + "/"
             fname += "{}-TP{}-{}.stafan".format(circuit.c_name, args.tp, ite)
             circuit.save_TMs(fname)
             print("Time: \t{:.3}".format(time.time() - time_s))
@@ -149,7 +144,7 @@ if __name__ == '__main__':
         print("Time: \t{:.3}".format(time.time() - time_s))
 
     elif args.func == "stafan-load":
-        fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
+        fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad)
         circuit.load_TMs(fname)
         PDs = []
@@ -223,7 +218,6 @@ if __name__ == '__main__':
             print("PFS and PPSF results match!")
     
     elif args.func == "ppsf_parallel":
-        # exp.ppsf_parallel(circuit, args)
         exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5e3, 1e4, 
                 2e4, 5e4, 1e5, 2e5, 5e5, 1e6])
     
@@ -279,10 +273,10 @@ if __name__ == '__main__':
         We may want to run this function many times, that is why we have code to avoid 
             overwriting tp files. 
         """
-        tp_fname = os.path.join(config.PATTERN_DIR, 
+        tp_fname = os.path.join(cfg.PATTERN_DIR, 
                 "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        log_fname = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+        log_fname = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
         log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
@@ -290,7 +284,7 @@ if __name__ == '__main__':
 
     
     elif args.func == "tpfc-fig":
-        path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+        path = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
         path += "tpfc_tp-" + str(args.tp)
         for i in range(1, 20):
             tmp = str(i)
@@ -308,6 +302,10 @@ if __name__ == '__main__':
     elif args.func == "fc-es-fig":
         exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad,tp=args.tp)
 
+    elif args.func == "fc-sta-fs":
+        TPs = [x*100 for x in range(1,21)]
+        exp.FCTP_analysis(circuit, args)
+
     elif args.func == "BFS-DFS":
         node = circuit.get_rand_nodes()
         print(node)
@@ -320,92 +318,40 @@ if __name__ == '__main__':
     elif args.func == "fanin-analysis":
         exp.fanin_analysis(circuit, args)
     
-    elif args.func == "msa":
-
-        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
-        fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
-                circuit.c_name, args.ci, args.cpu))
-        print("Loading ppsf results file from {} into node.D values".format(fname))
-        p_init = utils.load_ppsf_parallel_step(fname)
-        
-        deltaFC = dict() 
-        deltaP  = dict()
-        nodes = circuit.get_rand_nodes(3)
-        steps = [50, 100, 200, 5e2, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5]
-        TPs = [100, 200, 300, 400, 500, 1000]
-
-        for op in nodes:
-            orig_ntype = op.ntype
-            circuit.PO.append(op)
-            op.ntype = "PO"
-            p_op = exp.ppsf_parallel(circuit, args, op=op, 
-                    steps=steps)
-            _deltaFC = [0] * len(TPs)
-            _deltaP = 0 
-            for key in p_op.keys():
-                _deltaP += p_op[key] - p_init[key]
-                for idx, tp in enumerate(TPs):
-                    _deltaFC[idx] +=  ( np.exp(-p_init[key]*tp) - np.exp(-p_op[key]*tp) ) 
-                # print("{:10}\t\t{:.1e}\t\t{:.1e}\t\t{:.1e}".format(
-                #     key, res_new[key], res_ppsf[key], res_new[key]-res_ppsf[key]))
-            # print("\nFinal deltaFC for {} = {}".format(op.num, _deltaFC))
-            deltaFC[op.num] = _deltaFC
-            deltaP[op.num] = _deltaP
-            
-        pdb.set_trace()
-        for key in deltaP.keys():
-            print("{:10}\t{:.2f}\t".format(key, deltaP[key]), end="")
-            print("{}".format("\t".join(["{:.3f}".format(x) for x in deltaFC[key]])))
-
-    elif args.func == "msa2":
-        """ calculating deltaFC based on STAFAN """ 
-        ## To be replaced with OPI_analysis
+    elif args.func == "deltaFCP":
+        """ calculating deltaFC and deltaP of random OPs 
+        based on STAFAN and PPSF results """ 
         time_s = time.time()
         df = exp.OPI_analysis(circuit, args)
         print("Total time = {:.2f}".format(time.time() - time_s))
-        print(df)
-        exit()
 
-        samples = args.opCount 
-        nodes = circuit.get_rand_nodes(samples)
-        
-        # Reading characterized STAFAN values 
-        fname = config.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
-                circuit.c_name, circuit.c_name, args.tpLoad) 
-        circuit.load_TMs(fname)
-        
-        df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1", "deltaP"])
-        TPs = [x*200 for x in range(1, 16)]# [100, 200, 300, 400, 500, 1000]
-        
-        for tp in TPs:
-            print("TP = {:04d} => FC = {:.2f}%".format(tp, 100*circuit.STAFAN_FC(tp)))
-        
-        for node in nodes:
-            row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, 
-                    "C0":node.C0, "D0":node.D0, "D1":node.D1}
-            row["deltaP"] = sum(observation.deltaP(circuit, node, cut_bfs=20))
-            temp  = observation.deltaFC(circuit, node, TPs, cut_bfs=20)
-            for idx, tp in enumerate(TPs):
-                row["deltaFC-tp{:04d}".format(tp)] = temp[idx]
-            df = df.append(row, ignore_index=True)
-            
+    elif args.func == "deltaFCP-alt": 
+        fname = "./results/csv/OPI-report-{}-ci{}-op{}.csv".format(
+                circuit.c_name, args.ci, args.opCount)
+        df = pd.read_csv(fname)
         df2 = pd.DataFrame()
-        df2["Node"] = df["Node"]
+        # df2["Node"] = df["Node"]
         cols = df.columns.values.tolist()[1:]
         for col in cols:
-            if col != "Node":
+            if col not in ["Node", "deltaP", 
+                    "FC-FS-tp0600", "FC-FS-tp0700", "FC-FS-tp0800", 
+                    "FC-ST-tp0600", "FC-ST-tp0700", "FC-ST-tp0800"]:
                 df2[col] = df[col].rank(ascending=1)
+                print(col)
+        cols = df2.columns.values.tolist()
         print("\t", end="")
         for col in cols:
-            print("\t{}".format(col.split("-")[-1].strip()), end="")
+            print("\t{}".format(col), end="")
         print()
         for i in range(len(cols)):
-            print("{:15}".format(cols[i].split("-")[-1]), end="")
+            print("{:15}".format(cols[i]), end="")
             for j in range(len(cols)):
                 print("{:.2f}".format(df2[cols[i]].corr(df2[cols[j]])), end="\t")
             print()
+        TPs = [x*100 for x in range(1,11)]
         for tp in TPs:
-            col = "deltaFC-tp{:04d}".format(tp)
+            col1 = "FC-ST-tp{:04d}".format(tp)
+            col2 = "FC-FS-tp{:04d}".format(tp)
             # plt.scatter(df["D0"], df[col])
             # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D0", col, samples))
             # plt.close()
@@ -418,25 +364,38 @@ if __name__ == '__main__':
             # plt.scatter(df["B1"], df[col])
             # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B1", col, samples))
             # plt.close()
+             
+            # plt.scatter(df[["B0", "B1"]].min(axis=1), df[col])
+            # plt.xscale("log")
+            # plt.title("deltaFC based on STAFAN vs. observability (B)\n{}".format(
+            #     circuit.c_name))
+            # plt.xlabel("Min of STAFAN B0 and B1 for every node")
+            # plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
+            # plt.savefig("{}-{}-{}-samples{}.png".format(
+            #     circuit.c_name, "minB", col, args.opCount))
+            # plt.close()
             
-            plt.scatter(df[["B0", "B1"]].min(axis=1), df[col])
-            plt.xscale("log")
-            plt.title("deltaFC based on STAFAN vs. observability (B)\n{}".format(
-                circuit.c_name))
-            plt.xlabel("Min of STAFAN B0 and B1 for every node")
-            plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
-
-            plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minB", col, samples))
-            plt.close()
+            # plt.scatter(df[["D0", "D1"]].min(axis=1), df[col])
+            # plt.xscale("log")
+            # plt.title("deltaFC based on STAFAN vs. detection probability (D)\n{}".format(
+            #     circuit.c_name))
+            # plt.xlabel("Min of STAFAN D0 and D1 for every node")
+            # plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
+            # plt.savefig("{}-{}-{}-samples{}.png".format(
+            #     circuit.c_name, "minD", col, args.opCount))
+            # plt.close()
+            pdb.set_trace()
             
-            plt.scatter(df[["D0", "D1"]].min(axis=1), df[col])
+            plt.scatter(df[col1], df[col2])
             plt.xscale("log")
-            plt.title("deltaFC based on STAFAN vs. detection probability (D)\n{}".format(
+            plt.title("Compare deltaFC based on STAFAN vs. PPSF for nodes\n{}".format(
                 circuit.c_name))
-            plt.xlabel("Min of STAFAN D0 and D1 for every node")
-            plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
-
-            plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "minD", col, samples))
+            plt.xlabel("deltaFC based on STAFAN")
+            plt.ylabel("deltaFC based on Fault Simulation")
+            fname = "./results/figures/{}-deltaFC-STAFAN-PPSF-samples{}-tp{}.png".format(
+                    circuit.c_name, args.opCount, tp)
+            print("figure plotted in {}".format(fname))
+            plt.savefig(fname)
             plt.close()
 
 
@@ -492,7 +451,7 @@ if __name__ == '__main__':
         print(log)
 
     elif args.func in ["deltaP", "deltaHTO"]:
-        conv = Converter(ckt_name, "EPFL")
+        conv = convert.Converter(ckt_name, "EPFL")
         # TODO: be cautious about passing args
         ops = OPI(circuit, args.func, count_op=args.opCount, args=args)
         fname = "../data/observations/" + ckt_name + \
@@ -528,14 +487,14 @@ if __name__ == '__main__':
         Store the results for this new verilog in the .STIL format
         """
 
-        conv = Converter(args.ckt, utils.ckt_type(args.ckt))
+        conv = convert.Converter(args.ckt, utils.ckt_type(args.ckt))
         ops = OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
         print("Observation points are: ")
         for op in ops:
             print(op + "\t" + conv.n2g(op))
 
         tp_fname = os.path.join(
-            config.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
+            cfg.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
         OPs_fname = "../data/observations/" + args.ckt + "_" + \
@@ -550,8 +509,8 @@ if __name__ == '__main__':
             # Step 1: Generate a new verilog file
             print("Generating modified verilog for op: \t\t{}".format(op))
             cname_mod = args.ckt + "_OP_" + op
-            path_in = os.path.join(config.VERILOG_DIR, args.ckt + ".v")
-            path_out = os.path.join(config.VERILOG_DIR, cname_mod + ".v")
+            path_in = os.path.join(cfg.VERILOG_DIR, args.ckt + ".v")
+            path_out = os.path.join(cfg.VERILOG_DIR, cname_mod + ".v")
             convert.add_OP_verilog(path_in=path_in,
                                    op=op, path_out=path_out, verilog_version=utils.ckt_type(args.ckt))
 
@@ -561,7 +520,7 @@ if __name__ == '__main__':
             ckt_mod = Circuit(cname_mod)
             ckt_mod.lev()
             LoadCircuit(ckt_mod, "v")
-            stil_fname = os.path.join(config.PATTERN_DIR,
+            stil_fname = os.path.join(cfg.PATTERN_DIR,
                                       cname_mod + "_" + str(args.tp) + ".raw-stil")
             ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL")
             print("STIL format file  generated in \t\t\t{}".format(stil_fname))
@@ -574,14 +533,14 @@ if __name__ == '__main__':
         TODO: complete me after testing
         """
 
-        conv = Converter(args.ckt, utils.ckt_type(args.ckt))
+        conv = convert.Converter(args.ckt, utils.ckt_type(args.ckt))
         ops = OPI(circuit, args.OPIalg, count_op=args.opCount, B_th=args.Bth)
         print("Observation points are: ")
         for op in ops:
             print(op + "\t" + conv.n2g(op))
 
         tp_fname = os.path.join(
-            config.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
+            cfg.PATTERN_DIR, args.ckt + "_" + str(args.tp) + ".tp")
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
         OPs_fname = "../data/observations/" + args.ckt + "_" + \
@@ -591,7 +550,7 @@ if __name__ == '__main__':
         print("Stored Synopsys observation file in     \t{}".format(fname))
 
         # The path to verilog file changes cumulitavely
-        path_in = os.path.join(config.VERILOG_DIR, args.ckt + ".v")
+        path_in = os.path.join(cfg.VERILOG_DIR, args.ckt + ".v")
         for idx, op in enumerate(ops):
 
             print("".join(["-"]*100))
@@ -602,7 +561,7 @@ if __name__ == '__main__':
             # Step 1: Continuously modifying a verilog file
             cname_mod = args.ckt + "_OP_" + args.OPIalg + "_B-" + \
                 str(args.Bth) + "_Acc" + str(idx+1)
-            path_out = os.path.join(config.VERILOG_DIR, cname_mod + ".v")
+            path_out = os.path.join(cfg.VERILOG_DIR, cname_mod + ".v")
             convert.add_OP_verilog(
                 path_in=path_in,
                 op=op,
@@ -616,7 +575,7 @@ if __name__ == '__main__':
             ckt_mod = Circuit(cname_mod)
             ckt_mod.lev()
             LoadCircuit(ckt_mod, "v")
-            stil_fname = os.path.join(config.PATTERN_DIR,
+            stil_fname = os.path.join(cfg.PATTERN_DIR,
                                       cname_mod + "_" + str(args.tp) + ".raw-stil")
             ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL")
             print("STIL format file  generated in \t\t\t{}".format(stil_fname))
@@ -630,7 +589,7 @@ if __name__ == '__main__':
         output: verilog file with ops as PO to be sent to fault simulation """
         # TODO: what should be the output file name?
 
-        path_in = os.path.join(config.VERILOG_DIR, ckt_name + ".v")
+        path_in = os.path.join(cfg.VERILOG_DIR, ckt_name + ".v")
         print("the original circuit is {}".format(path_in))
         v_orig = convert.read_verilog_lines(path_in)
 
@@ -638,7 +597,7 @@ if __name__ == '__main__':
         op_fname = f"../data/observations/{args.op_fname}.op"
         print("reading op file from {}".format(op_fname))
 
-        conv = Converter(ckt_name, utils.ckt_type(args.ckt))
+        conv = convert.Converter(ckt_name, utils.ckt_type(args.ckt))
         ops_gate = conv.tmax2nodes_OP(op_fname)
         # ops_gate = []
         print("Observation points are: ")
@@ -680,13 +639,13 @@ if __name__ == '__main__':
 
         # Step 2: Logic sim and generate STIL file
         tp_fname = os.path.join(
-            config.PATTERN_DIR, args.ckt + "_TP" + str(args.tpLoad) + ".tp")
+            cfg.PATTERN_DIR, args.ckt + "_TP" + str(args.tpLoad) + ".tp")
         print("Reading test patterns from \t\t\t{}".format(tp_fname))
 
         ckt_mod = Circuit(cname_mod)
         LoadCircuit(ckt_mod, "v")
         ckt_mod.lev()
-        stil_fname = os.path.join(config.PATTERN_DIR,
+        stil_fname = os.path.join(cfg.PATTERN_DIR,
                                   cname_mod + "_" + str(args.tp) + ".raw-stil")
         ckt_mod.logic_sim_file(tp_fname, stil_fname, "STIL", args.tp)
         print("STIL format file  generated in \t\t\t{}".format(stil_fname))
