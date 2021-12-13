@@ -154,12 +154,12 @@ def load_pd_ppsf_conf(fname):
     
     return res
 
-def estimate_FC(circuit, tp): #Ghazal: This method is redundant. It is already implemented in circuit.STAFAN_FC()
-    """ estimating the fault coverage of a circuit based on all the faults
-    the detection probability is read from node.D0 and node.D1 values """ 
-    temp = 0
-    for node in circuit.nodes_lev:
-        temp += np.exp(-(node.B1*node.C1) * tp)
-        temp += np.exp(-(node.B0*node.C0) * tp)
+def estimate_FC(probs, tp): 
+    #TODO 4 Ghazal : documentation 
+    # probs is a dictionary, keys are faults strings, and values are ppsf probs
+    """ estimating the fault coverage of a circuit based on all the faults """
+    nfc = 0
+    for key in probs:
+        nfc += np.exp(-probs[key] * tp)
 
-    return 1 - temp/(2*len(circuit.nodes_lev))
+    return 1 - nfc/len(probs)

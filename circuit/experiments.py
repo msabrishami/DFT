@@ -407,7 +407,6 @@ def fanin_analysis(circuit, args):
     plt.close()
 
 def FCTP_analysis(circuit, args):
-    #Ghazal: FC_ppsf is stafan!
     """ Draw plot to compare Fault coverage using two methods \
     PFS with detection probability estimation using STAFAN parameters.\
     The plot is saved in ./results/figure/
@@ -431,7 +430,7 @@ def FCTP_analysis(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
-    # p_init = utils.load_pd_ppsf_step_D(circuit, args) # Not used
+    p_init = utils.load_pd_ppsf_conf(fname) 
 
     FC_stafan = []
     FC_ppsf = []
@@ -439,7 +438,7 @@ def FCTP_analysis(circuit, args):
     TPs = []
     for tp in TPs_base:
         FC_stafan.append(100*circuit.STAFAN_FC(tp))
-        FC_ppsf.append(100*utils.estimate_FC(circuit, tp))
+        FC_ppsf.append(100*utils.estimate_FC(p_init, tp))
         print("TP = {:04d}\tFC-STAFAN={:.2f}%\tFC-PPSF={:.2f}%".format(
             tp, FC_stafan[-1], FC_ppsf[-1]))
         TPs.append(tp)
@@ -448,8 +447,6 @@ def FCTP_analysis(circuit, args):
                 break
     plt.plot(TPs, FC_stafan, color='b', label="STAFAN",linestyle='dashed')
     plt.plot(TPs, FC_ppsf, color='r', label="Fault Simulation (PPSF)", alpha=0.5, linewidth=4)
-    print(FC_stafan)
-    print(FC_ppsf)
     plt.title("FC estimation based on fault detection probabilities\n{}".format(
         circuit.c_name))
     plt.xlabel("Test Pattern Count")
