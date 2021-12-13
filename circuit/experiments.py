@@ -5,7 +5,6 @@ from bisect import bisect
 from multiprocessing import Process, Pipe
 import time
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 from circuit import Circuit
@@ -29,7 +28,6 @@ def check_c432_logicsim(circuit, tp=1, mode="ckt"):
     for t in range(tp):
         PI_dict = dict()
         PI_list = []
-
         
         PI_num = [x.num for x in circuit.PI]
         PI_num = [x[1:] for x in PI_num] if mode=="v" else PI_num 
@@ -81,7 +79,6 @@ def ppsf_thread_old(conn, ckt_name, tp_count, tp_fname, fl_fname):
     fault_sim.fs_exe(tps)
     conn.send(fault_sim.fault_list)
 
-
 def ppsf_thread(conn, ckt, tp_count, fault_list):
     tps = ckt.gen_multiple_tp(tp_count)
     fault_sim = PPSF(ckt)
@@ -89,32 +86,37 @@ def ppsf_thread(conn, ckt, tp_count, fault_list):
     fault_sim.fs_exe(tps)
     conn.send(fault_sim.fault_list)
 
-
 def pd_ppsf_step(circuit, fl_curr, tp, cpu, log_fname=None, count_cont=False):
-    """ Running ppsf in parallel for one step given tp count and fault list, 
-        counts the number of times faults in fault list are detected. 
-        The tps are generated in each process separately, but are not stored by default. 
-        Returns a fault list with D_count is a list with length equal to cpu. 
+    """ Run ppsf in parallel for one step given tp count and fault list, \
+    counts the number of times faults in fault list are detected. 
+    The tps are generated in each process separately, but are not stored by default. \
+
     Parameters
     ----------
-    circuit : Circuit 
-    fl : FaultList 
-    tp : number of test patterns for each process  
-    cpu : count of parallel processes
-    log_fname : fname for the final log file, if None, do not log results 
+    circuit : Circuit
+    fl_curr : FaultList
+        Initially is total faults
+    tp : int
+        The number of test patterns for each process  
+    cpu : int
+        Count of parallel processes
+    log_fname : str
+        File name for the final log fil. If None, does not log results (default is None)
+    count_cont: int
+        #TODO: define this (default is False)
 
-    Return
+    Returns
     ------
-    The final fault list 
+    list
+        A fault list with D_count with length equal to given count of CPUs
     """
 
     time_s = time.time()
     process_list = []
-    for i in range(cpu):
+    for _ in range(cpu):
         parent_conn, child_conn = Pipe()
         p = Process(target=ppsf_thread,
                     args=(child_conn, circuit, tp, fl_curr))
-
         p.start()
         process_list.append((p, parent_conn))
 
@@ -132,7 +134,7 @@ def pd_ppsf_step(circuit, fl_curr, tp, cpu, log_fname=None, count_cont=False):
             fl_curr.faults[idx].D_count.append(fl.faults[idx].D_count)
     
     if log_fname:
-        tot_fl.write_file_extra(log_fname)
+        tot_fl.write_file_extra(log_fname) #TODO: tot_fl not defined in this scope
         with open(log_fname, "a") as outfile:
             outfile.write("Total time: {:.2f}\n".format(time.time() - time_s))
     
@@ -140,22 +142,26 @@ def pd_ppsf_step(circuit, fl_curr, tp, cpu, log_fname=None, count_cont=False):
 
 def pd_ppsf_basic(circuit, tp, cpu, fault_count=None):
     """ Basic parallel PPSF fault simulation
-    If fault_count is given, randomly selects faults, o.w. it generates a fault list 
+    If fault_count is given, randomly selects faults, o.w. it generates a fault list \
     with all the faults in the circuit. 
     Logs the results in a file with a default name. 
-    The resul is a fault list, and D_count attribute of each fault is a list of 
+    The result is a fault list, and D_count attribute of each fault is a list of \
     the number of times the fault is detected in each process. 
 
     Parameters
     ----------
     circuit : Circuit 
-    tp : number of test patterns for each process  
-    cpu : count of parallel processes
-    fault_count : number of random faults, if None, all faults are considered 
+    tp : int
+        The number of test patterns for each process  
+    cpu : int
+        count of parallel processes
+    fault_count : int
+        Number of random faults, if None, all faults are considered 
 
-    Return
+    Returns
     ------
-    The final fault list 
+    list
+        A fault list with D_count with length equal to given count of CPUs
     """
     
     tot_fl = FaultList()
@@ -171,9 +177,35 @@ def pd_ppsf_basic(circuit, tp, cpu, fault_count=None):
     
     return pd_ppsf_step(circuit, tot_fl, tp, cpu, log_fname)
 
-
 def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
-    #TODO: documentation AND -- FLAG FOR WRITING INTO FILE OR NOT WRITING 
+    """ Run ppsf with count of test patterns in stp_steps list over the given number of CPUs.\
+    If the times of probability detection is in the confidential interval, the \
+    fault is dropped. Finally, for each fault the mean of detection times and the standard \
+    deviation is stored in the log file.
+
+    Parameters
+    ----------
+    circuit : Circuit 
+    args : args
+        Command-line arguments
+    tp_steps : list
+        Lengths of tps in each run
+    op : Node
+        Node used for observation point insertion (default is None)
+    verbose : boolean
+        If True, print results (default is False)
+    log : boolean
+        If True, save logs in log file (default is True).
+        Logs are list of faults and the mean of times they were detected over cp times of \
+        process. Logs are separated by the line '#TP=tp_counts' in each step.
+        
+    Returns
+    ------
+    dict : str to float
+        A dictionary of faults to the mean of their detection times \
+        over args.cpu times of process with cumulative count of test patterns.
+    """
+
     fl_cont = FaultList()
     fl_curr = FaultList()
     if op == None:
@@ -200,10 +232,12 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
     else:
         log_fname = os.path.join(path, "{}-{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
                 circuit.c_name, node.num, args.ci, args.cpu))
+
     if log and verbose:
         print("Log for step based PPSF is being stored in {}".format(log_fname))
     if log:
         outfile = open(log_fname, "w")
+
     tp_tot = 0 
     res_final = {}
     for tp in tp_steps:
@@ -212,9 +246,9 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         fl_temp = FaultList()
         fl_curr = pd_ppsf_step(circuit, fl_curr, tp, args.cpu, log_fname=None, 
                 count_cont=True)
-        pdb.set_trace()
         if log: 
             outfile.write("#TP={}\n".format(tp))
+
         for fault in fl_curr.faults:
             fault_cont = fl_cont.faults[fault_idx[str(fault)]]
             fault_cont.D_count += np.array(fault.D_count)
@@ -250,16 +284,42 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
     
     return res_final 
 
-
 def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
-    # TODO 4 Ghazal : thoroughly stuff ... and documentation  
+    """ Parallel Fault Simulation
+    If steps is given, the ppsfs will be run for all tp counts over the \
+    given count of processes in the args and the mean and std will be save into log file. Else, \
+    the simple parallel patterns with the given count of test patterns will be run.
+
+    Parameters
+    ----------
+    circuit : Circuit 
+    args : args
+        Command-line arguments
+    steps : list
+        A list of tp counts for each run
+        (default is None)
+    op : None
+        Node used for observation point insertion (default is None)
+    verbose : boolean
+        If True, print results (default is False)
+    log : boolean
+        If save logs in log file (default is True)
+        Logs are list of faults and the mean of times they were detected over cp times of \
+            process. Logs are separated by the line '#TP=tp_counts' in each step
+    
+    Returns
+    ------
+    dict or list
+        According to the steps, it will be determined. If steps is given, returns \
+        a dictionary of faults to means, otherwise, A fault list with D_count  \
+        with length equal to cpu is returned
+    """
     if steps == None:
         res = pd_ppsf_basic(circuit, args.tp, args.cpu, args.fault_per_bin)
     else:
         res = pd_ppsf_conf(circuit, args, steps, op, verbose=verbose, log=log)
     return res
 
-    
 def ppsf_analysis(circuit, args):
     # TODO: let's get rid of this or at least change the name 
     fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
@@ -319,7 +379,6 @@ def compare_ppsf_step_stafan_hist(circuit, args):
             continue
         X.append(prob)
         Y.append( abs(D-prob)/prob ) 
-        # Y.append(D)
     
     plt.xscale("log")
     plt.yscale('log')
@@ -331,7 +390,6 @@ def compare_ppsf_step_stafan_hist(circuit, args):
     plt.ylabel("(D_STAFAN - D_PPSF)/D_PPSF")
     plt.savefig("./results/STAFAN-Error-{}.png".format(circuit.c_name))
     plt.close()
-
 
 def fanin_analysis(circuit, args):
     args.opCount = int(max(200, len(circuit.nodes)/4 ))
@@ -348,10 +406,22 @@ def fanin_analysis(circuit, args):
     plt.savefig("{}-fanin-count.png".format(circuit.c_name))
     plt.close()
 
-
 def FCTP_analysis(circuit, args):
-    #TODO 4 Ghaza : documentation and thoroughly understand what it does
+    #Ghazal: FC_ppsf is stafan!
+    """ Draw plot to compare Fault coverage using two methods \
+    PFS with detection probability estimation using STAFAN parameters.\
+    The plot is saved in ./results/figure/
 
+    Parameters
+    ----------
+    circuit : Circuit 
+    args : args
+        command-line arguments
+    
+    Returns
+    ------
+    None
+    """
     # Loading STAFAN data
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad) 
@@ -361,7 +431,7 @@ def FCTP_analysis(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
-    p_init = utils.load_pd_ppsf_step_D(circuit, args)
+    # p_init = utils.load_pd_ppsf_step_D(circuit, args) # Not used
 
     FC_stafan = []
     FC_ppsf = []
@@ -376,25 +446,46 @@ def FCTP_analysis(circuit, args):
         if len(FC_stafan) > 5:
             if (FC_stafan[-1]-FC_stafan[-5] < 0.05 ) and (FC_ppsf[-1]-FC_ppsf[-5] < 0.05):
                 break
-    plt.plot(TPs, FC_stafan, color='b', label="STAFAN")
-    plt.plot(TPs, FC_ppsf, color='r', label="Fault Simulation (PPSF)")
+    plt.plot(TPs, FC_stafan, color='b', label="STAFAN",linestyle='dashed')
+    plt.plot(TPs, FC_ppsf, color='r', label="Fault Simulation (PPSF)", alpha=0.5, linewidth=4)
+    print(FC_stafan)
+    print(FC_ppsf)
     plt.title("FC estimation based on fault detection probabilities\n{}".format(
         circuit.c_name))
     plt.xlabel("Test Pattern Count")
     plt.ylabel("Fault Coverage (%)")
     plt.legend()
-    plt.savefig("./results/figures/FCTP-STA-FS-{}.png".format(circuit.c_name))
+    path = "./results/figures"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+    plt.savefig("{}/FCTP-STA-FS-{}.png".format(path,circuit.c_name))
+    plt.show()
     plt.close()
 
-
 def OP_impact(circuit, args):
-    #TODO 4 Ghazal : documentation 
-    #TODO 4 Ghazal : understand this method completely 
+    # Ghazal:FC_ppsf is stafan, too!
+    """ Add args.opCount random nodes to the primary outputs as observation points. \
+    Then, calculates the change in the real fault coverage using ppsf and \
+    the estimation using STAFAN parameters. Finally saves the diferences in a .csv file. \
+    The csv also contains the sum of changes in fault coverage and \
+    probability detection in P-FS and P-ST columns.
+
+    Parameters
+    ----------
+    circuit : Circuit 
+    args : args
+        Command-line arguments
+    
+    Returns
+    ------
+    None
+    """
 
     samples = args.opCount 
     nodes = circuit.get_rand_nodes(samples)
     df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1"])
-    TPs_based = [x*100 for x in range(1, 50)]# [100, 200, 300, 400, 500, 1000]
+    TPs_based = [x*100 for x in range(1, 50)] # [100, 200, 300, 400, 500, 1000]
     steps = cfg.PPSF_STEPS 
     
     # Reading and loading characterized STAFAN prob. values 
@@ -406,7 +497,7 @@ def OP_impact(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
-    p_init = utils.load_pd_ppsf_conf(circuit, args)
+    p_init = utils.load_pd_ppsf_conf(fname)
     
     # Finding the range of the TP counts to generate results 
     FC_stafan = []
@@ -424,7 +515,6 @@ def OP_impact(circuit, args):
     # Finding the impact of each of the random nodes
     for count, node in enumerate(nodes):
         row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, "C0":node.C0}
-        #TODO: later we can check if the result file already exists! 
         res_stafan  = obsv.deltaFC(circuit, node, TPs) #cut_BFS=None
         res_ppsf = obsv.deltaFC_PPSF(circuit, node, p_init, TPs, args, steps) 
         row["P-FS"] = res_ppsf["deltaP"]
@@ -437,9 +527,12 @@ def OP_impact(circuit, args):
         print("{:5}\tOPI for node {} completed".format(count, node.num))
         df = df.append(row, ignore_index=True)
     
-    # Storing the datafram into a csv file 
-    fname =  "OPI-report-{}-ci{}-op{}.csv".format(circuit.c_name, args.ci, args.opCount)
+    # Storing the datafram into a csv file
+    i = 0
+    fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
+    while os.path.exists(fname):
+        i+=1
+        fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
     print("Dataframe of OPI analysis results is stored in {}".format(fname))
-    df.to_csv(fname)
+    df.to_csv(fname, float_format='%.5f')
     return df
-

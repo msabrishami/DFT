@@ -636,7 +636,6 @@ class Circuit:
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
-
     def STAFAN_FC(self, tp_count):
         """ Estimation of fault coverage for all faults 
         All faults include all nodes, SS@0 and SS@1 

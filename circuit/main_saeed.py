@@ -295,9 +295,6 @@ if __name__ == '__main__':
         plt.savefig("results-tpfc.pdf")
         plt.close()
 
-    elif args.func == "fc-es-fig":
-        exp.fc_estimation_fig(circuit=circuit, times=args.times, tp_load=args.tpLoad,tp=args.tp)
-
     elif args.func == "fc-sta-fs":
         TPs = [x*100 for x in range(1,21)]
         exp.FCTP_analysis(circuit, args)

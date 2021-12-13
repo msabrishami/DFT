@@ -69,7 +69,6 @@ def get_node_gtype_fin(node):
     if node.gtype in ["OR", "NOR", "NAND", "AND", "XOR", "XNOR"]:
         return "c" + node.gtype.lower() + str(len(node.unodes))
 
-
 def get_fanin_rec(circuit, node, res):
     """ Only called within get_fanin mehtod, 
     The recursive method for getting the fanins-code of node in a circuit 
@@ -83,7 +82,6 @@ def get_fanin_rec(circuit, node, res):
     for unode in node.unodes:
         res.update(get_fanin_rec(circuit, unode, res))
     return res
-
 
 def get_fanin(circuit, node):
     """ Find the nodes in the fanin-cone of a node in a circuit 
@@ -125,7 +123,6 @@ def get_fanin_BFS(circuit, node, lev_depth=None):
     
     return res
     
-   
 def load_ppsf_parallel(fname):
     """ loads a ppsf_parallel simulated log file 
     the last line is time """ 
@@ -157,13 +154,12 @@ def load_pd_ppsf_conf(fname):
     
     return res
 
-
-def estimate_FC(circuit, tp):
+def estimate_FC(circuit, tp): #Ghazal: This method is redundant. It is already implemented in circuit.STAFAN_FC()
     """ estimating the fault coverage of a circuit based on all the faults
     the detection probability is read from node.D0 and node.D1 values """ 
     temp = 0
     for node in circuit.nodes_lev:
-        temp += np.exp(-node.D0 * tp)
-        temp += np.exp(-node.D1 * tp)
+        temp += np.exp(-(node.B1*node.C1) * tp)
+        temp += np.exp(-(node.B0*node.C0) * tp)
 
     return 1 - temp/(2*len(circuit.nodes_lev))

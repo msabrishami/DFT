@@ -32,7 +32,6 @@ def fault_stat(circuit, HTO_th, HTC_th):
         else:
             node.stat["SS@0"] = "HTD"
 
-
 def stat_HTO(circuit, HTO_th, HTC_th):
     fault_stat(circuit, HTO_th, HTC_th)
     for node in circuit.nodes_lev:
@@ -45,13 +44,11 @@ def stat_HTO(circuit, HTO_th, HTC_th):
     print("Number of HTO nodes are {}".format(count))
     return count
 
-
 def make_OP_deprecated(circuit, op):
     """ adds an observation point, updates STAFAN_B """ 
     circuit.PO.append(op)
     op.ntype = "PO"
     circuit.STAFAN_B()
-
 
 def deltaHTO(circuit, op, HTO_th, HTC_th):
     """ count the number of nodes that change from HTO to ETO 
@@ -80,7 +77,6 @@ def deltaHTO(circuit, op, HTO_th, HTC_th):
     circuit.PO = circuit.PO[:-1]
     return count
 
-
 def circuit_deltaHTO(circuit, B_th, ops, args):
     res = {}
     
@@ -96,8 +92,6 @@ def circuit_deltaHTO(circuit, B_th, ops, args):
     res = {k: v for k,v in sorted(res.items(), key=lambda item: item[1], reverse=True)}
     # print(res)
     return res
-
-
 
 def deltaP_2(circuit, op, verbose=False):
     """ 
@@ -138,21 +132,28 @@ def deltaP_2(circuit, op, verbose=False):
 
     return deltaP_tot
 
-
 def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None): 
     """ Calculating the changes in the FC estimation of the nodes
     in the circuit when node OP is used as an observation point. 
     Detection probability is estimated using STAFAN values.
     FC estimation formula is Sum_FL( exp(-D_pre*tp) - exp(-D_post*tp) ). 
+
     Parameters
     ----------
     circuit : Circuit before adding op
-    op : node used for observation point insertion 
-    tps : the number of test patterns, it can be a list of tps
-    
+    op : Node
+        Node used for observation point insertion 
+    tps : int 
+        The number of test patterns, it can be a list of tps
+    verbose : boolean
+        (default is False)
+    cur_bfs : int
+        Set limit for BFS depth (default is None)
+
     Returns
     -------
-    float     
+    float
+        The change in fault coverage
     """
     
     circuit.STAFAN_B()
@@ -165,7 +166,6 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
         PDs_init.append(node.C0 * node.B0)
         PDs_init.append(node.C1 * node.B1)
 
-    
     # temporary adding op as a primary output and redoing STAFAN_B
     orig_ntype = op.ntype
     circuit.PO.append(op)
@@ -195,8 +195,29 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
     circuit.PO = circuit.PO[:-1]
     return deltaFC
 
-
 def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
+    """ Add op node to the primary output list and run ppsf for the \
+    fan-in cone nodes. The op is removed primary ouput list at the end.
+
+    Parameters
+    ----------
+    circuit : Circuit before adding op
+    op : Node 
+        Primary output node
+    TPs : list
+        A list of test patterns
+    args : args
+        Command-line arguments
+    steps : list
+        Lengths of tps in each ppsf run
+    log : boolean
+        If True, saves the log of ppsf
+
+    Returns
+    -------
+    dict
+        A dictionary in the following format: {"deltaP": float, "deltaFC": float}
+    """
     orig_ntype = op.ntype
     circuit.PO.append(op)
     op.ntype = "PO"
@@ -214,14 +235,20 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
 
     return {"deltaP":_deltaP, "deltaFC":_deltaFC}
 
-
 def deltaP(circuit, op, verbose=False, cut_bfs=None): 
     """ Calculating the changes in the sum of detection probability of the nodes
     in the circuit when node OP is used as an observation point 
+
     Parameters
     ----------
-    circuit : Circuit before adding op
+    circuit : Circuit 
+        The circuit before adding op
     op : Node 
+        Node used for observation point insertion 
+    verbose : boolean
+        (default is False)
+    cur_bfs : int
+        Set limit for BFS depth (default is None)
     
     Returns
     -------
@@ -247,13 +274,11 @@ def deltaP(circuit, op, verbose=False, cut_bfs=None):
         PDs_new.append(node.C0 * node.B0)
         PDs_new.append(node.C1 * node.B1)
 
-    delta_PDs = [PDs_new[i] - PDs_init[i] for i in range(len(PDs_new))]
+    delta_PDs = [PDs_new[i] - PDs_init[i] for i in range(len(PDs_new))] 
     
     op.ntype = orig_ntype
     circuit.PO = circuit.PO[:-1]
     return delta_PDs
-
-
 
 def OPI_old(circuit, alg, count_op, args):
     """ runs the observation point insertion, with algorithm alg
@@ -284,7 +309,6 @@ def OPI_old(circuit, alg, count_op, args):
   
     return res
 
-
 """
 def IMOP_1(circuit, node):
     # Sum of all the observations of the fan-in cone, only if lower than HTO
@@ -300,4 +324,3 @@ def IMOP_1(circuit, node):
         node.seen = False
 
 """
-
