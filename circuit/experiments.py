@@ -90,63 +90,6 @@ def ppsf_thread(conn, ckt, tp_count, fault_list):
     conn.send(fault_sim.fault_list)
 
 
-def fc_estimation_fig(circuit, tp_count=2, factor=2, limit=200, times=1, tp=100, tp_load=100):
-    """
-    Fault coverage estimation
-    Choose tp_count, factor and the limit according to the size of PI
-    """
-    for i in range(times):
-        tpc = tp_count
-        path = f"{cfg.STAFAN_DIR}/{circuit.c_name}"
-        if not os.path.exists(path):
-            os.mkdir(path)
-        fname = f"{path}/{circuit.c_name}-TP{tp_load}-{i}.stafan"
-        if not os.path.exists(fname):
-            circuit.STAFAN(tp_load)
-            circuit.save_TMs(tp=tp_load,fname = fname)
-        else:
-            circuit.load_TMs(fname)
-
-        limit = min(limit, (2<<len(circuit.PI)))
-
-        fc_sequence = [0]
-        tp_sequence = [0]
-        for tpc in range(tp):
-            try:
-                fc_sequence.append(circuit.STAFAN_FC(tpc)*100)
-                tp_sequence.append(tpc)
-                tpc*=factor
-
-            except:
-                continue
-
-        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,color = 'green', alpha = 0.5)
-
-    plot.set_ylabel(f'Fault Coverage (FC%)',fontsize=13)
-    plot.set_xlabel('Test Pattern Count #TP',fontsize=13)
-    plot.set_title(f'Dependency of fault coverage on random test patterns\nfor circuit {circuit.c_name}',fontsize=13)
-    plt.subplots_adjust(top=0.835,bottom=0.25,left=0.125,right=0.9,hspace=0.195,wspace=0.2)
-    plt.figtext(0.5, 0.04, f"The experiment is carried out {times} times.", wrap=True, horizontalalignment='center', fontsize=12)
-
-    path = f"{cfg.FIG_DIR}/{circuit.c_name}/"
-    if not os.path.exists(path):
-        os.mkdir(path)
-
-    fname = path+f"{limit}-fc-estimation.pdf"
-
-    plt.savefig(fname)  
-    plt.show()
-
-def tpfc    ():
-    """
-    Fault coverage using fault simulation
-    """
-    pass
-
-def compare_fc_tp_estimation():
-    pass
-
-
 def pd_ppsf_step(circuit, fl_curr, tp, cpu, log_fname=None, count_cont=False):
     """ Running ppsf in parallel for one step given tp count and fault list, 
         counts the number of times faults in fault list are detected. 
@@ -269,7 +212,7 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         fl_temp = FaultList()
         fl_curr = pd_ppsf_step(circuit, fl_curr, tp, args.cpu, log_fname=None, 
                 count_cont=True)
-        fault_completed = []
+        pdb.set_trace()
         if log: 
             outfile.write("#TP={}\n".format(tp))
         for fault in fl_curr.faults:
@@ -304,27 +247,21 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         res_final[str(fault)] = mu/tp_tot 
     if log:
         outfile.close()
-
+    
     return res_final 
 
 
-def pd_ppsf(circuit, args, op=None, steps=None, verbose=False, log=True):
+def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
+    # TODO 4 Ghazal : thoroughly stuff ... and documentation  
     if steps == None:
         res = pd_ppsf_basic(circuit, args.tp, args.cpu, args.fault_per_bin)
     else:
         res = pd_ppsf_conf(circuit, args, steps, op, verbose=verbose, log=log)
     return res
 
-    # This is for log fname 
-    # out_fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name) 
-    # if args.fault:
-    #     out_fname = os.path.join(out_fname, "{}-ppsf-fault{}-tp{}-cpu{}.ppsf".format(
-    #         circuit.c_name, args.fault, args.tp, args.cpu))
-    # else:
-    #     out_fname = os.path.join(out_fname, "{}-ppsf-all-tp{}-cpu{}.ppsf".format(
-    #         circuit.c_name, args.tp, args.cpu))
     
 def ppsf_analysis(circuit, args):
+    # TODO: let's get rid of this or at least change the name 
     fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(fname, "{}-ppsf-all-tp{}-cpu{}.ppsf".format(
         circuit.c_name, args.tp, args.cpu))
@@ -336,6 +273,8 @@ def ppsf_analysis(circuit, args):
     return res
 
 def compare_ppsf_step_stafan_hist(circuit, args):
+    # TODO : let's get rid of this soon ... 
+    
     # STEP 1: load stafan data into the circuit nodes
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad)
@@ -345,7 +284,7 @@ def compare_ppsf_step_stafan_hist(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
             circuit.c_name, args.ci, args.cpu))
-    res_ppsf = utils.load_pd_ppsf_step(fname)
+    res_ppsf = utils.load_pd_ppsf_conf(fname)
     
     stafan_pd = []
     ppsf_pd = [x for x in res_ppsf.values()]
@@ -394,8 +333,6 @@ def compare_ppsf_step_stafan_hist(circuit, args):
     plt.close()
 
 
-
-
 def fanin_analysis(circuit, args):
     args.opCount = int(max(200, len(circuit.nodes)/4 ))
     samples = args.opCount 
@@ -413,6 +350,8 @@ def fanin_analysis(circuit, args):
 
 
 def FCTP_analysis(circuit, args):
+    #TODO 4 Ghaza : documentation and thoroughly understand what it does
+
     # Loading STAFAN data
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad) 
@@ -449,6 +388,8 @@ def FCTP_analysis(circuit, args):
 
 
 def OP_impact(circuit, args):
+    #TODO 4 Ghazal : documentation 
+    #TODO 4 Ghazal : understand this method completely 
 
     samples = args.opCount 
     nodes = circuit.get_rand_nodes(samples)
@@ -465,7 +406,7 @@ def OP_impact(circuit, args):
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
-    p_init = utils.load_pd_ppsf_step_D(circuit, args)
+    p_init = utils.load_pd_ppsf_conf(circuit, args)
     
     # Finding the range of the TP counts to generate results 
     FC_stafan = []

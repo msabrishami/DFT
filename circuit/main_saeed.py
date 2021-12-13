@@ -218,7 +218,9 @@ if __name__ == '__main__':
             print("PFS and PPSF results match!")
     
     elif args.func == "PD_PPSF":
-        exp.pd_ppsf(circuit, args, cfg.PPSF_STEPS)
+        # TODO 4 Ghazal : almost done with the review
+        # TODO 4 Ghazal : don't forget the documentation of sub-methods 
+        exp.pd_ppsf(circuit, args, steps=cfg.PPSF_STEPS)
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args)
@@ -226,12 +228,7 @@ if __name__ == '__main__':
     elif args.func == "ppsf_analysis":
         mu = {}
         std = {}
-        # TPs = [10, 20, 50, 100, 200, 500, 1000, 2000]
-        # TPs = [x*10 for x in range(1,20)]
-        # TPs.extend([x*100 for x in range(1,10)])
-        # TPs.extend([2000])
         TPs = [10, 20, 30, 40, 50, 100, 200, 500, 1000]
-
         for tp in TPs: 
             args.tp = tp
             res = exp.ppsf_analysis(circuit, args)
@@ -318,6 +315,7 @@ if __name__ == '__main__':
         exp.fanin_analysis(circuit, args)
     
     elif args.func == "deltaFCP":
+        # TODO 4 Ghazal -- it's the final countdown 
         """ calculating deltaFC and deltaP of random OPs 
         based on STAFAN and PPSF results """ 
         time_s = time.time()

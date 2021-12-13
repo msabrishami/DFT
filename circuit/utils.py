@@ -136,9 +136,9 @@ def load_ppsf_parallel(fname):
         res[words[0]] = [int(x) for x in words[1:]]
     return res
 
-def load_ppsf_parallel_step(fname):
-    #TODO: ppsf-step is based on accumulated TPs now, wrong load 
-    """ loads a ppsf_parallel_step simulated log file 
+def load_pd_ppsf_conf(fname):
+    #TODO 4 Ghazal: documentation 
+    """ loads a ppsf with confidence log file 
     """ 
     lines = open(fname, "r").readlines()
     res = {}
@@ -150,27 +150,13 @@ def load_ppsf_parallel_step(fname):
         if line.startswith("#TP: (remaining"):
             if lines[-1] == line:
                 break
-            # TODO: check this out, we are not returning any info about remaining faults
-            print("Fault simulation was not completed for some nodes!")
+            print("Warning: PPSF was not completed with enough confidence for some faults")
             break
         words = line.split()
         res[words[0]] = float(words[1])/current_tp
-
+    
     return res
 
-def load_ppsf_parallel_step_D(circuit, args):
-    path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
-            circuit.c_name, args.ci, args.cpu))
-    print("Loading ppsf results file from {} into node.D values".format(fname))
-    res_ppsf = load_ppsf_parallel_step(fname)
-    for fault, prob in res_ppsf.items():
-        if fault[-1] == "1":
-            circuit.nodes[fault[:-2]].D1 = prob
-        else:
-            circuit.nodes[fault[:-2]].D0 = prob
-
-    return res_ppsf
 
 def estimate_FC(circuit, tp):
     """ estimating the fault coverage of a circuit based on all the faults
