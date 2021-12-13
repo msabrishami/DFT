@@ -225,7 +225,7 @@ if __name__ == '__main__':
     elif args.func == "ppsf_parallel":
         # exp.ppsf_parallel(circuit, args)
         exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5e3, 1e4, 
-                2e4, 5e4, 1e5, 2e5, 5e5, 1e6], 3)
+                2e4, 5e4, 1e5, 2e5, 5e5, 1e6])
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args)

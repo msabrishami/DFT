@@ -294,7 +294,7 @@ def ppsf_parallel(circuit, args, op=None, steps=None):
     if steps == None:
         res = ppsf_parallel_basic(circuit, args.tp, args.cpu, op, args.fault_per_bin)
     else:
-        res = ppsf_parallel_confidence(circuit, args, steps, op)
+        res = ppsf_parallel_confidence(circuit, args, steps, op, verbose=False)
     return res
 
     # This is for log fname 

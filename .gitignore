@@ -1,11 +1,11 @@
 # git ignore
 
 circuit/run.sh
+circuit/script_experiments.py
 
 # Saeed:
 **.swp
 **.csv
-circuit/run.sh
 data/modelsim/
 data/stafan-data/
 data/graph/*
