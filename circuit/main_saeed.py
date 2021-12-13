@@ -218,8 +218,7 @@ if __name__ == '__main__':
             print("PFS and PPSF results match!")
     
     elif args.func == "ppsf_parallel":
-        exp.ppsf_parallel(circuit, args, [50, 100, 200, 500, 1000, 2000, 5e3, 1e4, 
-                2e4, 5e4, 1e5, 2e5, 5e5, 1e6])
+        exp.ppsf_parallel(circuit, args, cfg.PPSF_STEPS)
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args)
@@ -322,8 +321,9 @@ if __name__ == '__main__':
         """ calculating deltaFC and deltaP of random OPs 
         based on STAFAN and PPSF results """ 
         time_s = time.time()
-        df = exp.OPI_analysis(circuit, args)
+        df = exp.OP_impact(circuit, args)
         print("Total time = {:.2f}".format(time.time() - time_s))
+        pdb.set_trace()
 
     elif args.func == "deltaFCP-alt": 
         fname = "./results/csv/OPI-report-{}-ci{}-op{}.csv".format(
@@ -384,10 +384,8 @@ if __name__ == '__main__':
             # plt.savefig("{}-{}-{}-samples{}.png".format(
             #     circuit.c_name, "minD", col, args.opCount))
             # plt.close()
-            pdb.set_trace()
             
             plt.scatter(df[col1], df[col2])
-            plt.xscale("log")
             plt.title("Compare deltaFC based on STAFAN vs. PPSF for nodes\n{}".format(
                 circuit.c_name))
             plt.xlabel("deltaFC based on STAFAN")

@@ -196,12 +196,12 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
     return deltaFC
 
 
-def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps):
+def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     orig_ntype = op.ntype
     circuit.PO.append(op)
     op.ntype = "PO"
     p_op = exp.ppsf_parallel(circuit, args, op=op, 
-            steps=steps)
+            steps=steps, log=log)
     _deltaFC = [0] * len(TPs)
     _deltaP = 0 
     for key in p_op.keys():
@@ -255,7 +255,7 @@ def deltaP(circuit, op, verbose=False, cut_bfs=None):
 
 
 
-def OPI(circuit, alg, count_op, args):
+def OPI_old(circuit, alg, count_op, args):
     """ runs the observation point insertion, with algorithm alg
     for count_op number of observation points 
     The circuit argument is considered to be fully loaded

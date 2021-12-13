@@ -218,7 +218,7 @@ def ppsf_parallel_basic(circuit, tp, cpu, op=None, fault_count=None):
     return ppsf_parallel_step(circuit, tot_fl, tp, cpu, log_fname)
 
 
-def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, full_log=False, verbose=False):
+def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, log=True, verbose=False):
     #TODO: documentation AND -- FLAG FOR WRITING INTO FILE OR NOT WRITING 
     fl_cont = FaultList()
     fl_curr = FaultList()
@@ -238,15 +238,18 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, full_log=False, v
         fault.D_count = np.zeros(args.cpu) 
 
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    if op==None:
+    if log==False:
+        log_fname = None
+    elif op==None:
         log_fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
                 circuit.c_name, args.ci, args.cpu))
     else:
         log_fname = os.path.join(path, "{}-{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
                 circuit.c_name, node.num, args.ci, args.cpu))
-    if verbose:
+    if log and verbose:
         print("Log for step based PPSF is being stored in {}".format(log_fname))
-    outfile = open(log_fname, "w")
+    if log:
+        outfile = open(log_fname, "w")
     tp_tot = 0 
     res_final = {}
     for tp in tp_steps:
@@ -256,7 +259,8 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, full_log=False, v
         fl_curr = ppsf_parallel_step(circuit, fl_curr, tp, args.cpu, log_fname=None, 
                 count_cont=True)
         fault_completed = []
-        outfile.write("#TP={}\n".format(tp))
+        if log: 
+            outfile.write("#TP={}\n".format(tp))
         for fault in fl_curr.faults:
             fault_cont = fl_cont.faults[fault_idx[str(fault)]]
             fault_cont.D_count += np.array(fault.D_count)
@@ -265,7 +269,8 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, full_log=False, v
             if mu==0 and std==0:
                 fl_temp.add_str(str(fault))
             elif mu/std > args.ci:
-                outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
+                if log:
+                    outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
                 res_final[str(fault)] = mu/tp_tot 
             else:
                 fl_temp.add_str(str(fault))
@@ -278,23 +283,25 @@ def ppsf_parallel_confidence(circuit, args, tp_steps, op=None, full_log=False, v
             break
     
     # Writing down the remaining faults 
-
-    outfile.write("#TP: (remaining faults)\n")
+    if log:
+        outfile.write("#TP: (remaining faults)\n")
     for fault in fl_curr.faults:
         mu = np.mean(fault.D_count) 
         std = np.std(fault.D_count)
-        outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
+        if log:
+            outfile.write("{}\t{:.2f}\t{:.2f}\n".format(fault, mu, std))
         res_final[str(fault)] = mu/tp_tot 
-    outfile.close()
+    if log:
+        outfile.close()
 
     return res_final 
 
 
-def ppsf_parallel(circuit, args, op=None, steps=None):
+def ppsf_parallel(circuit, args, op=None, steps=None, log=True):
     if steps == None:
         res = ppsf_parallel_basic(circuit, args.tp, args.cpu, op, args.fault_per_bin)
     else:
-        res = ppsf_parallel_confidence(circuit, args, steps, op, verbose=False)
+        res = ppsf_parallel_confidence(circuit, args, steps, op, verbose=False, log=log)
     return res
 
     # This is for log fname 
@@ -336,7 +343,6 @@ def compare_ppsf_step_stafan_hist(circuit, args):
         stafan_pd.extend([node.C1*node.B1, node.C0*node.B0])
     
     # Figure 1: histogram of STAFAN and PPSF probabilities 
-    pdb.set_trace()
     bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
     plt.figure(figsize=(10, 8), dpi=300)
     plt.xscale("log")
@@ -431,32 +437,42 @@ def FCTP_analysis(circuit, args):
     plt.close()
 
 
-def OPI_analysis(circuit, args):
+def OP_impact(circuit, args):
 
     samples = args.opCount 
     nodes = circuit.get_rand_nodes(samples)
-    df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1", "D0", "D1"])
-    TPs = [x*100 for x in range(1, 11)]# [100, 200, 300, 400, 500, 1000]
+    df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1"])
+    TPs_based = [x*100 for x in range(1, 50)]# [100, 200, 300, 400, 500, 1000]
     steps = cfg.PPSF_STEPS 
     
-    # Reading and loading characterized STAFAN values 
+    # Reading and loading characterized STAFAN prob. values 
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad) 
     circuit.load_TMs(fname)
     
+    # Reading and loading characterized PPSF prob. values 
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
     p_init = utils.load_ppsf_parallel_step_D(circuit, args)
-
-    for tp in TPs:
-        print("TP = {:04d}\tFC-STAFAN={:.2f}%\tFC-PPSF={:.2f}%".format(
-            tp, 100*circuit.STAFAN_FC(tp), 100*utils.estimate_FC(circuit, tp) ))
     
-    for node in nodes:
-        row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, 
-                "C0":node.C0, "D0":node.D0, "D1":node.D1}
+    # Finding the range of the TP counts to generate results 
+    FC_stafan = []
+    FC_ppsf = []
+    TPs = []
+    for tp in TPs_based:
+        FC_stafan.append(100*circuit.STAFAN_FC(tp))
+        FC_ppsf.append(100*utils.estimate_FC(circuit, tp))
+        TPs.append(tp)
+        if len(FC_stafan) > 5:
+            if (FC_stafan[-1]-FC_stafan[-5] < 0.05 ) and (FC_ppsf[-1]-FC_ppsf[-5] < 0.05):
+                break
+    print(TPs) 
 
+    # Finding the impact of each of the random nodes
+    for count, node in enumerate(nodes):
+        row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, "C0":node.C0}
+        #TODO: later we can check if the result file already exists! 
         res_stafan  = obsv.deltaFC(circuit, node, TPs) #cut_BFS=None
         res_ppsf = obsv.deltaFC_PPSF(circuit, node, p_init, TPs, args, steps) 
         row["P-FS"] = res_ppsf["deltaP"]
@@ -466,11 +482,12 @@ def OPI_analysis(circuit, args):
             row["FC-ST-tp{:04d}".format(tp)] = res_stafan[idx]
             row["FC-FS-tp{:04d}".format(tp)] = res_ppsf["deltaFC"][idx]
         
-        print("OPI for node {} completed".format(node.num))
+        print("{:5}\tOPI for node {} completed".format(count, node.num))
         df = df.append(row, ignore_index=True)
+    
+    # Storing the datafram into a csv file 
     fname =  "OPI-report-{}-ci{}-op{}.csv".format(circuit.c_name, args.ci, args.opCount)
     print("Dataframe of OPI analysis results is stored in {}".format(fname))
     df.to_csv(fname)
-    # Ranking analysis is in main_saeed.py
     return df
 
