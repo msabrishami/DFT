@@ -217,8 +217,8 @@ if __name__ == '__main__':
         if not error:
             print("PFS and PPSF results match!")
     
-    elif args.func == "ppsf_parallel":
-        exp.ppsf_parallel(circuit, args, cfg.PPSF_STEPS)
+    elif args.func == "PD_PPSF":
+        exp.pd_ppsf(circuit, args, cfg.PPSF_STEPS)
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args)

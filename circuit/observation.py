@@ -200,7 +200,7 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     orig_ntype = op.ntype
     circuit.PO.append(op)
     op.ntype = "PO"
-    p_op = exp.ppsf_parallel(circuit, args, op=op, 
+    p_op = exp.pd_ppsf(circuit, args, op=op, 
             steps=steps, log=log)
     _deltaFC = [0] * len(TPs)
     _deltaP = 0 
