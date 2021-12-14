@@ -457,11 +457,9 @@ def FCTP_analysis(circuit, args):
     if not os.path.exists(path):
         os.makedirs(path)
     plt.savefig("{}/FCTP-STA-FS-{}.png".format(path,circuit.c_name))
-    plt.show()
     plt.close()
 
 def OP_impact(circuit, args):
-    # Ghazal:FC_ppsf is stafan, too!
     """ Add args.opCount random nodes to the primary outputs as observation points. \
     Then, calculates the change in the real fault coverage using ppsf and \
     the estimation using STAFAN parameters. Finally saves the diferences in a .csv file. \
@@ -485,31 +483,30 @@ def OP_impact(circuit, args):
     TPs_based = [x*100 for x in range(1, 50)] # [100, 200, 300, 400, 500, 1000]
     steps = cfg.PPSF_STEPS 
     
-    # Reading and loading characterized STAFAN prob. values 
+    # Read and load characterized STAFAN prob. values 
     fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
             circuit.c_name, circuit.c_name, args.tpLoad) 
     circuit.load_TMs(fname)
     
-    # Reading and loading characterized PPSF prob. values 
+    # Read and load characterized PPSF prob. values 
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
     p_init = utils.load_pd_ppsf_conf(fname)
     
-    # Finding the range of the TP counts to generate results 
+    # Find the range of the TP counts to generate results 
     FC_stafan = []
     FC_ppsf = []
     TPs = []
     for tp in TPs_based:
         FC_stafan.append(100*circuit.STAFAN_FC(tp))
-        FC_ppsf.append(100*utils.estimate_FC(circuit, tp))
+        FC_ppsf.append(100*utils.estimate_FC(p_init, tp))
         TPs.append(tp)
         if len(FC_stafan) > 5:
             if (FC_stafan[-1]-FC_stafan[-5] < 0.05 ) and (FC_ppsf[-1]-FC_ppsf[-5] < 0.05):
                 break
-    print(TPs) 
 
-    # Finding the impact of each of the random nodes
+    # Find the impact of each of the random nodes
     for count, node in enumerate(nodes):
         row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, "C0":node.C0}
         res_stafan  = obsv.deltaFC(circuit, node, TPs) #cut_BFS=None
@@ -524,7 +521,7 @@ def OP_impact(circuit, args):
         print("{:5}\tOPI for node {} completed".format(count, node.num))
         df = df.append(row, ignore_index=True)
     
-    # Storing the datafram into a csv file
+    # Store the datafram into a csv file
     i = 0
     fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
     while os.path.exists(fname):
