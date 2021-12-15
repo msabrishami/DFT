@@ -14,9 +14,8 @@ import numpy as np
 import pandas as pd
 from circuit import Circuit
 from modelsim_simulator import Modelsim
-from regular_tp_gen import regular_tp_gen
 from pfs import PFS
-
+import pdb
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
@@ -390,31 +389,61 @@ def ppsf_corr_ci(circuit):
     sns.heatmap(df.corr(),annot=True,fmt='f',cmap="YlGnBu")
     plt.show()
 
-def ppsf_error_ci(circuit,hist_scatter):
-    df = pd.DataFrame(columns=['fault','ci4','ci3','ci2'])
+def ppsf_error_ci(circuit, hist_scatter, args, _cis):
+    df = pd.DataFrame(columns=["fault"].extend(["ci"+str(x) for x in _cis])) 
     cis = []
-    for c in [2,3,4]:
+    for c in _cis:
         path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{50}.ppsf")
-        cis.append(utils.load_ppsf_parallel_step(fname))
+        cis.append(utils.load_pd_ppsf_conf(fname))
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
+        row = {"fault": f}
+        for idx, c in enumerate(_cis):
+            row["ci" + str(c)] = cis[idx][f]
         try:
-            df = df.append({'fault':f,'ci2':cis[0][f],'ci3':cis[1][f],'ci4':cis[2][f]}, ignore_index=True)
+            df = df.append(row, ignore_index=True)
         except:
             pass
-    df['ci2_error']=abs(df['ci2']-df['ci4'])/df['ci4']
-    df['ci3_error']=abs(df['ci3']-df['ci4'])/df['ci4']
-    if hist_scatter == 'hist':
-        sns.histplot(df['ci3_error'],color='r',alpha = 0.3,label = 'ci 3')
-        sns.histplot(df['ci2_error'],color='b',alpha = 0.3, label = 'ci 2')
+    max_ci = max(_cis)
+    _cis.remove(max_ci)
+    max_ci_col = "ci" + str(max_ci)
+    colors = ["orange", "red", "blue", "green", "brown", "black"]
+    min_val = max( min( (df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col] ), -0.2)
+    max_val = min( max( (df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col] ), 0.2)
+    print(min_val, max_val)
+    bins = np.linspace(min_val, max_val, 40)
+    # bins = [-0.2 + x*0.02 for x in range(21)]
+    temp = []
+    plt.rcParams["patch.force_edgecolor"] = False
+    plt.figure(figsize=(12, 6), dpi=300)
+    plt.xlim(min_val*1.2, max_val*1.2)
+    for idx, c in enumerate(_cis):
+        col = "ci" + str(c) 
+        df[col+"_error"] = (df[col]-df[max_ci_col])/df[max_ci_col]
+        temp.append(col+"_error")
+        if hist_scatter == 'hist':
+            sns.histplot(df[col+"_error"], alpha = 0.1, color=colors[idx], 
+                    linewidth=0.01, 
+                    # line_kws=dict(edgecolor="white", linewidth=0.01), 
+                    kde=True, 
+                    label = col, bins=bins)
+            plt.legend()
 
-    elif hist_scatter == 'scatter':
-        sns.scatterplot(x=df['ci4'],y=df['ci2_error'],alpha = 0.3, label = 'ci 2')
-        sns.scatterplot(x=df['ci4'],y=df['ci3_error'],color='r',alpha = 0.3,label = 'ci 3')
+        elif hist_scatter == 'scatter':
+            sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"], 
+                    color=colors[idx], alpha = 0.2, label = col, element="step")
+            # sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"], label = col, element="step")
+
+            plt.xscale("log")
+
+    # if hist_scatter == "hist":
+    #     pdb.set_trace()
+    #     sns.histplot(data=df[temp], element="step") # bins=bins
+    #     plt.legend()
 
     plt.title(f'{hist_scatter}plot for absolute error {circuit.c_name}')
-    plt.ylabel('ci3 and ci2 error')
+    plt.ylabel('This is Y label')
     plt.savefig(f'results/figures/{hist_scatter}plot for absolute error {circuit.c_name}',bbox_inches='tight')
     print(circuit.c_name)
     plt.close()
@@ -457,5 +486,5 @@ if __name__ == '__main__':
         ppsf_corr_ci(circuit)
     
     elif args.func == 'ppsf-error':
-        ppsf_error_ci(circuit,hist_scatter='scatter')
-        ppsf_error_ci(circuit,hist_scatter='hist')
+        # ppsf_error_ci(circuit,hist_scatter='scatter', args=args, _cis=[5,6,10])
+        ppsf_error_ci(circuit,hist_scatter='hist', args=args, _cis=[1, 2, 3, 4, 5, 6, 10])

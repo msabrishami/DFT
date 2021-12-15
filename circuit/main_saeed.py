@@ -218,9 +218,11 @@ if __name__ == '__main__':
             print("PFS and PPSF results match!")
     
     elif args.func == "PD_PPSF":
+        time_s = time.time()
         # TODO 4 Ghazal : almost done with the review
         # TODO 4 Ghazal : don't forget the documentation of sub-methods 
-        exp.pd_ppsf(circuit, args, steps=cfg.PPSF_STEPS)
+        exp.pd_ppsf(circuit, args, steps=cfg.PPSF_STEPS, verbose=True)
+        print("Total time = {:.2f}".format(time.time() - time_s))
     
     elif args.func == "ppsf_vs_stafan":
         exp.compare_ppsf_step_stafan_hist(circuit, args)
