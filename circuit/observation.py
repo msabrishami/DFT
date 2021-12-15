@@ -197,7 +197,7 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
 
 def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     """ Add op node to the primary output list and run ppsf for the \
-    fan-in cone nodes. The op is removed primary ouput list at the end.
+    fan-in cone nodes. The op is removed from primary output list at the end.
 
     Parameters
     ----------
@@ -219,8 +219,9 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
         A dictionary in the following format: {"deltaP": float, "deltaFC": float}
     """
     orig_ntype = op.ntype
-    circuit.PO.append(op)
-    op.ntype = "PO"
+    if op:
+        circuit.PO.append(op)
+        op.ntype = "PO"
     p_op = exp.pd_ppsf(circuit, args, op=op, 
             steps=steps, log=log)
     _deltaFC = [0] * len(TPs)
@@ -230,8 +231,9 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
         for idx, tp in enumerate(TPs):
             _deltaFC[idx] +=  ( np.exp(-p_init[key]*tp) - np.exp(-p_op[key]*tp) ) 
     
-    op.ntype = orig_ntype
-    circuit.PO = circuit.PO[:-1]
+    if op:
+        op.ntype = orig_ntype
+        circuit.PO = circuit.PO[:-1]
 
     return {"deltaP":_deltaP, "deltaFC":_deltaFC}
 

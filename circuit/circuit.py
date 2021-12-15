@@ -234,7 +234,6 @@ class Circuit:
         if verbose:
             print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
         return tps
-    
 
     def gen_tp_file_full(self, tp_fname=None):
         """ create a single file including all possible tps """ 
@@ -256,10 +255,14 @@ class Circuit:
         return tps
 
     
-    def load_tp_file(self, fname):
+    def load_tp_file(self, fname,tp_count = 0):
         """ Load single file with multiple test pattern vectors. """ 
         # do we need to check the order of the inputs in the file?  
         # this can be done using "yield" or "generate" -- check online 
+
+        if not os.path.exists(fname):
+            return self.gen_tp_file(tp_count=tp_count,tp_fname=fname)
+        
         infile = open(fname, 'r')
         tps = []
         lines = infile.readlines()

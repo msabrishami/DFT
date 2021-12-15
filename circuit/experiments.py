@@ -208,7 +208,7 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
 
     fl_cont = FaultList()
     fl_curr = FaultList()
-    if op == None:
+    if op is None:
         fl_cont.add_all(circuit)
         fl_curr.add_all(circuit)
     else:
@@ -281,7 +281,7 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         res_final[str(fault)] = mu/tp_tot 
     if log:
         outfile.close()
-    
+    print('done once')
     return res_final 
 
 def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
@@ -314,10 +314,10 @@ def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
         a dictionary of faults to means, otherwise, A fault list with D_count  \
         with length equal to cpu is returned
     """
-    if steps == None:
-        res = pd_ppsf_basic(circuit, args.tp, args.cpu, args.fault_per_bin)
-    else:
+    if steps:
         res = pd_ppsf_conf(circuit, args, steps, op, verbose=verbose, log=log)
+    else:
+        res = pd_ppsf_basic(circuit, args.tp, args.cpu, args.fault_per_bin)
     return res
 
 def ppsf_analysis(circuit, args):

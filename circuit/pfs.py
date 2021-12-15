@@ -153,14 +153,14 @@ class PFS(FaultSim):
         return tpfc 
 
     
-    def fs_exe(self, tp_fname, log_fname=None, fault_drop=None):
+    def fs_exe(self, tp_fname, log_fname=None, fault_drop=None,tp_count=0):
         """
         Runs PFS for the faults in the fault list, given the tp file.  
         Arguments:
         ---------
         """
         self.fs_folder()
-        tps = self.circuit.load_tp_file(tp_fname)
+        tps = self.circuit.load_tp_file(tp_fname,tp_count)
         fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
         fn += tp_fname.split("/")[-1].replace(".tp", ".log")
         log_fname = fn if log_fname==None else log_fname
