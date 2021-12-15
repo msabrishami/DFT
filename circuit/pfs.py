@@ -153,14 +153,34 @@ class PFS(FaultSim):
         return tpfc 
 
     
-    def fs_exe(self, tp_fname, log_fname=None, fault_drop=None,tp_count=0):
+    def fs_exe(self, tp, fault_drop=None):
         """
         Runs PFS for the faults in the fault list, given the tp file.  
         Arguments:
         ---------
         """
         self.fs_folder()
-        tps = self.circuit.load_tp_file(tp_fname,tp_count)
+        tps = self.circuit.gen_tp_file(tp)
+        fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
+        if not os.path.exists(fn):
+            os.makedirs(fn)
+        fn += f"tp{tp}.tpfc"
+        print("PFS for tp file: {}".format(fn))
+        # self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
+        tpfc = self.tpfc(tps=tps, log_fname=fn, fault_drop=1)
+        print("PFS completed")
+        print("FC={:.4f}%, tot-faults={}".format(
+            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+        # pdb.set_trace()
+
+    def _fs_exe(self, tp_fname, log_fname=None, fault_drop=None):
+        """
+        Runs PFS for the faults in the fault list, given the tp file.  
+        Arguments:
+        ---------
+        """
+        self.fs_folder()
+        tps = self.circuit.load_tp_file(tp_fname)
         fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
         fn += tp_fname.split("/")[-1].replace(".tp", ".log")
         log_fname = fn if log_fname==None else log_fname

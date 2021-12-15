@@ -130,7 +130,7 @@ def diff_tp_stafan(circuit):
     """
     Fault simulation estimation with different sizes of tp_load using STAFAN data
     """
-    tps = 100,200,500,1000,2000,5000,10_000,20_000,50_000,100_000,200_000,500_000,1_000_000,10_000_000]
+    tps = [100,200,500,1000,2000,5000,10_000,20_000,50_000,100_000,200_000,500_000,1_000_000,10_000_000]
     set = 0
     tp_size = [f"{tp}-{set}" for tp in tps]+["1000000", "10000000"]
     for i in tp_size:
@@ -202,19 +202,18 @@ def tpfc_ppfs(circuit):  # Not completed
     return _PointPlotter
 
 
-def tpfc_psf(circuit, aggregate=False):
-    tps = [10, 20, 50, 100, 200, 300, 400, 500, 1000]  # 2000,5000,10_000
+def tpfc_pfs(circuit, tp, times, aggregate=False):
     df = pd.DataFrame(columns=["tp", "fc", "batch"])
 
-    for tp in range(len(tps)):
+    for i in range(times):
         tp_fname = os.path.join(config.PATTERN_DIR,
-                                f"{circuit.c_name}_tp_{tps[tp]}.tp")
-        log_fname = f"{config.FAULT_SIM_DIR}/{circuit.c_name}/pfs-tp_{tps[tp]}.log"
-        if not os.path.exists(log_fname):
-            pfs = PFS(circuit)
-            pfs.fault_list.add_all(circuit)
-            pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname,
-                       fault_drop=1, tp_count=tps[tp])
+                                f"{circuit.c_name}_tp_{tp}.tp")
+        log_fname = f"{config.FAULT_SIM_DIR}/{circuit.c_name}/pfs/tp{tp}.tpfc"
+        # if not os.path.exists(log_fname):
+        pfs = PFS(circuit)
+        pfs.fault_list.add_all(circuit)
+        pfs.fs_exe(tp,
+                    fault_drop=1)
 
         path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/"
         path += "tpfc_tp-" + str(tp) + "_" + str(tp)
@@ -229,18 +228,19 @@ def tpfc_psf(circuit, aggregate=False):
                 r"\s*(\d+)\s*New:\s*(\d+)\s*Total:\s*(\d+)\s*FC:\s*(\d+\.\d+)%", line)[0]
             fc_sequence.append(float(fc))
             tp_sequence.append(int(tp_num))
-            df = df.append({"tp": tp_num, "fc": float(fc),
-                            "batch": b}, ignore_index=True)
-        b += 1
+            df = df.append({"tp": tp_num, "fc": np.log(100-float(fc)),
+                            "batch": str(i)}, ignore_index=True)
+            b+=1
         if not aggregate:
             # --> multiple single lines
             plot = sns.lineplot(
                 x=tp_sequence, y=fc_sequence, alpha=0.2, color="b")
-
+    import pdb
+    pdb.set_trace()
     if aggregate:
         # df_sample = df.sample(1000)
         # --> aggregate multiple lines
-        plot = sns.lineplot(x=df['tp'], y=df['fc'],
+        plot = sns.lineplot(data = df, x='tp', y='fc',
                             alpha=0.8, color="b", linewidth=1)
 
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
@@ -255,11 +255,12 @@ def tpfc_psf(circuit, aggregate=False):
     path = f"{config.FIG_DIR}/{circuit.c_name}/fctp/"
     if not os.path.exists(path):
         os.makedirs(path)
-
+    print(df)
     fname = path+f"tfpc-pfs-{circuit.c_name}.png"
+    plt.xlim(50,tp)
     plt.tight_layout()
     plt.savefig(fname)
-    # plt.show()
+    plt.show()
     return plt
 
 
@@ -269,7 +270,7 @@ def compare_stafan_ppsf_pfs(circuit, times, tp_load, tp): # plt3 is not complete
     """
     plt1 = fc_estimation(circuit=circuit, times=times,
                          tp_load=tp_load, tp=tp)
-    plt2 = tpfc_psf(circuit=circuit, times=times, tp=tp)
+    plt2 = tpfc_pfs(circuit=circuit, times=times, tp=tp)
     plt3 = tpfc_ppfs(circuit=circuit)
 
     path = f"{config.FIG_DIR}/{circuit.c_name}/compare/"
@@ -558,8 +559,8 @@ if __name__ == "__main__":
         fc_estimation(circuit=circuit, times=args.times,
                       tp_load=args.tpLoad, tp=args.tp)
 
-    elif args.func == "tpfc-psf":
-        tpfc_psf(circuit=circuit, aggregate=True)
+    elif args.func == "tpfc-pfs":
+        tpfc_pfs(circuit=circuit,tp=args.tp,times=20, aggregate=True)
     elif args.func == "tpfc-ppfs":
         tpfc_ppfs(circuit=circuit)
 
