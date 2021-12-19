@@ -202,47 +202,33 @@ def tpfc_ppfs(circuit):  # Not completed
     return _PointPlotter
 
 
-def tpfc_pfs(circuit, tp, times, aggregate=False):
+def tpfc_pfs(circuit, tp, times):
+    """ running and plotting the TPFC figure by doing real fault simulation (PFS) 
+        if times > 1, then the fault simulation is done several times with different sets of 
+        random test patterns. The figure will show the range and the mean of FC value 
+        through all simulations. 
+
+        Parameters:
+        -----------
+        tp : int , number of patterns used for fault simulation 
+        times : int , number of times fault simulation is done
+    """
+
     df = pd.DataFrame(columns=["tp", "fc", "batch"])
 
-    for i in range(times):
-        tp_fname = os.path.join(config.PATTERN_DIR,
-                                f"{circuit.c_name}_tp_{tp}.tp")
-        log_fname = f"{config.FAULT_SIM_DIR}/{circuit.c_name}/pfs/tp{tp}.tpfc"
-        # if not os.path.exists(log_fname):
+    for batch in range(times):
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp,
-                    fault_drop=1)
-
-        path = config.FAULT_SIM_DIR + "/" + circuit.c_name + "/"
-        path += "tpfc_tp-" + str(tp) + "_" + str(tp)
-
-        infile = open(log_fname, "r")
-        lines = infile.readlines()
-        fc_sequence = []
-        tp_sequence = []
-        b = 0
-        for line in lines[:-1]:
-            tp_num, new_faults, total_faults, fc = re.findall(
-                r"\s*(\d+)\s*New:\s*(\d+)\s*Total:\s*(\d+)\s*FC:\s*(\d+\.\d+)%", line)[0]
-            fc_sequence.append(float(fc))
-            tp_sequence.append(int(tp_num))
-            df = df.append({"tp": tp_num, "fc": np.log(100-float(fc)),
-                            "batch": str(i)}, ignore_index=True)
-            b+=1
-        if not aggregate:
-            # --> multiple single lines
-            plot = sns.lineplot(
-                x=tp_sequence, y=fc_sequence, alpha=0.2, color="b")
-    import pdb
-    pdb.set_trace()
-    if aggregate:
-        # df_sample = df.sample(1000)
-        # --> aggregate multiple lines
-        plot = sns.lineplot(data = df, x='tp', y='fc',
-                            alpha=0.8, color="b", linewidth=1)
-
+        fc = pfs.tpfc(tp, fault_drop=1)
+        arr = [list(range(1,tp+1)), fc, [batch]*tp]
+        df = df.append(pd.DataFrame(np.array(arr).T, columns = ["tp", "fc", "batch"]),
+                ignore_index=True)
+    plt.xlim(50,tp)
+    plt.ylim(min(df[df["tp"]==50]["fc"].tolist()), max(df["fc"].tolist()) )
+    print(min(df[df["tp"]==50]["fc"].tolist()))
+    # df["nfc"] = 100.00001 - df["fc"]
+    plot = sns.lineplot(data = df, x='tp', y='fc', alpha=0.8, color="b", linewidth=1, ci=100)
+    # plt.yticks(df["nfc"], df["fc"])
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(f"Dependency of fault coverage on\n random test patterns for {circuit.c_name}",
@@ -252,17 +238,15 @@ def tpfc_pfs(circuit, tp, times, aggregate=False):
     # plot.set_xticklabels(plot.get_xticks()[::2])
     # plt.xticks(df["batch"])
 
-    path = f"{config.FIG_DIR}/{circuit.c_name}/fctp/"
+    path = f"results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
-    print(df)
-    fname = path+f"tfpc-pfs-{circuit.c_name}.png"
-    plt.xlim(50,tp)
+    fname = path+f"tpfc-pfs-{circuit.c_name}.png"
+
     plt.tight_layout()
     plt.savefig(fname)
-    plt.show()
+    # plt.show()
     return plt
-
 
 def compare_stafan_ppsf_pfs(circuit, times, tp_load, tp): # plt3 is not completed
     """
@@ -471,6 +455,8 @@ def ppsf_corr_ci(circuit, args, _cis, heatmap=False):
         col = "ci" + str(c)
         sns.scatterplot(x=df[max_ci_col], y=df[col],
                         color=colors[idx], alpha=0.3, s=6, ax=ax[i, j])
+        ax[i, j].set_ylabel(f"PD (CI={c})")
+        ax[i, j].set_xlabel(f"PD (CI={max_ci})")
 
     if heatmap:
         sns.heatmap(df.corr(), annot=True, fmt="f", cmap="YlGnBu")
@@ -478,10 +464,11 @@ def ppsf_corr_ci(circuit, args, _cis, heatmap=False):
     fig.suptitle(
         "Mean of detection probability which are\n in the given confidence interval.", fontsize=16)
     fig.tight_layout()
-    plt.savefig(
-        f"./results/figures/multi-scatterplot-{circuit.c_name}-cis={_cis}-max={max_ci}-cpu{args.cpu}.png")
+    fname = f"results/figures/{circuit.c_name}-ppsf-cis-max{max_ci}-cpu{args.cpu}.png" 
+    plt.savefig(fname)
+    print(f"Figure saved in {fname}")
     plt.show()
-    fig.show()
+    # fig.show()
 
 
 def ppsf_error_ci(circuit, hist_scatter, args, _cis):
@@ -490,7 +477,7 @@ def ppsf_error_ci(circuit, hist_scatter, args, _cis):
     for c in _cis:
         path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(
-            path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{args.cp}.ppsf")
+            path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{args.cpu}.ppsf")
         cis.append(utils.load_pd_ppsf_conf(fname))
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
@@ -509,46 +496,52 @@ def ppsf_error_ci(circuit, hist_scatter, args, _cis):
         min((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), -0.2)
     max_val = min(
         max((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), 0.2)
-    print(min_val, max_val)
     bins = np.linspace(min_val, max_val, 40)
-    # bins = [-0.2 + x*0.02 for x in range(21)]
     temp = []
     plt.rcParams["patch.force_edgecolor"] = False
     plt.figure(figsize=(12, 6), dpi=300)
-    plt.xlim(min_val*1.2, max_val*1.2)
+
     for idx, c in enumerate(_cis):
         col = "ci" + str(c)
         df[col+"_error"] = (df[col]-df[max_ci_col])/df[max_ci_col]
         temp.append(col+"_error")
         if hist_scatter == "hist":
+            plt.xlim(min_val, max_val) #TODO: Move me please
             sns.histplot(df[col+"_error"], alpha=0.1, color=colors[idx],
                          linewidth=0.01,
                          # line_kws=dict(edgecolor="white", linewidth=0.01),
                          kde=True,
-                         label=col, bins=bins)
+                         label=col.replace("ci", "CI="), bins=bins)
             plt.legend()
 
         elif hist_scatter == "scatter":
             sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"],
-                            color=colors[idx], alpha=0.2, label=col, element="step")
+                            color=colors[idx], alpha=0.2, s=8,
+                            label=col.replace("ci", "CI="))
             # sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"], label = col, element="step")
 
             plt.xscale("log")
 
-    plt.title(f"{hist_scatter}plot for absolute error {circuit.c_name}")
-    plt.ylabel("This is Y label")
-    plt.savefig(
-        f"results/figures/{hist_scatter}plot for absolute error {circuit.c_name}", bbox_inches="tight")
-    print(circuit.c_name)
+    plt.title(f"Comparing error in detection probability (DP) value of faults measured with PPSF \n\
+            for different confidence intervals (CIs) \n\
+            CI = {max_ci} is used as the reference for error. \n\
+            Number of parallel processes for PPSF = {args.cpu} \n\
+            Circuit = {circuit.c_name}")
+    if hist_scatter == "hist":
+        plt.ylabel("Count of faults")
+        plt.xlabel(f"Relative error to PPSF with CI={max_ci}")
+    else:
+        plt.ylabel(f"Relative error to PPSF with CI={max_ci}")
+        plt.xlabel("PD using PPSF with CI={max_ci}")
+    
+    fname = f"results/figures/{circuit.c_name}-ppsf-error-cis-{hist_scatter}-cpu{args.cpu}.png" 
+    plt.savefig(fname, bbox_inches="tight")
+    print(f"Figure saved in {fname}")
     plt.close()
     # plt.show()
 
-
 if __name__ == "__main__":
     args = pars_args()
-
-    config.HTO_TH = args.HTO_th if args.HTO_th else config.HTO_TH
-    config.HTC_TH = args.HTC_th if args.HTC_th else config.HTC_TH
 
     circuit = read_circuit(args)
     circuit.lev()
@@ -558,9 +551,9 @@ if __name__ == "__main__":
     if args.func == "fc-es-fig":
         fc_estimation(circuit=circuit, times=args.times,
                       tp_load=args.tpLoad, tp=args.tp)
-
+    
     elif args.func == "tpfc-pfs":
-        tpfc_pfs(circuit=circuit,tp=args.tp,times=20, aggregate=True)
+        tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
     elif args.func == "tpfc-ppfs":
         tpfc_ppfs(circuit=circuit)
 
@@ -584,6 +577,6 @@ if __name__ == "__main__":
         ppsf_corr_ci(circuit, _cis=[1, 2, 3, 4, 5, 6, 10], args=args)
 
     elif args.func == "ppsf-error":
-        # ppsf_error_ci(circuit,hist_scatter="scatter", args=args, _cis=[5,6,10])
+        # ppsf_error_ci(circuit, hist_scatter="scatter", args=args, _cis=[1,2,6,10])
         ppsf_error_ci(circuit, hist_scatter="hist",
-                      args=args, _cis=[1, 2, 3, 4, 5, 6, 10])
+                args=args, _cis=[1, 2, 3])

@@ -19,7 +19,9 @@ class PFS(FaultSim):
         self.fs_type = "pfs"
         self.wordlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**self.wordlen-1
-    
+        path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
+        if not os.path.exists(path):
+            os.mkdir(path)
 
     def single(self, tp, fault_drop=None):
         """
@@ -128,18 +130,45 @@ class PFS(FaultSim):
 
     def tpfc(self, tps, log_fname=None, fault_drop=None, verbose=False):
         """ 
-        Calculate the FC for each TP
-        Arguments: 
+        Running the PFS simulation and calculating fault coverage (FC) for the number of
+        test patterns (tps), which is referred to as TPFC. 
+        If the real test pattern is given (i.e. tp is a list indicating a set of test patterns), 
+        then those test patterns will be used for fault simulation, if tp is just an integer, 
+        then tps number of test patterns will be generated randomly and used for TPFC. 
+        In calculating FC, faults in the fault list are considered.  
+
+        Parameters
         ----------
-        tps : list of lists 
+        tps : two options
+            1. list of lists , test patterns 
+            2. int , number of random test patterns to be generated 
+        
+        log_fname : str (default None) , name of log file to record results
+            if not given, the results will not be logged
+
+        fault_drop : int (default None) , number of tps that must detect a fault so it will 
+            be dropped from fault_list, in other words considered completely detected. 
+
+        Returns
+        -------
+        tpfc : list of floats , FC percentage (accumulative) value as tps are used for test 
         """
         tpfc = []
+        fc_seq = []
+        if isinstance(tps, int):
+            tps = self.circuit.gen_tp_file(tps)
+        
         for idx, tp in enumerate(tps):
             tpfc.append(len(self.single(tp, fault_drop)))
+
+            fc_seq.append(100*sum(tpfc)/len(self.fault_list.faults))
             if verbose:
                 print("{:4} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
                     idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
         fault_coverage = self.fault_list.calc_fc() 
+
+        # TODO: just double check this, the reason fault_coverage is not the same as 
+        # tpfc[-1] is fault_drop -- I guess ... 
         if log_fname:
             outfile = open(log_fname, mode='w')
             for k in range(len(tpfc)):
@@ -148,9 +177,12 @@ class PFS(FaultSim):
             outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
             outfile.close()
             print("Log file saved in {}".format(log_fname))
+    
+        print("FC={:.4f}%, tot-faults={}".format(
+            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
 
         print("TPFC completed. ".format(self.fs_type))
-        return tpfc 
+        return fc_seq 
 
     
     def fs_exe(self, tp, fault_drop=None):
@@ -173,7 +205,7 @@ class PFS(FaultSim):
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
         # pdb.set_trace()
 
-    def _fs_exe(self, tp_fname, log_fname=None, fault_drop=None):
+    def _fs_exe_old(self, tp_fname, log_fname=None, fault_drop=None):
         """
         Runs PFS for the faults in the fault list, given the tp file.  
         Arguments:
