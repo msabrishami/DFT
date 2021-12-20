@@ -177,11 +177,10 @@ class PFS(FaultSim):
             outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
             outfile.close()
             print("Log file saved in {}".format(log_fname))
-    
-        print("FC={:.4f}%, tot-faults={}".format(
-            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+        if verbose: 
+            print("TPFC completed:\tFC={:.4f}%, tot-faults={}".format(
+                100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
 
-        print("TPFC completed. ".format(self.fs_type))
         return fc_seq 
 
     

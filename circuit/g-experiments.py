@@ -19,7 +19,6 @@ import observation as obsv
 import pdb
 
 import sys
-sys.path.insert(1, "../data/netlist_behavioral")
 
 def pars_args():
     parser = argparse.ArgumentParser()
@@ -84,7 +83,7 @@ def node_info(node):
 
     return node_parameters
 
-def fc_estimation(circuit, times=1, tp=100, tp_load=100):
+def tpfc_stafan(circuit, times=1, tp=100, tp_load=100):
     """
     Fault coverage estimation
     Choose tp_count, factor and the limit according to the size of PI
@@ -115,15 +114,17 @@ def fc_estimation(circuit, times=1, tp=100, tp_load=100):
     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(
-        f"Dependency of fault coverage on random test patterns\nfor circuit {circuit.c_name}", fontsize=13)
+        f"Dependency of fault coverage on random test patterns\n\
+                for circuit {circuit.c_name}", fontsize=13)
 
     path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"{tp}-fc-estimation.pdf"
+    fname = path+f"{tp}-fc-estimation.png"
     plt.tight_layout()
     plt.savefig(fname)
+    print(f"Figure saved in {fname}")
     return plt
 
 def diff_tp_stafan(circuit):
@@ -171,35 +172,35 @@ def diff_tp_stafan(circuit):
     plt.tight_layout()
     plt.savefig(fname)
 
-def tpfc_ppfs(circuit):  # Not completed
+def tpfc_ppsf(circuit, args):  # Not completed
     """
     Fault simulation estimation with different sizes of tp_load using STAFAN data
     """
-    tps = [100, 200, 500, 1000, 2000, 5000]
-    #   10000,20000,500000,100000
-    #   200000,500000,1000000,10000000]
     path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
     p_init = utils.load_pd_ppsf_conf(fname)
+    tps = np.arange(0, args.tp, 10)
+    fcs = []
     for tp in tps:
         # fc is estimated based on constant count of tps for ppsf
-        t = utils.estimate_FC(p_init, tp=tp)
-        print(t)
+        fcs.append(utils.estimate_FC(p_init, tp=tp))
+    plt.plot(tps, fcs)
+    plt.ylabel(f"Fault Coverage (FC%)", fontsize=13)
+    plt.xlabel("Test Pattern Count #TP", fontsize=13)
+    plt.title(
+            f"fault coverage for random test patterns\n\
+                    circuit: {circuit.c_name}", fontsize=13)
 
-    # plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
-    # plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
-    # plot.set_title(
-    #     f"Dependency of fault coverage on random test patterns\nfor circuit {circuit.c_name}", fontsize=13)
-
-    path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    fname = path+f"{tps[0]}-fc-estimation-ppsf.pdf"
+    # path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
+    fname = f"./results/figures/{circuit.c_name}-tpfc-ppsf-ci{args.ci}-cpu{args.cpu}.png"
+    print(f"Figure saved in {fname}")
+    # if not os.path.exists(path):
+    #     os.makedirs(path)
+    # fname = path+f"{tps[0]}-fc-estimation-ppsf.pdf"
     plt.tight_layout()
     plt.savefig(fname)
-    return _PointPlotter
+    return plt 
 
 
 def tpfc_pfs(circuit, tp, times):
@@ -225,13 +226,14 @@ def tpfc_pfs(circuit, tp, times):
                 ignore_index=True)
     plt.xlim(50,tp)
     plt.ylim(min(df[df["tp"]==50]["fc"].tolist()), max(df["fc"].tolist()) )
-    print(min(df[df["tp"]==50]["fc"].tolist()))
+    # print(min(df[df["tp"]==50]["fc"].tolist()))
     # df["nfc"] = 100.00001 - df["fc"]
-    plot = sns.lineplot(data = df, x='tp', y='fc', alpha=0.8, color="b", linewidth=1, ci=100)
+    plot = sns.lineplot(data = df, x='tp', y='fc', alpha=0.8, color="b", linewidth=1, ci=99.99)
     # plt.yticks(df["nfc"], df["fc"])
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
-    plot.set_title(f"Dependency of fault coverage on\n random test patterns for {circuit.c_name}",
+    plot.set_title(f"Dependency of fault coverage on\n \
+            random test patterns for {circuit.c_name}",
                    fontsize=13)
 
     # plot.set_xticks(df['batch'])
@@ -241,29 +243,28 @@ def tpfc_pfs(circuit, tp, times):
     path = f"results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
-    fname = path+f"tpfc-pfs-{circuit.c_name}.png"
-
+    fname = path + f"tpfc-pfs-{circuit.c_name}.png"
+    print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
-    # plt.show()
     return plt
 
-def compare_stafan_ppsf_pfs(circuit, times, tp_load, tp): # plt3 is not completed
+def compare_stafan_ppsf_pfs(circuit, args): # plt3 is not completed
     """
     FC estimation using STAFAN vs. PFS vs. PPSF
     """
-    plt1 = fc_estimation(circuit=circuit, times=times,
-                         tp_load=tp_load, tp=tp)
-    plt2 = tpfc_pfs(circuit=circuit, times=times, tp=tp)
-    plt3 = tpfc_ppfs(circuit=circuit)
+    plt1 = tpfc_stafan(circuit, times=args.times,
+            tp_load=args.tpLoad, tp=args.tp)
+    plt2 = tpfc_pfs(circuit, times=args.times, tp=args.tp)
+    plt3 = tpfc_ppsf(circuit, args)
 
     path = f"{config.FIG_DIR}/{circuit.c_name}/compare/"
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"{tp}-fc-stafan-ppsf-pfs_compare.pdf"
-    plt.legend(handles=[plt1, plt2, plt3], labels=[
-               "fc estimation with stafan", "pfs", "ppsf"])
+    fname = path+f"tpfc-compare.pdf"
+    # plt.legend(handles=[plt1, plt2, plt3], labels=[
+    #            "fc estimation with stafan", "pfs", "ppsf"])
     plt.tight_layout()
     plt.savefig(fname)
 
@@ -288,7 +289,7 @@ def stafan_scoap(circuit):
 
     tp_no_seq = []
     while tp_no < limit:
-        print(f"{tp_no = }")
+        # print(f"{tp_no = }") # TODO: why there is an error here?! 
         fname = config.STAFAN_DIR + "/" + circuit.c_name + "/"
         if not os.path.exists(fname):
             os.makedirs(fname)
@@ -346,7 +347,7 @@ def ppsf_ci(circuit, tpLoad, _cis):
         bins = np.logspace(np.floor(np.log10(min(ppsf_pd))),
                            np.log10(max(ppsf_pd)), 20)
         sns.histplot(ppsf_pd, bins=bins, alpha=0.2,
-                     color=colors[i], label=f"PPSF_{ci=}")
+                     color=colors[i], label=f"PPSF_{ci}=") # Some issue here
         i += 1
 
     # plt.xscale("log")
@@ -381,7 +382,7 @@ def euclidean(circuit):  # It seems to be useless!
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
-        fname = f"{path}/{circuit.c_name}-TP{tp}-{0}.stafan"
+        fname = f"{path}/{circuit.c_name}-TP{tp}-0.stafan"
         if os.path.exists(fname):
             circuit.load_TMs(fname)
         else:
@@ -407,7 +408,7 @@ def euclidean(circuit):  # It seems to be useless!
 
         sim_seq.append(similarity)
         dist_seq.append(distance)
-        print(f"{similarity = },{distance = }")
+        # print(f"{similarity = },{distance = }")
 
     plt.xlabel("#test patterns")
     plt.ylabel("similarity")
@@ -462,7 +463,8 @@ def ppsf_corr_ci(circuit, args, _cis, heatmap=False):
         sns.heatmap(df.corr(), annot=True, fmt="f", cmap="YlGnBu")
 
     fig.suptitle(
-        "Mean of detection probability which are\n in the given confidence interval.", fontsize=16)
+        "Mean of detection probability which are\n \
+                in the given confidence interval.", fontsize=16)
     fig.tight_layout()
     fname = f"results/figures/{circuit.c_name}-ppsf-cis-max{max_ci}-cpu{args.cpu}.png" 
     plt.savefig(fname)
@@ -548,18 +550,18 @@ if __name__ == "__main__":
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
-    if args.func == "fc-es-fig":
-        fc_estimation(circuit=circuit, times=args.times,
+    if args.func == "tpfc-stafan":
+        tpfc_stafan(circuit=circuit, times=args.times,
                       tp_load=args.tpLoad, tp=args.tp)
     
     elif args.func == "tpfc-pfs":
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
-    elif args.func == "tpfc-ppfs":
-        tpfc_ppfs(circuit=circuit)
+    
+    elif args.func == "tpfc-ppsf":
+        tpfc_ppsf(circuit, args)
 
-    elif args.func == "compare-fctp-es":
-        compare_stafan_ppsf_pfs(
-            circuit=circuit, times=args.times, tp_load=args.tpLoad, tp=args.tp)
+    elif args.func == "compare-tpfc":
+        compare_stafan_ppsf_pfs(circuit, args)
 
     elif args.func == "diff-tp-stafan":  # estimation with different tp loads
         diff_tp_stafan(circuit)
