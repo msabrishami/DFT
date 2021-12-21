@@ -589,7 +589,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Function '{args.func}' does not exist.")
 
-    plt.show()
+    # plt.show()
 
 
 def ppsf_error_ci_2(circuit, hist_scatter, cpu, _cis):
