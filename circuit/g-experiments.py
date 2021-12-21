@@ -555,7 +555,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Function '{args.func}' does not exist.")
 
-    plt.show()
+    # plt.show()
 
 
 
