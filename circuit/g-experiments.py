@@ -77,9 +77,9 @@ def node_info(node):
     node_parameters["S"] = node.S
     node_parameters["B0"] = node.B0
     node_parameters["B1"] = node.B1
-    node_parameters["CB0"] = node.CB0
-    node_parameters["CB1"] = node.CB1
-    node_parameters["B"] = node.B
+    # node_parameters["CB0"] = node.CB0
+    # node_parameters["CB1"] = node.CB1
+    # node_parameters["B"] = node.B
 
     return node_parameters
 
@@ -112,7 +112,13 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
     plot = sns.lineplot(x=df["tp"], y=df["fc"],
                         color="green", ci=99.99, label=f"STAFAN ({tpLoad=})")
 
-    plt.xlim(50, tp)
+    exp = lambda x: 1.1**(x)
+    log = lambda x: np.log(x)
+    plot.set_yscale('function', functions=(exp, log))
+    plot.set(xlim=(50,tp), ylim=(80,100))
+    plot.set_yticks([80,90,95,97.5,99,99.5,99.75,100])
+    plot.grid()
+
     plot.set_ylabel(f"Fault Coverage(FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(
@@ -125,14 +131,14 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"tpfc-stafan-constant-tpLoad-{circuit.c_name}-TP{tp}.png"
+    fname = path+f"tpfc-stafan-constant-tpLoad-{circuit.c_name}-tpLoad{tpLoad}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
     return plot
 
 
-def diff_tp_stafan(circuit, tps):
+def diff_tp_stafan(circuit, tps): #?
     """
     Fault coverage estimation
     STAFAN measures are calculates many times with different tpLoad count of test patterns.
@@ -208,12 +214,17 @@ def tpfc_pfs(circuit, tp, times):
         arr = [list(range(1, tp+1)), fc, [batch]*tp]
         df = df.append(pd.DataFrame(np.array(arr).T, columns=["tp", "fc", "batch"]),
                        ignore_index=True)
-    plt.xlim(50, tp)
-    plt.ylim(min(df[df["tp"] == 50]["fc"].tolist()), 100)
-    # print(min(df[df["tp"]==50]["fc"].tolist()))
-    # df["nfc"] = 100.00001 - df["fc"]
+
     plot = sns.lineplot(x=df["tp"], y=df["fc"], alpha=0.8,
                         color="b", ci=99.99, label="PFS")
+
+    exp = lambda x: 1.1**(x)
+    log = lambda x: np.log(x)
+    plt.xlim=(50,tp)
+    plt.ylim(min(df[df["tp"] == 50]["fc"].tolist()), 100)
+    plot.set_yscale('function', functions=(exp, log))
+    plot.set_yticks([80,90,95,97.5,99,99.5,99.75,100])
+    plot.grid()
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(f"Dependency of fault coverage on\n \
@@ -244,7 +255,16 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         # fc is estimated based on constant count of tps for ppsf
         fcs.append(utils.estimate_FC(p_init, tp=tp)*100)
     plot = sns.lineplot(x=tps, y=fcs, color="red", label="PPSF")
-    plt.xlim(50, tp)
+    # plt.xlim(50, tp)
+    
+    exp = lambda x: 1.1**(x)
+    log = lambda x: np.log(x)
+    plot.set_yscale('function', functions=(exp, log))
+    plot.set_yticks([80,90,95,97.5,99,99.5,99.75,100])
+    plt.xlim=(50,tp)
+    plt.ylim(min(80, 100))
+    plot.grid()
+
     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(
@@ -254,24 +274,23 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
 
     path = "./results/figures"
     # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
-    fname = f"{path}/tpfc-ppsf-{circuit.c_name}-CI{ci}-cpu{cpu}.png"
+    fname = f"{path}/tpfc-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-cpu{cpu}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
     return plot
 
 
-def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu, diff_tp=False, tps=[]):
+def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu):
     """
-    compare fault coverage using STAFAN vs. PFS vs. PPSF.
+    Compare fault coverage using STAFAN vs. PFS vs. PPSF.
+    Be careful plots are saved cumulative. If you want each plot separately, should \
+        directly run the methods.
     tps : list
         is required when diff_tp is True.
     """
-    if diff_tp: #Not tested yet. x ranges are not fixed.
-        plt1 = diff_tp_stafan(circuit, tps=tps)
-    else:
-        plt1 = tpfc_stafan(circuit, times, tpLoad=tpLoad, tp=tp)
-
+    
+    plt1 = tpfc_stafan(circuit, times, tpLoad=tpLoad, tp=tp)
     plt2 = tpfc_pfs(circuit, times=times, tp=tp)
     plt3 = tpfc_ppsf(circuit, ci=ci, cpu=cpu, tp=tp)
 
@@ -282,7 +301,8 @@ def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu, diff_tp=False, 
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}.png"
+    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp} \
+                -CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFinal figure saved in {fname}.")
@@ -290,10 +310,15 @@ def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu, diff_tp=False, 
 
 def ppsf_ci(circuit, cpu, _cis):
     i = 0
-    for ci in _cis:
+    copy_cis = _cis.copy()
+    for ci in copy_cis:
         path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(
             path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+        if not os.path.exists(fname):
+            _cis.remove(ci)
+            print(f"Data is not available for CI={ci}")
+            continue
         res_ppsf = utils.load_pd_ppsf_conf(fname)
         ppsf_pd = [x for x in res_ppsf.values()]
         bins = np.logspace(np.floor(np.log10(min(ppsf_pd))),
@@ -317,7 +342,7 @@ def ppsf_ci(circuit, cpu, _cis):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"ppsf-CI-{circuit.c_name}.png"
+    fname = path+f"ppsf-CI-{circuit.c_name}-maxCI{max(_cis)}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFigure saved in {fname}.")
@@ -325,14 +350,20 @@ def ppsf_ci(circuit, cpu, _cis):
 
 def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     """
-    Scatterplot for each CI comparing to the max CI
+    Scatterplot for each CI comparing to the max CI.
+    Be careful about subplots. Probably some of the them are empty.
     """
     df = pd.DataFrame(columns=["fault"].extend(["ci"+str(x) for x in _cis]))
     cis = []
-    for c in _cis:
+    copy_cis = _cis.copy()
+    for c in copy_cis:
         path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(
             path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
+        if not os.path.exists(fname):
+            _cis.remove(c)
+            print(f"Data is not available for CI={c}")
+            continue
         cis.append(utils.load_pd_ppsf_conf(fname))
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
@@ -350,7 +381,7 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
 
     subs = math.ceil(math.sqrt(len(_cis)))
     subs2 = subs
-    if subs*(subs-1) == len(_cis):
+    if subs*(subs-1) >= len(_cis):
         subs2 -= 1
     fig, ax = plt.subplots(subs2, subs, figsize=(4*subs, 4*subs2))
 
@@ -372,7 +403,7 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     fig.suptitle("Mean of detection probability which are\n\
     in the given confidence interval.", fontsize=16)
     fig.tight_layout()
-    fname = f"results/figures/ppsf-CIs-max{max_ci}-cpu{args.cpu}-{circuit.c_name}.png"
+    fname = f"results/figures/ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-cpu{cpu}.png"
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
@@ -391,6 +422,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
             path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
+            print(f"Data is not available for CI={c}")
             continue
         cis.append(utils.load_pd_ppsf_conf(fname))
     fault_list = [i for i in cis[0].keys()]
@@ -444,7 +476,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.ylabel(f"Relative error to PPSF with CI={max_ci}")
         plt.xlabel(f"PD using PPSF with CI={max_ci}")
 
-    fname = f"results/figures/{circuit.c_name}-ppsf-error-CIs-{hist_scatter}plot-cpu{cpu}.png"
+    fname = f"results/figures/ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-cpu{cpu}.png"
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
@@ -461,7 +493,7 @@ def stafan_scoap(circuit):
     node_num = 12
     mode = "*"  # + or *
 
-    parameters = ["C0", "C1", "S", "B0", "B1", "CB0", "CB1", "B"]
+    parameters = ["C0", "C1", "S", "B0", "B1"] #"CB0", "CB1", "B"
 
     result_dict = {}
     for node in circuit.nodes_lev:
@@ -510,13 +542,15 @@ def stafan_scoap(circuit):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"{limit}-stafan.png"
+    fname = path+f"stafan-scoap-{circuit.c_name}-TP{limit}.png"
     plt.tight_layout()
     plt.savefig(fname)
 
 
 if __name__ == "__main__":
     args = pars_args()
+    # plt.subplots(figsize=(9,8))
+    plt.rcParams['figure.figsize']=9,8
 
     circuit = read_circuit(args)
     circuit.lev()
@@ -543,20 +577,19 @@ if __name__ == "__main__":
         stafan_scoap(circuit=circuit)
 
     elif args.func == "ppsf-ci":
-        ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=[2, 3, 4])
+        ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=[1, 2, 3, 4, 5, 6])
 
     elif args.func == "ppsf-corr":
         ppsf_corr_ci(circuit=circuit, _cis=[1, 2, 3, 4, 5, 6, 10], cpu=args.cpu)
 
     elif args.func == "ppsf-error":
-        ppsf_error_ci(circuit=circuit, hist_scatter="hist", cpu=args.cpu, _cis=[1, 2, 3, 10])
+        ppsf_error_ci(circuit=circuit, hist_scatter="hist", cpu=args.cpu, _cis=[1, 2, 3, 4, 5, 6])
         # ppsf_error_ci(circuit=circuit, hist_scatter="scatter", cpu=args.cpu, _cis=[1, 2, 3, 4])
 
     else:
         raise ValueError(f"Function '{args.func}' does not exist.")
 
-    # plt.show()
-
+    plt.show()
 
 
 def ppsf_error_ci_2(circuit, hist_scatter, cpu, _cis):
