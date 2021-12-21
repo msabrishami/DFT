@@ -131,21 +131,21 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
     return plot
 
 
-def diff_tp_stafan(circuit):
+def diff_tp_stafan(circuit, tps):
     """
     Fault coverage estimation
     STAFAN measures are calculates many times with different tpLoad count of test patterns.
     Then, the fault coverage is calculated using STAFAN values with the correspoing tp count.
     TODO: list of tps should be generated automatically according to ?
     """
-    tps = [100, 200, 500,
-           1000, 2000, 5000,
-           10_000, 20_000, 50_000,
-           100_000, 200_000, 500_000,
-           1_000_000, 10_000_000]
+    # tps = [100, 200, 500,
+    #        1000, 2000, 5000,
+    #        10_000, 20_000, 50_000,
+    #        100_000, 200_000, 500_000,
+    #        1_000_000, 10_000_000]
 
     set = 0
-    tp_size = [f"{tp}-{set}" for tp in tps[-2]]+["1000000", "10000000"]
+    tp_size = [f"{tp}-{set}" for tp in tps[:-2]]+["1000000", "10000000"]
     for i in tp_size:
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
@@ -182,7 +182,8 @@ def diff_tp_stafan(circuit):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"tpfc-stafan-diff-tpload-{circuit.cname}.png"
+    fname = path+f"tpfc-stafan-diff-tpload-{circuit.c_name}.png"
+    print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
 
@@ -273,14 +274,14 @@ def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu):
     plt2 = tpfc_pfs(circuit, times=times, tp=tp)
     plt3 = tpfc_ppsf(circuit, ci=ci, cpu=cpu, tp=tp)
 
-    plt.title(
-        f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", fontsize=13)
+    plt.title(f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", 
+            fontsize=13)
 
     path = f"{config.FIG_DIR}/{circuit.c_name}/compare/"
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"tpfc-compare-stafan(constant)-pfs-ppsf-{circuit.c_name}.png"
+    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFinal figure saved in {fname}.")
@@ -409,7 +410,6 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     temp = []
     plt.rcParams["patch.force_edgecolor"] = False
     plt.figure(figsize=(12, 6))
-
     for idx, c in enumerate(_cis):
         col = "ci" + str(c)
         df[col+"_error"] = (df[col]-df[max_ci_col])/df[max_ci_col]
@@ -430,7 +430,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
 
             plt.xscale("log")
 
-    plt.title(f"Comparing error in detection probability (DP) value of faults measured with PPSF \n\
+    plt.title(f"Comparing error in detection probability (DP) of faults measured with PPSF \n\
     for different confidence intervals (CIs) \n\
     CI = {max_ci} is used as the reference for error. \n\
     Number of parallel processes for PPSF = {cpu} \n\
@@ -532,11 +532,10 @@ if __name__ == "__main__":
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
 
     elif args.func == "compare-tpfc":
-        compare_stafan_ppsf_pfs(
-            circuit=circuit, times=args.times, tp=args.tp, tpLoad=args.tpLoad, ci=args.ci, cpu=args.cpu)
+        compare_stafan_ppsf_pfs(circuit, args.times, args.tp, args.tpLoad, args.ci, args.cpu)
 
     elif args.func == "diff-tp-stafan":
-        diff_tp_stafan(circuit=circuit)
+        diff_tp_stafan(circuit, [100, 1000, 10000, 100000])
 
     elif args.func == "stafan":
         stafan_scoap(circuit=circuit)
@@ -548,10 +547,86 @@ if __name__ == "__main__":
         ppsf_corr_ci(circuit=circuit, _cis=[1, 2, 3, 4, 5, 6, 10], cpu=args.cpu)
 
     elif args.func == "ppsf-error":
-        ppsf_error_ci(circuit=circuit, hist_scatter="hist",cpu=args.cpu, _cis=[1, 2, 3, 4])
+        ppsf_error_ci(circuit=circuit, hist_scatter="hist", cpu=args.cpu, _cis=[1, 2, 3, 10])
         # ppsf_error_ci(circuit=circuit, hist_scatter="scatter", cpu=args.cpu, _cis=[1, 2, 3, 4])
 
     else:
         raise ValueError(f"Function '{args.func}' does not exist.")
 
     # plt.show()
+
+
+
+def ppsf_error_ci_2(circuit, hist_scatter, cpu, _cis):
+    """
+    hist_scatter : str
+        options: hist, scatter
+    """
+    df = pd.DataFrame(columns=["fault"].extend(["ci"+str(x) for x in _cis]))
+    cis = []
+    copy_cis = _cis.copy()
+    for c in copy_cis:
+        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        fname = os.path.join(
+            path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
+        if not os.path.exists(fname):
+            _cis.remove(c)
+            continue
+        cis.append(utils.load_pd_ppsf_conf(fname))
+    fault_list = [i for i in cis[0].keys()]
+    for f in fault_list:
+        row = {"fault": f}
+        for idx, c in enumerate(_cis):
+            row["ci" + str(c)] = cis[idx][f]
+        try:
+            df = df.append(row, ignore_index=True)
+        except:
+            pass
+
+    max_ci = max(_cis)
+    _cis.remove(max_ci)
+    max_ci_col = "ci" + str(max_ci)
+    min_val = max(min((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), -0.2)
+    max_val = min(max((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), 0.2)
+    bins = np.linspace(min_val, max_val, 40)
+    temp = []
+    plt.rcParams["patch.force_edgecolor"] = False
+    plt.figure(figsize=(12, 6))
+    pdb.set_trace()
+    for idx, c in enumerate(_cis):
+        col = "ci" + str(c)
+        df[col+"_error"] = (df[col]-df[max_ci_col])/df[max_ci_col]
+        temp.append(col+"_error")
+        if hist_scatter == "hist":
+            plt.xlim(min_val, max_val)  # TODO: Move me please --> why?
+            sns.histplot(df[col+"_error"], alpha=0.1, color=colors[idx],
+                         linewidth=0.01,
+                         # line_kws=dict(edgecolor="white", linewidth=0.01),
+                         kde=True,
+                         label=col.replace("ci", "CI="), bins=bins)
+            plt.legend()
+
+        if hist_scatter == "scatter":
+            sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"],
+                            color=colors[idx], alpha=0.5, s=8,
+                            label=col.replace("ci", "CI="))
+
+            plt.xscale("log")
+
+    plt.title(f"Comparing error in detection probability (DP) of faults measured with PPSF \n\
+    for different confidence intervals (CIs) \n\
+    CI = {max_ci} is used as the reference for error. \n\
+    Number of parallel processes for PPSF = {cpu} \n\
+    Circuit = {circuit.c_name}")
+    if hist_scatter == "hist":
+        plt.ylabel("Count of faults")
+        plt.xlabel(f"Relative error to PPSF with CI={max_ci}")
+    else:
+        plt.ylabel(f"Relative error to PPSF with CI={max_ci}")
+        plt.xlabel(f"PD using PPSF with CI={max_ci}")
+
+    fname = f"results/figures/{circuit.c_name}-ppsf-error-CIs-{hist_scatter}plot-cpu{cpu}.png"
+    plt.savefig(fname, bbox_inches="tight")
+    print(f"Figure saved in {fname}")
+
+
