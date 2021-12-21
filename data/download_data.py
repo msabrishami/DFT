@@ -50,12 +50,27 @@ def download_syn(dataset, syn_version):
                     WEBADDR, dataset, version, cname)
             os.system(sc)
 
+def download_stafan(dataset, versions=["V0", "V1", "V2"]):
+    """ downloading generated data of DFT package, currently includes: 
+    STAFAN, PPSF """ 
+
+    for version in versions:
+        for ckt in config.CKTS[dataset]:
+            cname = ckt + "_syn" + version 
+            if not os.path.exists("./stafan-data/" + cname):
+                os.mkdir("./stafan-data/" + cname)
+            sc =  "scp viterbi2:~/workspace/DFT/data/stafan-data/{}/"
+            sc += "*.stafan ./stafan-data/{}/"
+            os.system(sc.format(cname, cname))
+
+
 
 if __name__ == '__main__':
     print("Available benchmarks are EPFL, ISCAS85, and ISCAS89")
     print("Select what you want to download: ")
     print("1) Original design files") 
     print("2) Synthesized files (gate level verilog)") 
+    print("3) STAFAN data")
     tmp = input() 
     if tmp == "1":
         print("Write down the names of the datasets separated with space")
@@ -75,6 +90,11 @@ if __name__ == '__main__':
         versions = input().split(" ")
         for dataset in datasets:
             download_syn(dataset, versions)
+    
+    elif tmp == "3":
+        print("Copying from the main repository to the current repository")
+        download_stafan("ISCAS85", versions=["V0", "V1", "V2"]) 
+        
 
     else:
         print("Argument not accepted")

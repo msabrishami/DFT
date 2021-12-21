@@ -332,7 +332,7 @@ def ppsf_analysis(circuit, args):
 
     return res
 
-def compare_ppsf_step_stafan_hist(circuit, args):
+def compare_ppsf_stafan(circuit, args, mode="hist"):
     # TODO : let's get rid of this soon ... 
     
     # STEP 1: load stafan data into the circuit nodes
@@ -352,44 +352,86 @@ def compare_ppsf_step_stafan_hist(circuit, args):
         # stafan_pd.extend([node.D0, node.D1]) # D0 & D1 are not used for STAFAN anymore
         stafan_pd.extend([node.C1*node.B1, node.C0*node.B0])
     
-    # Figure 1: histogram of STAFAN and PPSF probabilities 
-    bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
-    plt.figure(figsize=(10, 8), dpi=300)
-    plt.xscale("log")
-    plt.yscale("log")
-    plt.hist(stafan_pd, bins=bins, color="r", alpha=0.2, label="STAFAN")
-    plt.hist(ppsf_pd,  bins=bins, color="b", alpha=0.2, label="PPSF")
-    plt.title("Detection probability histogram\n{}-tp={}".format(
-        circuit.c_name, args.tpLoad))
-    plt.legend()
-    plt.savefig("ppsf-vs-stafan-{}-tp{}.png".format(circuit.c_name, args.tpLoad))
-    plt.close()
+    if mode=="hist":
+        # Figure 1: histogram of STAFAN and PPSF probabilities 
+        bins = np.logspace(np.floor(np.log10(min(ppsf_pd))), np.log10(max(ppsf_pd)), 20)
+        plt.figure(figsize=(10, 8), dpi=300)
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.hist(stafan_pd, bins=bins, color="r", alpha=0.2, label="STAFAN")
+        plt.hist(ppsf_pd,  bins=bins, color="b", alpha=0.2, label="PPSF")
+        plt.title("Detection probability histogram\n{}-tp={}".format(
+            circuit.c_name, args.tpLoad))
+        plt.legend()
+        fname = "./results/figures/stafan-vs-ppsf-hist-{}-tpLoad{}-ci{}-cpu{}.png".format(
+                circuit.c_name, args.tpLoad, args.ci, args.cpu)
+        plt.tight_layout()
+        plt.savefig(fname)
+        plt.close()
+        print("Figure saved in {}".format(fname))
     
-    # Figure 2: relative error based on the PPSF value
-    X = []
-    Y = []
-    for fault, prob in res_ppsf.items():
+    elif mode=="rel-err":
+        # Figure 2: relative error based on the PPSF value
+        X = []
+        Y = []
+        for fault, prob in res_ppsf.items():
 
-        node = circuit.nodes[fault[:-2]]
-        if fault[-1] == 1:
-            D = node.C0 * node.B0
-        else:
-            D = node.C1 * node.B1 
-        if D==prob:
-            continue
-        X.append(prob)
-        Y.append( abs(D-prob)/prob ) 
-    
-    plt.xscale("log")
-    plt.yscale('log')
-    plt.scatter(X, Y, s=2)
-    plt.ylim(max(min(Y), 0.001), max(Y)*1.1)
-    # plt.xlim(0,0.2)
-    plt.title("Error in detection probability (D) STAFAN vs PPSF\n{}".format(circuit.c_name))
-    plt.xlabel("Detection Probability (PPSF)")
-    plt.ylabel("(D_STAFAN - D_PPSF)/D_PPSF")
-    plt.savefig("./results/STAFAN-Error-{}.png".format(circuit.c_name))
-    plt.close()
+            node = circuit.nodes[fault[:-2]]
+            if fault[-1] == 1:
+                D = node.C0 * node.B0
+            else:
+                D = node.C1 * node.B1 
+            if D==prob:
+                continue
+            X.append(prob)
+            Y.append( abs(D-prob)/prob ) 
+        
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.scatter(X, Y, s=2)
+        plt.ylim(max(min(Y), 0.001), max(Y)*1.1)
+        # plt.xlim(0,0.2)
+        plt.title("Relative error in detection probability STAFAN vs PPSF\n\
+                CI={}\tCPU={}\nCircuit={}".format(
+                    args.ci, args.cpu, circuit.c_name))
+        plt.xlabel("Detection Probability (PPSF)")
+        plt.ylabel("(D_STAFAN - D_PPSF)/D_PPSF")
+        fname = "./results/figures/stafan-vs-ppsf-error-{}-tpLoad{}-ci{}-cpu{}.png".format(
+                circuit.c_name, args.tpLoad, args.ci, args.cpu)
+        plt.tight_layout()
+        plt.savefig(fname)
+        plt.close()
+        print("Figure saved in {}".format(fname))
+
+    elif mode=="scatter":
+        # Figure 2: relative error based on the PPSF value
+        X = []
+        Y = []
+        for fault, prob in res_ppsf.items():
+            node = circuit.nodes[fault[:-2]]
+            if fault[-1] == 1:
+                Y.append(node.C0 * node.B0)
+            else:
+                Y.append(node.C1 * node.B1)
+            X.append(prob)
+        
+        plt.xscale("log")
+        plt.yscale("log")
+        plt.scatter(X, Y, s=2)
+        plt.ylim(max(min(Y), 0.001), max(Y)*1.1)
+        # plt.xlim(0,0.2)
+        plt.title("Relative error in detection probability STAFAN vs PPSF\n\
+                CI={}, CPU={}\nCircuit={}".format(
+                    args.ci, args.cpu, circuit.c_name))
+        plt.xlabel("PPSF")
+        plt.ylabel("STAFAN")
+        fname = "./results/figures/stafan-vs-ppsf-scatter-{}-tpLoad{}-ci{}-cpu{}.png".format(
+                circuit.c_name, args.tpLoad, args.ci, args.cpu)
+        plt.tight_layout()
+        plt.savefig(fname)
+        plt.close()
+        print("Figure saved in {}".format(fname))
+
 
 def fanin_analysis(circuit, args):
     args.opCount = int(max(200, len(circuit.nodes)/4 ))
