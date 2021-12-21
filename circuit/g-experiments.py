@@ -110,7 +110,7 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
                 continue
 
     plot = sns.lineplot(x=df["tp"], y=df["fc"],
-                        color="green", ci=99.99, label='STAFAN (constant tpLoad)')
+                        color="green", ci=99.99, label=f"STAFAN ({tpLoad=})")
 
     plt.xlim(50, tp)
     plot.set_ylabel(f"Fault Coverage(FC%)", fontsize=13)
@@ -118,13 +118,14 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
     plot.set_title(
         f"Dependency of fault coverage on random test patterns\n\
         for circuit {circuit.c_name}\n \
-        method: STAFAN (constant tpLoad) ", fontsize=13)
+        method: STAFAN ({tpLoad=})", fontsize=13)
 
-    path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
+    # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
+    path = "./results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"tpfc-stafan-constant-{circuit.c_name}-TP{tp}.png"
+    fname = path+f"tpfc-stafan-constant-tpLoad-{circuit.c_name}-TP{tp}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
@@ -138,39 +139,34 @@ def diff_tp_stafan(circuit, tps):
     Then, the fault coverage is calculated using STAFAN values with the correspoing tp count.
     TODO: list of tps should be generated automatically according to ?
     """
-    # tps = [100, 200, 500,
-    #        1000, 2000, 5000,
-    #        10_000, 20_000, 50_000,
-    #        100_000, 200_000, 500_000,
-    #        1_000_000, 10_000_000]
 
     set = 0
-    tp_size = [f"{tp}-{set}" for tp in tps[:-2]]+["1000000", "10000000"]
-    for i in tp_size:
+    fc_sequence = []
+    tp_sequence = []
+    for tp in tps:
+        f = f"{tp}-{set}"
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
-        fname = f"{path}/{circuit.c_name}-TP{i}.stafan"
+        fname = f"{path}/{circuit.c_name}-TP{f}.stafan"
         if not os.path.exists(fname):
-            tpc = re.findall(r"\d+", i)[0]
+            tpc = re.findall(r"\d+", f)[0]
             circuit.STAFAN(int(tpc))
-            circuit.save_TMs(tp=tp_size, fname=fname)
+            circuit.save_TMs(tp=tp, fname=fname)
         else:
             circuit.load_TMs(fname)
 
-        fc_sequence = [0]
-        tp_sequence = [0]
-        for tps in tp_size:
-            tp = re.findall(r"\d+", i)[0]
-            try:
-                fc_sequence.append(circuit.STAFAN_FC(tps)*100)
-                tp_sequence.append(tps)
-            except:
-                continue
+        try:
+            fc_sequence.append(circuit.STAFAN_FC(tp)*100)
+            tp_sequence.append(tp)
+        except:
+            continue
 
-        plot = sns.lineplot(x=tp_sequence, y=fc_sequence,
-                            color="green", alpha=0.5)
-
+    plot = sns.lineplot(x=tp_sequence, y=fc_sequence,
+                        color="green", label = "STAFAN (different tpLoads)")
+    plot = sns.scatterplot(x=tp_sequence, y=fc_sequence, color="green") #draw dots
+    
+    plt.xscale("log")
     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(
@@ -178,11 +174,12 @@ def diff_tp_stafan(circuit, tps):
         for circuit {circuit.c_name}\n \
         method: STAFAN (different tpLoads)", fontsize=13)
 
-    path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
+    # path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
+    path = "./results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"tpfc-stafan-diff-tpload-{circuit.c_name}.png"
+    fname = path+f"tpfc-stafan-diff-tpLoad-{circuit.c_name}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
@@ -222,7 +219,7 @@ def tpfc_pfs(circuit, tp, times):
     plot.set_title(f"Dependency of fault coverage on\n \
             random test patterns for {circuit.c_name}", fontsize=13)
 
-    path = f"results/figures/"
+    path = "results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
     fname = path + f"tpfc-pfs-{circuit.c_name}-TP{tp}-times{times}.png"
@@ -255,8 +252,8 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         for circuit {circuit.c_name} \n \
         method: PPSF", fontsize=13)
 
-    # path = f"./results/figures"
-    path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
+    path = "./results/figures"
+    # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
     fname = f"{path}/tpfc-ppsf-{circuit.c_name}-CI{ci}-cpu{cpu}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
@@ -264,13 +261,17 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     return plot
 
 
-def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu):
+def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu, diff_tp=False, tps=[]):
     """
     compare fault coverage using STAFAN vs. PFS vs. PPSF.
+    tps : list
+        is required when diff_tp is True.
     """
+    if diff_tp: #Not tested yet. x ranges are not fixed.
+        plt1 = diff_tp_stafan(circuit, tps=tps)
+    else:
+        plt1 = tpfc_stafan(circuit, times, tpLoad=tpLoad, tp=tp)
 
-    plt1 = tpfc_stafan(circuit, times,
-                       tpLoad=tpLoad, tp=tp)
     plt2 = tpfc_pfs(circuit, times=times, tp=tp)
     plt3 = tpfc_ppsf(circuit, ci=ci, cpu=cpu, tp=tp)
 
@@ -297,21 +298,22 @@ def ppsf_ci(circuit, cpu, _cis):
         ppsf_pd = [x for x in res_ppsf.values()]
         bins = np.logspace(np.floor(np.log10(min(ppsf_pd))),
                            np.log10(max(ppsf_pd)), 20)
-        sns.histplot(ppsf_pd, alpha=0.2, kde=True, bins=bins,
+        sns.histplot(ppsf_pd, alpha=0.2, bins=bins,# kde=True,
                      color=colors[i], label=f"CI={ci}")  # Some issue here
         i += 1
 
-    plt.xscale("log")
-    # plt.yscale("log")
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    plt.rcParams["patch.force_edgecolor"] = False
     plt.legend(by_label.values(), by_label.keys())
+    plt.rcParams["patch.force_edgecolor"] = False
+
+    plt.xscale("log")
     plt.xlabel('PD using PPSF')
     plt.ylabel('Count of faults')
     plt.title(f"Detection probability histogram with PPSF\n\
         for circuit{circuit.c_name}")
-    path = f"{config.FIG_DIR}/{circuit.c_name}/ppsf/"
+    # path = f"{config.FIG_DIR}/{circuit.c_name}/ppsf/"
+    path = f"./results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -535,7 +537,7 @@ if __name__ == "__main__":
         compare_stafan_ppsf_pfs(circuit, args.times, args.tp, args.tpLoad, args.ci, args.cpu)
 
     elif args.func == "diff-tp-stafan":
-        diff_tp_stafan(circuit, [100, 1000, 10000, 100000])
+        diff_tp_stafan(circuit, [100, 200, 500,1000,2000,5000,10000,20000,50000])
 
     elif args.func == "stafan":
         stafan_scoap(circuit=circuit)
@@ -628,5 +630,3 @@ def ppsf_error_ci_2(circuit, hist_scatter, cpu, _cis):
     fname = f"results/figures/{circuit.c_name}-ppsf-error-CIs-{hist_scatter}plot-cpu{cpu}.png"
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
-
-
