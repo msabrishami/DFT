@@ -564,7 +564,7 @@ def OP_impact(circuit, args):
     
     # Store the datafram into a csv file
     i = 0
-    fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
+    fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
     while os.path.exists(fname):
         i+=1
         fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
