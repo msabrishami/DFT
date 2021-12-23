@@ -311,7 +311,6 @@ if __name__ == '__main__':
         exp.fanin_analysis(circuit, args)
     
     elif args.func == "deltaFCP":
-        # TODO 4 Ghazal -- it's the final countdown 
         """ calculating deltaFC and deltaP of random OPs 
         based on STAFAN and PPSF results """ 
         time_s = time.time()

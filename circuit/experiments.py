@@ -281,7 +281,6 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         res_final[str(fault)] = mu/tp_tot 
     if log:
         outfile.close()
-    print('done once')
     return res_final 
 
 def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
@@ -570,5 +569,5 @@ def OP_impact(circuit, args):
         i+=1
         fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
     print("Dataframe of OPI analysis results is stored in {}".format(fname))
-    df.to_csv(fname, float_format='%.5f')
+    df.to_csv(fname, float_format='%.5e')
     return df
