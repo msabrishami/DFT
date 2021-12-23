@@ -316,7 +316,6 @@ if __name__ == '__main__':
         time_s = time.time()
         df = exp.OP_impact(circuit, args)
         print("Total time = {:.2f}".format(time.time() - time_s))
-        pdb.set_trace()
 
     elif args.func == "deltaFCP-alt": 
         fname = "./results/csv/OPI-report-{}-ci{}-op{}.csv".format(

@@ -110,7 +110,7 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
                 continue
 
     plot = sns.lineplot(x=df["tp"], y=df["fc"],
-                        color="green", ci=99.99, label=f"STAFAN ({tpLoad=})")
+                        color="green", ci=99.99, label=f"STAFAN ({tpLoad})")
 
     exp = lambda x: 1.1**(x)
     log = lambda x: np.log(x)
@@ -124,7 +124,7 @@ def tpfc_stafan(circuit, times=1, tp=100, tpLoad=100):
     plot.set_title(
         f"Dependency of fault coverage on random test patterns\n\
         for circuit {circuit.c_name}\n \
-        method: STAFAN ({tpLoad=})", fontsize=13)
+        method: STAFAN ({tpLoad})", fontsize=13)
 
     # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
     path = "./results/figures/"
@@ -301,8 +301,7 @@ def compare_stafan_ppsf_pfs(circuit, times, tp, tpLoad, ci, cpu):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp} \
-                -CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
+    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFinal figure saved in {fname}.")

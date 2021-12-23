@@ -542,11 +542,11 @@ def OP_impact(circuit, args):
     for tp in TPs_based:
         FC_stafan.append(100*circuit.STAFAN_FC(tp))
         FC_ppsf.append(100*utils.estimate_FC(p_init, tp))
+        print("tp={}\tFC-PPSF={}\tFC-STAFAN={}".format(tp, FC_ppsf[-1], FC_stafan[-1]))
         TPs.append(tp)
         if len(FC_stafan) > 5:
             if (FC_stafan[-1]-FC_stafan[-5] < 0.05 ) and (FC_ppsf[-1]-FC_ppsf[-5] < 0.05):
                 break
-
     # Find the impact of each of the random nodes
     for count, node in enumerate(nodes):
         row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, "C0":node.C0}
@@ -564,7 +564,8 @@ def OP_impact(circuit, args):
     
     # Store the datafram into a csv file
     i = 0
-    fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
+    fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}-{}.csv".format(
+            circuit.c_name, args.ci, args.opCount,i)
     while os.path.exists(fname):
         i+=1
         fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
