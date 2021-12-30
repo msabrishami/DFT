@@ -512,14 +512,20 @@ def OP_impact(circuit, args):
     circuit : Circuit 
     args : args
         Command-line arguments
+    args.opCount : number of random nodes to be selected for OP, 
+        if larger than total nodes in the circuit, all ndoes will be selected. 
     
     Returns
     ------
     None
     """
-
+    
     samples = args.opCount 
-    nodes = circuit.get_rand_nodes(samples)
+    if  samples > len(circuit.nodes_lev):
+        nodes = circuit.nodes_lev
+        # the order is kept, gradual increase in simulation time.
+    else:
+        nodes = circuit.get_rand_nodes(samples)
     df = pd.DataFrame(columns=["Node", "B1", "B0", "C0", "C1"])
     TPs_based = [x*100 for x in range(1, 50)] # [100, 200, 300, 400, 500, 1000]
     steps = cfg.PPSF_STEPS 
@@ -558,8 +564,8 @@ def OP_impact(circuit, args):
         for idx, tp in enumerate(TPs):
             row["FC-ST-tp{:04d}".format(tp)] = res_stafan[idx]
             row["FC-FS-tp{:04d}".format(tp)] = res_ppsf["deltaFC"][idx]
-        
-        print("{:5}\tOPI for node {} completed".format(count, node.num))
+        if count % 50 == 0: 
+            print("{:5}\tOPI for node {} completed".format(count, node.num))
         df = df.append(row, ignore_index=True)
     
     # Store the datafram into a csv file
