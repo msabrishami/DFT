@@ -596,12 +596,12 @@ def stafan(circuit, tps, ci = 5):
         sns.histplot(data=df_ci, x=f"{p}-error", hue = "TP", bins=bins, 
                      alpha=0.4, kde=True, palette=colors[:len(tps)])
 
-        path = "./results/figures/"
-        fname = path+f"stafan-{p}-maxTP{max_tp}.png"
         plt.xlabel(f"Relative error")
         plt.ylabel("Node count")
-        plt.title(f"Relative error of STAFAN values of {circuit.c_name} using different TPs compared to the maximum TP.\n \
+        plt.title(f"Relative error of STAFAN {p} of {circuit.c_name} using different TPs compared to the maximum TP.\n \
                     Only errors in ci = {ci} are considered.")
+        path = "./results/figures/"
+        fname = path+f"stafan-{p}-{circuit.c_name}-maxTP{max_tp}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
         plt.show()
