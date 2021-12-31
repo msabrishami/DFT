@@ -15,6 +15,7 @@ from circuit import Circuit
 from pfs import PFS
 import observation as obsv
 import pdb
+import scipy.stats
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']
@@ -544,73 +545,67 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     print(f"Figure saved in {fname}")
 
 
-def stafan_scoap(circuit): #TODO: Must be changed
-    """STAFAN and SCOAP values
+def stafan(circuit, tps, ci = 5): 
+    """
     
     Parameters:
     -----------
     circuit : Circuit
+    tps :  list
+
     """
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-
-    tp_no = 10
-    step = 2
-    limit = 20_000
-    node_num = 12
-    mode = "*"  # + or *
-
-    parameters = ["C0", "C1", "S", "B0", "B1"] #"CB0", "CB1", "B"
-
-    result_dict = {}
-    for node in circuit.nodes_lev:
-        for p in parameters:
-            result_dict[(node, p)] = []
-
-    tp_no_seq = []
-    while tp_no < limit:
-        fname = config.STAFAN_DIR + "/" + circuit.c_name + "/"
+    df = pd.DataFrame(columns=["Node", "C0", "C1", "B0", "B1", "TP"])
+    for tp in tps:
+        set = 0
+        path = f"{config.STAFAN_DIR}/{circuit.c_name}"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        fname = f"{path}/{circuit.c_name}-TP{tp}-{set}.stafan"
         if not os.path.exists(fname):
-            os.makedirs(fname)
-        fname += f"{circuit.c_name}-TP{tp_no}-0.stafan"
-        if not os.path.exists(fname):
-            circuit.STAFAN(tp_no, 8)
-            circuit.save_TMs(fname)
+            circuit.STAFAN(tp)
+            circuit.save_TMs(tp=tp, fname=fname)
         else:
             circuit.load_TMs(fname)
+        for n in circuit.nodes_lev:
+            df = df.append({"Node":n.num, "C0": n.C0, "C1": n.C1, "B0": n.B0, "B1": n.B1, "TP":tp}, ignore_index=True)
 
-        tp_no_seq.append(tp_no)
-        for node in circuit.nodes_lev:
-            for p in parameters:
-                result_dict[(node, p)].append(node_info(node)[p])
-        if mode == "*":
-            tp_no *= step
-        elif mode == "+":
-            tp_no += step
-        else:
-            raise "Operation is not valid"
 
-    for param in parameters:
-        test_array = result_dict[(circuit.nodes_lev[node_num], param)]
-        sns.scatterplot(x=tp_no_seq, y=test_array)
-        plot = sns.lineplot(x=tp_no_seq, y=test_array, label=param)
-    ax = plt.gca()
-    ax.grid(True, which="both")
+    max_tp = max(tps)
+    tps.remove(max_tp)
 
-    plot.set_ylabel("value")
-    plot.set_xlabel("No. of tests")
-    # plot.set_title(
-        # f"SCOAP measures of node {node_num} in circuit {circuit.c_name}")
-    # t.set_yscale("log")
-    # t.set_xscale("log")
+    df_max = df[df["TP"]==max_tp]
+    df_error = pd.DataFrame(columns=["Node", "C0-error", "C1-error", "B0-error", "B1-error", "TP"])
+    for tp in tps:
+        for n in circuit.nodes_lev:
+            row = {"Node":n.num, "TP":tp}
+            dftp = df[df["TP"]==tp]
+            for p in ["C0", "C1", "B0", "B1"]:
+                a = float(dftp[dftp["Node"]==n.num][p])
+                b = float(df_max[df_max["Node"]==n.num][p])
+                row[f"{p}-error"] = (a-b)/b
+            df_error = df_error.append(row,ignore_index=True)
+    del df
+    del df_max
+    for p in [ "C0", "C1", "B0", "B1"]:
+        mean, std = df_error[f"{p}-error"].mean(), df_error[f"{p}-error"].std()
+        min_val = mean-ci*std
+        max_val = mean+ci*std
+        df_ci = df_error[(df_error[f"{p}-error"]>min_val) & (df_error[f"{p}-error"]<max_val)]
+        bins_count = 15
+        bins = np.linspace(min_val, max_val, bins_count)
+        sns.histplot(data=df_ci, x=f"{p}-error", hue = "TP", bins=bins, 
+                     alpha=0.4, kde=True, palette=colors[:len(tps)])
 
-    path = f"{config.FIG_DIR}/{circuit.c_name}/stafan/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    fname = path+f"stafan-scoap-{circuit.c_name}-TP{limit}.png"
-    plt.tight_layout()
-    plt.savefig(fname)
+        path = "./results/figures/"
+        fname = path+f"stafan-{p}-maxTP{max_tp}.png"
+        plt.xlabel(f"Relative error")
+        plt.ylabel("Node count")
+        plt.title(f"Relative error of STAFAN values of {circuit.c_name} using different TPs compared to the maximum TP.\n \
+                    Only errors in ci = {ci} are considered.")
+        plt.savefig(fname)
+        print(f"Figure saved in {fname}")
+        plt.show()
+        plt.tight_layout()
 
 
 if __name__ == "__main__":
@@ -623,6 +618,7 @@ if __name__ == "__main__":
     circuit.lev()
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
+
 
     if args.func == "tpfc-stafan":
         tpfc_stafan(circuit=circuit, times=args.times,
@@ -651,8 +647,8 @@ if __name__ == "__main__":
         else:
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
-    # elif args.func == "diff-tp-stafan":
-        # diff_tp_stafan(circuit, [100, 200, 500,1000,2000,5000,10000,20000,50000])
+    elif args.func == "stafan":
+        stafan(circuit, tps=[50,200,500,1000,2000,5000], ci=1)
 
     # elif args.func == "stafan":
     #     stafan_scoap(circuit=circuit)
