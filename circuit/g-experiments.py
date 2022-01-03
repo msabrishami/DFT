@@ -547,66 +547,81 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
 
 def stafan(circuit, tps, ci = 5): 
     """
-    
+    TODO: 
     Parameters:
     -----------
     circuit : Circuit
     tps :  list
 
     """
-    df = pd.DataFrame(columns=["Node", "C0", "C1", "B0", "B1", "TP"])
+    df = pd.DataFrame(columns=["Node", "C0", "C1", "B0", "B1","D0", "D1" ,"TP"])
     for tp in tps:
-        set = 0
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
-        fname = f"{path}/{circuit.c_name}-TP{tp}-{set}.stafan"
+        fname = f"{path}/{circuit.c_name}-TP{tp}.stafan"
         if not os.path.exists(fname):
             circuit.STAFAN(tp)
             circuit.save_TMs(tp=tp, fname=fname)
         else:
             circuit.load_TMs(fname)
         for n in circuit.nodes_lev:
-            df = df.append({"Node":n.num, "C0": n.C0, "C1": n.C1, "B0": n.B0, "B1": n.B1, "TP":tp}, ignore_index=True)
-
+            df = df.append({"Node":n.num, "C0": n.C0, "C1": n.C1,
+                            "B0": n.B0, "B1": n.B1,
+                            "D0":n.B1*n.C1 ,"D1":n.B0*n.C0,
+                            "TP":tp}, ignore_index=True)
 
     max_tp = max(tps)
     tps.remove(max_tp)
 
     df_max = df[df["TP"]==max_tp]
-    df_error = pd.DataFrame(columns=["Node", "C0-error", "C1-error", "B0-error", "B1-error", "TP"])
+    df_error = pd.DataFrame(columns=["Node", "C0-error", "C1-error",
+                                     "B0-error", "B1-error",
+                                     "D0-error", "D1-error", "TP"])
     for tp in tps:
         for n in circuit.nodes_lev:
             row = {"Node":n.num, "TP":tp}
             dftp = df[df["TP"]==tp]
-            for p in ["C0", "C1", "B0", "B1"]:
+            for p in ["C0", "C1", "B0", "B1", "D0", "D1"]:
                 a = float(dftp[dftp["Node"]==n.num][p])
                 b = float(df_max[df_max["Node"]==n.num][p])
                 row[f"{p}-error"] = (a-b)/b
             df_error = df_error.append(row,ignore_index=True)
     del df
     del df_max
-    for p in [ "C0", "C1", "B0", "B1"]:
-        mean, std = df_error[f"{p}-error"].mean(), df_error[f"{p}-error"].std()
+    
+    df_p = pd.DataFrame(columns=["C", "B", "D", "TP"])
+    for p in [ "C", "B", "D"]:
+        df_p[p] = df_error[f"{p}0-error"].append(df_error[f"{p}1-error"],ignore_index=True)
+        df_p["TP"] = df_error["TP"].append(df_error["TP"],ignore_index=True)
+        mean, std = df_p[p].mean(skipna=True), df_p[p].std(skipna=True)
         min_val = mean-ci*std
         max_val = mean+ci*std
-        df_ci = df_error[(df_error[f"{p}-error"]>min_val) & (df_error[f"{p}-error"]<max_val)]
         bins_count = 15
         bins = np.linspace(min_val, max_val, bins_count)
-        sns.histplot(data=df_ci, x=f"{p}-error", hue = "TP", bins=bins, 
-                     alpha=0.4, kde=True, palette=colors[:len(tps)])
-
+        data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)].round(decimals=3)
+        plt.rcParams["patch.force_edgecolor"] = False
+        # print([10**i for i in range(int(np.log10(data[p].value_counts().max())+1))])
+        plot = sns.histplot(data = data, x=p, hue = "TP" ,bins=bins, log_scale=(False, True),
+                    alpha=0.4, kde=True, palette=colors[:len(tps)])
+        # plot."log")
+        # plot.set_yscale("log")
+        # plot.set_yticks([2**i for i in range(8)])
         plt.xlabel(f"Relative error")
         plt.ylabel("Node count")
-        plt.title(f"Relative error of STAFAN {p} of {circuit.c_name} using different TPs compared to the maximum TP.\n \
+        v = p.replace("C","controlability").replace("B","observability").replace("D","detectability")
+        plt.title(f"Relative error of STAFAN {v} of {circuit.c_name} using different TPs compared to the maximum TP.\n \
                     Only errors in ci = {ci} are considered.")
+        plt.tight_layout()
+        plt.show()
         path = "./results/figures/"
-        fname = path+f"stafan-{p}-{circuit.c_name}-maxTP{max_tp}.png"
+        print(v)
+        fname = path+f"stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI={ci}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
-        plt.show()
-        plt.tight_layout()
+        plt.close()
 
+        exit()
 
 if __name__ == "__main__":
     args = pars_args()
@@ -633,7 +648,6 @@ if __name__ == "__main__":
     elif args.func == "compare-tpfc":
         compare_tpfc(circuit, args.times, args.tp, args.tpLoad, args.ci, args.cpu)
 
-
     elif args.func == "ppsf-ci":
         ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=cis)
 
@@ -648,10 +662,8 @@ if __name__ == "__main__":
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        stafan(circuit, tps=[50,200,500,1000,2000,5000], ci=1)
-
-    # elif args.func == "stafan":
-    #     stafan_scoap(circuit=circuit)
+        stafan(circuit, tps=[100,1000,10000,100000,1000000], ci=1)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
+    
