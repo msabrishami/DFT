@@ -523,6 +523,7 @@ def OP_impact(circuit, args):
     samples = args.opCount 
     if  samples > len(circuit.nodes_lev):
         nodes = circuit.nodes_lev
+        samples = len(circuit.nodes_lev)
         # the order is kept, gradual increase in simulation time.
     else:
         nodes = circuit.get_rand_nodes(samples)
@@ -571,10 +572,10 @@ def OP_impact(circuit, args):
     # Store the datafram into a csv file
     i = 0
     fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}-{}.csv".format(
-            circuit.c_name, args.ci, args.opCount,i)
+            circuit.c_name, args.ci, samples, i)
     while os.path.exists(fname):
         i+=1
-        fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, args.opCount,i)
+        fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, samples, i)
     print("Dataframe of OPI analysis results is stored in {}".format(fname))
     df.to_csv(fname, float_format='%.5e')
     return df
