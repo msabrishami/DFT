@@ -207,7 +207,7 @@ def diff_tp_stafan(circuit, tps): #TODO: Must be changed
     plt.savefig(fname)
 
 
-def tpfc_pfs(circuit, tp, times):
+def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     """ Run and plot the TPFC figure by doing real fault simulation (PFS).
     If times > 1, then the fault simulation is done several times with different sets of 
     random test patterns. The figure will show the range and the mean of FC value 
@@ -233,13 +233,13 @@ def tpfc_pfs(circuit, tp, times):
                        ignore_index=True)
 
     plot = sns.lineplot(x=df["tp"], y=df["fc"], alpha=0.8,
-                        color="b", ci=99.99, label="PFS")
-
+                        color="b", ci=plot_ci, label="PFS")
     
     plt.xlim=(50,tp)
     plt.ylim(min(df[df["tp"] == 50]["fc"].tolist()), 100)
-    plot.set_yscale("function", functions=(exp, log))
-    plot.set_yticks(yticks)
+    if log_yscale:
+        plot.set_yscale("function", functions=(exp, log))
+        plot.set_yticks(yticks)
     plot.grid()
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
@@ -275,9 +275,14 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     p_init = utils.load_pd_ppsf_conf(fname)
     tps = np.arange(0, tp+1, 10)
     fcs = []
+    # flag = True
     for tp in tps:
         # fc is estimated based on constant count of tps for ppsf
         fcs.append(utils.estimate_FC(p_init, tp=tp)*100)
+        # if len(fcs) > 5 and flag:
+        #     if (fcs[-1]-fcs[-5]) < 0.01:
+        #         print("Saturated at tp={}".format(tp))
+        #         flag = False
     plot = sns.lineplot(x=tps, y=fcs, color="red", label="PPSF")
     
     plot.set_yscale("function", functions=(exp, log))
@@ -333,8 +338,8 @@ def compare_tpfc(circuit, times, tp, tpLoad, ci, cpu):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}\
-                    -TP{tp}-CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
+    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}"
+    fname += f"-TP{tp}-CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFinal figure saved in {fname}")
@@ -643,9 +648,12 @@ if __name__ == "__main__":
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
 
     elif args.func == "tpfc-ppsf":
+        args.tp = config.AUTO_TP[circuit.c_name] 
+        print(args.tp)
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
 
     elif args.func == "compare-tpfc":
+        args.tp = config.AUTO_TP[circuit.c_name] 
         compare_tpfc(circuit, args.times, args.tp, args.tpLoad, args.ci, args.cpu)
 
     elif args.func == "ppsf-ci":

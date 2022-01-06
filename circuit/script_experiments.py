@@ -39,8 +39,10 @@ script = "python3 main_saeed.py -ckt ../data/verilog/{} -func ppsf_vs_stafan -cp
 script = "python3 main_saeed.py -ckt ../data/verilog/{} -func fc-sta-fs -cpu 50 -tpLoad 100000 -opCount 100 -ci 2"
 script = "python3 g-experiments.py -ckt ../data/verilog/{} -func ppsf-error -cpu 100"
 # script = "python3 g-experiments.py -ckt ../data/verilog/{} -func PD_PPSF -cpu 80 -ci 1"
-script = "python3 main_saeed.py -ckt ../data/verilog/{}  -func ppsf-vs-stafan -tpLoad 100000 -ci 3 -cpu 50"
-script = "python3 main_saeed.py -ckt ../data/verilog/{}  -func  compare-tpfc -tpLoad 100000 -tp 1000 -cpu 50 -ci 3"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func ppsf-vs-stafan -tpLoad 100000 -ci 3 -cpu 50"
+script = "python3 g-experiments.py -ckt ../data/verilog/{} \t -func  compare-tpfc -tpLoad 100000 -tp 1000 -cpu 50 -ci 10 -times 20"
+#script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-pfs -cpu 10 -tp 1000 -times 10"
+#script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-ppsf -cpu 10 -tp 5000 -times 10"
 
 for tp in tps:
     for ckt in all_netlists[:-1]:
