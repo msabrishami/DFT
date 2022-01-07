@@ -40,12 +40,13 @@ script = "python3 main_saeed.py -ckt ../data/verilog/{} -func fc-sta-fs -cpu 50 
 script = "python3 g-experiments.py -ckt ../data/verilog/{} -func ppsf-error -cpu 100"
 # script = "python3 g-experiments.py -ckt ../data/verilog/{} -func PD_PPSF -cpu 80 -ci 1"
 script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func ppsf-vs-stafan -tpLoad 100000 -ci 3 -cpu 50"
-script = "python3 g-experiments.py -ckt ../data/verilog/{} \t -func  compare-tpfc -tpLoad 100000 -tp 1000 -cpu 50 -ci 10 -times 20"
+script = "python3 g-experiments.py -ckt ../data/verilog/{} \t -func  compare-tpfc -tpLoad 100000 -tp 1000 -cpu 50 -ci 10 -times 50"
 #script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-pfs -cpu 10 -tp 1000 -times 10"
 #script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-ppsf -cpu 10 -tp 5000 -times 10"
+script = "python3 g-experiments.py -ckt ../data/verilog/{} -func stafan"
 
 for tp in tps:
-    for ckt in all_netlists[:-1]:
+    for ckt in all_netlists:
         for ver in [0, 1, 2]:
             # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
             #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
@@ -54,6 +55,7 @@ for tp in tps:
             sc = script.format(ckt_name, tp)
             # os.system(sc)
             print(sc)
+            print("date \'+%F   %H:%M:%S\'")
     break
 exit()
 

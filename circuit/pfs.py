@@ -163,8 +163,9 @@ class PFS(FaultSim):
 
             fc_seq.append(100*sum(tpfc)/len(self.fault_list.faults))
             if verbose:
-                print("{:4} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
-                    idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
+                if idx%100 == 0:
+                    print("{:5} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
+                        idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
         fault_coverage = self.fault_list.calc_fc() 
 
         # TODO: just double check this, the reason fault_coverage is not the same as 

@@ -120,7 +120,7 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
         else:
             circuit.load_TMs(fname)
 
-        for tpc in range(1, tp+1):
+        for tpc in range(0, tp+1, 10):
             try:
                 row = {"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, "batch": i}
                 df = df.append(row, ignore_index=True)
@@ -225,13 +225,23 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     df = pd.DataFrame(columns=["tp", "fc", "batch"])
 
     for batch in range(times):
-        pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
-        fc = pfs.tpfc(tp, fault_drop=1)
+        #TODO > Saeed changed this for timing reasons ... 
+        fc_fname = f"./results/fc_pfs/tpfc-pfs-{circuit.c_name}-tp{tp}-part{batch}.csv"
+        if os.path.exists(fc_fname):
+            print(f"PFS results available, loading from {fc_fname}")
+            fc = [float(x) for x in open(fc_fname, "r").readline().split(",")]
+        else:
+            print(f"PFS results NOT available, saving into {fc_fname}")
+            pfs = PFS(circuit)
+            pfs.fault_list.add_all(circuit)
+            fc = pfs.tpfc(tp, fault_drop=1, verbose=True)
+            outfile = open(fc_fname, "w")
+            outfile.write(",".join([str(x) for x in fc]))
+            outfile.close()
         arr = [list(range(1, tp+1)), fc, [batch]*tp]
         df = df.append(pd.DataFrame(np.array(arr).T, columns=["tp", "fc", "batch"]),
                        ignore_index=True)
-
+    return 
     plot = sns.lineplot(x=df["tp"], y=df["fc"], alpha=0.8,
                         color="b", ci=plot_ci, label="PFS")
     
@@ -306,7 +316,7 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     plt.savefig(fname)
 
 
-def compare_tpfc(circuit, times, tp, tpLoad, ci, cpu):
+def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     """ A plot comparing fault coverage using STAFAN vs. PFS vs. PPSF.
     Be careful that plots are saved cumulative. If you want each plot separately, should \
     directly run the methods.
@@ -326,8 +336,8 @@ def compare_tpfc(circuit, times, tp, tpLoad, ci, cpu):
         Count of CPU used to execute PPSF.
     """
     
-    tpfc_stafan(circuit, tpLoad=tpLoad, tp=tp, times=times)
-    tpfc_pfs(circuit, times=times, tp=tp)
+    tpfc_stafan(circuit, tpLoad=tpLoad, tp=tp, times=times_stafan)
+    tpfc_pfs(circuit, times=times_pfs, tp=tp)
     tpfc_ppsf(circuit, ci=ci, cpu=cpu, tp=tp)
 
     plt.title(f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", 
@@ -338,11 +348,11 @@ def compare_tpfc(circuit, times, tp, tpLoad, ci, cpu):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}"
-    fname += f"-TP{tp}-CI{ci}-tpLoad{tpLoad}-cpu{cpu}.png"
+    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}"
+    fname += f"-tpLoad{tpLoad}-cpu{cpu}-Kpfs{times_pfs}-Kstafan{times_stafan}.png"
     plt.tight_layout()
     plt.savefig(fname)
-    print(f"\nFinal figure saved in {fname}")
+    print(f"Final figure saved in {fname}")
 
 
 def ppsf_ci(circuit, cpu, _cis):
@@ -592,41 +602,61 @@ def stafan(circuit, tps, ci = 5):
                 b = float(df_max[df_max["Node"]==n.num][p])
                 row[f"{p}-error"] = (a-b)/b
             df_error = df_error.append(row,ignore_index=True)
-    del df
-    del df_max
+    
+    # del df
+    # del df_max
     
     df_p = pd.DataFrame(columns=["C", "B", "D", "TP"])
     for p in [ "C", "B", "D"]:
         df_p[p] = df_error[f"{p}0-error"].append(df_error[f"{p}1-error"],ignore_index=True)
         df_p["TP"] = df_error["TP"].append(df_error["TP"],ignore_index=True)
-        mean, std = df_p[p].mean(skipna=True), df_p[p].std(skipna=True)
-        min_val = mean-ci*std
-        max_val = mean+ci*std
-        bins_count = 15
+
+    for p in ["C", "B", "D"]:
+        mean = df_p[df_p["TP"]==min(tps)][p].mean(skipna=True)
+        std = df_p[df_p["TP"]==min(tps)][p].std(skipna=True)
+        # TODO4Ghazal: this formula requires limiting to min-max, but not that important
+        min_val = max(mean-ci*std, min(df_p[df_p["TP"]==min(tps)][p]))
+        max_val = min(mean+ci*std, max(df_p[df_p["TP"]==min(tps)][p]))
+        bins_count = 20 if len(circuit.nodes_lev) < 500 else 40 
         bins = np.linspace(min_val, max_val, bins_count)
-        data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)].round(decimals=3)
+        # TODO4Ghazal: why on earth are you using round?
+        # data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)].round(decimals=3)
+        data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)]
         plt.rcParams["patch.force_edgecolor"] = False
+        plt.rcParams['patch.linewidth'] = 0
+        plt.rcParams['patch.edgecolor'] = 'none'
+
         # print([10**i for i in range(int(np.log10(data[p].value_counts().max())+1))])
-        plot = sns.histplot(data = data, x=p, hue = "TP" ,bins=bins, log_scale=(False, True),
-                    alpha=0.4, kde=True, palette=colors[:len(tps)])
+        plot = sns.histplot(data=data, x=p, hue="TP",
+                # bins=bins, 
+                # log_scale=(False, True),
+                alpha=0.1, 
+                kde=True, 
+                palette=colors[:len(tps)])
         # plot."log")
         # plot.set_yscale("log")
         # plot.set_yticks([2**i for i in range(8)])
+
+        plt.rcParams["patch.force_edgecolor"] = False
+        plt.rcParams['patch.linewidth'] = 0
+        plt.rcParams['patch.edgecolor'] = 'none'
+
         plt.xlabel(f"Relative error")
         plt.ylabel("Node count")
-        v = p.replace("C","controlability").replace("B","observability").replace("D","detectability")
-        plt.title(f"Relative error of STAFAN {v} of {circuit.c_name} using different TPs compared to the maximum TP.\n \
-                    Only errors in ci = {ci} are considered.")
+        v = p.replace("C","controlability").replace("B","observability")
+        v = v.replace("D","detectability")
+        plt.title(f"Relative error of STAFAN {v} of {circuit.c_name} \n\
+                compared to the maximum TP={max_tp}.\n \
+                Showing errors distribution with CI={ci}")
         plt.tight_layout()
         plt.show()
         path = "./results/figures/"
-        print(v)
-        fname = path+f"stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI={ci}.png"
+        fname = path + f"stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
         plt.close()
 
-        exit()
+    return 
 
 if __name__ == "__main__":
     args = pars_args()
@@ -645,16 +675,20 @@ if __name__ == "__main__":
                     tpLoad=args.tpLoad, tp=args.tp)
 
     elif args.func == "tpfc-pfs":
+        if circuit.c_name in config.AUTO_TP:
+            args.tp = config.AUTO_TP[circuit.c_name] 
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
 
     elif args.func == "tpfc-ppsf":
-        args.tp = config.AUTO_TP[circuit.c_name] 
+        if circuit.c_name in config.AUTO_TP:
+            args.tp = config.AUTO_TP[circuit.c_name] 
         print(args.tp)
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
 
     elif args.func == "compare-tpfc":
         args.tp = config.AUTO_TP[circuit.c_name] 
-        compare_tpfc(circuit, args.times, args.tp, args.tpLoad, args.ci, args.cpu)
+        compare_tpfc(circuit, times_stafan=1, times_pfs=args.times, 
+                tp=args.tp, tpLoad=args.tpLoad, ci=args.ci, cpu=args.cpu)
 
     elif args.func == "ppsf-ci":
         ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=cis)
@@ -670,7 +704,7 @@ if __name__ == "__main__":
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        stafan(circuit, tps=[100,1000,10000,100000,1000000], ci=1)
+        stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
