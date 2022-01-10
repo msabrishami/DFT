@@ -2,6 +2,7 @@
 
 circuit/run.sh
 circuit/script_experiments.py
+*/*.sh
 
 # Saeed:
 **.swp

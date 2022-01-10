@@ -132,7 +132,7 @@ def deltaP_2(circuit, op, verbose=False):
 
     return deltaP_tot
 
-def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None): 
+def deltaFC(circuit, op, tps, depth=False, verbose=False): 
     """ Calculating the changes in the FC estimation of the nodes
     in the circuit when node OP is used as an observation point. 
     Detection probability is estimated using STAFAN values.
@@ -157,9 +157,7 @@ def deltaFC(circuit, op, tps, verbose=False, cut_bfs=None):
     """
     
     circuit.STAFAN_B()
-    fanin_cone = utils.get_fanin_BFS(circuit, op)
-    if cut_bfs:
-        fanin_cone = fanin_cone[:cut_bfs]
+    fanin_cone = utils.get_fanin_BFS(circuit, op, depth)
     
     PDs_init = []
     for node in fanin_cone:

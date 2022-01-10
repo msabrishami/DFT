@@ -212,7 +212,7 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
         fl_cont.add_all(circuit)
         fl_curr.add_all(circuit)
     else:
-        fanin_nodes = utils.get_fanin_BFS(circuit, op)
+        fanin_nodes = utils.get_fanin_BFS(circuit, op, args.depth)
         for node in fanin_nodes:
             fl_cont.add(node.num, "1")
             fl_cont.add(node.num, "0")
@@ -433,9 +433,12 @@ def compare_ppsf_stafan(circuit, args, mode="hist"):
 
 
 def fanin_analysis(circuit, args):
-    args.opCount = int(max(200, len(circuit.nodes)/4 ))
-    samples = args.opCount 
-    nodes = circuit.get_rand_nodes(samples)
+    if args.opCount > len(circuit.nodes):
+        samples = len(circuit.nodes) 
+        nodes = circuit.nodes_lev
+    else:
+        samples = args.opCount
+        nodes = circuit.get_rand_nodes(samples)
     fanin_count = []
     for node in nodes:
         fanin_count.append(len(utils.get_fanin_BFS(circuit, node)))
@@ -446,6 +449,12 @@ def fanin_analysis(circuit, args):
     plt.hist(fanin_count)
     plt.savefig("{}-fanin-count.png".format(circuit.c_name))
     plt.close()
+
+def fanin_depth_analysis(circuit, depth):
+    res = []
+    for node in circuit.nodes_lev:
+        res.append(len(utils.get_fanin_depth(circuit, node, depth)))
+    return res
 
 def FCTP_analysis(circuit, args):
     """ Draw plot to compare Fault coverage using two methods \
@@ -557,7 +566,7 @@ def OP_impact(circuit, args):
     # Find the impact of each of the random nodes
     for count, node in enumerate(nodes):
         row = {"Node": node.num, "B1":node.B1, "B0":node.B0, "C1":node.C1, "C0":node.C0}
-        res_stafan  = obsv.deltaFC(circuit, node, TPs) #cut_BFS=None
+        res_stafan  = obsv.deltaFC(circuit, node, TPs, args.depth) #cut_BFS=None
         res_ppsf = obsv.deltaFC_PPSF(circuit, node, p_init, TPs, args, steps) 
         row["P-FS"] = res_ppsf["deltaP"]
         row["P-ST"] = sum(obsv.deltaP(circuit, node)) #cut_BFS=None
@@ -571,11 +580,17 @@ def OP_impact(circuit, args):
     
     # Store the datafram into a csv file
     i = 0
-    fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}-{}.csv".format(
-            circuit.c_name, args.ci, samples, i)
-    while os.path.exists(fname):
+    while True:
+        if args.depth:
+            fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}-depth{}-{}.csv".format(
+                    circuit.c_name, args.ci, samples, args.depth, i)
+        else:
+            fname =  "results/deltaFC/OPI-deltaFC-{}-ci{}-op{}-{}.csv".format(
+                    circuit.c_name, args.ci, samples, i) 
+        if not os.path.exists(fname):
+            break
         i+=1
-        fname =  "OPI-report-{}-ci{}-op{}i-{}.csv".format(circuit.c_name, args.ci, samples, i)
+   
     print("Dataframe of OPI analysis results is stored in {}".format(fname))
     df.to_csv(fname, float_format='%.5e')
     return df

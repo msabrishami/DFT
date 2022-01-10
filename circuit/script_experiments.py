@@ -44,6 +44,8 @@ script = "python3 g-experiments.py -ckt ../data/verilog/{} \t -func  compare-tpf
 #script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-pfs -cpu 10 -tp 1000 -times 10"
 #script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-ppsf -cpu 10 -tp 5000 -times 10"
 script = "python3 g-experiments.py -ckt ../data/verilog/{} -func stafan"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func  deltaFCP -tpLoad 1000000 -tp 1000 -cpu 50 -ci 1 -opCount 10000 -depth 10"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func  fanin-analysis"
 
 for tp in tps:
     for ckt in all_netlists:
@@ -55,7 +57,7 @@ for tp in tps:
             sc = script.format(ckt_name, tp)
             # os.system(sc)
             print(sc)
-            print("date \'+%F   %H:%M:%S\'")
+            # print("date \'+%F   %H:%M:%S\'")
     break
 exit()
 

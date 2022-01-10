@@ -63,6 +63,9 @@ def pars_args():
                         help="Number of TPI candidates specified")
     parser.add_argument("-times", type=int, required=False,
                         help="Repetition count for figures")
+    parser.add_argument("-depth", type=int, required=False,
+                        help="depth of search")
+
     # TODO: args.ci is now an integer because the way we saved current files
     parser.add_argument("-ci", type=int, required=False,
                         help="Confidence value (mu/std)")
@@ -299,8 +302,17 @@ if __name__ == '__main__':
         exp.FCTP_analysis(circuit, args)
 
     elif args.func == "BFS-DFS":
-        node = circuit.get_rand_nodes()
+        # node = circuit.get_rand_nodes()
+        node = circuit.nodes["n121"]
         print(node)
+
+        # testing backward BFS: 
+        res = utils.get_fanin_lvl(circuit, node, 2)
+        for n in res:
+            print(n, n.flagA)
+        
+        pdb.set_trace()
+        
         res_DFS = utils.get_fanin(circuit, node)
         print(len(res_DFS))
         res_BFS = utils.get_fanin_BFS(circuit, node)
@@ -308,7 +320,27 @@ if __name__ == '__main__':
         # TODO: check if the results of BFS and DFS are the same 
 
     elif args.func == "fanin-analysis":
-        exp.fanin_analysis(circuit, args)
+        # exp.fanin_analysis(circuit, args)
+        colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
+          'purple', 'turquoise', 'salmon', 'skyblue']
+        plt.rcParams["patch.force_edgecolor"] = False
+        plt.rcParams['patch.linewidth'] = 0
+        plt.rcParams['patch.edgecolor'] = 'none'
+        for idx, depth in enumerate([5, 8, 10, 15, 20]):
+            res = exp.fanin_depth_analysis(circuit, depth)
+            plot = sns.distplot(res, 
+                # bins=bins, 
+                # log_scale=(False, True),
+                label=f"depth={depth}",
+                hist=False,
+                kde=True, 
+                color=colors[idx])
+        res.sort()
+        plt.xlim(0, res[int(len(res)*0.95)])
+        plt.legend()
+        plt.savefig(f"fanin-depth-{circuit.c_name}.png")
+        plt.close()
+        
     
     elif args.func == "deltaFCP":
         """ calculating deltaFC and deltaP of random OPs 

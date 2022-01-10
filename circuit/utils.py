@@ -94,8 +94,38 @@ def get_fanin(circuit, node):
     res = set() 
     get_fanin_rec(circuit, node, res)
     return res
+
+
+def get_fanin_depth(circuit, node, lev_depth):
+    """ Finds the nodes in the fanin-cone of a node in a circuit
+        within a specific depth from the source node
+        The distance is based on hop-based min distance, and not circuit level
+        The algorithm is based on backward BFS through circuit graph
+        node.flagA is used to record the backward level value
+    """
+    res = []
+    q = deque()
+    q.append(node)
+    node.flagA = 0 
     
-def get_fanin_BFS(circuit, node, lev_depth=None):
+    while(len(q) != 0):
+        current_node = q.popleft()
+        res.append(current_node)
+        if current_node.flagA == lev_depth:
+            continue
+        for unode in current_node.unodes:
+            if unode.flagA != None: # we have already seen it! 
+                continue
+            unode.flagA = current_node.flagA + 1 
+            q.append(unode)
+
+    for n in res:
+        n.flagA = None
+    
+    return res
+
+
+def get_fanin_BFS(circuit, node, lev_depth=False):
     """ Finds the nodes in the fanin-cone of a node in a circuit
     returns an ordered list of nodes
     Using BFS approach 
@@ -103,6 +133,8 @@ def get_fanin_BFS(circuit, node, lev_depth=None):
         depth of search based on level 
     TODO: is this really BFS, because we are considering levels, and not depth
     """
+    if lev_depth:
+        return get_fanin_depth(circuit, node, lev_depth)
     q = deque()
     res = []
     visited = set()
