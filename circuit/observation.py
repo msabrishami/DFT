@@ -203,7 +203,7 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     op : Node 
         Primary output node
     TPs : list
-        A list of test patterns
+        A list of test pattern counts
     args : args
         Command-line arguments
     steps : list
@@ -234,6 +234,44 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
         circuit.PO = circuit.PO[:-1]
 
     return {"deltaP":_deltaP, "deltaFC":_deltaFC}
+
+
+def deltaFC_PFS(circuit, op, TPs, args, log=True):
+    """ Add op node to the primary output list and run PFS for the \
+    fan-in cone nodes. The op is removed from primary output list at the end.
+
+    Parameters
+    ----------
+    circuit : Circuit before adding op
+    op : Node 
+        Primary output node
+    TPs : list
+        A list of test pattern counts
+    times : int 
+        the number of times to run PFS
+    depth : int
+        the depth of search for doing PFS
+    args : args
+        Command-line argument
+    log : boolean
+        If True, saves the log of ppsf
+
+    Returns
+    -------
+    list 
+        A list of the new FCs 
+    """
+    orig_ntype = op.ntype
+    if op:
+        circuit.PO.append(op)
+        op.ntype = "PO"
+    # PFS --> only run it on fanin cone nodes with given depth 
+    # if depth is None, it means consider all the nodes in the fanin cone
+    return FCs
+
+
+
+
 
 def deltaP(circuit, op, verbose=False, cut_bfs=None): 
     """ Calculating the changes in the sum of detection probability of the nodes
