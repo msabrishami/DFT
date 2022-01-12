@@ -36,8 +36,7 @@ class FaultList:
 
     def add_all(self, circuit):
         for node in circuit.nodes_lev:
-            self.add(node.num, 0)
-            self.add(node.num, 1)
+            self.add_node(node.num)
 
     def add_random(self, circuit, random_num):
         idx_random = np.random.choice(len(circuit.nodes_lev), random_num, replace=False)
@@ -47,7 +46,17 @@ class FaultList:
     
     def add_fault(self, fault):
         self.faults.append(fault)
-    
+
+    def add_node(self, node):
+        """ adds both S@0 and S@1 faults for node """
+        self.add(node.num, 0)
+        self.add(node.num, 1)
+
+    def add_nodes(self, nodes):
+        assert isinstance(nodes, list), "the input should be a list of nodes"
+        for node in nodes:
+            self.add_node(node)
+
     def add_file(self, fname):
         """ read faults from a file and add it to the fault list 
         file format: each fault <node-num>@<stuck value> in separate lines

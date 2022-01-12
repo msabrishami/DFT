@@ -238,7 +238,7 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     return {"deltaP":_deltaP, "deltaFC":_deltaFC}
 
 
-def deltaFC_PFS(circuit, op, tps, times, depth=None, log=True):
+def deltaFC_PFS(circuit, op, tp, times, depth=None, log=True):
     """ Add op node to the primary output list and run PFS for the \
     fan-in cone nodes. The op is removed from primary output list at the end.
     This procedure is executed many times with different test pattern sizes in tps.
@@ -266,31 +266,25 @@ def deltaFC_PFS(circuit, op, tps, times, depth=None, log=True):
     """
     if op is None:
         raise ValueError("OP is None")
-    
+    fanin_nodes = utils.get_fanin_BFS(circuit, op, depth)
+    print(op)
+    print(len(fanin_nodes))
     delta_fcs = pd.DataFrame(columns={"time","tp","delta_FC"})
-    for tp in tps:
-        init_pfs = PFS(circuit)
-        init_pfs.fault_list.add_all(circuit)
-        init_pfs.tpfc(tp)
-        init_fc = 100*init_pfs.fault_list.calc_fc()
 
+    for time in range(times):
+        tps = circuit.gen_multiple_tp(tp)
+        pfs_0 = PFS(circuit)
+        pfs_1 = PFS(circuit)
+        pfs_0.fault_list.add_nodes(fanin_nodes)
+        pfs_1.fault_list.add_nodes(fanin_nodes)
+        tpfc_0 = pfs_0.tpfc(tps, fault_drop=1, verbose=False)
         circuit.PO.append(op)
-        op.ntype = "PO"
         orig_ntype = op.ntype
-
-        for time in range(times):
-            op_pfs = PFS(circuit)
-            fanin_nodes = utils.get_fanin_BFS(circuit, op, depth)
-            for node in fanin_nodes:
-                op_pfs.fault_list.add(node.num, "0")
-                op_pfs.fault_list.add(node.num, "1")
-
-            op_pfs.tpfc(tp)
-            op_fc = 100*op_pfs.fault_list.calc_fc()
-            delta_fcs = delta_fcs.append({"time":time, "tp":tp, "delta_FC":op_fc-init_fc}, ignore_index=True)
-
+        op.ntype = "PO"
+        tpfc_1 = pfs_1.tpfc(tps, fault_drop=1, verbose=False)
         op.ntype = orig_ntype
-        circuit.PO = circuit.PO[:-1]
+        circuit.PO = circuit.PO[:-1]     
+        
     delta_fcs["time"] = delta_fcs["time"].astype(int)
     delta_fcs["tp"] = delta_fcs["tp"].astype(int)
 

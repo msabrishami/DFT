@@ -666,13 +666,14 @@ def dfc_pfs_analysis(circuit, tps, times ,op_count, log= True):
         for node in nodes:
             if node.ntype != "PO" and node.ntype!="PI":
                 delta_fcs = obsv.deltaFC_PFS(circuit,node,tps,times,5,log)
+                pdb.set_trace()
                 path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
                 if not os.path.exists(path):
                     os.makedirs(path)
                 fname = f"{path}/OP_node-{node.num}.csv"
                 delta_fcs.to_csv(fname)
                 print(f"results saved in {fname}")
-        
+        pdb.set_trace() 
         log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
         for node in nodes:
             for tp in tps:
@@ -741,7 +742,7 @@ if __name__ == "__main__":
     
     #Delta FC
     elif args.func == "dfc-pfs":
-        dfc_pfs_analysis(circuit,[10,50,100,200],args.times,args.opCount)
+        dfc_pfs_analysis(circuit,250,args.times,args.opCount)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
