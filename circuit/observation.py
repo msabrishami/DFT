@@ -4,9 +4,11 @@ import pdb
 import utils
 import numpy as np
 import os
-
+import pandas as pd
 import config as cfg
 import experiments as exp
+from pfs import PFS
+from fault_sim import FaultList
 
 def fault_stat(circuit, HTO_th, HTC_th):
     """ categorizes all the nodes in the circuit based on obs and ctrl
@@ -236,9 +238,10 @@ def deltaFC_PPSF(circuit, op, p_init, TPs, args, steps, log=True):
     return {"deltaP":_deltaP, "deltaFC":_deltaFC}
 
 
-def deltaFC_PFS(circuit, op, TPs, args, log=True):
+def deltaFC_PFS(circuit, op, tps, times, depth=None, log=True):
     """ Add op node to the primary output list and run PFS for the \
     fan-in cone nodes. The op is removed from primary output list at the end.
+    This procedure is executed many times with different test pattern sizes in tps.
 
     Parameters
     ----------
@@ -259,18 +262,39 @@ def deltaFC_PFS(circuit, op, TPs, args, log=True):
     Returns
     -------
     list 
-        A list of the new FCs 
+        DataFrame with columns [time, tp, delta_FC]
     """
-    orig_ntype = op.ntype
-    if op:
+    if op is None:
+        raise ValueError("OP is None")
+    
+    delta_fcs = pd.DataFrame(columns={"time","tp","delta_FC"})
+    for tp in tps:
+        init_pfs = PFS(circuit)
+        init_pfs.fault_list.add_all(circuit)
+        init_pfs.tpfc(tp)
+        init_fc = 100*init_pfs.fault_list.calc_fc()
+
         circuit.PO.append(op)
         op.ntype = "PO"
-    # PFS --> only run it on fanin cone nodes with given depth 
-    # if depth is None, it means consider all the nodes in the fanin cone
-    return FCs
+        orig_ntype = op.ntype
 
+        for time in range(times):
+            op_pfs = PFS(circuit)
+            fanin_nodes = utils.get_fanin_BFS(circuit, op, depth)
+            for node in fanin_nodes:
+                op_pfs.fault_list.add(node.num, "0")
+                op_pfs.fault_list.add(node.num, "1")
 
+            op_pfs.tpfc(tp)
+            op_fc = 100*op_pfs.fault_list.calc_fc()
+            delta_fcs = delta_fcs.append({"time":time, "tp":tp, "delta_FC":op_fc-init_fc}, ignore_index=True)
 
+        op.ntype = orig_ntype
+        circuit.PO = circuit.PO[:-1]
+    delta_fcs["time"] = delta_fcs["time"].astype(int)
+    delta_fcs["tp"] = delta_fcs["tp"].astype(int)
+
+    return delta_fcs
 
 
 def deltaP(circuit, op, verbose=False, cut_bfs=None): 

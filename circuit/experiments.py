@@ -284,7 +284,7 @@ def pd_ppsf_conf(circuit, args, tp_steps, op=None, verbose=False, log=True):
     return res_final 
 
 def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
-    """ Parallel Fault Simulation
+    """ Parallel Pattern Fault Simulation
     If steps is given, the ppsfs will be run for all tp counts over the \
     given count of processes in the args and the mean and std will be save into log file. Else, \
     the simple parallel patterns with the given count of test patterns will be run.
@@ -310,7 +310,7 @@ def pd_ppsf(circuit, args, steps=None, op=None, verbose=False, log=True):
     ------
     dict or list
         According to the steps, it will be determined. If steps is given, returns \
-        a dictionary of faults to means, otherwise, A fault list with D_count  \
+        a dictionary of faults to means of fault coverage. Otherwise, A fault list with D_count  \
         with length equal to cpu is returned
     """
     if steps:
@@ -330,6 +330,8 @@ def ppsf_analysis(circuit, args):
         res[k] = np.mean(v), np.std(v)
 
     return res
+
+# def pd_pfs(circuit, args, op, log):
 
 def compare_ppsf_stafan(circuit, args, mode="hist"):
     # TODO : let's get rid of this soon ... 
@@ -433,6 +435,8 @@ def compare_ppsf_stafan(circuit, args, mode="hist"):
 
 
 def fanin_analysis(circuit, args):
+    """Histogram of the number of fanin nodes
+    """
     if args.opCount > len(circuit.nodes):
         samples = len(circuit.nodes) 
         nodes = circuit.nodes_lev

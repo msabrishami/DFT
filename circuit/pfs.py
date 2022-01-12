@@ -21,7 +21,7 @@ class PFS(FaultSim):
         self.bitwise_not = 2**self.wordlen-1
         path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path)
 
     def single(self, tp, fault_drop=None):
         """
@@ -203,6 +203,8 @@ class PFS(FaultSim):
         print("PFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+        
+        return tpfc
         # pdb.set_trace()
 
     def _fs_exe_old(self, tp_fname, log_fname=None, fault_drop=None):

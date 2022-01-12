@@ -619,8 +619,6 @@ def stafan(circuit, tps, ci = 5):
         max_val = min(mean+ci*std, max(df_p[df_p["TP"]==min(tps)][p]))
         bins_count = 20 if len(circuit.nodes_lev) < 500 else 40 
         bins = np.linspace(min_val, max_val, bins_count)
-        # TODO4Ghazal: why on earth are you using round?
-        # data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)].round(decimals=3)
         data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)]
         plt.rcParams["patch.force_edgecolor"] = False
         plt.rcParams['patch.linewidth'] = 0
@@ -658,6 +656,39 @@ def stafan(circuit, tps, ci = 5):
 
     return 
 
+def dfc_pfs_analysis(circuit, tps, times ,op_count, log= True):
+        if  op_count > len(circuit.nodes_lev):
+            nodes = circuit.nodes_lev
+            op_count = len(circuit.nodes_lev)
+        else:
+            nodes = list(circuit.get_rand_nodes(op_count))
+
+        for node in nodes:
+            if node.ntype != "PO" and node.ntype!="PI":
+                delta_fcs = obsv.deltaFC_PFS(circuit,node,tps,times,5,log)
+                path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                fname = f"{path}/OP_node-{node.num}.csv"
+                delta_fcs.to_csv(fname)
+                print(f"results saved in {fname}")
+        
+        log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
+        for node in nodes:
+            for tp in tps:
+                df_tp = delta_fcs[delta_fcs["tp"]==tp]
+                mu = df_tp["delta_FC"].mean()
+                std = df_tp["delta_FC"].std()
+                row = {"OP_Node":node.num,"times":times, "TP":tp, "mu":mu, "std":std}
+                log_df = log_df.append(row,ignore_index=True)
+
+        fname = f"../data/delta_FC_PFS/{circuit.c_name}/deltaFC-PFS-{circuit.c_name}-op{op_count}-times{times}.csv"
+        log_df.to_csv(fname)
+        print(f"logs saved in {fname}")
+        
+def dfc_pfs():
+    """Plot"""
+    pass
 if __name__ == "__main__":
     args = pars_args()
     plt.rcParams["figure.figsize"]=9,8
@@ -705,6 +736,10 @@ if __name__ == "__main__":
     
     elif args.func == "stafan":
         stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
+    
+    #Delta FC
+    elif args.func == "dfc-pfs":
+        dfc_pfs_analysis(circuit,[10,50,100,200],args.times,args.opCount)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
