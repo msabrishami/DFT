@@ -2,6 +2,8 @@
 
 import os
 import subprocess
+import glob
+import pdb
 
 netlists_EPFL_ALL = ["arbiter", "ctrl",  "i2c",  "mem_ctrl", "sin", "bar","dec", "int2float", "multiplier", "sqrt", "cavlc", "div", "log2", "router", "square", "adder", "hyp", "max", "priority", "voter"]
 # removed because of size issue: mem_ctrl, hyp, div, sqrt, square, log2 
@@ -46,19 +48,52 @@ script = "python3 g-experiments.py -ckt ../data/verilog/{} \t -func  compare-tpf
 script = "python3 g-experiments.py -ckt ../data/verilog/{} -func stafan"
 script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func  deltaFCP -tpLoad 1000000 -tp 1000 -cpu 50 -ci 1 -opCount 10000 -depth 10"
 script = "python3 main_saeed.py -ckt ../data/verilog/{} \t -func  fanin-analysis"
+script = "python3 main_saeed.py -ckt ../data/verilog/{} -func simple-stafan -tp {} -cpu 100"
+script = "python3 g-experiments.py  -ckt ../data/verilog/{}   -func tpfc-pfs -cpu 40 -tp 1000 -times 20"
 
-for tp in tps:
+# All TPs used for STAFAN on Jan 11th 
+STAFAN_TPs = [200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
+STAFAN_TPs = [1000000, 2000000, 5000000, 10000000]
+# os.chdir("../data/stafan-data/")
+os.chdir("./results/fc_pfs/")
+
+for tp in [1]: # STAFAN_TPs:
     for ckt in all_netlists:
         for ver in [0, 1, 2]:
-            # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
-            #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
-            #     continue
+            not_found = []
             ckt_name = ckt + "_synV" + str(ver) + ".v" 
-            sc = script.format(ckt_name, tp)
-            # os.system(sc)
-            print(sc)
-            # print("date \'+%F   %H:%M:%S\'")
-    break
+            print(script.format(ckt_name, tp))
+            continue
+            # exit()
+            #         continue
+            # fnames = glob.glob(f"{ckt_name}/*00.stafan")
+            ckt_name = ckt + "_synV" + str(ver) 
+            fnames = glob.glob(f"tpfc-pfs-{ckt_name}-tp*-part*.csv")
+            max_tps = list(set([fname.split("-")[-2][2:] for fname in fnames]))
+            if len(max_tps) > 1:
+                for tp in max_tps:
+                    print(ckt_name, tp, len(glob.glob(f"tpfc-pfs-{ckt_name}-tp{tp}-part*.csv")))
+            if len(max_tps) == 0:
+                print(ckt_name, "Empty")
+                continue
+            print(f"{ckt_name} \t {max_tps[0]}")
+            continue
+
+            for tp in STAFAN_TPs:
+                if f"{ckt_name}/{ckt_name}-TP{tp}.stafan" not in fnames:
+                    not_found.append(str(tp))
+            if len(not_found) == 0:
+                print(f"{ckt_name} DONE!")
+            else:
+                print(f"{ckt_name} not found: " + str(not_found))
+        # if os.path.exists("../data/stafan-data/" + ckt[2:] + "-stafan-TP" + str(tp) + ".log"):
+        #     print("file exists for ckt: {} tp: {}, skipped".format(ckt, tp))
+        #     continue
+    exit()
+        # sc = script.format(ckt_name, tp)
+        # os.system(sc)
+        # print(sc)
+        # print("date \'+%F   %H:%M:%S\'")
 exit()
 
 

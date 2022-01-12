@@ -119,6 +119,15 @@ if __name__ == '__main__':
         tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
         # print(tps)
 
+    elif args.func == "simple-stafan":
+        time_s = time.time()
+        circuit.STAFAN(args.tp, args.cpu)
+        fname = cfg.STAFAN_DIR+ "/" + circuit.c_name + "/"
+        fname += "{}-TP{}.stafan".format(circuit.c_name, args.tp)
+        circuit.save_TMs(fname)
+        print("Time: \t{:.3}".format(time.time() - time_s))
+
+
     elif args.func == "stafan-save-coded":
         """ Running STAFAN with random TPs and saving TPs into file """
 

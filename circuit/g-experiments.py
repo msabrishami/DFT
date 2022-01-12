@@ -676,6 +676,8 @@ if __name__ == "__main__":
 
     elif args.func == "tpfc-pfs":
         if circuit.c_name in config.AUTO_TP:
+            print("TP count is automatically changed from {} to {}".format(
+                        args.tp, config.AUTO_TP[circuit.c_name]))
             args.tp = config.AUTO_TP[circuit.c_name] 
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
 
