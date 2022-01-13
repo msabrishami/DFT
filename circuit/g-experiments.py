@@ -656,40 +656,45 @@ def stafan(circuit, tps, ci = 5):
 
     return 
 
-def dfc_pfs_analysis(circuit, tps, times ,op_count, log= True):
-        if  op_count > len(circuit.nodes_lev):
-            nodes = circuit.nodes_lev
-            op_count = len(circuit.nodes_lev)
-        else:
-            nodes = list(circuit.get_rand_nodes(op_count))
+def dfc_pfs_analysis(circuit, tp, times ,op_count, log= True):
+    """
+    tps : int
+    """
+    if  op_count > len(circuit.nodes_lev):
+        nodes = circuit.nodes_lev
+        op_count = len(circuit.nodes_lev)
+    else:
+        nodes = list(circuit.get_rand_nodes(op_count))
 
-        for node in nodes:
-            if node.ntype != "PO" and node.ntype!="PI":
-                delta_fcs = obsv.deltaFC_PFS(circuit,node,tps,times,5,log)
-                pdb.set_trace()
-                path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                fname = f"{path}/OP_node-{node.num}.csv"
-                delta_fcs.to_csv(fname)
-                print(f"results saved in {fname}")
-        pdb.set_trace() 
-        log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
-        for node in nodes:
-            for tp in tps:
-                df_tp = delta_fcs[delta_fcs["tp"]==tp]
-                mu = df_tp["delta_FC"].mean()
-                std = df_tp["delta_FC"].std()
-                row = {"OP_Node":node.num,"times":times, "TP":tp, "mu":mu, "std":std}
-                log_df = log_df.append(row,ignore_index=True)
+    delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC"])
+    for node in nodes:
+        if node.ntype != "PO" and node.ntype!="PI":
+            delta_fcs = delta_fcs.append(obsv.deltaFC_PFS(circuit, node, tp, times, 5, log))
+            path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
+            if not os.path.exists(path):
+                os.makedirs(path)
+            fname = f"{path}/OP_node-{node.num}-op{op_count}-tp{tp}-times{times}.csv"
+        delta_fcs.to_csv(fname)
+        print(f"results saved in {fname}")
+    log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
+    for node in nodes:
+        for t in range(tp):
+            df_tp = delta_fcs[delta_fcs["tp"]==t]
+            mu = df_tp["delta_FC"].mean()
+            std = df_tp["delta_FC"].std()
+            row = {"OP_Node":node.num,"times":times, "TP":t, "mu":mu, "std":std}
+            log_df = log_df.append(row,ignore_index=True)
 
-        fname = f"../data/delta_FC_PFS/{circuit.c_name}/deltaFC-PFS-{circuit.c_name}-op{op_count}-times{times}.csv"
-        log_df.to_csv(fname)
-        print(f"logs saved in {fname}")
-        
+    fname = f"../data/delta_FC_PFS/{circuit.c_name}/deltaFC-PFS-{circuit.c_name}-op{op_count}-tp{tp}-times{times}.csv"
+    log_df.to_csv(fname)
+    print(f"logs saved in {fname}")
+
+
 def dfc_pfs():
     """Plot"""
     pass
+
+
 if __name__ == "__main__":
     args = pars_args()
     plt.rcParams["figure.figsize"]=9,8
@@ -742,7 +747,7 @@ if __name__ == "__main__":
     
     #Delta FC
     elif args.func == "dfc-pfs":
-        dfc_pfs_analysis(circuit,250,args.times,args.opCount)
+        dfc_pfs_analysis(circuit, 250, args.times, args.opCount)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")

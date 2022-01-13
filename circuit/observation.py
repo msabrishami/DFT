@@ -248,14 +248,14 @@ def deltaFC_PFS(circuit, op, tp, times, depth=None, log=True):
     circuit : Circuit before adding op
     op : Node 
         Primary output node
-    TPs : list
-        A list of test pattern counts
+    tp : list
+        test pattern counts
     times : int 
         the number of times to run PFS
     depth : int
         the depth of search for doing PFS
     args : args
-        Command-line argument
+        Command-line arguments
     log : boolean
         If True, saves the log of ppsf
 
@@ -267,21 +267,25 @@ def deltaFC_PFS(circuit, op, tp, times, depth=None, log=True):
     if op is None:
         raise ValueError("OP is None")
     fanin_nodes = utils.get_fanin_BFS(circuit, op, depth)
-    print(op)
-    print(len(fanin_nodes))
-    delta_fcs = pd.DataFrame(columns={"time","tp","delta_FC"})
+    delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC"])
 
     for time in range(times):
         tps = circuit.gen_multiple_tp(tp)
-        pfs_0 = PFS(circuit)
-        pfs_1 = PFS(circuit)
-        pfs_0.fault_list.add_nodes(fanin_nodes)
-        pfs_1.fault_list.add_nodes(fanin_nodes)
-        tpfc_0 = pfs_0.tpfc(tps, fault_drop=1, verbose=False)
+        init_pfs = PFS(circuit)
+        init_pfs.fault_list.add_nodes(fanin_nodes)
+        init_fc = init_pfs.tpfc(tps, fault_drop=1, verbose=False)
+
         circuit.PO.append(op)
         orig_ntype = op.ntype
         op.ntype = "PO"
-        tpfc_1 = pfs_1.tpfc(tps, fault_drop=1, verbose=False)
+
+        op_pfs = PFS(circuit)
+        op_pfs.fault_list.add_nodes(fanin_nodes)
+        op_fc = op_pfs.tpfc(tps, fault_drop=1, verbose=False)
+        for t in range(tp):
+            row = {"time":time, "tp":t, "delta_FC":op_fc[t]-init_fc[t]}
+            delta_fcs = delta_fcs.append(row, ignore_index=True)
+
         op.ntype = orig_ntype
         circuit.PO = circuit.PO[:-1]     
         
