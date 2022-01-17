@@ -267,7 +267,7 @@ def deltaFC_PFS(circuit, op, tp, times, depth=None, log=True):
     if op is None:
         raise ValueError("OP is None")
     fanin_nodes = utils.get_fanin_BFS(circuit, op, depth)
-    delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC"])
+    delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC","OP_Node"])
 
     for time in range(times):
         tps = circuit.gen_multiple_tp(tp)
@@ -283,7 +283,7 @@ def deltaFC_PFS(circuit, op, tp, times, depth=None, log=True):
         op_pfs.fault_list.add_nodes(fanin_nodes)
         op_fc = op_pfs.tpfc(tps, fault_drop=1, verbose=False)
         for t in range(tp):
-            row = {"time":time, "tp":t, "delta_FC":op_fc[t]-init_fc[t]}
+            row = {"time":time, "tp":t, "delta_FC":op_fc[t]-init_fc[t], "OP_Node":op.num}
             delta_fcs = delta_fcs.append(row, ignore_index=True)
 
         op.ntype = orig_ntype

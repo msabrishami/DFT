@@ -680,8 +680,9 @@ def dfc_pfs_analysis(circuit, tp, times ,op_count, log= True):
     for node in nodes:
         for t in range(tp):
             df_tp = delta_fcs[delta_fcs["tp"]==t]
-            mu = df_tp["delta_FC"].mean()
-            std = df_tp["delta_FC"].std()
+            df_fc = df_tp[df_tp['OP_Node']==node.num]["delta_FC"]
+            mu = df_fc.mean()
+            std = df_fc.std()
             row = {"OP_Node":node.num,"times":times, "TP":t, "mu":mu, "std":std}
             log_df = log_df.append(row,ignore_index=True)
 
