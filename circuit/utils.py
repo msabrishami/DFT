@@ -85,9 +85,9 @@ def get_fanin_rec(circuit, node, res):
 
 def get_fanin(circuit, node):
     """ Find the nodes in the fanin-cone of a node in a circuit 
-    Using DFS approach 
+    Using semi-DFS approach 
     Returns a set of node numbers
-    TODO: is this really DFS, because we are considering levels, and not depth 
+    Note: not really DFS, as we are considering levels, and not depth. 
     """
     if isinstance(node, str):
         node = circuit.nodes[node]
@@ -98,10 +98,10 @@ def get_fanin(circuit, node):
 
 def get_fanin_depth(circuit, node, lev_depth):
     """ Finds the nodes in the fanin-cone of a node in a circuit
-        within a specific depth from the source node
-        The distance is based on hop-based min distance, and not circuit level
-        The algorithm is based on backward BFS through circuit graph
-        node.flagA is used to record the backward level value
+    within a specific depth from the source node
+    The distance is based on hop-based min distance, and not circuit level
+    The algorithm is based on BFS running backward in circuit graph
+    node.flagA is used to record the backward level value
     """
     res = []
     q = deque()
@@ -127,31 +127,32 @@ def get_fanin_depth(circuit, node, lev_depth):
 
 def get_fanin_BFS(circuit, node, lev_depth=False):
     """ Finds the nodes in the fanin-cone of a node in a circuit
-    returns an ordered list of nodes
-    Using BFS approach 
+    returns an ordered list of nodes 
+    Using BFS approach, based on level of nodes, and not hop-based
     lev_depth : int 
         depth of search based on level 
-    TODO: is this really BFS, because we are considering levels, and not depth
+    Note: not really BFS, as we are considering levels, and not hop-based depth
+    Note: node.flagA is used within this method 
     """
     if lev_depth:
         return get_fanin_depth(circuit, node, lev_depth)
-    q = deque()
+
     res = []
-    visited = set()
-    lev_depth = len(circuit.nodes) if lev_depth==None else lev_depth
-    lev_max = node.lev - lev_depth
+    q = deque()
     q.append(node)
-    visited.add(node.num)
+    node.flagA = True
     
     while(len(q) != 0):
         current_node = q.popleft()
-        # print(current_node)
         res.append(current_node)
         for unode in current_node.unodes:
-            if (unode.num in visited) or (unode.lev < lev_max) :
+            if unode.flagA != None:
                 continue
-            visited.add(unode.num)
+            unode.flagA = True
             q.append(unode)
+    
+    for n in res:
+        n.flagA = None
     
     return res
     

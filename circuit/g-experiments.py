@@ -555,7 +555,8 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.xlabel(f"PD using PPSF with CI={max_ci}")
         plt.ylabel(f"Relative error with respect to PPSF with CI={max_ci}")
 
-    fname = f"results/figures/ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-cpu{cpu}.png"
+    fname = "results/figures/ppsf-error-{}-maxCI{}-{}plot-cpu{}.png".format(
+            circuit.c_name, max_ci, hist_scatter, cpu)
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
@@ -656,39 +657,103 @@ def stafan(circuit, tps, ci = 5):
 
     return 
 
-def dfc_pfs_analysis(circuit, tp, times ,op_count, log= True):
+def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
+    """ 
+    TODOs: 
+    - log fname
+    - times is not considered
+    - saving the generated TPs
+    - summarizing the results and preparing the plot, 
+    - making sure we are overwriting anything, log file can be unique
+    - a few other steps ... review the code!
     """
-    tps : int
-    """
+    print("ERROR: this method is not completed yet")
     if  op_count > len(circuit.nodes_lev):
         nodes = circuit.nodes_lev
         op_count = len(circuit.nodes_lev)
     else:
         nodes = list(circuit.get_rand_nodes(op_count))
 
-    delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC"])
-    for node in nodes:
-        if node.ntype != "PO" and node.ntype!="PI":
-            delta_fcs = delta_fcs.append(obsv.deltaFC_PFS(circuit, node, tp, times, 5, log))
-            path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
-            if not os.path.exists(path):
-                os.makedirs(path)
-            fname = f"{path}/OP_node-{node.num}-op{op_count}-tp{tp}-times{times}.csv"
-        delta_fcs.to_csv(fname)
-        print(f"results saved in {fname}")
-    log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
-    for node in nodes:
-        for t in range(tp):
-            df_tp = delta_fcs[delta_fcs["tp"]==t]
-            df_fc = df_tp[df_tp['OP_Node']==node.num]["delta_FC"]
-            mu = df_fc.mean()
-            std = df_fc.std()
-            row = {"OP_Node":node.num,"times":times, "TP":t, "mu":mu, "std":std}
-            log_df = log_df.append(row,ignore_index=True)
+    tps = circuit.gen_multiple_tp(tp_count)
+    tps_detected_init = []
+    
+    init_pfs = PFS(circuit)
+    init_pfs.fault_list.add_all(circuit)
+    all_faults = set([str(x) for x in init_pfs.fault_list.faults])
 
-    fname = f"../data/delta_FC_PFS/{circuit.c_name}/deltaFC-PFS-{circuit.c_name}-op{op_count}-tp{tp}-times{times}.csv"
-    log_df.to_csv(fname)
-    print(f"logs saved in {fname}")
+    for tp in tps:
+        init_pfs = PFS(circuit)
+        init_pfs.fault_list.add_all(circuit)
+        tps_detected_init.append([str(x) for x in init_pfs.single(tp, fault_drop=1)])
+
+    # MSA: the main idea here was to not consider test patterns one after another
+    fname_log = "just-test-deltaFC-PFS-{}.log".format(circuit.c_name)
+    outfile = open(fname_log, "w")
+    outfile.write("This is just a test!\n") # u can also write down the tps
+
+    for op in nodes:
+        if op.ntype in ["PO", "PI"]:
+            continue
+        outfile.write("\nOP={}\n".format(str(op)))
+        
+        tps_detected_post = []
+        fanin_nodes = utils.get_fanin_BFS(circuit, op) # depth is missing
+        op_pfs = PFS(circuit)
+        op_pfs.fault_list.add_nodes(fanin_nodes)
+
+        for idx, tp in enumerate(tps):
+            # remove those faults that are detected by this tp
+            new_faults = op_pfs.fault_list.remove_faults(tps_detected_init[idx])
+            if len(new_faults) == 0:
+                print("Skip!")
+                tps_detected_post.append(set())
+                continue
+            new_pfs = PFS(circuit)
+            new_pfs.fault_list.add_str_list(new_faults)
+            circuit.PO.append(op)
+            orig_ntype = op.ntype
+            op.ntype = "PO"
+            delta = set([str(x) for x in new_pfs.single(tp, fault_drop=1)])
+            tps_detected_post.append(delta)
+        # Calculate TPFC for this OP:
+        detected_init = set() # set(all_faults)
+        detected_post = set() # set(all_faults)
+        tpfc_init = []
+        tpfc_post = []
+        for idx, tp in enumerate(tps):
+            detected_init = detected_init.union(set(tps_detected_init[idx]))
+            detected_post = detected_post.union(set(tps_detected_init[idx]))
+            detected_post = detected_post.union(tps_detected_post[idx])
+            tpfc_init.append(100*len(detected_init)/len(all_faults))
+            tpfc_post.append(100*len(detected_post)/len(all_faults))
+            # print("Init={:.2f}%\tPost={:.2f}%".format(tpfc_init[-1], tpfc_post[-1]))
+        outfile.write("Init," + ",".join([str(x) for x in tpfc_init]) + "\n")
+        outfile.write("Post," + ",".join([str(x) for x in tpfc_post]) + "\n")
+    # delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC"])
+    # path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
+    # if not os.path.exists(path):
+    #     os.makedirs(path)
+    pdb.set_trace()
+    
+    # for node in nodes:
+    #     delta_fcs = delta_fcs.append(obsv.deltaFC_PFS(circuit, node, tp, times, 5, log))
+    #     fname = f"{path}/OP_node-{node.num}-op{op_count}-tp{tp}-times{times}.csv"
+    #     delta_fcs.to_csv(fname)
+    #     print(f"results saved in {fname}")
+    # log_df = pd.DataFrame(columns=["OP_Node","times","TP","mu","std"])
+    # for node in nodes:
+    #     for t in range(tp):
+    #         df_tp = delta_fcs[delta_fcs["tp"]==t]
+    #         df_fc = df_tp[df_tp['OP_Node']==node.num]["delta_FC"]
+    #         mu = df_fc.mean()
+    #         std = df_fc.std()
+    #         row = {"OP_Node":node.num,"times":times, "TP":t, "mu":mu, "std":std}
+    #         log_df = log_df.append(row,ignore_index=True)
+
+    # fname = f"../data/delta_FC_PFS/{circuit.c_name}/"
+    # fname += f"deltaFC-PFS-{circuit.c_name}-op{op_count}-tp{tp}-times{times}.csv"
+    # log_df.to_csv(fname)
+    # print(f"logs saved in {fname}")
 
 
 def dfc_pfs():
@@ -748,7 +813,7 @@ if __name__ == "__main__":
     
     #Delta FC
     elif args.func == "dfc-pfs":
-        dfc_pfs_analysis(circuit, 250, args.times, args.opCount)
+        dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, op_count=args.opCount)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")

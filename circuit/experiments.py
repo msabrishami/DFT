@@ -70,6 +70,39 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
     circuit.lev()
     check_c432_logicsim(circuit, tp, mode)
 
+def check_pfs_vs_ppsf(circuit, args):
+    """ checking whether the results of PFS and PPSF match 
+        if number of PIs in circuit <12, all possible tps are checked,
+        o.w. args.tp will be used to generate a tp file """
+    if len(circuit.PI) < 12:
+            tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
+            tps = circuit.gen_tp_file_full()
+    else:
+        tp_fname = "../data/patterns/{}_tp_{}.tp".format(
+            circuit.c_name, args.tp)
+        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+ 
+    pfs = PFS(circuit)
+    pfs.fault_list.add_all(circuit)
+    pfs.fs_exe(tp_fname=tp_fname)
+ 
+    ppsf = PPSF(circuit)
+    ppsf.fault_list.add_all(circuit)
+    ppsf.fs_exe(tp_fname)
+ 
+    pfs_res = dict()
+    for fault in pfs.fault_list.faults:
+        pfs_res[str(fault)] = fault.D_count
+    error = False
+    for fault in ppsf.fault_list.faults:
+        if fault.D_count != pfs_res[str(fault)]:
+            error = True
+            print("Error: Fault={} PFS={} PPSF={}".format(
+                str(fault), pfs_res[str(fault)], fault.D_count))
+    if not error:
+        print("PFS and PPSF results match!")
+
+
 def ppsf_thread_old(conn, ckt_name, tp_count, tp_fname, fl_fname):
     ckt = Circuit(ckt_name) 
     ckt.lev()

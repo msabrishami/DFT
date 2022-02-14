@@ -119,24 +119,17 @@ if __name__ == '__main__':
         tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
         # print(tps)
 
-    elif args.func == "simple-stafan":
+    elif args.func == "stafan-save":
+        """ Running STAFAN with random TPs and saving TMs into file """
         time_s = time.time()
         circuit.STAFAN(args.tp, args.cpu)
-        fname = cfg.STAFAN_DIR+ "/" + circuit.c_name + "/"
-        fname += "{}-TP{}.stafan".format(circuit.c_name, args.tp)
         circuit.save_TMs(fname)
         print("Time: \t{:.3}".format(time.time() - time_s))
 
 
     elif args.func == "stafan-save-coded":
-        """ Running STAFAN with random TPs and saving TPs into file """
-
-        if not os.path.exists(cfg.STAFAN_DIR):
-            os.mkdir(cfg.STAFAN_DIR)
-        if not os.path.exists(os.path.join(cfg.STAFAN_DIR, circuit.c_name)):
-            os.mkdir(os.path.join(cfg.STAFAN_DIR, circuit.c_name))
-
-
+        """ Running STAFAN with random TPs, for args.code times 
+            and saving TMs into file """
         for ite in range(int(args.code)):
             time_s = time.time()
             circuit.STAFAN(args.tp, args.cpu)
@@ -146,95 +139,40 @@ if __name__ == '__main__':
             print("Time: \t{:.3}".format(time.time() - time_s))
 
 
-    elif args.func == "stafan-save":
-        """ Running STAFAN with random TPs and saving TPs into file """
-        time_s = time.time()
-        circuit.STAFAN(args.tp, args.cpu)
-        # fname = "../data/stafan-data/{}-TP{}.stafan".format(circuit.c_name, args.tp)
-        # circuit.save_TMs(fname)
-        circuit.save_TMs(tp=args.tp)
-        print("Time: \t{:.3}".format(time.time() - time_s))
+    elif args.func == "lev-backward":
+        #TODO: needs review
+        circuit.lev_backward()
 
-    elif args.func == "stafan-load":
-        fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
-            circuit.c_name, circuit.c_name, args.tpLoad)
-        circuit.load_TMs(fname)
-        PDs = []
-        for node in circuit.nodes_lev:
-            PDs.append(node.D0)
-            PDs.append(node.D1)
-        if min(PDs) == 0:
-            PDs = [x for x in PDs if x!=0]
-        bins = np.logspace(np.floor(np.log10(min(PDs))), np.log10(max(PDs)), 20)
-        plt.figure(figsize=(14,8), dpi=300) 
-        plt.xscale("log")
-        plt.yscale("log")
-        plt.hist(PDs, bins=bins)
-        plt.title("Detection probability histogram based on STAFAN\n{}".format(circuit.c_name))
-        plt.tight_layout()
-        plt.savefig("stafan-hist-{}".format(circuit.c_name))
-
-    elif args.func == "backward-level":
-        circuit.all_shortest_distances_to_PO()
 
     elif args.func == "pfs":
         tp_fname = "../data/patterns/{}_tp_{}.tp".format(
             circuit.c_name, args.tp)
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-        # tps = circuit.gen_tp_file_full()
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1)
+        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1, verbose=True)
+
 
     elif args.func == "ppsf":
-        tp_fname = "../data/patterns/{}_tp_{}.tp".format(
-            circuit.c_name, args.tp)
-        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-        # tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-        # tps = circuit.gen_tp_file_full()
         ppsf = PPSF(circuit)
         ppsf.fault_list.add_all(circuit)
-        ppsf.fs_exe(tp_fname)
+        ppsf.fs_exe(tp_fname, args.tp, fault_drop=1)
+
 
     elif args.func == "pfs-vs-ppsf":
-        if len(circuit.PI) < 12:
-            tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-            tps = circuit.gen_tp_file_full()
-        else:
-            tp_fname = "../data/patterns/{}_tp_{}.tp".format(
-                circuit.c_name, args.tp)
-            tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
-
-        pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname)
-
-        ppsf = PPSF(circuit)
-        ppsf.fault_list.add_all(circuit)
-        ppsf.fs_exe(tp_fname)
-
-        pfs_res = dict()
-        for fault in pfs.fault_list.faults:
-            pfs_res[str(fault)] = fault.D_count
-        error = False
-        for fault in ppsf.fault_list.faults:
-            if fault.D_count != pfs_res[str(fault)]:
-                error = True
-                print("Error: Fault={} PFS={} PPSF={}".format(
-                    str(fault), pfs_res[str(fault)], fault.D_count))
-        if not error:
-            print("PFS and PPSF results match!")
+        exp.check_pfs_vs_ppsf(circuit, args)
+        
     
-    elif args.func == "PD_PPSF":
+    elif args.func == "pd-ppsf":
+        # TODO full review and documentation  
         time_s = time.time()
-        # TODO 4 Ghazal : almost done with the review
-        # TODO 4 Ghazal : don't forget the documentation of sub-methods 
         exp.pd_ppsf(circuit, args, steps=cfg.PPSF_STEPS, verbose=True)
         print("Total time = {:.2f}".format(time.time() - time_s))
     
+
     elif args.func == "ppsf-vs-stafan":
         exp.compare_ppsf_stafan(circuit, args, mode="hist")
+
 
     elif args.func == "ppsf_analysis":
         mu = {}
@@ -288,8 +226,8 @@ if __name__ == '__main__':
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
         pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)
-
     
+
     elif args.func == "tpfc-fig":
         path = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
         path += "tpfc_tp-" + str(args.tp)
@@ -311,16 +249,14 @@ if __name__ == '__main__':
         exp.FCTP_analysis(circuit, args)
 
     elif args.func == "BFS-DFS":
-        # node = circuit.get_rand_nodes()
-        node = circuit.nodes["n121"]
+        #TODO: review is required
+        node = circuit.get_rand_nodes()
         print(node)
 
         # testing backward BFS: 
         res = utils.get_fanin_lvl(circuit, node, 2)
         for n in res:
             print(n, n.flagA)
-        
-        pdb.set_trace()
         
         res_DFS = utils.get_fanin(circuit, node)
         print(len(res_DFS))
@@ -385,39 +321,6 @@ if __name__ == '__main__':
         for tp in TPs:
             col1 = "FC-ST-tp{:04d}".format(tp)
             col2 = "FC-FS-tp{:04d}".format(tp)
-            # plt.scatter(df["D0"], df[col])
-            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D0", col, samples))
-            # plt.close()
-            # plt.scatter(df["D1"], df[col])
-            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "D1", col, samples))
-            # plt.close()
-            # plt.scatter(df["B0"], df[col])
-            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B0", col, samples))
-            # plt.close()
-            # plt.scatter(df["B1"], df[col])
-            # plt.savefig("{}-{}-{}-samples{}.png".format(circuit.c_name, "B1", col, samples))
-            # plt.close()
-             
-            # plt.scatter(df[["B0", "B1"]].min(axis=1), df[col])
-            # plt.xscale("log")
-            # plt.title("deltaFC based on STAFAN vs. observability (B)\n{}".format(
-            #     circuit.c_name))
-            # plt.xlabel("Min of STAFAN B0 and B1 for every node")
-            # plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
-            # plt.savefig("{}-{}-{}-samples{}.png".format(
-            #     circuit.c_name, "minB", col, args.opCount))
-            # plt.close()
-            
-            # plt.scatter(df[["D0", "D1"]].min(axis=1), df[col])
-            # plt.xscale("log")
-            # plt.title("deltaFC based on STAFAN vs. detection probability (D)\n{}".format(
-            #     circuit.c_name))
-            # plt.xlabel("Min of STAFAN D0 and D1 for every node")
-            # plt.ylabel("Change in FC estimation (deltaFC) - STAFAN")
-            # plt.savefig("{}-{}-{}-samples{}.png".format(
-            #     circuit.c_name, "minD", col, args.opCount))
-            # plt.close()
-            
             plt.scatter(df[col1], df[col2])
             plt.title("Compare deltaFC based on STAFAN vs. PPSF for nodes\n{}".format(
                 circuit.c_name))

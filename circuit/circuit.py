@@ -123,7 +123,30 @@ class Circuit:
     
         self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
     
-    
+
+    def lev_backward(self):
+        """ Calculate shortest distace from node to POs for all nodes
+            using Dijktra algorithm """
+        dist = {} 
+        MAX_WEIGHT = 10**9
+        nodes = list(self.nodes.values()) + self.PO + self.PI
+
+        for node in nodes:
+            dist[node] = MAX_WEIGHT
+            
+        unvisited_nodes = []
+        for po in self.PO:
+            dist[po] = min(0,dist[po])
+            unvisited_nodes.append(po)
+            
+        while unvisited_nodes:
+            for node in unvisited_nodes:
+                for unode in node.unodes:
+                    dist[unode] = min(1+dist[node],dist[unode])
+                    unvisited_nodes.append(unode)
+                unvisited_nodes.remove(node)
+
+
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
@@ -135,6 +158,7 @@ class Circuit:
         for node in self.nodes_lev:
             res.append(str(node))
         return "\n".join(res)
+
 
     def get_rand_nodes(self, count=1):
         if count > len(self.nodes):
@@ -926,28 +950,6 @@ class Circuit:
 
         self.PO.append(new_brch)    
         self.nodes[new_brch.num] = new_brch
+    
 
-    def all_shortest_distances_to_PO(self):
-        """ Calculate shortest distace from any gate to any PO 
-        using Dijktra algorithm
-        """
-        dist = {} 
-        MAX_WEIGHT = 10**9
-        nodes = list(self.nodes.values()) + self.PO + self.PI
-
-        for node in nodes:
-            dist[node] = MAX_WEIGHT
-            
-        unvisited_nodes = []
-        for po in self.PO:
-            dist[po] = min(0,dist[po])
-            unvisited_nodes.append(po)
-            
-        while unvisited_nodes:
-            for node in unvisited_nodes:
-                for unode in node.unodes:
-                    dist[unode] = min(1+dist[node],dist[unode])
-                    unvisited_nodes.append(unode)
-                unvisited_nodes.remove(node)
-        # print('Distances from node to the nearest output:', 
-        #         *[f'{d[0].num}: {d[1]}' for d in dist.items()], sep='\n')
+    

@@ -16,14 +16,21 @@ class PPSF(FaultSim):
     """ 
     Parallel Patern Single Fault, Fault Simulation 
     """
-
     def __init__(self, circuit):
         super().__init__(circuit)
         self.fs_type = "ppsf"
         self.wordlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**self.wordlen-1
+        self.fs_folder()
 
- 
+
+    def fs_folder(self):
+        super().fs_folder()
+        path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+
     def single(self, tps, fault):
         """ 
         One pass of fault simulation for test patterns over a single fault. 
@@ -63,19 +70,18 @@ class PPSF(FaultSim):
 
     def fs_exe(self, tps, log_fname=None, verbose=False): 
         """ 
-        Run PPSF for the fault in the fault list, given the tp file. 
-        For each fault, it counts the number of times it has been detected.
-        tps : str or list of tps, if tps is str, it is the fname of a tp file
-        """ 
-        self.fs_folder()
-        if isinstance(tps, str):
-            tps = self.circuit.load_tp_file(tps)
-        else:
-            assert(isinstance(tps, list), "tps type shoud be str or list")
+        Runs PPSF for the faults in the fault list, given tp count/list/fname
+        For each fault, it counts the number of times it has been detected
+        WARNING: this method is not tested after a few modifications 
+        """
+        print("WARNING: ppsf.fs_exe is not tested after a few modifications")
+        if isinstance(tps, int):
+            tps = self.circuit.gen_tp_file(tps)
+        elif isinstance(tps, str):
+            self.circuit.load_tp_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be either int, list, or file name")
 
-        if verbose:
-            print("PPSF for tp file: {}".format(tp_fname))
-        
         for fault in self.fault_list.faults:
             tot_pass = math.ceil(len(tps)/self.wordlen)
             for _pass in range(tot_pass):

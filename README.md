@@ -1,18 +1,24 @@
-# Circuit Test and GNN 
-This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *design for test* (DFT) operations, including: 
-- Gate level logical simulation
-- Fault simulation (PFS, DFS)
-- Dominancy and equivalency relations
-- Systematic fault dropping (CPT)
-- Fault based ATPG (different versions of D-Algorithm and PODEM)
-- Full circuit ATPG 
-- Different controllability and observability measurements (e.g. SCOAP)
+# PyCAD: Python Package for Digital Circuit and Computer Aided Design (CAD) Research 
+This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *computer aided design* operations, including: 
+- Basic operations: 
+    -- Gate level logical simulation
+- *Design for test* (DFT):
+    -- Fault analysis, e.g. dominancy and equivalency relations
+    -- Testability measures (SCOAP)
+    -- Fault simulation (PFS, DFS, PPSF)
+    -- Systematic fault dropping (CPT)
+    -- *Automatic test pattern generation* (ATPG), different versions of D-Algorithm and PODEM
+    -- Test pattern generation 
+    -- Logic built-in self test (LBIST): 
+    -- Random test pattern analysis and testability measures (STAFAN)
 - Translation between different formats of circuits (.bench, .verilog, .ckt)
+- Statistical static timing analysis (SSTA)
+
 
 The package is capable of producing test-related datasets later used in down stream machine learning applications. 
 
 ## Developers and Affiliation: <br />
-The package was first developed by a group of University of Southern California (USC) computer engineering graduate students as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
+PyCAD development was first started by a group of graduate students at the University of Southern California (USC) computer engineering as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
 
 **Repository manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
@@ -50,7 +56,7 @@ Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 Python3
 
 ## Circuit Input Format
-The initial implementation was based on a modified version of *.CKT*, referred as *CKT658* [reference]. A translator is availabel to convert standard *.bench* format to *CKT658* and implemented inside the platform. 
+The initial implementation was aimed for test of digital circuits. on a modified version of *.CKT*, referred as *CKT658* [reference]. A translator is availabel to convert standard *.bench* format to *CKT658* and implemented inside the platform. 
 `translator.py`
 <!--This part is written by Yida-->
 

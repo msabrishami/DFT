@@ -19,9 +19,15 @@ class PFS(FaultSim):
         self.fs_type = "pfs"
         self.wordlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**self.wordlen-1
+        self.fs_folder()
+        
+    
+    def fs_folder(self):
+        super().fs_folder()
         path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
         if not os.path.exists(path):
             os.makedirs(path)
+
 
     def single(self, tp, fault_drop=None):
         """
@@ -185,43 +191,27 @@ class PFS(FaultSim):
         return fc_seq 
 
     
-    def fs_exe(self, tp, fault_drop=None):
+    def fs_exe(self, tps, fault_drop=None):
         """
-        Runs PFS for the faults in the fault list, given the tp file.  
-        Arguments:
-        ---------
+        Runs PFS for the faults in the fault list, given tp count/list/fname
+        WARNING: this method is not tested after a few modifications 
         """
-        self.fs_folder()
-        tps = self.circuit.gen_tp_file(tp)
+        print("WARNING: pfs.fs_exe is not tested after a few modifications")
+        if isinstance(tps, int):
+            tps = self.circuit.gen_tp_file(tps)
+        elif isinstance(tps, str):
+            self.circuit.load_tp_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be either int, list, or file name")
+
         fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
         if not os.path.exists(fn):
             os.makedirs(fn)
-        fn += f"tp{tp}.tpfc"
-        print("PFS for tp file: {}".format(fn))
-        # self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
-        tpfc = self.tpfc(tps=tps, log_fname=fn, fault_drop=1)
+        fn += f"{self.circuit.c_name}-PFS-temp.log"
+        fc = self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
         print("PFS completed")
         print("FC={:.4f}%, tot-faults={}".format(
             100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
         
-        return tpfc
-        # pdb.set_trace()
-
-    def _fs_exe_old(self, tp_fname, log_fname=None, fault_drop=None):
-        """
-        Runs PFS for the faults in the fault list, given the tp file.  
-        Arguments:
-        ---------
-        """
-        self.fs_folder()
-        tps = self.circuit.load_tp_file(tp_fname)
-        fn = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
-        fn += tp_fname.split("/")[-1].replace(".tp", ".log")
-        log_fname = fn if log_fname==None else log_fname
-        print("PFS for tp file: {}".format(tp_fname))
-        # self.multiple_separate(tps=tps, log_fname=log_fname, fault_drop=fault_drop)
-        tpfc = self.tpfc(tps=tps, log_fname=log_fname, fault_drop=1)
-        print("PFS completed")
-        print("FC={:.4f}%, tot-faults={}".format(
-            100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
-    
+        return fc 
+   

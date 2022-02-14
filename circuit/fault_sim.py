@@ -34,9 +34,14 @@ class FaultList:
         num, val = fault_str.strip().split("@")
         self.faults.append(Fault_C(num, val))
 
+    def add_str_list(self, faults_str_list):
+        """ add faults with their string in faults_str_list """
+        for fault in faults_str_list:
+            self.add_str(fault)
+
     def add_all(self, circuit):
         for node in circuit.nodes_lev:
-            self.add_node(node.num)
+            self.add_node(node)
 
     def add_random(self, circuit, random_num):
         idx_random = np.random.choice(len(circuit.nodes_lev), random_num, replace=False)
@@ -46,6 +51,19 @@ class FaultList:
     
     def add_fault(self, fault):
         self.faults.append(fault)
+
+    def remove_faults(self, faults):
+        # TODO: this is not a good method, to be modified after
+        # the main data structure is changed to a dict or set
+        # Does not change the current faults
+        current_faults = set([str(x) for x in self.faults])
+        if isinstance(faults, list):
+            faults = set([str(x) for x in faults])
+        new_faults = current_faults - faults
+        # self.faults = []
+        # for fault in new_faults:
+        #     self.faults.add_str(fault)
+        return list(new_faults)
 
     def add_node(self, node):
         """ adds both S@0 and S@1 faults for node """
