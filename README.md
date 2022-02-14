@@ -1,19 +1,18 @@
 # PyCAD: Python Package for Digital Circuit and Computer Aided Design (CAD) Research 
 This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *computer aided design* operations, including: 
 - Basic operations: 
-    -- Gate level logical simulation
-- *Design for test* (DFT):
-    -- Fault analysis, e.g. dominancy and equivalency relations
-    -- Testability measures (SCOAP)
-    -- Fault simulation (PFS, DFS, PPSF)
-    -- Systematic fault dropping (CPT)
-    -- *Automatic test pattern generation* (ATPG), different versions of D-Algorithm and PODEM
-    -- Test pattern generation 
-    -- Logic built-in self test (LBIST): 
-    -- Random test pattern analysis and testability measures (STAFAN)
+    - Gate level logical simulation
+- Design for test (DFT):
+    - Fault analysis, e.g. dominancy and equivalency relations
+    - Testability measures (SCOAP)
+    - Fault simulation (PFS, DFS, PPSF)
+    - Systematic fault dropping (CPT)
+    - Automatic test pattern generation (ATPG), different versions of D-Algorithm and PODEM
+    - Test pattern generation 
+    - Logic built-in self test (LBIST): 
+    - Random test pattern analysis and testability measures (STAFAN)
 - Translation between different formats of circuits (.bench, .verilog, .ckt)
 - Statistical static timing analysis (SSTA)
-
 
 The package is capable of producing test-related datasets later used in down stream machine learning applications. 
 
@@ -23,13 +22,9 @@ PyCAD development was first started by a group of graduate students at the Unive
 **Repository manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
 
-**Main contributers:**  <br /> 
+**Graduate students who worked with this platform (some during their EE658 course**) *(equal contribution):* <br /> 
 <cite>[Luke Grantham][20]</cite> <br />
 <cite>[Yang Shen][14]</cite> <br />
-
-
-**Graduate students who worked with this platform (some during their EE658 course**) *(equal contribution):* <br /> 
-<cite>[Amir Erfan Eshratifar][19]</cite>  <br />
 Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
 Jiaming Li <cite>[LinkedIn][15]</cite> <br />
 Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
@@ -50,7 +45,6 @@ Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 [16]: https://www.linkedin.com/in/han-zhang-usc/
 [17]: https://www.linkedin.com/in/shubo-li-760991193/
 [18]: https://www.linkedin.com/in/yida-yan-489b06191/
-[19]: http://amirerfan.com/
 [20]: https://www.linkedin.com/in/lukegrantham/
 ## Setup Environment
 Python3
