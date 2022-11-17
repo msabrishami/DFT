@@ -22,6 +22,10 @@ PyCAD development was first started by a group of graduate students at the Unive
 **Repository manager:** <br />
 <cite>[M. Saeed Abrishami][10]</cite>  <br />
 
+**Main developers:** <br />
+<cite>[M. Saeed Abrishami][10]</cite>  <br />
+<cite>[Ghazal Rafiei][21]</cite>  <br />
+
 **Graduate students who worked with this platform (some during their EE658 course**) *(equal contribution):* <br /> 
 <cite>[Luke Grantham][20]</cite> <br />
 <cite>[Yang Shen][14]</cite> <br />
@@ -46,6 +50,7 @@ Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 [17]: https://www.linkedin.com/in/shubo-li-760991193/
 [18]: https://www.linkedin.com/in/yida-yan-489b06191/
 [20]: https://www.linkedin.com/in/lukegrantham/
+[21]: https://github.com/ghazalrafiei
 ## Setup Environment
 Python3
 
