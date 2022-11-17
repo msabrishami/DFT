@@ -19,11 +19,8 @@ The package is capable of producing test-related datasets later used in down str
 ## Developers and Affiliation: <br />
 PyCAD development was first started by a group of graduate students at the University of Southern California (USC) computer engineering as a joint research project with <cite>[**The System Power Optimization and Regulation Technology (SPORT) Lab**][1]</cite>. <br />
 
-**Repository manager:** <br />
-<cite>[M. Saeed Abrishami][10]</cite>  <br />
-
 **Main developers:** <br />
-<cite>[M. Saeed Abrishami][10]</cite>  <br />
+<cite>[M. Saeed Abrishami][10]</cite> <br /> 
 <cite>[Ghazal Rafiei][21]</cite>  <br />
 
 **Graduate students who worked with this platformو during their EE658 course** <br /> 
