@@ -29,11 +29,6 @@ PyCAD development was first started by a group of graduate students at the Unive
 **Graduate students who worked with this platform (some during their EE658 course**) *(equal contribution):* <br /> 
 <cite>[Luke Grantham][20]</cite> <br />
 <cite>[Yang Shen][14]</cite> <br />
-Jiayi Wang <cite>[Linkedin][13]</cite>  <br />
-Jiaming Li <cite>[LinkedIn][15]</cite> <br />
-Han Zhang  <cite>[LinkedIn][16]</cite>  <br />
-Shubo Li   <cite>[LinkedIn][17]</cite>  <br />
-Yida Yan <cite>[LinkedIn][18]</cite>  <br />
 
 **Advisors:** <br />
 <cite>[Prof. Massoud Pedram][11]</cite>  <br />
