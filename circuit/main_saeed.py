@@ -89,8 +89,8 @@ if __name__ == '__main__':
 
     args = pars_args()
 
-    cfg.HTO_TH = args.HTO_th if args.HTO_th else cfg.HTO_TH
-    cfg.HTC_TH = args.HTC_th if args.HTC_th else cfg.HTC_TH
+    # cfg.HTO_TH = args.HTO_th if args.HTO_th else cfg.HTO_TH
+    # cfg.HTC_TH = args.HTC_th if args.HTC_th else cfg.HTC_TH
 
     circuit = read_circuit(args)
     circuit.lev()
