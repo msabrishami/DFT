@@ -27,8 +27,6 @@ class PFS(FaultSim):
         path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
         if not os.path.exists(path):
             os.makedirs(path)
-
-
     def single_run(self, tp, fault_drop=None):
         """
         For one test pattern
@@ -41,7 +39,7 @@ class PFS(FaultSim):
         detected_faults = set() 
         
         ptr0 = 0
-        while ptr0 < len(self.fault_list.faults):
+        while (ptr0 < len(self.fault_list.faults)):
             pfs_stuck_values = 0
             read_fault_ind = 0
 
@@ -49,26 +47,21 @@ class PFS(FaultSim):
             mask_dict = {}  # {key: fault_num, value: mask}
             faults_pass = []
             faults_pass_idx = []
-            # detected_faults.add()
 
             if fault_drop:    
                 ptr1 = ptr0
-                while len(faults_pass) < self.wordlen-1 and \
-                        ptr1 != len(self.fault_list.faults):
+                while(len(faults_pass) < self.wordlen-1 and \
+                        ptr1 != len(self.fault_list.faults)):
                     fault = self.fault_list.faults[ptr1]
-                    if fault.D_count >= fault_drop:
+                    if (fault.D_count < fault_drop):
                         faults_pass.append(fault)
                         faults_pass_idx.append(ptr1)
-                        detected_faults.add(self.fault_list.faults[ptr0])
-
                     ptr1 += 1
-                    # print(fault_drop)
             else:
                 ptr1 = min(ptr0+self.wordlen-2, len(self.fault_list.faults)-1)
                 for x in range(ptr0, ptr1+1):
                     faults_pass.append(self.fault_list.faults[x])
                     faults_pass_idx.append(x)
-                    detected_faults.add(self.fault_list.faults[ptr0])
             
             ptr0 = ptr1+1
             for i in range(len(faults_pass)):
@@ -108,13 +101,9 @@ class PFS(FaultSim):
                             # tp found this fault_pass[j]
                             detected_faults.add(faults_pass[j])
 
-            for fault in detected_faults:
-                if fault_drop and fault.D_count >= fault_drop:
-                    fault.D_count += 1
-                elif  fault_drop is None:
-                    fault.D_count +=1
-
-        return detected_faults
+        for fault in detected_faults:
+            fault.D_count += 1
+        return list(detected_faults)
 
     def multiple_separate_run(self, tps, log_fname, fault_drop, verbose = True):
         """ 
