@@ -31,7 +31,7 @@ class PPSF(FaultSim):
             os.makedirs(path)
 
 
-    def single(self, tps, fault):
+    def single_run(self, tps, fault):
         """ 
         One pass of fault simulation for test patterns over a single fault. 
         Number of tps should be less than the system's word length. 
@@ -76,9 +76,13 @@ class PPSF(FaultSim):
         """
         print("WARNING: ppsf.fs_exe is not tested after a few modifications")
         if isinstance(tps, int):
-            tps = self.circuit.gen_tp_file(tps)
+            tps = self.circuit.gen_multiple_tp(tps)
         elif isinstance(tps, str):
-            self.circuit.load_tp_file(tps)
+            if os.path.exists(str):
+                tps = self.circuit.load_tp_file(tps)
+            else:
+                raise "path not exist."
+
         elif not isinstance(tps, list):
             raise TypeError("tps should be either int, list, or file name")
 
@@ -86,9 +90,9 @@ class PPSF(FaultSim):
             tot_pass = math.ceil(len(tps)/self.wordlen)
             for _pass in range(tot_pass):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
-                res = self.single(tps_pass, fault)
+                res = self.single_run(tps_pass, fault)
                 fault.D_count += len(res)
+
         if verbose: 
             print("PPFS completed")
-            print("FC={:.4f}%, tot-faults={}".format(
-                100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+            print(f"FC={100*self.fault_list.calc_fc():.4f}%, tot-faults={len(self.fault_list.faults)}")

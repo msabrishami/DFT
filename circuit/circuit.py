@@ -279,13 +279,15 @@ class Circuit:
         return tps
 
     
-    def load_tp_file(self, fname,tp_count = 0):
-        """ Load single file with multiple test pattern vectors. """ 
+    def load_tp_file(self, fname, tp_count = 0):
+        """ Load single file with multiple test pattern vectors. 
+            Does not warn if the size of input nodes is less than each test pattern""" 
         # do we need to check the order of the inputs in the file?  
         # this can be done using "yield" or "generate" -- check online 
 
         if not os.path.exists(fname):
-            return self.gen_tp_file(tp_count=tp_count,tp_fname=fname)
+            raise 'Test file does not exist. Use gen_tp_file() instead'
+            # return self.gen_tp_file(tp_count=tp_count,tp_fname=fname)
         
         infile = open(fname, 'r')
         tps = []
@@ -577,7 +579,7 @@ class Circuit:
 
     def STAFAN(self, total_tp, num_proc=1, verbose=False):
         """ 
-        Generating STAFAN controllability and observability in parallel. 
+        Calculating STAFAN controllability and observability in parallel. 
         Random TPs are generated within the method itself and are not stored. 
         
         Arguments:
@@ -617,7 +619,7 @@ class Circuit:
         if verbose: 
             for node in self.nodes_lev:
                 if node.C0 == 0 or node.C1 == 0:
-                    print("Warning: node {} controllability is zero".format(node.num))
+                    print(f"Warning: node {node.num} controllability is zero")
         try: 
             self.STAFAN_B()
         except ZeroDivisionError:
@@ -627,11 +629,10 @@ class Circuit:
         end_time = time.time()
         duration = end_time - start_time
         if verbose:
-            print ("Processor count: {}, TP-count: {}, Time: {:.2f} sec".format(
-                num_proc,total_tp ,duration))
+            print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
 
     
-    def save_TMs(self, fname=None, tp=None):
+    def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN
         if fname == None:
             path = config.STAFAN_DIR+"/"+self.c_name
             if not os.path.exists(path):
@@ -639,7 +640,7 @@ class Circuit:
             fname = os.path.join(path, self.c_name)
             if not os.path.exists(fname):
                 os.mkdir(fname)
-            fname = os.path.join(fname, "{}-TP{}.stafan".format(self.c_name, tp))
+            fname = os.path.join(fname, f"{self.c_name}-TP{tp}.stafan")
 
         outfile = open(fname, "w")
         outfile.write("Node,C0,C1,B0,B1,S\n")
@@ -647,7 +648,7 @@ class Circuit:
             ss = ["{:e}".format(x) for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
             outfile.write(",".join([node.num] + ss) + "\n")
         outfile.close()
-        print("Saved circuit STAFAN TMs in {}".format(fname))
+        print(f"Saved circuit STAFAN TMs in {fname}")
 
     
     def load_TMs(self, fname):
@@ -655,11 +656,11 @@ class Circuit:
         for line in lines:
             words = line.strip().split(",")
             node = self.nodes[words[0]]
-            node.C0 =   float(words[1])  
-            node.C1 =   float(words[2]) 
-            node.B0 =   float(words[3]) 
-            node.B1 =   float(words[4]) 
-            node.S  =   float(words[5]) 
+            node.C0 = float(words[1])  
+            node.C1 = float(words[2]) 
+            node.B0 = float(words[3]) 
+            node.B1 = float(words[4]) 
+            node.S  = float(words[5]) 
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
 
@@ -675,6 +676,8 @@ class Circuit:
         """
         nfc = 0
         for node in self.nodes_lev:
+            if None in [node.C0,node.C1,node.B0,node.B1]:
+                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
             nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
             nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
         return 1 - nfc/(2*len(self.nodes)) 
