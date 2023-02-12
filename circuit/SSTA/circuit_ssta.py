@@ -2,7 +2,6 @@
 ####################################
 ########## NOT TESTED AT ALL 
 ####################################
-import circuit 
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 
