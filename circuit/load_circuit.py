@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-from circuit import *
+# from circuit import *
 from node import *
 import config
 

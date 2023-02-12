@@ -1,27 +1,24 @@
 # -*- coding: utf-8 -*-
 
-import re
-import random
-from enum import Enum
 import math
-import sys
-from node import gtype
-from node import ntype
-from node import *
-import collections
-# import networkx as nx
-import matplotlib.pyplot as plt
-from itertools import cycle
-
-from random import randint
+import re
+import os 
+import random
 import time
 import pdb
+import sys
+import matplotlib.pyplot as plt
+
+from itertools import cycle
+from enum import Enum
+from collections import deque
 from multiprocessing import Process, Pipe
-#import numpy as np
-import os 
+
 import utils
 import config
-#import xlwt
+import load_circuit
+from node import *
+
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
@@ -32,7 +29,6 @@ import config
 #   ... for SSTA we have cell SSTA delay for NAND2 and NAND3, fix this!
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
-import load_circuit
 
 
 
@@ -166,14 +162,14 @@ class Circuit:
             return None
         res = set() 
         while len(res) < count:
-            idx = randint(0, len(self.nodes)-1)
+            idx = random.randint(0, len(self.nodes)-1)
             res.add(self.nodes_lev[idx])
-        return list(res)[0] if count==1 else res
+        return list(res)[0] if count==1 else res  # better to return a list all the time
     
     
     def print_fanin(self, target_node, depth):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
-        queue = collections.deque()
+        queue = deque()
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
         self.print_fanin_rec(queue, min_level)
@@ -192,7 +188,6 @@ class Circuit:
         depth : int 
             search depth for BFS, final node to be printed has depth=zero
         """
-        print()
         print("queue is: " + ",".join([node.num for node in queue]))
         if len(queue) == 0:
             return 
@@ -210,7 +205,7 @@ class Circuit:
         self.print_fanin_rec(queue, min_level)
 
     def gen_single_tp(self, mode="b"):
-        """ Randomly generate a single input pattern.
+        """ Generate a random input pattern.
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         returns a single input pattern
@@ -227,21 +222,20 @@ class Circuit:
         return tp 
     
     def gen_multiple_tp(self, tp_count, mode="b"):
-        """ Generates multiple input patterns
+        """ Generate multiple random input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
-        returns the list of geneted test patterns
+        returns a list of random test patterns
         does not store the generated tps in file 
-        converts tp_count to int, as sometimes we pass fps (e.g. 1e6)
         """
         tps = [self.gen_single_tp(mode) for _ in range(int(tp_count))] 
         return tps
 
     def gen_tp_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
-        """ create single file with multiple input patterns
+        """ Create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
-        returns the list of geneted test patterns
+        returns a list of random test patterns
         mention the sequence of inputs and tps
         """ 
         fn = os.path.join(config.PATTERN_DIR, 
@@ -256,11 +250,24 @@ class Circuit:
         
         outfile.close()
         if verbose:
-            print("Generated {} test patterns and saved in {}".format(tp_count, tp_fname))
+            print(f"Generated {tp_count} test patterns and saved in {tp_fname}")
+
+        return tps # better to return file name
+
+    def gen_full_tp(self):
+        """
+        Return all possible test patterns
+        #TODO: should we implement all with mode = x?
+        """ 
+        tps = []
+        for t in range(2**len(self.PI)):
+            tp = list(map(int, bin(t)[2:].zfill(len(self.PI))))
+            tps.append(tp)
+        
         return tps
 
     def gen_tp_file_full(self, tp_fname=None):
-        """ create a single file including all possible tps """ 
+        """Create a single file including all possible test patterns""" 
         if len(self.PI) > 12:
             print("Error: cannot generate full tp file for circuits with PI > 12")
             return []
@@ -268,15 +275,13 @@ class Circuit:
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.PI]) + "\n")
-        tps = [] 
-        for t in range(2**len(self.PI)):
-            tp = [str(random.randint(0,1)) for x in range(len(self.PI))]
-            tp = "{:{}b}".format(t, len(self.PI)).replace(" ", "0")
-            tps.append(tp)
-            outfile.write(",".join(list(tp)) + "\n")
+        tps = self.gen_full_tp()
+        for t in tps:
+            outfile.write(",".join(str(t)) + "\n")
         outfile.close()
         print("Generated full test patterns and saved in {}".format(tp_fname))
-        return tps
+        
+        return tps # better to return file name
 
     
     def load_tp_file(self, fname, tp_count = 0):
@@ -286,7 +291,7 @@ class Circuit:
         # this can be done using "yield" or "generate" -- check online 
 
         if not os.path.exists(fname):
-            raise 'Test file does not exist. Use gen_tp_file() instead'
+            raise 'Test file does not exist. Use gen_tp_file() or gen_full_tp_file() instead'
             # return self.gen_tp_file(tp_count=tp_count,tp_fname=fname)
         
         infile = open(fname, 'r')
@@ -296,6 +301,7 @@ class Circuit:
         for line in lines[1:]:
             words = line.rstrip().split(',')
             words = [int(word) if word == '1' or word == '0' else 'X' for word in words]
+            # Not the best practice to have a list with multiple types of elements
             tps.append(words)
         infile.close()
         return tps
@@ -315,7 +321,7 @@ class Circuit:
     def logic_sim(self, tp):
         """
         Logic simulation:
-        Reads a given pattern and perform the logic simulation
+        Read a given pattern and perform the logic simulation
         Currently just works with binary logic
         tp is a list of values (currently int) in the ... 
             ... same order as in self.PI
@@ -328,102 +334,102 @@ class Circuit:
             else:
                 node.imply()
 
-    def logic_sim_bitwise(self, tp, fault=None):
-        """
-        Logic simulation bitwise mode:
-        Reads a given pattern and perform the logic simulation bitwise
+    # def logic_sim_bitwise(self, tp, fault=None):
+    #     """
+    #     Logic simulation bitwise mode:
+    #     Reads a given pattern and perform the logic simulation bitwise
 
-        Arguments
-        ---------
-        tp : list of int 
-            input pattern in the same order as in self.PI
-        fault : str
-            node.num@fault --> example: N43@0 means node N43 single stuck at zero 
+    #     Arguments
+    #     ---------
+    #     tp : list of int 
+    #         input pattern in the same order as in self.PI
+    #     fault : str
+    #         node.num@fault --> example: N43@0 means node N43 single stuck at zero 
 
-        fault
-        """
-        node_dict = dict(zip([x.num for x in self.PI], tp))
-        # TODO: get rid of this! Why did we not implement this within constructor?
-        n = sys.maxsize
-        bitlen = math.log2(n)+1
+    #     fault
+    #     """
+    #     node_dict = dict(zip([x.num for x in self.PI], tp))
+    #     # TODO: get rid of this! Why did we not implement this within constructor?
+    #     n = sys.maxsize
+    #     bitlen = math.log2(n)+1
 
-        bitwise_not = 2**bitlen-1
+    #     bitwise_not = 2**bitlen-1
         
-        if fault:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
-                if node.num == fault.node_num:
-                    if fault.stuck_val == '0':
-                        node.value = 0
-                    else:
-                        node.value = node.bitwise_not
+    #     if fault:
+    #         for node in self.nodes_lev:
+    #             if node.gtype == "IPT":
+    #                 node.imply_b(node_dict[node.num])
+    #             else:
+    #                 node.imply_b()
+    #             if node.num == fault.node_num:
+    #                 if fault.stuck_val == '0':
+    #                     node.value = 0
+    #                 else:
+    #                     node.value = node.bitwise_not
 
-        else:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
+    #     else:
+    #         for node in self.nodes_lev:
+    #             if node.gtype == "IPT":
+    #                 node.imply_b(node_dict[node.num])
+    #             else:
+    #                 node.imply_b()
 
     
 
-    def logic_sim_file(self, in_fname, out_fname, stil=False): 
-        """
-        logic simulation with given input vectors from a file
-        - generates an output folder in ../data/modelsim/circuit_name/ directory
-        - read a input file in input folder
-        - generate a output file in output folder by using logic_sim() function
-        """
-        # Saeed needs to rewrite this method using 'yield' in load_tp_file     
-        fr = open(in_fname, mode='r')
-        fw = open(out_fname, mode='w')
-        fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
-        fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
-        temp = fr.readline()
-        i=1
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            self.logic_sim(line_split)
-            fw.write('Test # = '+str(i)+'\n')
-            fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
-            i+=1
-        fw.close()
-        fr.close()
+    # def logic_sim_file(self, in_fname, out_fname, stil=False): 
+    #     """
+    #     logic simulation with given input vectors from a file
+    #     - generate an output folder in ../data/modelsim/circuit_name/ directory
+    #     - read an input file in the input folder
+    #     - generate a output file in output folder by using logic_sim() function
+    #     """
+    #     # Saeed needs to rewrite this method using 'yield' in load_tp_file     
+    #     fr = open(in_fname, mode='r')
+    #     fw = open(out_fname, mode='w')
+    #     fw.write('Inputs: ')
+    #     fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
+    #     fw.write('Outputs: ')
+    #     fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
+    #     temp = fr.readline()
+    #     i=1
+    #     for line in fr.readlines():
+    #         line=line.rstrip('\n')
+    #         line_split=line.split(',')
+    #         for x in range(len(line_split)):
+    #             line_split[x]=int(line_split[x])
+    #         self.logic_sim(line_split)
+    #         fw.write('Test # = '+str(i)+'\n')
+    #         fw.write(line+'\n')
+    #         fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
+    #         i+=1
+    #     fw.close()
+    #     fr.close()
         
         
-        if stil:
-            infile = open(in_fname, "r")
-            lines = infile.readlines()
-            outfile = open(out_fname, "w")
-            outfile.write("PI:")
-            outfile.write(",".join([node.num for node in self.PI]) + "\n")
-            outfile.write("PO:")
-            outfile.write(",".join([node.num for node in self.PO]) + "\n")
-            for idx, line in enumerate(lines[1:]):
-                tp=line.rstrip('\n').split(",")
-                # for x in range(len(line_split)):
-                #    line_split[x]=int(line_split[x])
-                # self.logic_sim(line_split)
-                self.logic_sim(tp)
-                outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
-                outfile.write("\"_pi\"=")
-                outfile.write("".join(line.strip().split(",")))
-                outfile.write(";\n")
-                outfile.write("      \"_po\"=")
-                for node in self.PO:
-                    val = "H" if node.value==1 else "L"
-                    outfile.write(val)
-                outfile.write("; } \n")
-            outfile.close()
+    #     if stil:
+    #         infile = open(in_fname, "r")
+    #         lines = infile.readlines()
+    #         outfile = open(out_fname, "w")
+    #         outfile.write("PI:")
+    #         outfile.write(",".join([node.num for node in self.PI]) + "\n")
+    #         outfile.write("PO:")
+    #         outfile.write(",".join([node.num for node in self.PO]) + "\n")
+    #         for idx, line in enumerate(lines[1:]):
+    #             tp=line.rstrip('\n').split(",")
+    #             # for x in range(len(line_split)):
+    #             #    line_split[x]=int(line_split[x])
+    #             # self.logic_sim(line_split)
+    #             self.logic_sim(tp)
+    #             outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
+    #             outfile.write("\"_pi\"=")
+    #             outfile.write("".join(line.strip().split(",")))
+    #             outfile.write(";\n")
+    #             outfile.write("      \"_po\"=")
+    #             for node in self.PO:
+    #                 val = "H" if node.value==1 else "L"
+    #                 outfile.write(val)
+    #             outfile.write("; } \n")
+    #         outfile.close()
 
 
     def golden_test(self, golden_io_filename):
@@ -534,7 +540,7 @@ class Circuit:
 
         for t in range(num_pattern):
             if tp_gen:
-                b = ('{:0%db}'%len(self.PI)).format(randint(limit[0], limit[1]))
+                b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
                 tp = [int(b[j]) for j in range(len(self.PI))]
             else:
                 tp = tps[t]
@@ -953,6 +959,3 @@ class Circuit:
 
         self.PO.append(new_brch)    
         self.nodes[new_brch.num] = new_brch
-    
-
-    

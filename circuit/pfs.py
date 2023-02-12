@@ -3,8 +3,6 @@ import sys
 import math
 import os
 
-from circuit import Circuit
-from node import Node
 from fault_sim import FaultSim
 import config
 import pdb
@@ -27,6 +25,7 @@ class PFS(FaultSim):
         path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
         if not os.path.exists(path):
             os.makedirs(path)
+
     def single_run(self, tp, fault_drop=None):
         """
         For one test pattern
@@ -35,6 +34,7 @@ class PFS(FaultSim):
         Updates the fault.D_count of fault_list.faults
         Returns a list of detected faults in this pass
         tp sequence is important, if circuit.PI=[Na, Nb, Nc], then tp=[Xa, Xb, Xc]
+        #TODO: Fix fault drop
         """        
         detected_faults = set() 
         
