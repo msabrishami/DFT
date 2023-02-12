@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 #from numpy import uint64
-from enum import Enum
 import pdb
 import math 
 import sys
+from enum import Enum
+from functools import reduce
 
 # We are using GNOT, etc. as we may later use X values
 """" GENERAL NOTES AND SUGGESTIONS: 
@@ -12,7 +13,16 @@ import sys
     Class 3: Node with SSTA features 
 """
 
-class five_value(Enum):
+""" helper function
+returns multiplication of values in a list"""
+mul_list = lambda arr: reduce(lambda a,b: a*b, arr, 1) # faster / move it to utils
+# def mul_list(arr):
+#     res = 1
+#     for a in arr:
+#         res  = res*a
+#     return res
+
+class five_value(Enum): # what are these?
    ZERO = 0
    ONE = 15
    D = 12
@@ -36,7 +46,6 @@ class ntype(Enum):
     PI = 1
     FB = 2
     PO = 3
-
 
 class Node:
     """ Representing a circuit node, i.e. also representing its unique upnode gate.
@@ -123,7 +132,6 @@ class Node:
         self.dd_cell = None
         self.dd_node = None
 
-                    
     def __str__(self):
         res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
@@ -131,7 +139,6 @@ class Node:
         if self.C0 and self.C1:
             res += " C0={:.4f} C1={:.4f} B0={:.4f} B1={:.4f}".format(self.C0, self.C1, self.B0, self.B1)
         return res
-
     
     def imply(self):
         ''' forward implication for a logic gate ''' 
@@ -181,13 +188,14 @@ class Node:
     '''
 
     def get_neighbors(self, value=False, inclusive=False):
-        ''' Returns a list of nodes (or the values of nodes)
+        ''' Return a list of nodes (or the values of nodes)
         that have the same out gate as this node
         inclusive: if set True, includes this node itself.
         value: if set True, returns the value of neighbors node, by default list of nodes
         '''
         # TODO: Check this for all possible gates, specially branch
         # TODO: not tested
+        # TODO: optimize: why not append the node itself out of for?
         res = []
         if self.dnodes:
             for node in self.dnodes[0].unodes:
@@ -217,7 +225,7 @@ class Node:
             else:
                 return True
 
-        elif ((self.dnodes[0].gtype == 'OR') | (self.dnodes[0].gtype == 'NOR')):
+        elif (self.dnodes[0].gtype == 'OR') | (self.dnodes[0].gtype == 'NOR'):
             if 1 in self.get_neighbors(inclusive=False, value=True):
                 return False
             else:
@@ -226,40 +234,39 @@ class Node:
             print("Error: Not implemented yet") 
             pdb.set_trace()
 
-
     def print_info(self, get_labels=False, print_labels=True):
         # TODO: two if/else is wrong, create strings and print once
+        # raises error when stafan is not calculated (move where stafan is, not here)
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
                     "C1", "S", "B0", "B1"]
         if print_labels:
-            print("N:{}\t".format(str(self.num).zfill(4)), end="")
-            print("LEV:{}\t".format(str(self.lev).zfill(2)), end="")
-            print("GATE:{}\t".format(self.gtype), end="")
-            print("CC0:{}\t".format(str(self.CC0).zfill(3)), end="")
-            print("CC1:{}\t".format(str(self.CC1).zfill(3)), end="")
-            print("CO:{}\t".format(str(self.CO).zfill(3)), end="")
-            print("C0:{:.2e}\t".format(self.C0), end="")
-            print("C1:{:.2e}\t".format(self.C1), end="")
-            print("S:{:.2e}\t".format(self.S), end="")
-            print("B0:{:.2e}\t".format(self.B0), end="")
-            print("B1:{:.2e}\t".format(self.B1), end="")
+            print(f"N:{str(self.num).zfill(4)}\t", end="")
+            print(f"LEV:{str(self.lev).zfill(2)}\t", end="")
+            print(f"GATE:{self.gtype}\t", end="")
+            print(f"CC0:{str(self.CC0).zfill(3)}\t", end="")
+            print(f"CC1:{str(self.CC1).zfill(3)}\t", end="")
+            print(f"CO:{str(self.CO).zfill(3)}\t", end="")
+            print(f"C0:{self.C0:.2e}\t", end="")
+            print(f"C1:{self.C1:.2e}\t", end="")
+            print(f"S:{self.S:.2e}\t", end="")
+            print(f"B0:{self.B0:.2e}\t", end="")
+            print(f"B1:{self.B1:.2e}\t", end="")
             print()
         else:
-            print("N:{}\t".format(str(self.num).zfill(4)), end="")
-            print("{}\t".format(str(self.lev).zfill(2)), end="")
-            print("{}\t".format(self.gtype), end="")
-            print("{}\t".format(str(self.CC0).zfill(3)), end="")
-            print("{}\t".format(str(self.CC1).zfill(3)), end="")
-            print("{}\t".format(str(self.CO).zfill(3)), end="")
-            print("{:.2e}\t".format(self.C0), end="")
-            print("{:.2e}\t".format(self.C1), end="")
-            print("{:.2e}\t".format(self.S), end="")
-            print("{:.2e}\t".format(self.B0), end="")
-            print("{:.2e}\t".format(self.B1), end="")
+            print(f"N:{str(self.num).zfill(4)}\t", end="")
+            print(f"{str(self.lev).zfill(2)}\t", end="")
+            print(f"{self.gtype}\t", end="")
+            print(f"{str(self.CC0).zfill(3)}\t", end="")
+            print(f"{str(self.CC1).zfill(3)}\t", end="")
+            print(f"{str(self.CO).zfill(3)}\t", end="")
+            print(f"{self.C0:.2e}\t", end="")
+            print(f"{self.C1:.2e}\t", end="")
+            print(f"{self.S:.2e}\t", end="")
+            print(f"{self.B0:.2e}\t", end="")
+            print(f"{self.B1:.2e}\t", end="")
             print()
     
-
 class BUFF(Node):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
@@ -290,7 +297,6 @@ class BUFF(Node):
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
 
-
 class NOT(Node):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
@@ -320,7 +326,6 @@ class NOT(Node):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
-
 
 class OR(Node):
     def __init__(self, n_type, g_type, num):
@@ -381,7 +386,6 @@ class OR(Node):
         self.faultlist_dfs.clear()
         dfs_general(self, 1)
 
-
 class NOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
@@ -439,14 +443,11 @@ class NOR(Node):
                 for x in ne_C0:
                     unode.B0 *= x
                 print(" ==> B0 ~ {:.2e}".format(unode.B0))
-                    
-
 
     def dfs(self):
         # the controling value of NOR is 1
         self.faultlist_dfs.clear()
         dfs_general(self, 1)
-
 
 class AND(Node):
     def __init__(self, n_type, g_type, num):
@@ -506,7 +507,6 @@ class AND(Node):
         # the controling value of AND is 0
         self.faultlist_dfs.clear()
         dfs_general(self, 0)
-
 
 class NAND(Node):
     def __init__(self, n_type, g_type, num):
@@ -569,7 +569,6 @@ class NAND(Node):
         # the controling value of NAND is 0
         self.faultlist_dfs.clear()
         dfs_general(self, 0)
- 
 
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
@@ -623,7 +622,6 @@ class XOR(Node):
         xor_FL_set.add((self.num, GNOT(self.value)))
         self.faultlist_dfs = xor_FL_set
 
-
 class XNOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
@@ -674,7 +672,6 @@ class XNOR(Node):
         xnor_FL_set.add((self.num, GNOT(self.value)))
         self.faultlist_dfs = xnor_FL_set
 
-
 class IPT(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
@@ -701,7 +698,6 @@ class IPT(Node):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
-
 
 class BRCH(Node):
     def __init__(self, n_type, g_type, num):
@@ -738,17 +734,6 @@ class BRCH(Node):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
         self.faultlist_dfs.add((self.num, GNOT(self.value)))
-
-
-def mul_list(arr):
-    """ helper function
-    returns multiplication of values in a list"""
-    res = 1
-    for a in arr:
-        res  = res*a
-    return res
-
-
 
 def dfs_general(node, c_val):
     """
@@ -799,75 +784,78 @@ def dfs_general(node, c_val):
     #TODO: clear this return, if it is correct, document it
     return fault_set
 
-
 def GNOT(a):
     '''NOT gate'''
-    if a == 1:
-        out = 0
-    elif a == 0:
-        out = 1
-    return out
+    return 1-a
+    # if a == 1:
+    #     out = 0
+    # elif a == 0:
+    #     out = 1
+    # return out
 
-
-class podem_node_5val():
+class podem_node_5val(): # Change Case - move somewhere else
     def __init__(self):
         self.x = 1
         self.bit0 = 0
         self.bit1 = 0
 
     def fault_node(self, SA1):
-        if (self.x == 0):
+        if self.x == 0:
             self.bit0 = SA1
             self.bit1 = not SA1
 
     def is_0(self):
-        if (self.x == 1):
+        if self.x == 1:
             return False
-        if ((self.bit0 | self.bit1) == 0):
-            return True
-        else:
-            return False
+        elif (self.bit0 | self.bit1) == 0:
+            return True 
+
+        return False
+
     def is_1(self):
-        if (self.x == 1):
+        if self.x == 1:
             return False
-        if ((self.bit0 & self.bit1) == 1):
+        elif (self.bit0 & self.bit1) == 1:
             return True
-        else:
-            return False
+        
+        return False
+
     def is_d(self):
-        if (self.x == 1):
+        if self.x == 1:
             return False
-        if ((self.bit0 ^ self.bit1) == 1):
+        elif (self.bit0 ^ self.bit1) == 1:
             return True
-        else:
-            return False
+
+        return False
+
     def is_sa0(self):
-        if (self.x == 1):
+        if self.x == 1:
             return False
-        elif ((self.bit0 == 0) & (self.bit1 == 1)):
+        elif (self.bit0 == 0) & (self.bit1 == 1):
             return True
-        else:
-            return False
+
+        return False
+
     def is_sa1(self):
-        if (self.x == 1):
+        if self.x == 1:
             return False
-        elif ((self.bit0 == 1) & (self.bit1 == 0)):
+        elif (self.bit0 == 1) & (self.bit1 == 0):
             return True
-        else:
-            return False
+
+        return False
 
     def __and__(self, other):
         val = podem_node_5val()
         val.bit0 = self.bit0 & other.bit0
         val.bit1 = self.bit1 & other.bit1
         val.x = 0
-        if (self.x == 1):
-            if (other.is_0()):
+        if self.x == 1:
+            if other.is_0():
                 val.x = 0
             else:
                 val.x = 1
-        if (other.x == 1):
-            if(self.is_0()):
+        if other.x == 1:
+            if self.is_0():
                 val.x = 0
             else:
                 val.x = 1
@@ -878,13 +866,13 @@ class podem_node_5val():
         val.bit0 = self.bit0 | other.bit0
         val.bit1 = self.bit1 | other.bit1
         val.x = 0
-        if (self.x == 1):
+        if self.x == 1:
             if (other.is_1() == True):
                 val.x = 0
             else:
                 val.x = 1
-        if (other.x == 1):
-            if(self.is_1()):
+        if other.x == 1:
+            if self.is_1():
                 val.x = 0
             else:
                 val.x = 1
@@ -896,12 +884,10 @@ class podem_node_5val():
         val.bit1 = self.bit1 ^ other.bit1
         val.x = self.x | other.x
         return val
+
     def __invert__(self):
         val = podem_node_5val()
         val.bit0 = not self.bit0
         val.bit1 = not self.bit1
         val.x = self.x
         return val
-
-
-

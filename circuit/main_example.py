@@ -4,7 +4,7 @@ from pfs import PFS
 
 if __name__ == '__main__':
 
-    circuit_path = '../data/verilog/ISCAS85/v1/c17_synV1.v'
+    circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
 
     circuit = Circuit(circuit_path)
     circuit.lev()
@@ -14,18 +14,18 @@ if __name__ == '__main__':
     ### TEST ###
     # tp = circuit.gen_multiple_tp(1e6)
     # tp = circuit.gen_full_tp()
-    tp = circuit.gen_tp_file_full()
-    print(tp)
+    # tp = circuit.gen_tp_file_full() --> returns string not int
+    # print(tp)
     #################### PFS Example ####################
    
    # todo: fault drop!!!!!
-    # pfs = PFS(circuit)
-    # pfs.fault_list.add_all(circuit)
+    pfs = PFS(circuit)
+    pfs.fault_list.add_all(circuit)
 
-    # tp = 500
+    tp = 500
     # # tp = '../hello'
-    # # tp = '../data/patterns/c499_synV1_tp_1000.tp'
-    # pfs.fs_exe(tp, fault_drop=0, verbose=True)
+    # tp = '../data/patterns/c499_synV1_tp_1000.tp'
+    pfs.fs_exe(tp, fault_drop=0, verbose=True)
 
     #################### PFS Example ####################
     
@@ -40,7 +40,9 @@ if __name__ == '__main__':
 
     #################### STAFAN_FC Example ####################
     
-    # circuit.STAFAN(tp, num_proc=4)
+    circuit.STAFAN(tp, num_proc=4)
     # tp = 1000
-    # fc = circuit.STAFAN_FC(tp)
+    fc = circuit.STAFAN_FC(tp)
     # print("Fault Coverage=", fc)
+    # for n in circuit.nodes_lev:
+    #     n.print_info()
