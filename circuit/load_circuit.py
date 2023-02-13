@@ -7,12 +7,12 @@ import config
 import node
 
 class LoadCircuit:
-    """ Reads a circuit netlist (gate level), 
-    currently supports .ckt (refer to USC EE658) and .v (Verilog) 
+    """ Read a circuit netlist (gate level), 
+    currently support .ckt (refer to USC EE658) and .v (Verilog) 
     """
     
     def __init__(self, circuit, circuit_fname):
-        """ Reads a gate level netlist and feeds the Circuit object 
+        """ Read a gate level netlist and feed the Circuit object 
 
         Parameters
         ----------
@@ -29,7 +29,7 @@ class LoadCircuit:
         elif circuit_format == 'v':
             self.read_verilog(circuit, circuit_fname)
         else:
-            raise NotImplementedError("Circuit format {} is not supported!".format(mode))
+            raise NotImplementedError(f"Circuit format {mode} is not supported!")
 
     def connect_node(self, circuit,  line):
         # As we move forward, find the upnodes and connects them
@@ -63,52 +63,52 @@ class LoadCircuit:
         else:
             print("ERROR: not known!", ptr.num)
 
-    
-    def gen_node(self, Dict):
+    def gen_node(self, node_info):
         """ creates a node, does not make any connections, 
         does not modify the PI, PO list of this circuit """
 
-        new_node = -1
+        new_node = None
         
-        if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
-            new_node = node.IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
+        if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
+            new_node = node.IPT(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-        elif Dict['n_type'] == "FB" and Dict['g_type'] == "BRCH":
-            new_node = node.BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
+        elif node_info['n_type'] == "FB" and node_info['g_type'] == "BRCH":
+            new_node = node.BRCH(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-        elif Dict['n_type'] == "GATE" and Dict['g_type'] == "BRCH":
+        elif node_info['n_type'] == "GATE" and node_info['g_type'] == "BRCH":
             raise NotImplementedError()
 
-        elif Dict['n_type'] == "GATE" or Dict['n_type'] == "PO":
-            if Dict['g_type'] == 'XOR':
-                new_node = node.XOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+        elif node_info['n_type'] == "GATE" or node_info['n_type'] == "PO":
+            if node_info['g_type'] == 'XOR':
+                new_node = node.XOR(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'OR':
-                new_node = node.OR(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'OR':
+                new_node = node.OR(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'NOR':
-                new_node = node.NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'NOR':
+                new_node = node.NOR(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'NOT':
-                new_node = node.NOT(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'NOT':
+                new_node = node.NOT(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'NAND':
-                new_node = node.NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'NAND':
+                new_node = node.NAND(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'AND':
-                new_node = node.AND(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'AND':
+                new_node = node.AND(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'BUFF':
-                new_node = node.BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'BUFF':
+                new_node = node.BUFF(node_info['n_type'], node_info['g_type'], node_info['num'])
 
-            elif Dict['g_type'] == 'XNOR':
-                new_node = node.XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+            elif node_info['g_type'] == 'XNOR':
+                new_node = node.XNOR(node_info['n_type'], node_info['g_type'], node_info['num'])
         else:
             raise NotImplementedError()
         
-        if new_node == -1:
+        if not new_node:
             import pdb
             pdb.set_trace()
+
         return new_node
 
 
@@ -238,8 +238,7 @@ def cell2gate(cell_name):
     for gname, cell_names in config.CELL_NAMES.items():
         if cell_name in cell_names:
             return gname
-    raise NameError("Cell type {} was not found".format(cell_name))
-
+    raise NameError(f"Cell type {cell_name} was not found")
 
 def insert_branch(u_node, d_node, i_node):
     """ This function is used for inserting the BRCH node
@@ -251,7 +250,6 @@ def insert_branch(u_node, d_node, i_node):
     d_node.unodes.append(i_node)
     i_node.unodes.append(u_node)
     i_node.dnodes.append(d_node)
-
 
 def read_verilog_syntax(line):
     if line.strip() == "endmodule":
@@ -303,4 +301,4 @@ def read_verilog_syntax(line):
 
         return ("GATE", (gtype, nets) )
     
-    raise NameError("No suggestion for \n>{}<\n was found".format(line))
+    raise NameError(f"No suggestion for \n>{line}<\n was found")

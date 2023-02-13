@@ -85,7 +85,7 @@ class Node:
         self.unodes = []
         self.dnodes = []
         self.flagA = None # flag?
-        self.flagB = None
+        self.flagB = None # flag?
 
         # used for PPSF and SPPF 
         # TODO
@@ -137,7 +137,7 @@ class Node:
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
         res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
         if self.C0 and self.C1:
-            res += " C0={:.4f} C1={:.4f} B0={:.4f} B1={:.4f}".format(self.C0, self.C1, self.B0, self.B1)
+            res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
         return res
     
     def imply(self):
@@ -195,13 +195,14 @@ class Node:
         '''
         # TODO: Check this for all possible gates, specially branch
         # TODO: not tested
-        # TODO: optimize: why not append the node itself out of for?
         res = []
+        if inclusive:
+            res.append(self.num)
         if self.dnodes:
             for node in self.dnodes[0].unodes:
-                if self.num == node.num and inclusive:
-                    res.append(node)
-                elif self.num != node.num:
+                # if self.num == node.num and inclusive
+                #     res.append(node)
+                if self.num != node.num:
                     res.append(node)
 
         return [n.value for n in res] if value else res
@@ -295,7 +296,7 @@ class BUFF(Node):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs.add((self.num, not_gate(self.value)))
 
 class NOT(Node):
     """ This gate is yet not tested""" 
@@ -325,7 +326,7 @@ class NOT(Node):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs.add((self.num, not_gate(self.value)))
 
 class OR(Node):
     def __init__(self, n_type, g_type, num):
@@ -359,28 +360,28 @@ class OR(Node):
             try: 
                 unode.B1 = self.B1 * (unode.S - self.C0) / unode.C1
             except ZeroDivisionError:
-                print("Warning (OR.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (OR.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C0)), end="\t")
+                print(f"|ne|={len(ne_C0)}", end="\t")
                 if 0 in ne_C0:
                     raise ValueError("Error (OR.stafan_b): unresolved issue")
                 unode.B1 = self.B1
                 for x in ne_C0:
                     unode.B1 *= x
-                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+                print(f" ==> B1 ~ {unode.B1:.2e}")
                 
             try:
                 unode.B0 = self.B0 * self.C0 / unode.C0
             except ZeroDivisionError:
-                print("Warning (OR.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (OR.stafan_b): C0=0 for node {unode.num}", end="\t")
                 ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C0)), end="\t")
+                print(f"|ne|={len(ne_C0)}", end="\t")
                 if 0 in ne_C0:
                     raise ValueError("Error (OR.stafan_b): unresolved issue")
                 unode.B0 = self.B0
                 for x in ne_C0:
                     unode.B0 *= x
-                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
+                print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
     def dfs(self):
         self.faultlist_dfs.clear()
@@ -421,28 +422,28 @@ class NOR(Node):
             try:
                 unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
             except ZeroDivisionError:
-                print("Warning (NOR.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (NOR.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C0)), end="\t")
+                print(f"|ne|={len(ne_C0)}", end="\t")
                 if 0 in ne_C0:
                     raise ValueError("Error (NOR.stafan_b): unresolved issue")
                 unode.B1 = self.B0 
                 for x in ne_C0:
                     unode.B1 *= x
-                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+                print(f" ==> B1 ~ {unode.B1:.2e}")
 
             try:
                 unode.B0 = self.B1 * self.C1 / unode.C0
             except ZeroDivisionError:
-                print("Warning (NOR.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (NOR.stafan_b): C0=0 for node {unode.num}", end="\t")
                 ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C0)), end="\t")
+                print("|ne|={len(ne_C0)}", end="\t")
                 if 0 in ne_C0:
                     raise ValueError("Error (NOR.stafan_b): unresolved issue")
                 unode.B0 = self.B1
                 for x in ne_C0:
                     unode.B0 *= x
-                print(" ==> B0 ~ {:.2e}".format(unode.B0))
+                print(f" ==> B0 ~ {unode.B0:.2e}")
 
     def dfs(self):
         # the controling value of NOR is 1
@@ -481,27 +482,27 @@ class AND(Node):
             try:
                 unode.B1 = self.B1 * self.C1 / unode.C1
             except ZeroDivisionError:
-                print("Warning (AND.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (AND.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C1)), end="\t")
+                print(f"|ne|={len(ne_C1)}", end="\t")
                 if 0 in ne_C1:
                     raise ValueError("Error (AND.stafan_b): unresolved issue")
                 unode.B1 = self.B1
                 for x in ne_C1:
                     unode.B1 *= x 
-                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+                print(f" ==> B1 ~ {unode.B1:.2e}")
             try:
                 unode.B0 = self.B0 * (unode.S - self.C1) / unode.C0
             except ZeroDivisionError:
-                print("Warning (AND.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (AND.stafan_b): C0=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C1)), end="\t")
+                print(f"|ne|={len(ne_C1)}", end="\t")
                 if 0 in ne_C1:
                     raise ValueError("Error (NAND.stafan_b): unresolved issue")
                 unode.B0 = self.B0
                 for x in ne_C1:
                     unode.B0 *= x 
-                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
+                print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
     def dfs(self):
         # the controling value of AND is 0
@@ -543,27 +544,27 @@ class NAND(Node):
             try: 
                 unode.B1 = self.B0 * self.C0 / unode.C1
             except ZeroDivisionError:
-                print("Warning (NAND.stafan_b): C1=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (NAND.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C1)), end="\t")
+                print(f"|ne|={len(ne_C1)}", end="\t")
                 if 0 in ne_C1:
                     raise ValueError("Error (NAND.stafan_b): unresolved issue")
                 unode.B1 = self.B0
                 for x in ne_C1:
                     unode.B1 *= x 
-                print(" ==> B1 ~ {:.2e}".format(unode.B1))
+                print(f" ==> B1 ~ {unode.B1:.2e}")
             try:
                 unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
             except ZeroDivisionError:
-                print("Warning (NAND.stafan_b): C0=0 for node {}".format(unode.num), end="\t")
+                print(f"Warning (NAND.stafan_b): C0=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
-                print("|ne|={}".format(len(ne_C1)), end="\t")
+                print(f"|ne|={len(ne_C1)}", end="\t")
                 if 0 in ne_C1:
                     raise ValueError("Error (NAND.stafan_b): unresolved issue")
                 unode.B0 = self.B1
                 for x in ne_C1:
                     unode.B0 *= x 
-                print(" ==> node.B0 ~ {:.2e}".format(unode.B0))
+                print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
     def dfs(self):
         # the controling value of NAND is 0
@@ -573,7 +574,7 @@ class NAND(Node):
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0
+        self.c_flag = 0 # what is this?
 
     def imply(self):
         try:
@@ -619,13 +620,13 @@ class XOR(Node):
         xor_FL_set = set()
         for unode in self.unodes:
             xor_FL_set = xor_FL_set.symmetric_difference(unode.faultlist_dfs)
-        xor_FL_set.add((self.num, GNOT(self.value)))
+        xor_FL_set.add((self.num, not_gate(self.value)))
         self.faultlist_dfs = xor_FL_set
 
 class XNOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0
+        self.c_flag = 0 # what is this?
 
     def imply(self):
         self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
@@ -669,7 +670,7 @@ class XNOR(Node):
         xnor_FL_set = set()
         for unode in self.unodes:
             xnor_FL_set = xnor_FL_set.symmetric_difference(unode.faultlist_dfs)
-        xnor_FL_set.add((self.num, GNOT(self.value)))
+        xnor_FL_set.add((self.num, not_gate(self.value)))
         self.faultlist_dfs = xnor_FL_set
 
 class IPT(Node):
@@ -697,7 +698,7 @@ class IPT(Node):
 
     def dfs(self):
         self.faultlist_dfs.clear()
-        self.faultlist_dfs.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs.add((self.num, not_gate(self.value)))
 
 class BRCH(Node):
     def __init__(self, n_type, g_type, num):
@@ -717,7 +718,7 @@ class BRCH(Node):
         self.CC1 = self.unodes[0].CC1
 
     def eval_CO(self): 
-        # CO measurement for a stem is done by it's branches
+        # CO measurement for a stem is done by its branches
         # This causes redundant computation, but OK! 
         self.unodes[0].CO = min([node.CO for node in self.unodes[0].dnodes])
 
@@ -733,7 +734,7 @@ class BRCH(Node):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, GNOT(self.value)))
+        self.faultlist_dfs.add((self.num, not_gate(self.value)))
 
 def dfs_general(node, c_val):
     """
@@ -770,7 +771,7 @@ def dfs_general(node, c_val):
     # none of the inputs are controlling value
     if flag_c == 0:
         node.faultlist_dfs.clear()
-        nc_FL_set.add((node.num, GNOT(node.value)))
+        nc_FL_set.add((node.num, not_gate(node.value)))
         # print(list(nc_FL_set))
         node.faultlist_dfs = nc_FL_set.copy()
     
@@ -778,13 +779,13 @@ def dfs_general(node, c_val):
     else :
         node.faultlist_dfs.clear()
         node.faultlist_dfs = c_FL_set.difference(nc_FL_set)
-        node.faultlist_dfs.add((node.num, GNOT(node.value)))
+        node.faultlist_dfs.add((node.num, not_gate(node.value)))
     c_FL_set.clear()
     nc_FL_set.clear()
     #TODO: clear this return, if it is correct, document it
     return fault_set
 
-def GNOT(a):
+def not_gate(a):
     '''NOT gate'''
     return 1-a
     # if a == 1:
@@ -867,7 +868,7 @@ class podem_node_5val(): # Change Case - move somewhere else
         val.bit1 = self.bit1 | other.bit1
         val.x = 0
         if self.x == 1:
-            if (other.is_1() == True):
+            if other.is_1() == True:
                 val.x = 0
             else:
                 val.x = 1

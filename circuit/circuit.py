@@ -107,7 +107,7 @@ class Circuit:
                     if None in lev_u:
                         continue
                     elif lev_u == []:
-                        print("Warning! Node {} has zero fanins".format(node.num))
+                        print(f"Warning! Node {node.num} has zero fanins")
                         print(node)
                         print("level of this node is set to zero")
                         node.lev = 0
@@ -197,7 +197,7 @@ class Circuit:
             return 
         
         for node in target_node.unodes:
-            print("added node {} to the queue".format(node.num))
+            print(f"added node {node.num} to the queue")
             queue.append(node)
             
         self.print_fanin_rec(queue, min_level)
@@ -277,7 +277,7 @@ class Circuit:
         for t in tps:
             outfile.write(",".join(str(t)) + "\n")
         outfile.close()
-        print("Generated full test patterns and saved in {}".format(tp_fname))
+        print(f"Generated full test patterns and saved in {tp_fname}")
         
         return tps # better to return file name
 
@@ -441,7 +441,7 @@ class Circuit:
         print(PI_t_order)
         PI_num = [x.num for x in self.PI]
         print(PI_num)
-        print("Logic-Sim validation with {} patterns".format(int((len(lines)-2)/3)))
+        print(f"Logic-Sim validation with {int((len(lines)-2)/3)} patterns")
         if PI_t_order != PI_num:
             print("Error: PI node order does not match! ")
             return False
@@ -538,7 +538,7 @@ class Circuit:
 
         for t in range(num_pattern):
             if tp_gen:
-                b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
+                b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
                 tp = [int(b[j]) for j in range(len(self.PI))]
             else:
                 tp = tps[t]
@@ -636,7 +636,7 @@ class Circuit:
             print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
 
     
-    def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN
+    def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
         if fname == None:
             path = config.STAFAN_DIR+"/"+self.c_name
             if not os.path.exists(path):
@@ -649,13 +649,13 @@ class Circuit:
         outfile = open(fname, "w")
         outfile.write("Node,C0,C1,B0,B1,S\n")
         for node in self.nodes_lev:
-            ss = ["{:e}".format(x) for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
+            ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
             outfile.write(",".join([node.num] + ss) + "\n")
         outfile.close()
         print(f"Saved circuit STAFAN TMs in {fname}")
 
     
-    def load_TMs(self, fname):
+    def load_TMs(self, fname): # change name
         lines = open(fname).readlines()[1:]
         for line in lines:
             words = line.strip().split(",")
@@ -784,7 +784,7 @@ class Circuit:
 
         for i in range(total_pattern):
             #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = ('{:0%db}'%inputnum).format(i)
+            b = (f'{i:0%db}'%inputnum)
             list_to_pfs = []
             for j in range(inputnum):
                 list_to_pfs.append(int(b[j]))
@@ -801,7 +801,7 @@ class Circuit:
 
             fault_dict.update({b: fault})
 
-        fault_dict_result = open("../fault_dic/{}.fd".format(self.c_name), "w")
+        fault_dict_result = open(f"../fault_dic/{self.c_name}.fd", "w")
         for i in range(len(self.input_num_list)):
             if (i<len(self.input_num_list)-1):
                 fault_dict_result.write('%d->' % self.input_num_list[i])
@@ -813,7 +813,7 @@ class Circuit:
         fault_dict_result.write('tps\t\t\tdetected_faults\n')
         for i in range(total_pattern):
             #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = ('{:0%db}'%inputnum).format(i)
+            b = (f'{i:0%db}'%inputnum)
             fault_dict_result.write('%s\t\t\t\t' % b)
             for i in range(len(fault_dict.get(b))):
                 fault_dict_result.write('%-5s ' % fault_dict.get(b)[i])#format ok?
@@ -833,7 +833,7 @@ class Circuit:
 
         for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
             #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = ('{:0%db}'%len(self.PI)).format(i)
+            b = (f'{i:0%db}'%len(self.PI))
             list_to_pfs = []
             for j in range(len(self.PI)):
                 list_to_pfs.append(int(b[j]))
@@ -848,7 +848,7 @@ class Circuit:
             fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
             fault_dict.update({b: fault})
 
-        with open ("../fault_dic/{}_{}.fd".format(self.c_name, idx), "w") as fo:
+        with open (f"../fault_dic/{self.c_name}_{idx}.fd", "w") as fo:
             for i in range(len(self.PI)):
                 if (i < len(self.PI) - 1):
                     fo.write('%d->' % self.input_num_list[i])
@@ -858,17 +858,17 @@ class Circuit:
             fo.write('\n')
             fo.write('tps\t\t\tdetected_faults\n')
             for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-                b = ('{:0%db}'%len(self.PI)).format(i)
+                b = (f'{i:0%db}'%len(self.PI))
                 fo.write('%s\t\t\t\t' % b)
                 for i in range(len(fault_dict.get(b))):
                     fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
                 fo.write('\n')
-        print("thread #{} of {} threads finished".format(idx, thread_cnt))
+        print(f"thread #{idx} of {thread_cnt} threads finished")
 
     
     def read_fault_dict(self):
         """read already generated fault dictionary"""
-        fd = open("../fault_dic/{}.fd".format(self.c_name),"r")
+        fd = open(f"../fault_dic/{self.c_name}.fd","r")
         self.fd_data = fd.read()
         fd.close()
 
@@ -933,8 +933,8 @@ class Circuit:
         if target.ntype == "PO":
             return 
         # target becomes stem, create new branches:
-        new_brch = BRCH("PO", "BRCH", target.num+"-IPO") 
-        old_brch = BRCH("FB", "BRCH", target.num+"-OLD")
+        new_brch = node.BRCH("PO", "BRCH", target.num+"-IPO") 
+        old_brch = node.BRCH("FB", "BRCH", target.num+"-OLD")
 
         # fixing unodes for new branches
         new_brch.unodes.append(target)
