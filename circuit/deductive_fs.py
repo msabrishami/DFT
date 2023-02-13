@@ -21,8 +21,6 @@ class DFS(FaultSim):
         # return a fault set
         return fault_set
 
-
-
     def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
         """
         Execute fs in rand or full mode
@@ -31,7 +29,8 @@ class DFS(FaultSim):
         """
 
         if t_mode == 'rand':
-            self.fs_folder(tp_mode='rand', r_mode='b')
+            # self.fs_folder(tp_mode='rand', r_mode='b')
+            self.fs_folder()
             report_fname = self.circuit.c_name + '_' + str(tp_num) + '_dfs_'+ r_mode + '.log'
             # tp_fname = tp_path + self.c_name + '_' + str(tp_num) + "_tp_b.txt"
             tp_fname = self.circuit.c_name + '_' + str(tp_num) + "_tp_b.txt"

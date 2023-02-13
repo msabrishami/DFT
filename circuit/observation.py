@@ -92,7 +92,7 @@ def circuit_deltaHTO(circuit, B_th, ops, args):
         res[node.num] = count
 
     res = {k: v for k,v in sorted(res.items(), key=lambda item: item[1], reverse=True)}
-    # print(res)
+
     return res
 
 def deltaP_2(circuit, op, verbose=False):
@@ -369,5 +369,3 @@ def OPI_old(circuit, alg, count_op, args):
         make_OP(circuit, new_op)
   
     return res
-
-

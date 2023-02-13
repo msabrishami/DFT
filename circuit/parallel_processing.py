@@ -24,6 +24,4 @@ def parallel_processing():
         circuit.get_full_fault_list()
         circuit.gen_fault_dic_multithreading(thread_cnt, idx)
 
-parallel_processing()    
-
-
+parallel_processing()

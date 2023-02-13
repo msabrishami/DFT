@@ -1,6 +1,7 @@
 from circuit import Circuit
 from ppsf import PPSF
 from pfs import PFS
+from deductive_fs import DFS
 
 if __name__ == '__main__':
 
@@ -19,13 +20,13 @@ if __name__ == '__main__':
     #################### PFS Example ####################
    
    # todo: fault drop!!!!!
-    pfs = PFS(circuit)
-    pfs.fault_list.add_all(circuit)
+    # pfs = PFS(circuit)
+    # pfs.fault_list.add_all(circuit)
 
-    tp = 500
+    # tp = 500
     # # tp = '../hello'
     # tp = '../data/patterns/c499_synV1_tp_1000.tp'
-    pfs.fs_exe(tp, fault_drop=0, verbose=True)
+    # pfs.fs_exe(tp, fault_drop=0, verbose=True)
 
     #################### PFS Example ####################
     
@@ -40,9 +41,13 @@ if __name__ == '__main__':
 
     #################### STAFAN_FC Example ####################
     
-    circuit.STAFAN(tp, num_proc=4)
+    # circuit.STAFAN(tp, num_proc=4)
     # tp = 1000
-    fc = circuit.STAFAN_FC(tp)
+    # fc = circuit.STAFAN_FC(tp)
     # print("Fault Coverage=", fc)
     # for n in circuit.nodes_lev:
     #     n.print_info()
+
+    #################### DFS ####################
+    d = DFS(circuit)
+    d.fs_exe()

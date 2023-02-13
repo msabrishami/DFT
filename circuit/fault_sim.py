@@ -17,7 +17,7 @@ class Fault_C (Fault):
         return self.node_num + "@" + self.stuck_val
 
     def __repr__(self):
-        return self.node_num + "@" + self.stuck_val
+        return self.__str__()
 
 
 class FaultList:
@@ -43,7 +43,7 @@ class FaultList:
         for node in circuit.nodes_lev:
             self.add_node(node)
 
-    def add_random(self, circuit, random_num):
+    def add_random(self, circuit, random_num=1):
         idx_random = np.random.choice(len(circuit.nodes_lev), random_num, replace=False)
         for i in range(random_num):
             self.add(circuit.nodes_lev[idx_random[i]].num, 
@@ -125,8 +125,7 @@ class FaultSim:
         for node in self.circuit.nodes_lev:
             self.fault_set_all.add((node.num,0))
             self.fault_set_all.add((node.num,1))
-        self.fault_set_rest = self.fault_set_all
-     
+        self.fault_set_rest = self.fault_set_all # seems redundant
 
     def fs_folder(self):
         """
@@ -147,17 +146,13 @@ class FaultSim:
         """
         raise NotImplementedError()
 
-
     def fs_for_atpg(self):
         """ DFS/PFS for ATPG use """ 
         raise NotImplementedError()
         
-
     def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
         """ Defined in children: DFS, PFS """
         raise NotImplementedError()
 
-
-    def return_rest_fault(self):
-        return self.fault_set_rest
-
+    def return_rest_fault(self): # seems redundant
+        return self.fault_set_rest 

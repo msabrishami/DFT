@@ -89,7 +89,6 @@ class Circuit:
         self.PO = [] # this should be created to have a list of outputs
 
         load_circuit.LoadCircuit(self, netlist_fname)
-       
     
     def lev(self):
         """
