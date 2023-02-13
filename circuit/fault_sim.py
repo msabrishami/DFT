@@ -2,15 +2,14 @@ import config
 import os
 import numpy as np
 
-class Fault:
+# class Fault:
+#     def __init__(self, node_num, stuck_val):
+
+
+class Fault():
     def __init__(self, node_num, stuck_val):
         self.node_num = str(node_num)
         self.stuck_val = str(stuck_val)
-
-
-class Fault_C (Fault):
-    def __init__(self, node_num, stuck_val):
-        super().__init__(node_num, stuck_val)
         self.D_count = 0
 
     def __str__(self):
@@ -27,12 +26,12 @@ class FaultList:
         self.faults = []
 
     def add(self, node_num, stuck_val):
-        self.faults.append(Fault_C(node_num, stuck_val))
+        self.faults.append(Fault(node_num, stuck_val))
 
     def add_str(self, fault_str):
         """ add a fault if the fault format is <node-num>@<stuck value> """ 
         num, val = fault_str.strip().split("@")
-        self.faults.append(Fault_C(num, val))
+        self.faults.append(Fault(num, val))
 
     def add_str_list(self, faults_str_list):
         """ add faults with their string in faults_str_list """

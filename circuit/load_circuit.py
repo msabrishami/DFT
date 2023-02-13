@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+
 import os
 import re
-# from circuit import *
-from node import *
 import config
+
+import node
 
 class LoadCircuit:
     """ Reads a circuit netlist (gate level), 
@@ -67,48 +68,48 @@ class LoadCircuit:
         """ creates a node, does not make any connections, 
         does not modify the PI, PO list of this circuit """
 
-        node = -1
+        new_node = -1
         
         if Dict['n_type'] == "PI" and Dict['g_type'] == "IPT":
-            node = IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
+            new_node = node.IPT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
         elif Dict['n_type'] == "FB" and Dict['g_type'] == "BRCH":
-            node = BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
+            new_node = node.BRCH(Dict['n_type'], Dict['g_type'], Dict['num'])
 
         elif Dict['n_type'] == "GATE" and Dict['g_type'] == "BRCH":
             raise NotImplementedError()
 
         elif Dict['n_type'] == "GATE" or Dict['n_type'] == "PO":
             if Dict['g_type'] == 'XOR':
-                node = XOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.XOR(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'OR':
-                node = OR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.OR(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NOR':
-                node = NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.NOR(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NOT':
-                node = NOT(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.NOT(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'NAND':
-                node = NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.NAND(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'AND':
-                node = AND(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.AND(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'BUFF':
-                node = BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.BUFF(Dict['n_type'], Dict['g_type'], Dict['num'])
 
             elif Dict['g_type'] == 'XNOR':
-                node = XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
+                new_node = node.XNOR(Dict['n_type'], Dict['g_type'], Dict['num'])
         else:
             raise NotImplementedError()
         
-        if node == -1:
+        if new_node == -1:
             import pdb
             pdb.set_trace()
-        return node
+        return new_node
 
 
     def read_verilog(self, circuit, circuit_fname):
