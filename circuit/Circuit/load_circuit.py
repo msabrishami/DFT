@@ -4,7 +4,7 @@ import os
 import re
 import config
 
-import node
+from Node import node
 
 class LoadCircuit:
     """ Read a circuit netlist (gate level), 
@@ -212,8 +212,8 @@ class LoadCircuit:
             # node_info = self.read_node_ckt(circuit, line.strip())
             attr = line.split()
             node_info = dict()
-            node_info["n_type"] = ntype(int(attr[0])).name
-            node_info["g_type"] = gtype(int(attr[2])).name
+            node_info["n_type"] = node.ntype(int(attr[0])).name
+            node_info["g_type"] = node.gtype(int(attr[2])).name
             node_info["num"] = attr[1]
             new_node = self.gen_node(node_info)
             # new_node.ntype = n_type

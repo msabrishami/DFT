@@ -3,6 +3,7 @@
 import pdb
 import math 
 import sys
+import operator
 from enum import Enum
 from functools import reduce
 
@@ -15,7 +16,7 @@ from functools import reduce
 
 """ helper function
 returns multiplication of values in a list"""
-mul_list = lambda arr: reduce(lambda a,b: a*b, arr, 1) # faster / move it to utils
+mul_list = lambda arr: reduce(operator.mul, arr, 1) # faster / move it to utils
 # def mul_list(arr):
 #     res = 1
 #     for a in arr:

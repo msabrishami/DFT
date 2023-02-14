@@ -1,14 +1,15 @@
 
 import config
 import pdb
-import utils
-import numpy as np
 import os
+import numpy as np
 import pandas as pd
-import config as cfg
+
+import utils
 import experiments as exp
-from pfs import PFS
-from fault_sim import FaultList
+
+from FaultSimulation.pfs import PFS
+from FaultSimulation.fault import FaultList
 
 def fault_stat(circuit, HTO_th, HTC_th):
     """ categorizes all the nodes in the circuit based on obs and ctrl

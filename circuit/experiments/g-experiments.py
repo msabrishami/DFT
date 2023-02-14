@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import enum
-import utils
-import config
 import argparse
 import math
 import os
+import re
+import pdb
+
+import scipy.stats
 import matplotlib.pyplot as plt
 import seaborn as sns
-import re
 import numpy as np
 import pandas as pd
-from circuit import Circuit
-from pfs import PFS
+
+import sys
+sys.path.append('../')
+import config
+import utils
 import observation as obsv
-import pdb
-import scipy.stats
+from Circuit.circuit import Circuit
+from FaultSimulation.pfs import PFS
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']

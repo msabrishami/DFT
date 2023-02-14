@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from circuit import Circuit
+from Circuit.circuit import Circuit
 import argparse
 """
 When MT.cpp passes "circuit_name -1 -1" to this function, it returns the input_cnt of the circuit.

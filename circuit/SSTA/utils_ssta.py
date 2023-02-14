@@ -1,10 +1,11 @@
 
-import numpy as np
 import config
-import matplotlib.pyplot as plt
 import pdb
 import sys
 import math
+
+import numpy as np
+import matplotlib.pyplot as plt
 from multiprocessing import Process, Pipe
 
 

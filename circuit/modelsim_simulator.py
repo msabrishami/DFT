@@ -1,7 +1,7 @@
 
 import os
 import subprocess
-import circuit
+import Circuit.circuit
 import config
 from shutil import copyfile
 

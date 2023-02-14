@@ -2,6 +2,8 @@
 import re
 import config
 import os
+
+# change these
 from circuit import *
 from modelsim_simulator import *
 from load_circuit import *

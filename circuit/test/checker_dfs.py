@@ -1,7 +1,9 @@
 import xlrd
 import os
 from itertools import groupby
-from circuit import *
+
+# change this
+from Circuit.circuit import *
 
 def FD_excel_extractor(c_name):
     # output golden file

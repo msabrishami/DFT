@@ -1,30 +1,32 @@
 # -*- coding: utf-8 -*-
 
 import os
-from multiprocessing import Process, Pipe
 import argparse
 import pandas as pd
 import networkx as nx
 import math
 import time
-import numpy as np
 import copy
-import matplotlib.pyplot as plt
-import seaborn as sns
 import re
 import sys
 import pdb
 
-from circuit import Circuit
+from multiprocessing import Process, Pipe
+
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 import utils
-import convert
-import experiments as exp
 import config as cfg
-from fault_sim import FaultList
-from ppsf import PPSF
-from pfs import PFS
-from load_circuit import LoadCircuit
+import experiments.experiments as exp
 import observation
+from Circuit.circuit import Circuit
+from FaultSimulation.fault import FaultList
+from FaultSimulation.ppsf import PPSF
+from FaultSimulation.pfs import PFS
+from Circuit.load_circuit import LoadCircuit
+from Circuit import convert
 
 sys.path.insert(1, "../data/netlist_behavioral")
 
@@ -150,7 +152,7 @@ if __name__ == '__main__':
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, fault_drop=1, verbose=True)
+        pfs.fs_exe(tps=tp_fname, fault_drop=1, verbose=True)
 
 
     elif args.func == "ppsf":
@@ -225,7 +227,7 @@ if __name__ == '__main__':
         log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tp_fname=tp_fname, log_fname=log_fname, fault_drop=1)
+        pfs.fs_exe(tps=tp_fname, fault_drop=1)
     
 
     elif args.func == "tpfc-fig":

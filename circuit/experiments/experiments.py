@@ -1,23 +1,27 @@
 
 import os 
+import time
+import pdb
+
 import numpy as np
 from bisect import bisect 
 from multiprocessing import Process, Pipe
-import time
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from circuit import Circuit
-import observation as obsv
-from random import randint
-from load_circuit import LoadCircuit
-from pfs import PFS
-from ppsf import PPSF 
-from fault_sim import FaultList
+import sys
+sys.path.append('../')
+
 import config as cfg
 import utils
+import observation as obsv
+from random import randint
+from Circuit.circuit import Circuit
+from Circuit.load_circuit import LoadCircuit
+from FaultSimulation.pfs import PFS
+from FaultSimulation.ppsf import PPSF 
+from FaultSimulation.fault import FaultList
 
-import pdb
 
 def check_c432_logicsim(circuit, tp=1, mode="ckt"):
     """ ckt and verilog files in all ISCAS valid circuits differ by "N"
@@ -58,7 +62,7 @@ def exp_check_verilog_modelsim():
         circuit = Circuit(ckt)
         LoadCircuit(circuit, "v")
         circuit.lev()
-        path = "../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
+        path = "../../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
         circuit.golden_test(path)
 
 def exp_check_c432_behavioral(mode="ckt", tp=100, ):
@@ -84,7 +88,7 @@ def check_pfs_vs_ppsf(circuit, args):
  
     pfs = PFS(circuit)
     pfs.fault_list.add_all(circuit)
-    pfs.fs_exe(tp_fname=tp_fname)
+    pfs.fs_exe(tps=tp_fname)
  
     ppsf = PPSF(circuit)
     ppsf.fault_list.add_all(circuit)

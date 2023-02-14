@@ -6,10 +6,11 @@ import os
 import re
 import sys
 import subprocess
+
 sys.path.insert(1, config.LIB_CELLS_PATH)
 import library_cells
 
-from load_circuit import read_verilog_syntax
+from Circuit.load_circuit import read_verilog_syntax
 
 class Converter:
     def __init__(self, ckt, verilog_format):
@@ -264,16 +265,8 @@ def read_verilog_lines(path):
     infile.close()
     return new_lines
 
-
-
-
-
-
-
 if __name__ == "__main__":
     verilog_path = "../data/EPFL/arbiter_syn.v"
     opi_path = "../data/arbiter_opi_60.txt"
     out_path = "../data/arbiter_opi_60_ready.txt"
     convert_opi_gate2node(verilog_path, opi_path, out_path)
-
-

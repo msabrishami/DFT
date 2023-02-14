@@ -5,19 +5,19 @@ import re
 import os 
 import random
 import time
-import pdb
 import sys
-import matplotlib.pyplot as plt
+import pdb
 
-from itertools import cycle
 from enum import Enum
+from itertools import cycle
 from collections import deque
 from multiprocessing import Process, Pipe
+import matplotlib.pyplot as plt
 
 import utils
 import config
-import load_circuit
-import node
+from Circuit import load_circuit
+from Node import node
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
@@ -538,7 +538,8 @@ class Circuit:
 
         for t in range(num_pattern):
             if tp_gen:
-                b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
+                # b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
+                b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
                 tp = [int(b[j]) for j in range(len(self.PI))]
             else:
                 tp = tps[t]
@@ -783,8 +784,8 @@ class Circuit:
         total_pattern = pow(2,inputnum) # produce 2^n different input files for pfs to use
 
         for i in range(total_pattern):
-            #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = (f'{i:0%db}'%inputnum)
+            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+            # b = (f'{i:0%db}'%inputnum)
             list_to_pfs = []
             for j in range(inputnum):
                 list_to_pfs.append(int(b[j]))
@@ -812,8 +813,8 @@ class Circuit:
         fault_dict_result.write('\n')
         fault_dict_result.write('tps\t\t\tdetected_faults\n')
         for i in range(total_pattern):
-            #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = (f'{i:0%db}'%inputnum)
+            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+            # b = (f'{i:0%db}'%inputnum)
             fault_dict_result.write('%s\t\t\t\t' % b)
             for i in range(len(fault_dict.get(b))):
                 fault_dict_result.write('%-5s ' % fault_dict.get(b)[i])#format ok?
@@ -832,8 +833,8 @@ class Circuit:
         pattern_per_thread = int(total_pattern / thread_cnt)
 
         for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-            #print ('{:05b}'.format(i))#str type output #Suit different input numbers!!!!
-            b = (f'{i:0%db}'%len(self.PI))
+            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+            # b = (f'{i:0%db}'%len(self.PI))
             list_to_pfs = []
             for j in range(len(self.PI)):
                 list_to_pfs.append(int(b[j]))

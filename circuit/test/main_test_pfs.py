@@ -8,13 +8,15 @@ import math
 import time
 from random import randint
 
-from circuit import Circuit
+from Circuit.circuit import Circuit
 from modelsim_simulator import Modelsim
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")
 from c432_logic_sim import c432_sim
 import config
+
+# change these
 from checker_logicsim import *
 from regular_tp_gen import *
 from checker_dfs import *

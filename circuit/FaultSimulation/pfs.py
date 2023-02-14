@@ -1,12 +1,12 @@
 
+import pdb
 import sys
+
 import math
 import os
 
-from fault_sim import FaultSim
 import config
-import pdb
-
+from FaultSimulation.simulation import FaultSim
 
 class PFS(FaultSim):
     """ 
@@ -50,10 +50,10 @@ class PFS(FaultSim):
 
             if fault_drop:    
                 ptr1 = ptr0
-                while(len(faults_pass) < self.wordlen-1 and \
-                        ptr1 != len(self.fault_list.faults)):
+                while len(faults_pass) < self.wordlen-1 and \
+                        ptr1 != len(self.fault_list.faults) :
                     fault = self.fault_list.faults[ptr1]
-                    if (fault.D_count < fault_drop):
+                    if fault.D_count < fault_drop:
                         faults_pass.append(fault)
                         faults_pass_idx.append(ptr1)
                     ptr1 += 1

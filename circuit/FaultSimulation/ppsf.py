@@ -6,8 +6,8 @@ import time
 from multiprocessing import Process, Pipe
 import os
 
-from node import Node
-from fault_sim import FaultSim
+# from fault_sim import FaultSim
+from FaultSimulation.simulation import FaultSim
 import config
 import pdb
 
@@ -46,6 +46,7 @@ class PPSF(FaultSim):
         -------
         res_fixed : set of the index of tps that could detect the given fault
         """
+        #TODO: Add verbose
         if len(tps) > self.wordlen:
             print("Error: number of tps should be wordlen")
             return None
@@ -78,7 +79,7 @@ class PPSF(FaultSim):
         if isinstance(tps, int):
             tps = self.circuit.gen_multiple_tp(tps)
         elif isinstance(tps, str):
-            if os.path.exists(str):
+            if os.path.exists(tps):
                 tps = self.circuit.load_tp_file(tps)
             else:
                 raise "path not exist."

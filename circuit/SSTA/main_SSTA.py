@@ -7,11 +7,11 @@ import pdb
 import math
 import time
 from random import randint
-from circuit import Circuit
+from Circuit.circuit import Circuit
 import sys
 import config
 import utils
-from load_circuit import LoadCircuit
+from Circuit.load_circuit import LoadCircuit
 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist

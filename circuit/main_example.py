@@ -1,12 +1,12 @@
-from circuit import Circuit
-from ppsf import PPSF
-from pfs import PFS
+from Circuit import circuit
+from FaultSimulation.ppsf import PPSF
+from FaultSimulation.pfs import PFS
 
 if __name__ == '__main__':
 
     circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
 
-    circuit = Circuit(circuit_path)
+    circuit = circuit.Circuit(circuit_path)
     circuit.lev()
 
     print(f"circuit {circuit.c_name} is read and levelized.")
@@ -22,10 +22,10 @@ if __name__ == '__main__':
     pfs = PFS(circuit)
     pfs.fault_list.add_all(circuit)
 
-    tp = 500
+    # tp = 500
     # tp = '../hello'
-    # tp = '../data/patterns/c432_synV1_tp_1000.tp'
-    pfs.fs_exe(tp, fault_drop=0, verbose=True)
+    tp = '../data/patterns/c432_synV1_tp_1000.tp'
+    pfs.fs_exe(tp, fault_drop=2, verbose=True)
 
     #################### PFS Example ####################
     
@@ -40,9 +40,9 @@ if __name__ == '__main__':
 
     #################### STAFAN_FC Example ####################
     
-    # circuit.STAFAN(tp, num_proc=4)
-    # tp = 1000
-    # fc = circuit.STAFAN_FC(tp)
-    # print("Fault Coverage=", fc)
+    tp = 1000
+    circuit.STAFAN(tp, num_proc=4)
+    fc = circuit.STAFAN_FC(tp)
+    print("Fault Coverage=", fc)
     # for n in circuit.nodes_lev:
     #     n.print_info()

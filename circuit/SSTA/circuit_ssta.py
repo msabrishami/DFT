@@ -2,7 +2,7 @@
 ####################################
 ########## NOT TESTED AT ALL 
 ####################################
-from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
+from SSTA.distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 
 class Circuit_SSTA(Circuit):
