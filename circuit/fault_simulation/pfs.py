@@ -6,7 +6,7 @@ import math
 import os
 
 import config
-from FaultSimulation.simulation import FaultSim
+from fault_simulation.simulation import FaultSim
 
 class PFS(FaultSim):
     """ 

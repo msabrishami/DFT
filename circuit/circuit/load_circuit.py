@@ -4,7 +4,7 @@ import os
 import re
 import config
 
-from Node import node
+from node import node
 
 class LoadCircuit:
     """ Read a circuit netlist (gate level), 

@@ -1,4 +1,4 @@
-from circuit import Circuit
+from circuit.circuit import Circuit
 from classdef import podem_node_5val
 from podem import podem
 import copy

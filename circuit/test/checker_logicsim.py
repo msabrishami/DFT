@@ -4,9 +4,9 @@ import config
 import os
 
 # change these
-from circuit import *
+from circuit.circuit import *
 from modelsim_simulator import *
-from load_circuit import *
+from circuit.load_circuit import *
 
 class Checker():
     def __init__(self, c_name, tp_count):

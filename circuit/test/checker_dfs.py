@@ -3,7 +3,7 @@ import os
 from itertools import groupby
 
 # change this
-from Circuit.circuit import *
+from circuit.circuit import *
 
 def FD_excel_extractor(c_name):
     # output golden file

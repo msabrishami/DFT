@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 
 import utils
 import config
-from Circuit import load_circuit
-from Node import node
+from circuit import load_circuit
+from node import node
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 

@@ -8,7 +8,7 @@ import math
 import time
 from random import randint
 
-from Circuit.circuit import Circuit
+from circuit.circuit import Circuit
 from modelsim_simulator import Modelsim
 
 import sys

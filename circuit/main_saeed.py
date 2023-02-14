@@ -21,12 +21,12 @@ import utils
 import config as cfg
 import experiments.experiments as exp
 import observation
-from Circuit.circuit import Circuit
-from FaultSimulation.fault import FaultList
-from FaultSimulation.ppsf import PPSF
-from FaultSimulation.pfs import PFS
-from Circuit.load_circuit import LoadCircuit
-from Circuit import convert
+from fault_simulation.fault import FaultList
+from fault_simulation.ppsf import PPSF
+from fault_simulation.pfs import PFS
+from circuit import convert
+from circuit.load_circuit import LoadCircuit
+from circuit.circuit import Circuit
 
 sys.path.insert(1, "../data/netlist_behavioral")
 

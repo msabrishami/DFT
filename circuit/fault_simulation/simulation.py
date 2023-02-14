@@ -4,7 +4,7 @@ import numpy as np
 import sys
 
 import config
-from FaultSimulation import fault
+from fault_simulation import fault
 
 class FaultSim:
     

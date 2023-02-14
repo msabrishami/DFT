@@ -16,11 +16,11 @@ import config as cfg
 import utils
 import observation as obsv
 from random import randint
-from Circuit.circuit import Circuit
-from Circuit.load_circuit import LoadCircuit
-from FaultSimulation.pfs import PFS
-from FaultSimulation.ppsf import PPSF 
-from FaultSimulation.fault import FaultList
+from circuit.circuit import Circuit
+from circuit.load_circuit import LoadCircuit
+from fault_simulation.pfs import PFS
+from fault_simulation.ppsf import PPSF 
+from fault_simulation.fault import FaultList
 
 
 def check_c432_logicsim(circuit, tp=1, mode="ckt"):

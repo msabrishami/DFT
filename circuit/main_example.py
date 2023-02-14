@@ -1,6 +1,6 @@
-from Circuit import circuit
-from FaultSimulation.ppsf import PPSF
-from FaultSimulation.pfs import PFS
+from circuit import circuit
+from fault_simulation.ppsf import PPSF
+from fault_simulation.pfs import PFS
 
 if __name__ == '__main__':
 

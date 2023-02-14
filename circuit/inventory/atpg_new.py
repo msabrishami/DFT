@@ -2,9 +2,9 @@
 from d_alg import *
 from podem_new import *
 from parallel_fs import *
-from deductive_fs import *
+from faul_simuation import deductive_fs
 from collections import deque
-from circuit import Circuit
+from circuit.circuit import Circuit
 
 import time
 import os, sys

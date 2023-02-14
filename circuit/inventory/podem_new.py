@@ -1,7 +1,7 @@
 
 import functools
 import operator
-from node import *
+from node.node import *
 from random import randint
 import random
 
