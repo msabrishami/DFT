@@ -27,7 +27,6 @@ from fault_simulation.fault import FaultList
 from fault_simulation.ppsf import PPSF
 from fault_simulation.pfs import PFS
 from circuit import convert
-from circuit.load_circuit import LoadCircuit
 from circuit.circuit import Circuit
 
 sys.path.insert(1, "../data/netlist_behavioral")

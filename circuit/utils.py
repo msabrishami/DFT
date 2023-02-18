@@ -1,14 +1,20 @@
 
-import numpy as np
-import matplotlib.pyplot as plt
 import pdb
+import os
 import sys
 import math
+import operator
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from multiprocessing import Process, Pipe
 from collections import deque
-import os
+from functools import reduce
 
-import config as cfg
+mul_list = lambda arr: reduce(operator.mul, arr, 1)
+
+not_gate = lambda a: 1-a
 
 def ckt_type(cname):
     print("FIX ME LATER -- CKT TYPE AUTOMATIC DETECTION")

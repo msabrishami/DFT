@@ -6,7 +6,7 @@ import config
 
 from node import node
 
-class LoadCircuit:
+class CircuitLoader:
     """ Read a circuit netlist (gate level), 
     currently support .ckt (refer to USC EE658) and .v (Verilog) 
     """

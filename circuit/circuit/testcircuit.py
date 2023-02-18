@@ -15,7 +15,7 @@ from multiprocessing import Process, Pipe
 
 import utils
 import config
-from circuit import load_circuit, circuit
+from circuit import circuit
 from node import testnode
 
 #TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
@@ -44,9 +44,8 @@ from node import testnode
 
 
 class TestCircuit(circuit.Circuit):
-    """ Representing a digital logic circuit, capable of doing logic simulation, 
-        test related operations such as fault simulation, ATPG, OPI, testability 
-        measurements, SSTA, etc. 
+    """ 
+        An extended version of Circuit(), which is capable of SCOAP, STAFAN, PPSF, PFS
 
         Attributes
         ---------
@@ -70,14 +69,6 @@ class TestCircuit(circuit.Circuit):
                     'IPT':testnode.TestIPT}
 
     def __init__(self, netlist_fname):
-        """ 
-        Parameters
-        ----------
-        c_fname : str
-            the name of the circuit with path and format
-        c_name : str
-            the full name of the circuit without path and format 
-        """
         super().__init__(netlist_fname, TestCircuit.STD_NODE_LIB)
     
     def SCOAP_CC(self):
@@ -201,7 +192,6 @@ class TestCircuit(circuit.Circuit):
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-
     def STAFAN(self, total_tp, num_proc=1, verbose=False):
         """ 
         Calculating STAFAN controllability and observability in parallel. 
@@ -255,7 +245,6 @@ class TestCircuit(circuit.Circuit):
         duration = end_time - start_time
         if verbose:
             print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
-
     
     def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
         if fname == None:
@@ -275,7 +264,6 @@ class TestCircuit(circuit.Circuit):
         outfile.close()
         print(f"Saved circuit STAFAN TMs in {fname}")
 
-    
     def load_TMs(self, fname): # change name
         lines = open(fname).readlines()[1:]
         for line in lines:
@@ -318,7 +306,6 @@ class TestCircuit(circuit.Circuit):
         for node in self.nodes_lev:
             node.print_info(print_labels=False)
 
-
     def CALC_TPI(self, num_TPI, fname):
         TPI_list = [] #list of node entropy 
         for node in self.nodes_lev:
@@ -337,7 +324,6 @@ class TestCircuit(circuit.Circuit):
         for item in TPI_list: 
             outfile.write(item[0] + "\n")
         outfile.close()
-        
 
     def TPI_stat(self, HTO_th, HTC_th):
         """ Categorization of nodes based on STAFAN's measurement into 4 groups:
@@ -364,7 +350,6 @@ class TestCircuit(circuit.Circuit):
                 node.stat["SS@0"] = "HTO"
             else:
                 node.stat["SS@0"] = "HTD"
-
     
     def NVIDIA_count(self, op, HTO_th, HTC_th):
         """ count the number of nodes that change from HTO to ETO 

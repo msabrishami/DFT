@@ -1,134 +1,82 @@
-# ---> methods that appears here must be removed from node.py
-
 # -*- coding: utf-8 -*-
 
 import pdb
 import math 
 import sys
-import operator
 from enum import Enum
-from functools import reduce
-import node.node as basenode
+from abc import ABC, abstractmethod
+
+sys.path.insert(0,'..')
+import utils
+import node.node as node
 
 # We are using GNOT, etc. as we may later use X values
-""" helper function
-returns multiplication of values in a list"""
+class TestNode(ABC):
+    """For now, it is designed for STAFAN, SCOAP, PFS and PPSF"""
+    def __init__(self):
+        # used for PPSF and SPPF 
+        bitlen = int(math.log2(sys.maxsize))+1
+        self.bitwise_not = 2**bitlen-1
 
-mul_list = lambda arr: reduce(operator.mul, arr, 1) # faster / move it to utils
+        # PFS:
+        self.pfs_V = None   # PFS value
+        self.pfs_I = None   # PFS mask
+        #self.pfs_S = None  # stuck values of fault for each pass
 
-class five_value(Enum): # what are these?
-   ZERO = 0
-   ONE = 15
-   D = 12
-   D_BAR = 3
-   X = 9
+        # Saeed does not confirm
+        self.faultlist_dfs = set() # will be aset
 
-class gtype(Enum):
-    IPT = 0
-    BRCH = 1
-    XOR = 2
-    OR = 3
-    NOR = 4
-    NOT = 5
-    NAND = 6
-    AND = 7
-    XNOR = 8
-    BUFF = 9
+        # SCOAP measures
+        self.CC0 = None
+        self.CC1 = None
+        self.CO = None
 
-class ntype(Enum):
-    GATE = 0
-    PI = 1
-    FB = 2
-    PO = 3
-
-# class TestNode(basenode.Node):
-#     """ #TODO: complete
-#     Extended version of Node, containing testing attributes and methods.
-#         1- STAFAN
-#         2- SCOAP
-#     """
-
-#     def __init__(self, n_type, g_type, num):
+        # STAFAN for all test measures
+        self.one_count = 0      # count
+        self.zero_count = 0     # count
+        self.sen_count = 0      # count
         
-#         super.__init__(self, n_type, gtype, num)
-#         # used for PPSF and SPPF 
-#         # print("I WAS CALLED")
-#         bitlen = int(math.log2(sys.maxsize))+1
-#         self.bitwise_not = 2**bitlen-1
+        # STAFAN Forward for every test measure
+        self.sense = False      # Boolean, maybe redundant
 
-#         # PFS:
-#         self.pfs_V = None   # PFS value
-#         self.pfs_I = None   # PFS mask
-#         #self.pfs_S = None  # stuck values of fault for each pass
+        # STAFAN 
+        self.S = None           # prob
+        self.C1 = None          # prob
+        self.C0 = None          # prob
+        self.B1 = None          # prob
+        self.B0 = None          # prob
+        self.D0 = None          # prob
+        self.D1 = None          # prob
 
-#         # Saeed does not confirm
-#         self.faultlist_dfs = set() # will be aset
+        #Entropy
+        self.Entropy =None      #entropy of the node
 
-#         # SCOAP measures
-#         self.CC0 = None
-#         self.CC1 = None
-#         self.CO = None
-
-#         # STAFAN for all test measures
-#         self.one_count = 0      # count
-#         self.zero_count = 0     # count
-#         self.sen_count = 0      # count
-        
-#         # STAFAN Forward for every test measure
-#         self.sense = False      # Boolean, maybe redundant
-
-#         # STAFAN 
-#         self.S = None           # prob
-#         self.C1 = None          # prob
-#         self.C0 = None          # prob
-#         self.B1 = None          # prob
-#         self.B0 = None          # prob
-#         self.D0 = None          # prob
-#         self.D1 = None          # prob
-
-#         #Entropy
-#         self.Entropy =None      #entropy of the node
-
-#         # Test Point Insertion Measurements
-#         self.stat = {}
-        
-#         # SSTA Project
-#         self.dd_cell = None
-#         self.dd_node = None
+        # Test Point Insertion Measurements
+        self.stat = {}
     
-    def imply_p(self, bitwise_not):
-        ''' forward parallel implication for a logic gate ''' 
-        raise NotImplementedError()
-
-    def insert_f(self, bitwise_not, pfs_S):
-        """ insert a fault for pdf in this node """ 
-        pfs_I_bar = self.pfs_I ^ bitwise_not
-        self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
-
+    @abstractmethod
     def eval_CC(self):
         ''' forward assignment of SCOAP-CC for this node based on unodes''' 
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        pass
     
+    @abstractmethod
     def eval_CO(self):
         ''' backward assignment of SCOAP-CO for unodes of this node''' 
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        pass
     
+    @abstractmethod
     def stafan_b(self):
         ''' backward assignment of STAFAN observability for unodes of this node''' 
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        pass
 
-    def dfs(self):
-        ''' deductive fault simulation (dfs) using unodes ''' 
-        raise NotImplementedError()
-
-
-class TestBUFF(basenode.BUFF):
+class TestBUFF(node.BUFF, TestNode):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-
-    def imply_b(self):
-        self.value = self.unodes[0].value
+        node.BUFF.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -143,22 +91,12 @@ class TestBUFF(basenode.BUFF):
     def stafan_b(self):
         self.unodes[0].B1 = self.B1
         self.unodes[0].B0 = self.B0
-    
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, not_gate(self.value)))
 
-class TestNOT(basenode.NOT):
+class TestNOT(node.NOT, TestNode):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
-        # print('I was called')
-        super().__init__(n_type, g_type, num)
-        # super(TestNode, self).__init__(n_type, g_type, num)
-        # super(basenode.NOT, self).__init__(n_type, g_type, num)
-
-    def imply_b(self):
-        self.value = self.unodes[0].value ^ self.bitwise_not  
+        node.NOT.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
@@ -174,21 +112,10 @@ class TestNOT(basenode.NOT):
         self.unodes[0].B1 = self.B0
         self.unodes[0].B0 = self.B1
 
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, not_gate(self.value)))
-
-class TestOR(basenode.OR):
+class TestOR(node.OR, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.cval = 15
-        self.inv = 0
-
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value | unode.value
+        node.OR.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -231,22 +158,11 @@ class TestOR(basenode.OR):
                     unode.B0 *= x
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        dfs_general(self, 1)
-
-class TestNOR(basenode.NOR):
+class TestNOR(node.NOR, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.cval = 15
-        self.inv = 15
+        node.NOR.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value | unode.value
-        self.value = self.value ^ self.bitwise_not
-    
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
@@ -262,7 +178,6 @@ class TestNOR(basenode.NOR):
             unode.CO = sum([unode.CC0 for unode in self.unodes]) - unode.CC0 + self.CO + 1
 
     def stafan_b(self):
-        
         for unode in self.unodes:
             try:
                 unode.B1 = self.B0 * (unode.S - self.C1) / unode.C1
@@ -290,22 +205,11 @@ class TestNOR(basenode.NOR):
                     unode.B0 *= x
                 print(f" ==> B0 ~ {unode.B0:.2e}")
 
-    def dfs(self):
-        # the controling value of NOR is 1
-        self.faultlist_dfs.clear()
-        dfs_general(self, 1)
-
-class TestAND(basenode.AND):
+class TestAND(node.AND, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.cval = 0
-        self.inv = 0
+        node.AND.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value & unode.value
-    
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
@@ -346,22 +250,10 @@ class TestAND(basenode.AND):
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-    def dfs(self):
-        # the controling value of AND is 0
-        self.faultlist_dfs.clear()
-        dfs_general(self, 0)
-
-class TestNAND(basenode.NAND):
+class TestNAND(node.NAND, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.cval = 0
-        self.inv = 15
-    
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value & unode.value
-        self.value = self.value ^ self.bitwise_not
+        node.NAND.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -405,20 +297,10 @@ class TestNAND(basenode.NAND):
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-    def dfs(self):
-        # the controling value of NAND is 0
-        self.faultlist_dfs.clear()
-        dfs_general(self, 0)
-
-class TestXOR(basenode.XOR):
+class TestXOR(node.XOR, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.c_flag = 0 # what is this?
-
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value ^ unode.value
+        basnode.XOR.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -447,25 +329,11 @@ class TestXOR(basenode.XOR):
             unode.B1 = self.B0
             unode.B0 = self.B1
 
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        xor_FL_set = set()
-        for unode in self.unodes:
-            xor_FL_set = xor_FL_set.symmetric_difference(unode.faultlist_dfs)
-        xor_FL_set.add((self.num, not_gate(self.value)))
-        self.faultlist_dfs = xor_FL_set
-
-class TestXNOR(basenode.XNOR):
+class TestXNOR(node.XNOR, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-        self.c_flag = 0 # what is this?
+        node.XNOR.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value ^ unode.value
-        self.value = self.value ^ self.bitwise_not
-    
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
         for unode in self.unodes[1:]:
@@ -494,20 +362,10 @@ class TestXNOR(basenode.XNOR):
             unode.B1 = self.B0
             unode.B0 = self.B1
 
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        xnor_FL_set = set()
-        for unode in self.unodes:
-            xnor_FL_set = xnor_FL_set.symmetric_difference(unode.faultlist_dfs)
-        xnor_FL_set.add((self.num, not_gate(self.value)))
-        self.faultlist_dfs = xnor_FL_set
-
-class TestIPT(basenode.IPT):
+class TestIPT(node.IPT, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-
-    def imply_b(self, value):
-        self.value = value
+        node.IPT.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not, pfs_V):
         self.pfs_V = pfs_V * bitwise_not
@@ -522,16 +380,10 @@ class TestIPT(basenode.IPT):
     def stafan_b(self):
         return 
 
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        self.faultlist_dfs.add((self.num, not_gate(self.value)))
-
-class TestBRCH(basenode.BRCH):
+class TestBRCH(node.BRCH, TestNode):
     def __init__(self, n_type, g_type, num):
-        super().__init__(n_type, g_type, num)
-
-    def imply_b(self):
-        self.value = self.unodes[0].value
+        node.BRCH.__init__(self, n_type, g_type, num)
+        TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -551,63 +403,5 @@ class TestBRCH(basenode.BRCH):
         brchs = self.unodes[0].dnodes
         brchs_B1_c = [(1-brch.B1) for brch in brchs]
         brchs_B0_c = [(1-brch.B0) for brch in brchs]
-        self.unodes[0].B1 = 1 - mul_list(brchs_B1_c)
-        self.unodes[0].B0 = 1 - mul_list(brchs_B0_c)
-
-    def dfs(self):
-        self.faultlist_dfs.clear()
-        self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
-        self.faultlist_dfs.add((self.num, not_gate(self.value)))
-
-def dfs_general(node, c_val):
-    """
-    Helper function; it doesn't belong to any node class
-    The general dfs algorithm is suitable for (gates with controlling),
-        such as AND, NAND, OR, NOR, etc., and does not include XOR, XNOR, INV, etc.
-    node: an object from class Node
-    c_val: controlling value for this node
-    functionality: 
-    Making changes on node.faultlist_dfs, based on the fault list of node.unodes
-    For PI nodes, faultlist_dfs is fault list on itself
-    """
-    # the fault list of the gate output
-    fault_set = set()
-    # intersection set of all faults implied by controling inputs
-    c_FL_set = set()
-    # union set of all faults implied by non-controling inputs
-    nc_FL_set = set()
-    # imply if there is any control value amoung the inputs
-    flag_c = 0
-    first_c = 1
-    for unode in node.unodes:
-        if unode.value == c_val :
-            flag_c = 1
-            # for the first controling value, use its FL as initialization
-            if first_c == 1:
-                c_FL_set = unode.faultlist_dfs.copy()
-                first_c = 0
-            else:
-                c_FL_set = c_FL_set.intersection(unode.faultlist_dfs)
-        else :
-            nc_FL_set = nc_FL_set.union(unode.faultlist_dfs)
-    
-    # none of the inputs are controlling value
-    if flag_c == 0:
-        node.faultlist_dfs.clear()
-        nc_FL_set.add((node.num, not_gate(node.value)))
-        # print(list(nc_FL_set))
-        node.faultlist_dfs = nc_FL_set.copy()
-    
-    # there is a controlling value on inputs 
-    else :
-        node.faultlist_dfs.clear()
-        node.faultlist_dfs = c_FL_set.difference(nc_FL_set)
-        node.faultlist_dfs.add((node.num, not_gate(node.value)))
-    c_FL_set.clear()
-    nc_FL_set.clear()
-    #TODO: clear this return, if it is correct, document it
-    return fault_set
-
-def not_gate(a):
-    '''NOT gate'''
-    return 1-a
+        self.unodes[0].B1 = 1 - utils.mul_list(brchs_B1_c)
+        self.unodes[0].B0 = 1 - utils.mul_list(brchs_B0_c)
