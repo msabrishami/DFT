@@ -41,7 +41,7 @@ from node import node
 """
 
 
-class Circuit():
+class Circuit:
     """ Representing a digital logic circuit, capable of doing logic simulation, 
         test related operations such as fault simulation, ATPG, OPI, testability 
         measurements, SSTA, etc. 

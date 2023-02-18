@@ -4,7 +4,7 @@ import os
 import re
 import config
 
-from node import node
+from node.node import Node
 
 class CircuitLoader:
     """ Read a circuit netlist (gate level), 
@@ -17,7 +17,7 @@ class CircuitLoader:
         Parameters
         ----------
         circuit : Circuit 
-            A Circuit object that will be be initialized 
+            A Circuit object that will be be initialized and filled with the given node types
         circuit_name : str
             the name of the circuit netlist file, with path and format
         std_node_lib : dict
@@ -66,56 +66,6 @@ class CircuitLoader:
         else:
             print("ERROR: not known!", ptr.num)
 
-    def gen_node(self, node_info, std_node_lib):
-        """ creates a node, does not make any connections, 
-        does not modify the PI, PO list of this circuit """
-        
-        new_node = None
-        # could be written more compact
-
-        if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
-            new_node = std_node_lib['IPT'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-        elif node_info['n_type'] == "FB" and node_info['g_type'] == "BRCH":
-            new_node = std_node_lib['BRCH'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-        elif node_info['n_type'] == "GATE" and node_info['g_type'] == "BRCH":
-            raise NotImplementedError()
-
-        elif node_info['n_type'] == "GATE" or node_info['n_type'] == "PO":
-            if node_info['g_type'] == 'XOR':
-                new_node = std_node_lib['XOR'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'OR':
-                new_node = std_node_lib['OR'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'NOR':
-                new_node = std_node_lib['NOR'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'NOT':
-                new_node = std_node_lib['NOT'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'NAND':
-                new_node = std_node_lib['NAND'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'AND':
-                new_node = std_node_lib['AND'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'BUFF':
-                new_node = std_node_lib['BUFF'](node_info['n_type'], node_info['g_type'], node_info['num'])
-
-            elif node_info['g_type'] == 'XNOR':
-                new_node = std_node_lib['XNOR'](node_info['n_type'], node_info['g_type'], node_info['num'])
-        else:
-            raise NotImplementedError()
-        
-        if not new_node:
-            import pdb
-            pdb.set_trace()
-
-        return new_node
-
-
     def read_verilog(self, circuit, circuit_fname, std_node_lib):
         """
         Read circuit from .v file, each node as an object
@@ -158,7 +108,7 @@ class CircuitLoader:
             # PI: n_type=PI, g_type=IPT, Node will be added! 
             if x_type == "PI":
                 for pi in nets:
-                    new_node = self.gen_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"}, std_node_lib)
+                    new_node = Node.gen_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"}, std_node_lib)
                     circuit.nodes[new_node.num] = new_node
                     circuit.PI.append(new_node)
 
@@ -174,7 +124,7 @@ class CircuitLoader:
                 if nets[0] not in _nodes:
                     pdb.set_trace()
                 _nodes[nets[0]]['g_type'] = gtype 
-                new_node = self.gen_node(_nodes[nets[0]], std_node_lib)
+                new_node = Node.gen_node(_nodes[nets[0]], std_node_lib)
                 circuit.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
                     circuit.PO.append(new_node)
@@ -196,7 +146,7 @@ class CircuitLoader:
             if len(node.dnodes) > 1:
                 for idx in range(len(node.dnodes)):
                     ## New BNCH
-                    branch = self.gen_node({'num': node.num + '-' + str(idx+1), 
+                    branch = Node.gen_node({'num': node.num + '-' + str(idx+1), 
                         'n_type':"FB", 'g_type':"BRCH"}, std_node_lib)
                     branches[branch.num] = branch
                     insert_branch(node, node.dnodes[0], branch)
@@ -216,10 +166,10 @@ class CircuitLoader:
             # node_info = self.read_node_ckt(circuit, line.strip())
             attr = line.split()
             node_info = dict()
-            node_info["n_type"] = node.ntype(int(attr[0])).name
-            node_info["g_type"] = node.gtype(int(attr[2])).name
+            node_info["n_type"] = Node.ntype(int(attr[0])).name
+            node_info["g_type"] = Node.gtype(int(attr[2])).name
             node_info["num"] = attr[1]
-            new_node = self.gen_node(node_info, std_node_lib)
+            new_node = Node.gen_node(node_info, std_node_lib)
             # new_node.ntype = n_type
             # new_node.gtype = g_type
             if new_node.ntype == "PI":

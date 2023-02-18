@@ -48,9 +48,6 @@ class TestNode(ABC):
         self.D0 = None          # prob
         self.D1 = None          # prob
 
-        #Entropy
-        self.Entropy =None      #entropy of the node
-
         # Test Point Insertion Measurements
         self.stat = {}
     

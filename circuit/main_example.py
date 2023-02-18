@@ -25,7 +25,7 @@ if __name__ == '__main__':
     pfs = PFS(my_test_circuit)
     pfs.fault_list.add_all(my_test_circuit)
 
-    tp = 500
+    tp = 100
     # # tp = '../hello'
     # # tp = '../data/patterns/c432_synV1_tp_1000.tp'
     pfs.fs_exe(tp, verbose=True)

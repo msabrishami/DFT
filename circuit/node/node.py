@@ -51,8 +51,6 @@ class Node(ABC):
     sa0:        #TODO: possibly single stuck at 0 fault
     sa1:        #TODO: possibly single stuck at 1 fault
     index:      #TODO: Not known
-    TODO: add information about the rest of the attributes,
-    including paper references for STAFAN and SCOAP
     """
 
     def __init__(self, n_type, g_type, num):
@@ -74,18 +72,13 @@ class Node(ABC):
         bitlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**bitlen-1
 
+        #Entropy
+        self.Entropy =None      #entropy of the node
+
         # # SSTA Project
         self.dd_cell = None
         self.dd_node = None
 
-    def __str__(self):
-        res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
-        res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
-        res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
-        if self.C0 and self.C1:
-            res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
-        return res
-    
     @abstractmethod
     def imply(self):
         ''' forward implication for a logic gate ''' 
@@ -97,6 +90,14 @@ class Node(ABC):
         ''' forward parallel implication for a logic gate ''' 
         # raise NotImplementedError()
         pass
+
+    def __str__(self):
+        res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
+        res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
+        res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
+        if self.C0 and self.C1:
+            res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
+        return res
 
     def insert_f(self, bitwise_not, pfs_S):
         """ insert a fault for pdf in this node """ 
@@ -186,6 +187,28 @@ class Node(ABC):
             print(f"{self.B0:.2e}\t", end="")
             print(f"{self.B1:.2e}\t", end="")
             print()
+    
+    @staticmethod
+    def gen_node(node_info, std_node_lib):
+        """ Generate a node based on information in node_info
+            
+            Parameters
+            ----------
+            node_info : dict
+                # TODO
+         """
+        
+        if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
+            return std_node_lib['IPT'](node_info['n_type'], node_info['g_type'], node_info['num'])
+
+        elif node_info['n_type'] == "FB" and node_info['g_type'] == "BRCH":
+            return std_node_lib['BRCH'](node_info['n_type'], node_info['g_type'], node_info['num'])
+
+        elif node_info['n_type'] == "GATE" or node_info['n_type'] == "PO":
+            if node_info['g_type'] in ['XOR','OR','NOR','NOT','NAND','AND','BUFF','XNOR']:
+                return std_node_lib[node_info['g_type']](node_info['n_type'], node_info['g_type'], node_info['num'])
+        else:
+            raise NotImplementedError()
     
 class BUFF(Node):
     """ This gate is yet not tested""" 
