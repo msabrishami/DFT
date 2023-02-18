@@ -6,7 +6,6 @@ import time
 from multiprocessing import Process, Pipe
 import os
 
-# from fault_sim import FaultSim
 from fault_simulation.simulation import FaultSim
 import config
 import pdb

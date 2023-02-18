@@ -9,10 +9,7 @@ import sys
 import pdb
 
 from enum import Enum
-from itertools import cycle
-from collections import deque
 from multiprocessing import Process, Pipe
-import matplotlib.pyplot as plt
 
 import utils
 import config
@@ -44,13 +41,15 @@ from node import node
 """
 
 
-class Circuit:
+class Circuit():
     """ Representing a digital logic circuit, capable of doing logic simulation, 
         test related operations such as fault simulation, ATPG, OPI, testability 
         measurements, SSTA, etc. 
 
         Attributes
         ---------
+        STD_NODE_LIB : dict
+            dictionary of node type to related node class
         c_fname : str
             circuit name, full with path and format
         c_name : str
@@ -69,8 +68,19 @@ class Circuit:
         fault_node_num : 
             node numbers in full fault list
         """
+    
+    STD_NODE_LIB = {'AND':node.AND, 
+                    'XOR':node.XOR,
+                    'OR': node.OR, 
+                    'XNOR':node.XNOR,
+                    'BUFF':node.BUFF,
+                    'BRCH':node.BRCH,
+                    'NOR':node.NOR,
+                    'NOT':node.NOT,
+                    'NAND':node.NAND,
+                    'IPT':node.IPT}
 
-    def __init__(self, netlist_fname):
+    def __init__(self, netlist_fname, std_node_lib=STD_NODE_LIB):
         """ 
         Parameters
         ----------
@@ -86,10 +96,12 @@ class Circuit:
         self.nodes_lev = [] # list of all nodes, ordered by level
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
-
-        load_circuit.LoadCircuit(self, netlist_fname)
+        self._load(netlist_fname, std_node_lib)
     
-    def lev(self):
+    def _load(self, netlist_fname, std_node_lib): #could be private
+        load_circuit.LoadCircuit(self, netlist_fname, std_node_lib)
+
+    def lev(self): # --> levelize(self)
         """
         Levelization, assigns a level to each node
         Branches are also considered as gates: lev(branch) = lev(stem) + 1 
@@ -167,6 +179,7 @@ class Circuit:
     
     def print_fanin(self, target_node, depth):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
+        from collections import deque
         queue = deque()
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
@@ -460,232 +473,232 @@ class Circuit:
         return True
     
     
-    def SCOAP_CC(self):
-        """ Calculates combinational controllability based on SCOAP measure """ 
-        for node in self.nodes_lev:
-            node.eval_CC()
+    # def SCOAP_CC(self):
+    #     """ Calculates combinational controllability based on SCOAP measure """ 
+    #     for node in self.nodes_lev:
+    #         node.eval_CC()
     
-    def SCOAP_CO(self):
-        """ Calculates combinational observability based on SCOAP measure """ 
-        for node in self.PO:
-            node.CO = 0
+    # def SCOAP_CO(self):
+    #     """ Calculates combinational observability based on SCOAP measure """ 
+    #     for node in self.PO:
+    #         node.CO = 0
 
-        for node in reversed(self.nodes_lev):
-            node.eval_CO()
+    #     for node in reversed(self.nodes_lev):
+    #         node.eval_CO()
 
-    def STAFAN_reset_counts(self):
-        for node in self.nodes_lev:
-            node.one_count = 0
-            node.zero_count = 0
-            node.sen_count = 0
+    # def STAFAN_reset_counts(self):
+    #     for node in self.nodes_lev:
+    #         node.one_count = 0
+    #         node.zero_count = 0
+    #         node.sen_count = 0
 
-    def STAFAN_reset_flags(self):
-        for node in self.nodes_lev:
-            node.sense = False
+    # def STAFAN_reset_flags(self):
+    #     for node in self.nodes_lev:
+    #         node.sense = False
     
-    def STAFAN_C_single(self, tp):
-        """ Running STAFAN controllability step for one test pattern 
-        The initialization of nodes C1 and C0 are done in the prior method 
+    # def STAFAN_C_single(self, tp):
+    #     """ Running STAFAN controllability step for one test pattern 
+    #     The initialization of nodes C1 and C0 are done in the prior method 
 
-        Arguments
-        ---------
-        tp : a single test pattern vector 
-        """
-        self.logic_sim(tp)
-        self.STAFAN_reset_flags()
+    #     Arguments
+    #     ---------
+    #     tp : a single test pattern vector 
+    #     """
+    #     self.logic_sim(tp)
+    #     self.STAFAN_reset_flags()
             
-        for node in self.nodes_lev:
-            node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
-            node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
+    #     for node in self.nodes_lev:
+    #         node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
+    #         node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
 
-            # sensitization
-            if node.is_sensible():
-                node.sense = True
-                node.sen_count += 1
-
-    
-    def STAFAN_C(self, tp, limit=None):
-        ''' 
-        STAFAN controllability 
-
-        Arguments: 
-        ----------
-        tp : Either the name of a test pattern file (str) or number of test patterns (int).
-            If tp is number of test patterns, they will be generated internally within limit
-        limit : Limit of test patterns to be generated.
-            If limit is not given, all possible tps can be generated. 
-            Every test pattern can be assigned a number by putting binary values of 
-            primary inputs together in the same sequence as in self.PI, and then converting 
-            this value to a decimal one. 
-        
-        Note: Random input patterns are generated with replacement (not pseudo-random)
-        Note: random.choice method is very inefficient
-        '''
-
-        if isinstance(tp, str):
-            tps = self.load_tp_file(tp)
-            num_pattern = len(tps)
-            tp_gen = False 
-
-        elif isinstance(tp,int):
-            tp_gen = True
-            num_pattern = tp
-
-        # We need to reset the circuit
-        self.STAFAN_reset_counts()
-        if limit == None:
-            limit = [0, pow(2, len(self.PI))-1]
-
-        for t in range(num_pattern):
-            if tp_gen:
-                # b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
-                b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
-                tp = [int(b[j]) for j in range(len(self.PI))]
-            else:
-                tp = tps[t]
-
-            self.STAFAN_C_single(tp)
-
-        # calculate percentage/prob
-        for node in self.nodes_lev:
-            node.C1 = node.one_count / num_pattern
-            node.C0 = node.zero_count / num_pattern
-            node.S = node.sen_count / num_pattern
-
-
-    def STAFAN_B(self):
-        """ calculates the STAFAN observability probabilities for all nodes """
-
-        for node in reversed(self.nodes_lev):
-            if node in self.PO:
-                node.B0 = 1.0
-                node.B1 = 1.0
-            node.stafan_b()
-    
-    def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
-        circuit = Circuit(self.c_fname)
-        circuit.lev()
-        PI_num = len(circuit.PI)
-        tp_count = int(tot_tp_count / tot_proc)
-        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
-                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
-        circuit.STAFAN_C(tp_count, limit)
-
-        one_count_list = []
-        zero_count_list = []
-        sen_count_list = []
-        for i in circuit.nodes_lev:
-            one_count_list.append(i.one_count)
-            zero_count_list.append(i.zero_count)
-            sen_count_list.append(i.sen_count)
-        conn.send((one_count_list, zero_count_list, sen_count_list))
-        conn.close()
-
-
-    def STAFAN(self, total_tp, num_proc=1, verbose=False):
-        """ 
-        Calculating STAFAN controllability and observability in parallel. 
-        Random TPs are generated within the method itself and are not stored. 
-        
-        Arguments:
-        ---------
-        total_tp : (int) total number of test pattern vectors (not less than num_proc)
-        num_proc : (int) number of processors that will be used in parallel processing 
-        """
-        if total_tp < num_proc:
-            raise ValueError("Total TPs should be higher than process numbers")
-
-        start_time = time.time()
-        process_list = []
-        for id_proc in range(num_proc):
-            parent_conn, child_conn = Pipe()
-            p = Process(target = self.STAFAN_ctrl_process, 
-                    args =(child_conn, id_proc, total_tp, num_proc))
-            p.start()
-            process_list.append((p, parent_conn))
-
-        one_count_list = [0] * len(self.nodes_lev) 
-        zero_count_list = [0] * len(self.nodes_lev) 
-        sen_count_list = [0] *  len(self.nodes_lev)
-
-        for p, conn in process_list:
-            tup = conn.recv()
-            for i in range(len(tup[0])):
-                one_count_list[i] += tup[0][i]
-                zero_count_list[i] += tup[1][i]
-                sen_count_list[i] += tup[2][i]
-            p.join()
-        
-        for idx, node in enumerate(self.nodes_lev):
-            node.C1 = one_count_list[idx] / total_tp
-            node.C0 = zero_count_list[idx] / total_tp
-            node.S = sen_count_list[idx] / total_tp
-
-        if verbose: 
-            for node in self.nodes_lev:
-                if node.C0 == 0 or node.C1 == 0:
-                    print(f"Warning: node {node.num} controllability is zero")
-        try: 
-            self.STAFAN_B()
-        except ZeroDivisionError:
-            print("Node Ctrl is zero")
-            pdb.set_trace()
-        
-        end_time = time.time()
-        duration = end_time - start_time
-        if verbose:
-            print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
+    #         # sensitization
+    #         if node.is_sensible():
+    #             node.sense = True
+    #             node.sen_count += 1
 
     
-    def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
-        if fname == None:
-            path = config.STAFAN_DIR+"/"+self.c_name
-            if not os.path.exists(path):
-                os.mkdir(path)
-            fname = os.path.join(path, self.c_name)
-            if not os.path.exists(fname):
-                os.mkdir(fname)
-            fname = os.path.join(fname, f"{self.c_name}-TP{tp}.stafan")
+    # def STAFAN_C(self, tp, limit=None):
+    #     ''' 
+    #     STAFAN controllability 
 
-        outfile = open(fname, "w")
-        outfile.write("Node,C0,C1,B0,B1,S\n")
-        for node in self.nodes_lev:
-            ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
-            outfile.write(",".join([node.num] + ss) + "\n")
-        outfile.close()
-        print(f"Saved circuit STAFAN TMs in {fname}")
+    #     Arguments: 
+    #     ----------
+    #     tp : Either the name of a test pattern file (str) or number of test patterns (int).
+    #         If tp is number of test patterns, they will be generated internally within limit
+    #     limit : Limit of test patterns to be generated.
+    #         If limit is not given, all possible tps can be generated. 
+    #         Every test pattern can be assigned a number by putting binary values of 
+    #         primary inputs together in the same sequence as in self.PI, and then converting 
+    #         this value to a decimal one. 
+        
+    #     Note: Random input patterns are generated with replacement (not pseudo-random)
+    #     Note: random.choice method is very inefficient
+    #     '''
+
+    #     if isinstance(tp, str):
+    #         tps = self.load_tp_file(tp)
+    #         num_pattern = len(tps)
+    #         tp_gen = False 
+
+    #     elif isinstance(tp,int):
+    #         tp_gen = True
+    #         num_pattern = tp
+
+    #     # We need to reset the circuit
+    #     self.STAFAN_reset_counts()
+    #     if limit == None:
+    #         limit = [0, pow(2, len(self.PI))-1]
+
+    #     for t in range(num_pattern):
+    #         if tp_gen:
+    #             # b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
+    #             b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
+    #             tp = [int(b[j]) for j in range(len(self.PI))]
+    #         else:
+    #             tp = tps[t]
+
+    #         self.STAFAN_C_single(tp)
+
+    #     # calculate percentage/prob
+    #     for node in self.nodes_lev:
+    #         node.C1 = node.one_count / num_pattern
+    #         node.C0 = node.zero_count / num_pattern
+    #         node.S = node.sen_count / num_pattern
+
+
+    # def STAFAN_B(self):
+    #     """ calculates the STAFAN observability probabilities for all nodes """
+
+    #     for node in reversed(self.nodes_lev):
+    #         if node in self.PO:
+    #             node.B0 = 1.0
+    #             node.B1 = 1.0
+    #         node.stafan_b()
+    
+    # def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
+    #     circuit = Circuit(self.c_fname)
+    #     circuit.lev()
+    #     PI_num = len(circuit.PI)
+    #     tp_count = int(tot_tp_count / tot_proc)
+    #     limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
+    #             int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
+    #     circuit.STAFAN_C(tp_count, limit)
+
+    #     one_count_list = []
+    #     zero_count_list = []
+    #     sen_count_list = []
+    #     for i in circuit.nodes_lev:
+    #         one_count_list.append(i.one_count)
+    #         zero_count_list.append(i.zero_count)
+    #         sen_count_list.append(i.sen_count)
+    #     conn.send((one_count_list, zero_count_list, sen_count_list))
+    #     conn.close()
+
+
+    # def STAFAN(self, total_tp, num_proc=1, verbose=False):
+    #     """ 
+    #     Calculating STAFAN controllability and observability in parallel. 
+    #     Random TPs are generated within the method itself and are not stored. 
+        
+    #     Arguments:
+    #     ---------
+    #     total_tp : (int) total number of test pattern vectors (not less than num_proc)
+    #     num_proc : (int) number of processors that will be used in parallel processing 
+    #     """
+    #     if total_tp < num_proc:
+    #         raise ValueError("Total TPs should be higher than process numbers")
+
+    #     start_time = time.time()
+    #     process_list = []
+    #     for id_proc in range(num_proc):
+    #         parent_conn, child_conn = Pipe()
+    #         p = Process(target = self.STAFAN_ctrl_process, 
+    #                 args =(child_conn, id_proc, total_tp, num_proc))
+    #         p.start()
+    #         process_list.append((p, parent_conn))
+
+    #     one_count_list = [0] * len(self.nodes_lev) 
+    #     zero_count_list = [0] * len(self.nodes_lev) 
+    #     sen_count_list = [0] *  len(self.nodes_lev)
+
+    #     for p, conn in process_list:
+    #         tup = conn.recv()
+    #         for i in range(len(tup[0])):
+    #             one_count_list[i] += tup[0][i]
+    #             zero_count_list[i] += tup[1][i]
+    #             sen_count_list[i] += tup[2][i]
+    #         p.join()
+        
+    #     for idx, node in enumerate(self.nodes_lev):
+    #         node.C1 = one_count_list[idx] / total_tp
+    #         node.C0 = zero_count_list[idx] / total_tp
+    #         node.S = sen_count_list[idx] / total_tp
+
+    #     if verbose: 
+    #         for node in self.nodes_lev:
+    #             if node.C0 == 0 or node.C1 == 0:
+    #                 print(f"Warning: node {node.num} controllability is zero")
+    #     try: 
+    #         self.STAFAN_B()
+    #     except ZeroDivisionError:
+    #         print("Node Ctrl is zero")
+    #         pdb.set_trace()
+        
+    #     end_time = time.time()
+    #     duration = end_time - start_time
+    #     if verbose:
+    #         print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
 
     
-    def load_TMs(self, fname): # change name
-        lines = open(fname).readlines()[1:]
-        for line in lines:
-            words = line.strip().split(",")
-            node = self.nodes[words[0]]
-            node.C0 = float(words[1])  
-            node.C1 = float(words[2]) 
-            node.B0 = float(words[3]) 
-            node.B1 = float(words[4]) 
-            node.S  = float(words[5]) 
+    # def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
+    #     if fname == None:
+    #         path = config.STAFAN_DIR+"/"+self.c_name
+    #         if not os.path.exists(path):
+    #             os.mkdir(path)
+    #         fname = os.path.join(path, self.c_name)
+    #         if not os.path.exists(fname):
+    #             os.mkdir(fname)
+    #         fname = os.path.join(fname, f"{self.c_name}-TP{tp}.stafan")
 
-        print("Loaded circuit STAFAN TMs loaded from: " + fname)
+    #     outfile = open(fname, "w")
+    #     outfile.write("Node,C0,C1,B0,B1,S\n")
+    #     for node in self.nodes_lev:
+    #         ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
+    #         outfile.write(",".join([node.num] + ss) + "\n")
+    #     outfile.close()
+    #     print(f"Saved circuit STAFAN TMs in {fname}")
 
-    def STAFAN_FC(self, tp_count):
-        """ Estimation of fault coverage for all faults 
-        All faults include all nodes, SS@0 and SS@1 
-        pd stands for probability of detection 
+    
+    # def load_TMs(self, fname): # change name
+    #     lines = open(fname).readlines()[1:]
+    #     for line in lines:
+    #         words = line.strip().split(",")
+    #         node = self.nodes[words[0]]
+    #         node.C0 = float(words[1])  
+    #         node.C1 = float(words[2]) 
+    #         node.B0 = float(words[3]) 
+    #         node.B1 = float(words[4]) 
+    #         node.S  = float(words[5]) 
 
-        Arguments: 
-        ----------
-        tp_count : int
-            number of test patterns, used in the fault coverage estimation formula 
-        """
-        nfc = 0
-        for node in self.nodes_lev:
-            if None in [node.C0,node.C1,node.B0,node.B1]:
-                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
-        return 1 - nfc/(2*len(self.nodes)) 
+    #     print("Loaded circuit STAFAN TMs loaded from: " + fname)
+
+    # def STAFAN_FC(self, tp_count):
+    #     """ Estimation of fault coverage for all faults 
+    #     All faults include all nodes, SS@0 and SS@1 
+    #     pd stands for probability of detection 
+
+    #     Arguments: 
+    #     ----------
+    #     tp_count : int
+    #         number of test patterns, used in the fault coverage estimation formula 
+    #     """
+    #     nfc = 0
+    #     for node in self.nodes_lev:
+    #         if None in [node.C0,node.C1,node.B0,node.B1]:
+    #             raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
+    #         nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
+    #         nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
+    #     return 1 - nfc/(2*len(self.nodes)) 
 
 
     def CALC_ENTROPY(self):
@@ -772,106 +785,106 @@ class Circuit:
         return count
 
     
-    def gen_fault_dic(self):
-        """
-        Fault Dictionary:
-        key: input pattern value: detected fault (returned by PFS)
-        Fault Dictionary can only be generated for small circuits
-        because the file size will become too large for big circuits.
-        """
-        fault_dict = {}
-        inputnum = len(self.input_num_list)
-        total_pattern = pow(2,inputnum) # produce 2^n different input files for pfs to use
+    # def gen_fault_dic(self):
+    #     """
+    #     Fault Dictionary:
+    #     key: input pattern value: detected fault (returned by PFS)
+    #     Fault Dictionary can only be generated for small circuits
+    #     because the file size will become too large for big circuits.
+    #     """
+    #     fault_dict = {}
+    #     inputnum = len(self.input_num_list)
+    #     total_pattern = pow(2,inputnum) # produce 2^n different input files for pfs to use
 
-        for i in range(total_pattern):
-            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
-            # b = (f'{i:0%db}'%inputnum)
-            list_to_pfs = []
-            for j in range(inputnum):
-                list_to_pfs.append(int(b[j]))
+    #     for i in range(total_pattern):
+    #         print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+    #         # b = (f'{i:0%db}'%inputnum)
+    #         list_to_pfs = []
+    #         for j in range(inputnum):
+    #             list_to_pfs.append(int(b[j]))
 
-            #do pfs based on the prodeuced input files
-            result = []
-            result = self.pfs(list_to_pfs)
-            fault = []
-            for i in result:
-                fault.append("%d@%d" % (i[0], i[1]))
+    #         #do pfs based on the prodeuced input files
+    #         result = []
+    #         result = self.pfs(list_to_pfs)
+    #         fault = []
+    #         for i in result:
+    #             fault.append("%d@%d" % (i[0], i[1]))
 
-            fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
-            #jb51.net/article/164342.htm for referance to sort the output
+    #         fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
+    #         #jb51.net/article/164342.htm for referance to sort the output
 
-            fault_dict.update({b: fault})
+    #         fault_dict.update({b: fault})
 
-        fault_dict_result = open(f"../fault_dic/{self.c_name}.fd", "w")
-        for i in range(len(self.input_num_list)):
-            if (i<len(self.input_num_list)-1):
-                fault_dict_result.write('%d->' % self.input_num_list[i])
-            else:
-                fault_dict_result.write('%d' % self.input_num_list[i])
+    #     fault_dict_result = open(f"../fault_dic/{self.c_name}.fd", "w")
+    #     for i in range(len(self.input_num_list)):
+    #         if (i<len(self.input_num_list)-1):
+    #             fault_dict_result.write('%d->' % self.input_num_list[i])
+    #         else:
+    #             fault_dict_result.write('%d' % self.input_num_list[i])
 
-        fault_dict_result.write(' as sequence of inputs')
-        fault_dict_result.write('\n')
-        fault_dict_result.write('tps\t\t\tdetected_faults\n')
-        for i in range(total_pattern):
-            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
-            # b = (f'{i:0%db}'%inputnum)
-            fault_dict_result.write('%s\t\t\t\t' % b)
-            for i in range(len(fault_dict.get(b))):
-                fault_dict_result.write('%-5s ' % fault_dict.get(b)[i])#format ok?
-            fault_dict_result.write('\n')
+    #     fault_dict_result.write(' as sequence of inputs')
+    #     fault_dict_result.write('\n')
+    #     fault_dict_result.write('tps\t\t\tdetected_faults\n')
+    #     for i in range(total_pattern):
+    #         print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+    #         # b = (f'{i:0%db}'%inputnum)
+    #         fault_dict_result.write('%s\t\t\t\t' % b)
+    #         for i in range(len(fault_dict.get(b))):
+    #             fault_dict_result.write('%-5s ' % fault_dict.get(b)[i])#format ok?
+    #         fault_dict_result.write('\n')
 
-        fault_dict_result.close()
+    #     fault_dict_result.close()
 
 
-    def gen_fault_dic_multithreading(self, thread_cnt, idx):
-        """
-        Create threads to generate fault dictionaries.
-        Speed up the fault dictionary generation process.
-        """
-        fault_dict = {}
-        total_pattern = pow(2, len(self.PI))
-        pattern_per_thread = int(total_pattern / thread_cnt)
+    # def gen_fault_dic_multithreading(self, thread_cnt, idx):
+    #     """
+    #     Create threads to generate fault dictionaries.
+    #     Speed up the fault dictionary generation process.
+    #     """
+    #     fault_dict = {}
+    #     total_pattern = pow(2, len(self.PI))
+    #     pattern_per_thread = int(total_pattern / thread_cnt)
 
-        for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-            print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
-            # b = (f'{i:0%db}'%len(self.PI))
-            list_to_pfs = []
-            for j in range(len(self.PI)):
-                list_to_pfs.append(int(b[j]))
-        #do pfs based on the prodeuced input files
-            result = []
-            result = self.pfs(list_to_pfs)
-            fault = []
-            #print(result)
-            for i in result:
-                fault.append("%d@%d" % (i[0], i[1]))
+    #     for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
+    #         print ('{:05b}'.format(i)) #str type output #Suit different input numbers!!!!
+    #         # b = (f'{i:0%db}'%len(self.PI))
+    #         list_to_pfs = []
+    #         for j in range(len(self.PI)):
+    #             list_to_pfs.append(int(b[j]))
+    #     #do pfs based on the prodeuced input files
+    #         result = []
+    #         result = self.pfs(list_to_pfs)
+    #         fault = []
+    #         #print(result)
+    #         for i in result:
+    #             fault.append("%d@%d" % (i[0], i[1]))
 
-            fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
-            fault_dict.update({b: fault})
+    #         fault.sort(key = lambda i:int(re.match(r'(\d+)',i).group()))
+    #         fault_dict.update({b: fault})
 
-        with open (f"../fault_dic/{self.c_name}_{idx}.fd", "w") as fo:
-            for i in range(len(self.PI)):
-                if (i < len(self.PI) - 1):
-                    fo.write('%d->' % self.input_num_list[i])
-                else:
-                    fo.write('%d' % self.input_num_list[i])
-            fo.write(' as sequence of inputs')
-            fo.write('\n')
-            fo.write('tps\t\t\tdetected_faults\n')
-            for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
-                b = (f'{i:0%db}'%len(self.PI))
-                fo.write('%s\t\t\t\t' % b)
-                for i in range(len(fault_dict.get(b))):
-                    fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
-                fo.write('\n')
-        print(f"thread #{idx} of {thread_cnt} threads finished")
+    #     with open (f"../fault_dic/{self.c_name}_{idx}.fd", "w") as fo:
+    #         for i in range(len(self.PI)):
+    #             if (i < len(self.PI) - 1):
+    #                 fo.write('%d->' % self.input_num_list[i])
+    #             else:
+    #                 fo.write('%d' % self.input_num_list[i])
+    #         fo.write(' as sequence of inputs')
+    #         fo.write('\n')
+    #         fo.write('tps\t\t\tdetected_faults\n')
+    #         for i in range(idx * pattern_per_thread, (idx + 1) * pattern_per_thread):
+    #             b = (f'{i:0%db}'%len(self.PI))
+    #             fo.write('%s\t\t\t\t' % b)
+    #             for i in range(len(fault_dict.get(b))):
+    #                 fo.write('%-5s ' % fault_dict.get(b)[i])#format ok?
+    #             fo.write('\n')
+    #     print(f"thread #{idx} of {thread_cnt} threads finished")
 
     
-    def read_fault_dict(self):
-        """read already generated fault dictionary"""
-        fd = open(f"../fault_dic/{self.c_name}.fd","r")
-        self.fd_data = fd.read()
-        fd.close()
+    # def read_fault_dict(self):
+    #     """read already generated fault dictionary"""
+    #     fd = open(f"../fault_dic/{self.c_name}.fd","r")
+    #     self.fd_data = fd.read()
+    #     fd.close()
 
     
     def save_circuit_entropy(self, fname):

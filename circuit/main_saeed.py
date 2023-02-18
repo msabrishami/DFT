@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+#TODO: if you want to read circuit for testing, change the circuit type to TestCircuit()
+
 import os
 import argparse
 import pandas as pd
