@@ -51,8 +51,6 @@ class Node(ABC):
     sa0:        #TODO: possibly single stuck at 0 fault
     sa1:        #TODO: possibly single stuck at 1 fault
     index:      #TODO: Not known
-    TODO: add information about the rest of the attributes,
-    including paper references for STAFAN and SCOAP
     """
 
     def __init__(self, n_type, g_type, num):
@@ -73,6 +71,9 @@ class Node(ABC):
         # TODO
         bitlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**bitlen-1
+
+        #Entropy
+        self.Entropy =None      #entropy of the node
 
         # # SSTA Project
         self.dd_cell = None
@@ -187,6 +188,28 @@ class Node(ABC):
             print(f"{self.B0:.2e}\t", end="")
             print(f"{self.B1:.2e}\t", end="")
             print()
+    
+    @staticmethod
+    def gen_node(node_info, std_node_lib):
+        """ Generate a node based on information in node_info
+            
+            Parameters
+            ----------
+            node_info : dict
+                # TODO
+         """
+        
+        if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
+            return std_node_lib['IPT'](node_info['n_type'], node_info['g_type'], node_info['num'])
+
+        elif node_info['n_type'] == "FB" and node_info['g_type'] == "BRCH":
+            return std_node_lib['BRCH'](node_info['n_type'], node_info['g_type'], node_info['num'])
+
+        elif node_info['n_type'] == "GATE" or node_info['n_type'] == "PO":
+            if node_info['g_type'] in ['XOR','OR','NOR','NOT','NAND','AND','BUFF','XNOR']:
+                return std_node_lib[node_info['g_type']](node_info['n_type'], node_info['g_type'], node_info['num'])
+        else:
+            raise NotImplementedError()
     
 class BUFF(Node):
     """ This gate is yet not tested""" 
