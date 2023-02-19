@@ -53,7 +53,12 @@ class TestNode(ABC):
 
         # Test Point Insertion Measurements
         self.stat = {}
-    
+        
+    def insert_f(self, bitwise_not, pfs_S):
+        """ insert a fault for pdf in this node """ 
+        pfs_I_bar = self.pfs_I ^ bitwise_not
+        self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
+
     @abstractmethod
     def eval_CC(self):
         ''' forward assignment of SCOAP-CC for this node based on unodes''' 

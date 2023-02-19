@@ -86,6 +86,15 @@ class Node(ABC):
             res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
         return res
     
+    def add_unodes(self, unode):
+        self.unodes.append(unode)
+    
+    def add_dnodes(self, dnode):
+        self.dnodes.append(dnode)
+    
+    def unodes_val(self):
+        return [int(unode.value) for unode in self.unodes]
+    
     @abstractmethod
     def imply(self):
         ''' forward implication for a logic gate ''' 
@@ -98,14 +107,6 @@ class Node(ABC):
         # raise NotImplementedError()
         pass
 
-    def insert_f(self, bitwise_not, pfs_S):
-        """ insert a fault for pdf in this node """ 
-        pfs_I_bar = self.pfs_I ^ bitwise_not
-        self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
-
-    def unodes_val(self):
-        return [int(unode.value) for unode in self.unodes]
-    
     def get_neighbors(self, value=False, inclusive=False):
         ''' Return a list of nodes (or the values of nodes)
         that have the same out gate as this node
