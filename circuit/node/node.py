@@ -86,10 +86,10 @@ class Node(ABC):
             res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
         return res
     
-    def add_unodes(self, unode):
+    def add_unode(self, unode):
         self.unodes.append(unode)
     
-    def add_dnodes(self, dnode):
+    def add_dnode(self, dnode):
         self.dnodes.append(dnode)
     
     def unodes_val(self):
