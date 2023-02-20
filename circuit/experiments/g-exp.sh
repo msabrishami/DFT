@@ -1,2 +1,0 @@
-# python3 g-experiments.py -ckt ../data/verilog/ISCAS85/v0/c432_synV0.v -func tpfc-pfs -cpu 50 -times 100
-python3 g-experiments.py -ckt ../../data/verilog/ISCAS85/v1/c880_synV1.v -func  ppsf-corr -tpLoad 1000 -tp 1000 -cpu 50 -ci 6 -times 50
