@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
     elif args.func == "lev-backward":
         #TODO: needs review
-        circuit.lev_backward()
+        circuit.levelize_backward()
 
 
     elif args.func == "pfs":

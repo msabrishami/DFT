@@ -1,46 +1,16 @@
-# ---> methods that appears here must be removed from node.py
-
-# -*- coding: utf-8 -*-
-
 import math
 import re
 import os 
 import random
 import time
-import sys
 import pdb
 
 from enum import Enum
 from multiprocessing import Process, Pipe
 
-import utils
 import config
 from circuit import circuit
 from node import testnode
-
-#TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
-#TODO: we need a flag to make sure no new nodes are added to the circuit, 
-#   ... for example, if we find all cell types in one method, later we should 
-#   ... read this flag to make sure what this method found is valid now, 
-#   ... and no new cell added that is not tracked. 
-#TODO: in DFT package gates are logical, NAND can have several inputs, but 
-#   ... for SSTA we have cell SSTA delay for NAND2 and NAND3, fix this!
-# distributions added to the repo temporarily 
-# sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
-
-
-
-"""
-# Tasks for the DFT team:
-- Don't change my alreay written methods, if u need to change it let me know. 
-- What is the data structure of Node
-- Understand the flow of this current code, how we read ckt, 
-- How are doing the logic-simulation 
-- Adding a new py file, for testbench generation class (maybe call it ModelSim_Simulator
-- Add the read_verilog file
-- ADd the methods you have for creating a random test pattern file 
-- Check if we read a circuit using read_verilog, the current logicsim works fine
-"""
 
 
 class TestCircuit(circuit.Circuit):

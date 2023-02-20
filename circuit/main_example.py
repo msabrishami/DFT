@@ -5,11 +5,11 @@ from fault_simulation.pfs import PFS
 
 if __name__ == '__main__':
 
-    circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
+    # circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
+    circuit_path = '../data/verilog/c432_synV1.v'
 
     # circuit = Circuit(circuit_path)
     my_test_circuit = TestCircuit(circuit_path)
-    my_test_circuit.lev()
     # print(circuit.nodes.keys())
     # print(my_test_circuit.nodes_lev)
 

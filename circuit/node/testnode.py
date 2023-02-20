@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-import pdb
-import math 
 import sys
 from enum import Enum
 from abc import ABC, abstractmethod
@@ -10,14 +6,10 @@ sys.path.insert(0,'..')
 import utils
 import node.node as node
 
-# We are using GNOT, etc. as we may later use X values
 class TestNode(ABC):
     """For now, it is designed for STAFAN, SCOAP, PFS and PPSF"""
     def __init__(self):
-        # used for PPSF and SPPF 
-        bitlen = int(math.log2(sys.maxsize))+1
-        self.bitwise_not = 2**bitlen-1
-
+        
         # PFS:
         self.pfs_V = None   # PFS value
         self.pfs_I = None   # PFS mask
@@ -59,20 +51,44 @@ class TestNode(ABC):
     @abstractmethod
     def eval_CC(self):
         ''' forward assignment of SCOAP-CC for this node based on unodes''' 
-        # raise NotImplementedError()
         pass
     
     @abstractmethod
     def eval_CO(self):
         ''' backward assignment of SCOAP-CO for unodes of this node''' 
-        # raise NotImplementedError()
         pass
     
     @abstractmethod
     def stafan_b(self):
         ''' backward assignment of STAFAN observability for unodes of this node''' 
-        # raise NotImplementedError()
         pass
+
+    def is_sensible(self, count=True):
+        ''' Calculates if this node can propagate the gate in front of it.
+        i.e. if current value changes, down-node (output gate) value will change.
+        '''
+        # TODO: implemented on two value system, not sure if it applies to others
+
+        if self.ntype == 'PO':
+            return True
+
+        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH', 'BUFF']:
+            return True
+
+        elif self.dnodes[0].gtype in ['AND', 'NAND']:
+            if 0 in self.get_neighbors(inclusive=False, value = True):
+                return False
+            else:
+                return True
+
+        elif (self.dnodes[0].gtype == 'OR') | (self.dnodes[0].gtype == 'NOR'):
+            if 1 in self.get_neighbors(inclusive=False, value=True):
+                return False
+            else:
+                return True
+        else:
+            print("(NODE_TEST) ERROR") # TODO: raise exception 
+
 
 class TestBUFF(node.BUFF, TestNode):
     """ This gate is yet not tested""" 
@@ -301,7 +317,7 @@ class TestNAND(node.NAND, TestNode):
 
 class TestXOR(node.XOR, TestNode):
     def __init__(self, n_type, g_type, num):
-        basnode.XOR.__init__(self, n_type, g_type, num)
+        node.XOR.__init__(self, n_type, g_type, num)
         TestNode.__init__(self)
 
     def imply_p(self, bitwise_not):

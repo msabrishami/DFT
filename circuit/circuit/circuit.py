@@ -1,50 +1,24 @@
-# -*- coding: utf-8 -*-
-
 import math
-import re
 import os 
 import random
-import time
 import sys
-import pdb
 
 from enum import Enum
-from multiprocessing import Process, Pipe
+from multiprocessing import Process
 
-import utils
 import config
 from circuit.circuit_loader import CircuitLoader
 from node import node
 
-#TODO: one issue with ckt (2670 as example) is that some nodes are both PI and PO
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
-#   ... for example, if we find all cell types in one method, later we should 
-#   ... read this flag to make sure what this method found is valid now, 
-#   ... and no new cell added that is not tracked. 
-#TODO: in DFT package gates are logical, NAND can have several inputs, but 
-#   ... for SSTA we have cell SSTA delay for NAND2 and NAND3, fix this!
+#           for example, we all cell types in method foo after loading the circuit, 
+#           after adding new nodes, results of foo may still not be valid. 
+
 # distributions added to the repo temporarily 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 
-
-
-"""
-# Tasks for the DFT team:
-- Don't change my alreay written methods, if u need to change it let me know. 
-- What is the data structure of Node
-- Understand the flow of this current code, how we read ckt, 
-- How are doing the logic-simulation 
-- Adding a new py file, for testbench generation class (maybe call it ModelSim_Simulator
-- Add the read_verilog file
-- ADd the methods you have for creating a random test pattern file 
-- Check if we read a circuit using read_verilog, the current logicsim works fine
-"""
-
-
 class Circuit:
-    """ Representing a digital logic circuit, capable of doing logic simulation, 
-        test related operations such as fault simulation, ATPG, OPI, testability 
-        measurements, SSTA, etc. 
+    """ Representing a digital logic circuit, capable of doing logic simulation.  
 
         Attributes
         ---------
@@ -63,10 +37,6 @@ class Circuit:
         nodes_lev : 
             circuit information after levelization,
             each node has level info, previous nodelist_order
-        fault_name : 
-            full fault list in string format
-        fault_node_num : 
-            node numbers in full fault list
         """
     
     STD_NODE_LIB = {'AND':node.AND, 
@@ -80,9 +50,10 @@ class Circuit:
                     'NAND':node.NAND,
                     'IPT':node.IPT}
 
+
     def __init__(self, netlist_fname, std_node_lib=STD_NODE_LIB):
         """ 
-        Parameters
+        Attributes 
         ----------
         c_fname : str
             the name of the circuit with path and format
@@ -97,11 +68,14 @@ class Circuit:
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
         self._load(netlist_fname, std_node_lib)
-    
+        self.levelize()
+
+
     def _load(self, netlist_fname, std_node_lib):
         CircuitLoader(self, netlist_fname, std_node_lib)
 
-    def lev(self): # --> levelize(self) / if it must be call all the times, put it in the __init__
+
+    def levelize(self):  
         """
         Levelization, assigns a level to each node
         Branches are also considered as gates: lev(branch) = lev(stem) + 1 
@@ -114,7 +88,7 @@ class Circuit:
         while flag_change: 
             flag_change = False
             for num, node in self.nodes.items():
-                if node.lev == None: # not levelized yet
+                if node.lev == None: 
                     lev_u = [x.lev for x in node.unodes]
                     if None in lev_u:
                         continue
@@ -129,7 +103,8 @@ class Circuit:
     
         self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
 
-    def lev_backward(self):
+
+    def levelize_backward(self):
         """ Calculate shortest distace from node to POs for all nodes
             using Dijktra algorithm """
         dist = {} 
@@ -173,6 +148,7 @@ class Circuit:
             res.add(self.nodes_lev[idx])
         return list(res)[0] if count==1 else res  # better to return a list all the time
     
+
     def print_fanin(self, target_node, depth):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
         from collections import deque
@@ -180,6 +156,7 @@ class Circuit:
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
         self.print_fanin_rec(queue, min_level)
+
 
     def print_fanin_rec(self, queue, min_level):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
@@ -210,6 +187,7 @@ class Circuit:
             
         self.print_fanin_rec(queue, min_level)
 
+    
     def gen_single_tp(self, mode="b"):
         """ Generate a random input pattern.
         mode b: generate values in {0, 1}
@@ -227,6 +205,7 @@ class Circuit:
         
         return tp 
     
+
     def gen_multiple_tp(self, tp_count, mode="b"):
         """ Generate multiple random input patterns
         mode b: generate values in {0, 1}
@@ -238,6 +217,7 @@ class Circuit:
         tps = [self.gen_single_tp(mode) for _ in range(int(tp_count))]
 
         return tps
+
 
     def gen_tp_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
         """ Create single file with multiple input patterns
@@ -262,6 +242,7 @@ class Circuit:
 
         return tps # better to return the file name
 
+
     def gen_full_tp(self):
         """
         Return all possible test patterns
@@ -273,6 +254,7 @@ class Circuit:
             tps.append(tp)
         
         return tps
+
 
     def gen_tp_file_full(self, tp_fname=None):
         """Create a single file including all possible test patterns""" 
@@ -462,98 +444,6 @@ class Circuit:
         print("Validation completed successfully - all correct")
         return True
     
-    def CALC_ENTROPY(self):
-        for node in self.nodes_lev:
-            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
-                    (node.C0*math.log(node.C0, 2.0)))
-
-    def co_ob_info(self):
-        print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
-        for node in self.nodes_lev:
-            node.print_info(print_labels=False)
-
-
-    def CALC_TPI(self, num_TPI, fname):
-        TPI_list = [] #list of node entropy 
-        for node in self.nodes_lev:
-            node_list = [node.num, node.Entropy]
-            if not '-' in node.num:
-                TPI_list.append(node_list)
-            #print(TPI_list)
-        TPI_list.sort(key = lambda x: x[1])
-        print(TPI_list)
-        TPI_list = TPI_list[:num_TPI]
-        print(TPI_list)
-        
-        if not os.path.exists('../data/stafan-data'):
-            os.makedirs('../data/stafan-data')
-        outfile = open(fname, "w")
-        for item in TPI_list: 
-            outfile.write(item[0] + "\n")
-        outfile.close()
-
-    def TPI_stat(self, HTO_th, HTC_th):
-        """ Categorization of nodes based on STAFAN's measurement into 4 groups:
-        ETD: easy to detect 
-        HTC: hard to control, but easy to observe 
-        HTO: hard to observe, but easy to control 
-        HTD: hard to control, hard to observe
-        """
-        for node in self.nodes_lev:
-            if (node.B0 >= HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "ETD"
-            elif (node.B0 >= HTO_th) and (node.C0 < HTC_th):
-                node.stat["SS@1"] = "HTC"
-            elif (node.B0 < HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "HTO"
-            else: 
-                node.stat["SS@1"] = "HTD"
-
-            if (node.B1 >= HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "ETD"
-            elif (node.B1 >= HTO_th) and (node.C1 < HTC_th):
-                node.stat["SS@0"] = "HTC"
-            elif (node.B1 < HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "HTO"
-            else:
-                node.stat["SS@0"] = "HTD"
-    
-    def NVIDIA_count(self, op, HTO_th, HTC_th):
-        """ count the number of nodes that change from HTO to ETO 
-        by making node an observation point """ 
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_old = set()
-        for node in self.nodes_lev: 
-            if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
-                HTO_old.add(node.num)
-        orig_ntype = op.ntype
-        self.PO.append(op)
-        op.ntype = "PO"
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_new = set()
-        count = 0
-        for node in self.nodes_lev:
-            if node.num in HTO_old:
-                if (node.stat["SS@0"] != "HTO") and (node.stat["SS@1"] != "HTO"):
-                    # print("\t{} was HTO, but now became ETO".format(node.num))
-                    count = count + 1
-        op.ntype = orig_ntype
-        self.PO = self.PO[:-1]
-        return count
-    
-    def save_circuit_entropy(self, fname):
-        if not os.path.exists('../data/stafan-data'):
-            os.makedirs('../data/stafan-data')
-        outfile = open(fname, "w")
-        for node in self.nodes_lev:
-            arr = [node.num,node.Entropy] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
-        outfile.close()
-
     def make_num_int(self):
         node2int = dict()
         for idx, node in enumerate(self.nodes_lev):

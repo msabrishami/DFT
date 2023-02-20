@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
 
-import pdb
 import math 
 import sys
-import operator
 
 from enum import Enum
-from functools import reduce
 from abc import ABC, abstractmethod
-
-# We are using GNOT, etc. as we may later use X values
 
 class gtype(Enum):
     IPT = 0
@@ -41,39 +35,33 @@ class Node(ABC):
         logical value on the node, currently only accepting 2-value logic
     lev : int
         level of the node in circuit
-    gtype:      the upnode gate type
-                supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND, BUFF
-    ntype:      the node type
-                supporting: GATE, PI, FB, PO
-    unodes:     list of upper hand node objects
-    dnodes:     list of lower hand node objects
-    cpt:        #TODO: possibly checkpoints
-    sa0:        #TODO: possibly single stuck at 0 fault
-    sa1:        #TODO: possibly single stuck at 1 fault
-    index:      #TODO: Not known
+    gtype : TODO
+        the upnode gate type
+        supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND, BUFF
+    ntype : TODO
+        the node type
+        supporting: GATE, PI, FB, PO
+    unodes : list 
+        list of upper hand node objects
+    dnodes : list 
+        list of lower hand node objects
     """
 
     def __init__(self, n_type, g_type, num):
-        # Saeed confirms: 
         self.gtype = g_type
         self.ntype = n_type
         self.num = num
-        self.lev = None # choose a more descriptive name
+        self.lev = None 
         self.value = None
-        self.cval = None # ?
-        self.inv = None
+        self.cval = None    #TODO: controlling value, set to 15 by mistake 
+        self.inv = None     #TODO: inverting value, set to 15 by mistake
         self.unodes = []
         self.dnodes = []
-        self.flagA = None # flag?
-        self.flagB = None # flag?
+        self.flagA = None   # Very professional 
+        self.flagB = None   # Very professional 
 
-        # used for PPSF and SPPF 
-        # TODO
         bitlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**bitlen-1
-
-        #Entropy
-        self.Entropy =None      #entropy of the node
 
         # # SSTA Project
         self.dd_cell = None
@@ -83,8 +71,6 @@ class Node(ABC):
         res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
         res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
         res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
-        if self.C0 and self.C1:
-            res += f" C0={self.C0:.4f} C1={self.C1:.4f} B0={self.B0:.4f} B1={self.B1:.4f}"
         return res
     
     def add_unode(self, unode):
@@ -99,13 +85,11 @@ class Node(ABC):
     @abstractmethod
     def imply(self):
         ''' forward implication for a logic gate ''' 
-        # raise NotImplementedError() --> it implicitly exist when we import ABC
         pass
     
     @abstractmethod
     def imply_b(self, bitwise_not):
         ''' forward parallel implication for a logic gate ''' 
-        # raise NotImplementedError()
         pass
 
     def get_neighbors(self, value=False, inclusive=False):
@@ -128,37 +112,8 @@ class Node(ABC):
 
         return [n.value for n in res] if value else res
 
-    # TODO Move to children later
-    def is_sensible(self, count=True):
-        ''' Calculates if this node can propagate the gate in front of it.
-        i.e. if current value changes, down-node (output gate) value will change.
-        '''
-        # TODO: implemented on two value system, not sure if it applies to others
-
-        if self.ntype == 'PO':
-            return True
-
-        elif self.dnodes[0].gtype in ['NOT', 'XOR', 'XNOR', 'BRCH', 'BUFF']:
-            return True
-
-        elif self.dnodes[0].gtype in ['AND', 'NAND']:
-            if 0 in self.get_neighbors(inclusive=False, value = True):
-                return False
-            else:
-                return True
-
-        elif (self.dnodes[0].gtype == 'OR') | (self.dnodes[0].gtype == 'NOR'):
-            if 1 in self.get_neighbors(inclusive=False, value=True):
-                return False
-            else:
-                return True
-        else:
-            print("Error: Not implemented yet") 
-            pdb.set_trace()
 
     def print_info(self, get_labels=False, print_labels=True):
-        # TODO: two if/else is wrong, create strings and print once
-        # raises error when stafan is not calculated (move where stafan is, not here)
         if get_labels:
             return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
                     "C1", "S", "B0", "B1"]
@@ -166,27 +121,11 @@ class Node(ABC):
             print(f"N:{str(self.num).zfill(4)}\t", end="")
             print(f"LEV:{str(self.lev).zfill(2)}\t", end="")
             print(f"GATE:{self.gtype}\t", end="")
-            print(f"CC0:{str(self.CC0).zfill(3)}\t", end="")
-            print(f"CC1:{str(self.CC1).zfill(3)}\t", end="")
-            print(f"CO:{str(self.CO).zfill(3)}\t", end="")
-            print(f"C0:{self.C0:.2e}\t", end="")
-            print(f"C1:{self.C1:.2e}\t", end="")
-            print(f"S:{self.S:.2e}\t", end="")
-            print(f"B0:{self.B0:.2e}\t", end="")
-            print(f"B1:{self.B1:.2e}\t", end="")
             print()
         else:
             print(f"N:{str(self.num).zfill(4)}\t", end="")
             print(f"{str(self.lev).zfill(2)}\t", end="")
             print(f"{self.gtype}\t", end="")
-            print(f"{str(self.CC0).zfill(3)}\t", end="")
-            print(f"{str(self.CC1).zfill(3)}\t", end="")
-            print(f"{str(self.CO).zfill(3)}\t", end="")
-            print(f"{self.C0:.2e}\t", end="")
-            print(f"{self.C1:.2e}\t", end="")
-            print(f"{self.S:.2e}\t", end="")
-            print(f"{self.B0:.2e}\t", end="")
-            print(f"{self.B1:.2e}\t", end="")
             print()
     
     @staticmethod
@@ -196,7 +135,6 @@ class Node(ABC):
             Parameters
             ----------
             node_info : dict
-                # TODO
          """
         
         if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
@@ -294,14 +232,13 @@ class NAND(Node):
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0 # what is this?
+        self.c_flag = 0 
 
     def imply(self):
         try:
             self.value = 1 if (sum(self.unodes_val())%2 == 1) else 0
         except:
-            print("issue")
-            pdb.set_trace()
+            print("(NODE) ERROR") # TODO: raise exception 
     
     def imply_b(self):
         self.value = self.unodes[0].value
@@ -311,7 +248,7 @@ class XOR(Node):
 class XNOR(Node):
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0 # what is this?
+        self.c_flag = 0 
 
     def imply(self):
         self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1

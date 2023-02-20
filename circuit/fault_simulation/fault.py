@@ -1,3 +1,5 @@
+import numpy as np
+
 class Fault():
     def __init__(self, node_num, stuck_val):
         self.node_num = str(node_num)
