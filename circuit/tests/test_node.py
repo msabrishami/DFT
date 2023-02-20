@@ -375,7 +375,7 @@ def test_brch_imply():
 @pytest.mark.BRCH
 def test_brch_imply_b():
     ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    brch_node = node.BRCH(node.ntype.GATE, node.gtype.BRCH, "2")
+    brch_node = node.BRCH(node.ntype.FB, node.gtype.BRCH, "2")
     
     brch_node.add_unode(ipt_node)
     ipt_node.add_dnode(brch_node)
