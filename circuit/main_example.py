@@ -1,15 +1,14 @@
 from circuit.circuit import Circuit
-from circuit.testcircuit import TestCircuit
+from circuit.dft_circuit import DFTCircuit
 from fault_simulation.ppsf import PPSF
 from fault_simulation.pfs import PFS
 
 if __name__ == '__main__':
 
-    # circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
-    circuit_path = '../data/verilog/c432_synV1.v'
+    circuit_path = '../data/verilog/ISCAS85/v1/c17_synV1.v'
 
     # circuit = Circuit(circuit_path)
-    my_test_circuit = TestCircuit(circuit_path)
+    my_test_circuit = DFTCircuit(circuit_path)
     # print(circuit.nodes.keys())
     # print(my_test_circuit.nodes_lev)
 
@@ -25,7 +24,7 @@ if __name__ == '__main__':
     pfs = PFS(my_test_circuit)
     pfs.fault_list.add_all(my_test_circuit)
 
-    tp = 100
+    tp = 500
     # # tp = '../hello'
     # # tp = '../data/patterns/c432_synV1_tp_1000.tp'
     pfs.fs_exe(tp, verbose=True)

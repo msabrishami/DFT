@@ -10,10 +10,10 @@ from multiprocessing import Process, Pipe
 
 import config
 from circuit import circuit
-from node import testnode
+from node import dft_node
 
 
-class TestCircuit(circuit.Circuit):
+class DFTCircuit(circuit.Circuit):
     """ 
         An extended version of Circuit(), which is capable of SCOAP, STAFAN, PPSF, PFS
 
@@ -27,19 +27,19 @@ class TestCircuit(circuit.Circuit):
             node numbers in full fault list
         """
 
-    STD_NODE_LIB = {'AND':testnode.TestAND, 
-                    'XOR':testnode.TestXOR,
-                    'OR': testnode.TestOR, 
-                    'XNOR':testnode.TestXNOR,
-                    'BUFF':testnode.TestBUFF,
-                    'BRCH':testnode.TestBRCH,
-                    'NOR':testnode.TestNOR,
-                    'NAND':testnode.TestNAND,
-                    'NOT':testnode.TestNOT,
-                    'IPT':testnode.TestIPT}
+    STD_NODE_LIB = {'AND':dft_node.DFTAND, 
+                    'XOR':dft_node.DFTXOR,
+                    'OR': dft_node.DFTOR, 
+                    'XNOR':dft_node.DFTXNOR,
+                    'BUFF':dft_node.DFTBUFF,
+                    'BRCH':dft_node.DFTBRCH,
+                    'NOR':dft_node.DFTNOR,
+                    'NAND':dft_node.DFTNAND,
+                    'NOT':dft_node.DFTNOT,
+                    'IPT':dft_node.DFTIPT}
 
     def __init__(self, netlist_fname):
-        super().__init__(netlist_fname, TestCircuit.STD_NODE_LIB)
+        super().__init__(netlist_fname, DFTCircuit.STD_NODE_LIB)
     
     def SCOAP_CC(self):
         """ Calculates combinational controllability based on SCOAP measure """ 
@@ -143,7 +143,7 @@ class TestCircuit(circuit.Circuit):
             node.stafan_b()
     
     def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
-        # circuit = TestCircuit(self.c_fname)
+        # circuit = DFTCircuit(self.c_fname)
         # circuit.lev()
         circuit=self
         PI_num = len(circuit.PI)

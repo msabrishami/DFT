@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#TODO: if you want to read circuit for testing, change the circuit type to TestCircuit()
+#TODO: if you want to read circuit for testing, change the circuit type to DFTCircuit()
 
 import os
 import argparse

@@ -6,7 +6,7 @@ sys.path.insert(0,'..')
 import utils
 import node.node as node
 
-class TestNode(ABC):
+class DFTNode(ABC):
     """For now, it is designed for STAFAN, SCOAP, PFS and PPSF"""
     def __init__(self):
         
@@ -90,11 +90,11 @@ class TestNode(ABC):
             print("(NODE_TEST) ERROR") # TODO: raise exception 
 
 
-class TestBUFF(node.BUFF, TestNode):
+class DFTBUFF(node.BUFF, DFTNode):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
         node.BUFF.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -110,11 +110,11 @@ class TestBUFF(node.BUFF, TestNode):
         self.unodes[0].B1 = self.B1
         self.unodes[0].B0 = self.B0
 
-class TestNOT(node.NOT, TestNode):
+class DFTNOT(node.NOT, DFTNode):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
         node.NOT.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V ^ bitwise_not    # invert pfs_V using xor "1111..."
@@ -130,10 +130,10 @@ class TestNOT(node.NOT, TestNode):
         self.unodes[0].B1 = self.B0
         self.unodes[0].B0 = self.B1
 
-class TestOR(node.OR, TestNode):
+class DFTOR(node.OR, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.OR.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -176,10 +176,10 @@ class TestOR(node.OR, TestNode):
                     unode.B0 *= x
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-class TestNOR(node.NOR, TestNode):
+class DFTNOR(node.NOR, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.NOR.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -223,10 +223,10 @@ class TestNOR(node.NOR, TestNode):
                     unode.B0 *= x
                 print(f" ==> B0 ~ {unode.B0:.2e}")
 
-class TestAND(node.AND, TestNode):
+class DFTAND(node.AND, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.AND.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -268,10 +268,10 @@ class TestAND(node.AND, TestNode):
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-class TestNAND(node.NAND, TestNode):
+class DFTNAND(node.NAND, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.NAND.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -315,10 +315,10 @@ class TestNAND(node.NAND, TestNode):
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-class TestXOR(node.XOR, TestNode):
+class DFTXOR(node.XOR, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.XOR.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -347,10 +347,10 @@ class TestXOR(node.XOR, TestNode):
             unode.B1 = self.B0
             unode.B0 = self.B1
 
-class TestXNOR(node.XNOR, TestNode):
+class DFTXNOR(node.XNOR, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.XNOR.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V
@@ -380,10 +380,10 @@ class TestXNOR(node.XNOR, TestNode):
             unode.B1 = self.B0
             unode.B0 = self.B1
 
-class TestIPT(node.IPT, TestNode):
+class DFTIPT(node.IPT, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.IPT.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not, pfs_V):
         self.pfs_V = pfs_V * bitwise_not
@@ -398,10 +398,10 @@ class TestIPT(node.IPT, TestNode):
     def stafan_b(self):
         return 
 
-class TestBRCH(node.BRCH, TestNode):
+class DFTBRCH(node.BRCH, DFTNode):
     def __init__(self, n_type, g_type, num):
         node.BRCH.__init__(self, n_type, g_type, num)
-        TestNode.__init__(self)
+        DFTNode.__init__(self)
 
     def imply_p(self, bitwise_not):
         self.pfs_V = self.unodes[0].pfs_V

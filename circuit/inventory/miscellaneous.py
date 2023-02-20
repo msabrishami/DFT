@@ -121,49 +121,49 @@ import utils
 
 
 ##### DFS Functions #####
-class TestNode(node.Node):
+class DFTNode(node.Node):
 
     def dfs(self):
         ''' deductive fault simulation (dfs) using unodes ''' 
         raise NotImplementedError()
 
 
-class TestBUFF(node.BUFF):
+class DFTBUFF(node.BUFF):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
         self.faultlist_dfs.add((self.num, utils.not_gate(self.value)))
 
-class TestNOT(node.NOT):
+class DFTNOT(node.NOT):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
         self.faultlist_dfs.add((self.num, utils.not_gate(self.value)))
 
-class TestOR(node.OR):
+class DFTOR(node.OR):
     def dfs(self):
         self.faultlist_dfs.clear()
         dfs_general(self, 1)
 
-class TestNOR(node.NOR):
+class DFTNOR(node.NOR):
     def dfs(self):
         # the controling value of NOR is 1
         self.faultlist_dfs.clear()
         dfs_general(self, 1)
 
-class TestAND(node.AND):
+class DFTAND(node.AND):
     def dfs(self):
         # the controling value of AND is 0
         self.faultlist_dfs.clear()
         dfs_general(self, 0)
 
-class TestNAND(node.NAND):
+class DFTNAND(node.NAND):
     def dfs(self):
         # the controling value of NAND is 0
         self.faultlist_dfs.clear()
         dfs_general(self, 0)
 
-class TestXOR(node.XOR):
+class DFTXOR(node.XOR):
     def dfs(self):
         self.faultlist_dfs.clear()
         xor_FL_set = set()
@@ -172,7 +172,7 @@ class TestXOR(node.XOR):
         xor_FL_set.add((self.num, utils.not_gate(self.value)))
         self.faultlist_dfs = xor_FL_set
 
-class TestXNOR(node.XNOR):
+class DFTXNOR(node.XNOR):
     def dfs(self):
         self.faultlist_dfs.clear()
         xnor_FL_set = set()
@@ -181,12 +181,12 @@ class TestXNOR(node.XNOR):
         xnor_FL_set.add((self.num, utils.not_gate(self.value)))
         self.faultlist_dfs = xnor_FL_set
 
-class TestIPT(node.IPT):
+class DFTIPT(node.IPT):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs.add((self.num, utils.not_gate(self.value)))
 
-class TestBRCH(node.BRCH):
+class DFTBRCH(node.BRCH):
     def dfs(self):
         self.faultlist_dfs.clear()
         self.faultlist_dfs = self.unodes[0].faultlist_dfs.copy()
