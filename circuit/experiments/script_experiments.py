@@ -1,9 +1,7 @@
 
 
 import os
-import subprocess
 import glob
-import pdb
 
 netlists_EPFL_ALL = ["arbiter", "ctrl",  "i2c",  "mem_ctrl", "sin", "bar","dec", "int2float", "multiplier", "sqrt", "cavlc", "div", "log2", "router", "square", "adder", "hyp", "max", "priority", "voter"]
 # removed because of size issue: mem_ctrl, hyp, div, sqrt, square, log2 

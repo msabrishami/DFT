@@ -3,9 +3,6 @@ import os
 import random
 import sys
 
-from enum import Enum
-from multiprocessing import Process
-
 import config
 from circuit.circuit_loader import CircuitLoader
 from node import node

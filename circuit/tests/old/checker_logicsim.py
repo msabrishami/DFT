@@ -5,7 +5,7 @@ import os
 
 # change these
 from circuit.circuit import *
-from modelsim_simulator import *
+from circuit.inventory.modelsim_simulator import *
 from circuit.load_circuit import *
 
 class Checker():

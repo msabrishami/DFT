@@ -1,13 +1,5 @@
-
-import config
-import pdb
-import sys
-import math
-
 import numpy as np
 import matplotlib.pyplot as plt
-from multiprocessing import Process, Pipe
-
 
 def smooth_hist(vals, window=5):
     """ Average smoothing over a floating point series, it can be a series of 

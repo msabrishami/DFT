@@ -1,7 +1,4 @@
 import os
-import numpy as np
-
-import sys
 
 import config
 from fault_simulation import fault

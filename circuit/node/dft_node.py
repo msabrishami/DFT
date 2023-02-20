@@ -1,5 +1,4 @@
 import sys
-from enum import Enum
 from abc import ABC, abstractmethod
 
 sys.path.insert(0,'..')

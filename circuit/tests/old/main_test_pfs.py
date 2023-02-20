@@ -9,7 +9,7 @@ import time
 from random import randint
 
 from circuit.circuit import Circuit
-from modelsim_simulator import Modelsim
+from circuit.inventory.modelsim_simulator import Modelsim
 
 import sys
 sys.path.insert(1, "../data/netlist_behavioral")

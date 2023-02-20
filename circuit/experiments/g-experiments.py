@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
-import enum
 import argparse
 import math
 import os
 import re
 import pdb
 
-import scipy.stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -15,11 +11,11 @@ import pandas as pd
 
 import sys
 sys.path.append('../')
+
 import config
 import utils
-import observation as obsv
-from Circuit.circuit import Circuit
-from FaultSimulation.pfs import PFS
+from circuit.circuit import Circuit
+from fault_simulation.pfs import PFS
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']

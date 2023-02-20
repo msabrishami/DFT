@@ -4,14 +4,10 @@ sys.path.insert(0,'..')
 import argparse
 import os
 import pdb
-import math
-import time
-from random import randint
 from circuit.circuit import Circuit
 import sys
 import config
 import utils
-from circuit.load_circuit import LoadCircuit
 
 # sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist

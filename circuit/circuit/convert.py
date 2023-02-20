@@ -5,12 +5,11 @@ import config
 import os
 import re
 import sys
-import subprocess
 
 sys.path.insert(1, config.LIB_CELLS_PATH)
 import library_cells
 
-from circuit.load_circuit import read_verilog_syntax
+from circuit.circuit_loader import read_verilog_syntax
 
 class Converter:
     def __init__(self, ckt, verilog_format):

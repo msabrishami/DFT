@@ -1,19 +1,10 @@
-# -*- coding: utf-8 -*-
-
-#TODO: if you want to read circuit for testing, change the circuit type to DFTCircuit()
-
 import os
 import argparse
 import pandas as pd
-import networkx as nx
-import math
 import time
-import copy
-import re
 import sys
 import pdb
 
-from multiprocessing import Process, Pipe
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,11 +13,8 @@ import seaborn as sns
 import utils
 import config as cfg
 import experiments.experiments as exp
-import observation
-from fault_simulation.fault import FaultList
 from fault_simulation.ppsf import PPSF
 from fault_simulation.pfs import PFS
-from circuit import convert
 from circuit.circuit import Circuit
 
 sys.path.insert(1, "../data/netlist_behavioral")

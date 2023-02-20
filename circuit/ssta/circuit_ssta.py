@@ -2,6 +2,13 @@
 ####################################
 ########## NOT TESTED AT ALL 
 ####################################
+import os
+import time
+import matplotlib.pyplot as plt
+
+import config
+import utils
+from circuit.circuit import Circuit
 from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 

@@ -2,7 +2,7 @@
 ####################################
 ########## NOT TESTED AT ALL 
 ####################################
-import circuit.circuit
+from circuit.circuit import Circuit
 
 class Circuit_ATPG(Circuit):
 
