@@ -21,7 +21,6 @@ class CircuitLoader:
             A dictionary of each node type to its class
         """ 
 
-        circuit_name   = circuit_fname.split('/')[-1].split('.')[0]
         circuit_format = circuit_fname.split('/')[-1].split('.')[1]
 
         if circuit_format == 'ckt':
@@ -29,7 +28,7 @@ class CircuitLoader:
         elif circuit_format == 'v':
             self.read_verilog(circuit, circuit_fname, std_node_lib)
         else:
-            raise NotImplementedError(f"Circuit format {mode} is not supported!")
+            raise NotImplementedError(f"Circuit format {circuit_format} is not supported!")
 
     def connect_node(self, circuit,  line):
         # As we move forward, find the upnodes and connects them
@@ -241,7 +240,6 @@ def read_verilog_syntax(line):
         if pin_format:
             #TODO: for now, we considered PO as the last pin
             if "Z" not in pin_format[-1][0]:
-                pdb.set_trace()
                 raise NameError("Cannot detect the output pin as the last argumet, check code")
             nets = [pin_format[-1][1]]
             for x in pin_format[:-1]:
