@@ -355,7 +355,7 @@ def OPI_old(circuit, alg, count_op, args):
         print("Candidates: {}".format(len(ops)))
 
         if alg == "deltaP":
-            ops = circuit_deltaP(circuit, B_th=args.Bth, ops=ops)
+            ops = circuit_deltaP(circuit, B_th=args.Bth, ops=ops) # not defined at all!
         elif alg == "deltaHTO":
             ops = circuit_deltaHTO(circuit, B_th=args.Bth, ops=ops, args=args)
 
