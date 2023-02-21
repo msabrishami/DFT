@@ -26,14 +26,14 @@ class Circuit:
         c_name : str
             circuit name, without path or format
         nodes : list
-            list of nodes objects
+            list of nodes objects-->Wrong
+            dict of node.num to object of node
         input_num_list : list
             list of PI node numbers
         nodes_cnt : 
             total number of nodes in the circuit
-        nodes_lev : 
-            circuit information after levelization,
-            each node has level info, previous nodelist_order
+        nodes_lev : list
+            list of all nodes, ordered by level
         """
     
     STD_NODE_LIB = {'AND':node.AND, 
@@ -60,12 +60,13 @@ class Circuit:
 
         self.c_fname = netlist_fname 
         self.c_name = netlist_fname.split('/')[-1].split('.')[0]
-        self.nodes = {}     # dict of all nodes, key is now string node-num
-        self.nodes_lev = [] # list of all nodes, ordered by level
+        self.nodes = {}     
+        self.nodes_lev = [] 
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
         self._load(netlist_fname, std_node_lib)
         self.levelize()
+
 
 
     def _load(self, netlist_fname, std_node_lib):
@@ -184,7 +185,113 @@ class Circuit:
             
         self.print_fanin_rec(queue, min_level)
 
+    def logic_sim(self, tp):
+        """
+        Logic simulation:
+        Read a given pattern and perform the logic simulation
+        Currently just works with binary logic
+        tp is a list of values (currently int) in the same order as in self.PI
+
+        TODO: Maybe returns the output
+        """
+        node_dict = dict(zip([x.num for x in self.PI], tp))
+
+        for node in self.nodes_lev:
+            if node.gtype == "IPT":
+                node.imply(node_dict[node.num])
+            else:
+                node.imply()
+
+    def logic_sim_bitwise(self, tp, fault=None):
+        """
+        Logic simulation bitwise mode:
+        Reads a given pattern and perform the logic simulation bitwise
+
+        Arguments
+        ---------
+        tp : list of int 
+            input pattern in the same order as in self.PI
+        fault : Fault
+            node.num@fault --> example: N43@0 means node N43 single stuck at zero 
+        
+        TODO: Maybe returns the output
+        """
+
+        node_dict = dict(zip([x.num for x in self.PI], tp))
     
+        if fault:
+            for node in self.nodes_lev:
+                if node.gtype == "IPT":
+                    node.imply_b(node_dict[node.num])
+                else:
+                    node.imply_b()
+                if node.num == fault.node_num:
+                    if fault.stuck_val == '0':
+                        node.value = 0
+                    else:
+                        node.value = node.bitwise_not
+
+        else:
+            for node in self.nodes_lev:
+                if node.gtype == "IPT":
+                    node.imply_b(node_dict[node.num])
+                else:
+                    node.imply_b()
+
+    def logic_sim_file(self, in_fname, out_fname, stil=False): 
+        """
+        logic simulation with given input vectors from a file
+        - generate an output folder in ../data/modelsim/circuit_name/ directory
+        - read an input file in the input folder
+        - generate a output file in output folder by using logic_sim() function
+        """
+        # Saeed needs to rewrite this method using 'yield' in load_tp_file     
+        fr = open(in_fname, mode='r')
+        fw = open(out_fname, mode='w')
+        fw.write('Inputs: ')
+        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
+        fw.write('Outputs: ')
+        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
+        temp = fr.readline()
+        i=1
+        for line in fr.readlines():
+            line=line.rstrip('\n')
+            line_split=line.split(',')
+            for x in range(len(line_split)):
+                line_split[x]=int(line_split[x])
+            self.logic_sim(line_split)
+            fw.write('Test # = '+str(i)+'\n')
+            fw.write(line+'\n')
+            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
+            i+=1
+        fw.close()
+        fr.close()
+        
+        if stil:
+            infile = open(in_fname, "r")
+            lines = infile.readlines()
+            outfile = open(out_fname, "w")
+            outfile.write("PI:")
+            outfile.write(",".join([node.num for node in self.PI]) + "\n")
+            outfile.write("PO:")
+            outfile.write(",".join([node.num for node in self.PO]) + "\n")
+            for idx, line in enumerate(lines[1:]):
+                tp=line.rstrip('\n').split(",")
+                # for x in range(len(line_split)):
+                #    line_split[x]=int(line_split[x])
+                # self.logic_sim(line_split)
+                self.logic_sim(tp)
+                outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
+                outfile.write("\"_pi\"=")
+                outfile.write("".join(line.strip().split(",")))
+                outfile.write(";\n")
+                outfile.write("      \"_po\"=")
+                for node in self.PO:
+                    val = "H" if node.value==1 else "L"
+                    outfile.write(val)
+                outfile.write("; } \n")
+            outfile.close()
+
     def gen_single_tp(self, mode="b"):
         """ Generate a random input pattern.
         mode b: generate values in {0, 1}
@@ -202,7 +309,6 @@ class Circuit:
         
         return tp 
     
-
     def gen_multiple_tp(self, tp_count, mode="b"):
         """ Generate multiple random input patterns
         mode b: generate values in {0, 1}
@@ -291,126 +397,6 @@ class Circuit:
             tps.append(words)
         infile.close()
         return tps
-
-    def read_PO(self):
-        """ Read the values of POs in a dictionary.
-        The key to the dictionary is the PO node and value is the value of node
-        """ 
-        #TODO: remove out from the output 
-        res = {}
-        for node in self.PO:
-            res["out" + str(node.num)] = node.value
-        return res
-
-    def logic_sim(self, tp):
-        """
-        Logic simulation:
-        Read a given pattern and perform the logic simulation
-        Currently just works with binary logic
-        tp is a list of values (currently int) in the ... 
-            ... same order as in self.PI
-        """
-        node_dict = dict(zip([x.num for x in self.PI], tp))
-
-        for node in self.nodes_lev:
-            if node.gtype == "IPT":
-                node.imply(node_dict[node.num])
-            else:
-                node.imply()
-
-    def logic_sim_bitwise(self, tp, fault=None):
-        """
-        Logic simulation bitwise mode:
-        Reads a given pattern and perform the logic simulation bitwise
-
-        Arguments
-        ---------
-        tp : list of int 
-            input pattern in the same order as in self.PI
-        fault : str
-            node.num@fault --> example: N43@0 means node N43 single stuck at zero 
-
-        fault
-        """
-        node_dict = dict(zip([x.num for x in self.PI], tp))
-        # TODO: get rid of this! Why did we not implement this within constructor?
-        n = sys.maxsize
-        bitlen = math.log2(n)+1
-
-        bitwise_not = 2**bitlen-1
-        
-        if fault:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
-                if node.num == fault.node_num:
-                    if fault.stuck_val == '0':
-                        node.value = 0
-                    else:
-                        node.value = node.bitwise_not
-
-        else:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
-
-    def logic_sim_file(self, in_fname, out_fname, stil=False): 
-        """
-        logic simulation with given input vectors from a file
-        - generate an output folder in ../data/modelsim/circuit_name/ directory
-        - read an input file in the input folder
-        - generate a output file in output folder by using logic_sim() function
-        """
-        # Saeed needs to rewrite this method using 'yield' in load_tp_file     
-        fr = open(in_fname, mode='r')
-        fw = open(out_fname, mode='w')
-        fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
-        fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
-        temp = fr.readline()
-        i=1
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            self.logic_sim(line_split)
-            fw.write('Test # = '+str(i)+'\n')
-            fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
-            i+=1
-        fw.close()
-        fr.close()
-        
-        if stil:
-            infile = open(in_fname, "r")
-            lines = infile.readlines()
-            outfile = open(out_fname, "w")
-            outfile.write("PI:")
-            outfile.write(",".join([node.num for node in self.PI]) + "\n")
-            outfile.write("PO:")
-            outfile.write(",".join([node.num for node in self.PO]) + "\n")
-            for idx, line in enumerate(lines[1:]):
-                tp=line.rstrip('\n').split(",")
-                # for x in range(len(line_split)):
-                #    line_split[x]=int(line_split[x])
-                # self.logic_sim(line_split)
-                self.logic_sim(tp)
-                outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
-                outfile.write("\"_pi\"=")
-                outfile.write("".join(line.strip().split(",")))
-                outfile.write(";\n")
-                outfile.write("      \"_po\"=")
-                for node in self.PO:
-                    val = "H" if node.value==1 else "L"
-                    outfile.write(val)
-                outfile.write("; } \n")
-            outfile.close()
 
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
@@ -511,3 +497,12 @@ class Circuit:
 
         self.PO.append(new_brch)    
         self.nodes[new_brch.num] = new_brch
+
+    def read_PO(self):
+        """ Read the values of POs in a dictionary.
+        The key to the dictionary is the PO node and value is the value of node
+        """ 
+        res = {}
+        for node in self.PO:
+            res[str(node.num)] = node.value
+        return res

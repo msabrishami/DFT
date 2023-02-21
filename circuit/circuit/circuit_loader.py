@@ -2,6 +2,7 @@ import re
 import config
 
 from node.node import Node
+from node import node
 
 class CircuitLoader:
     """ Read a circuit netlist (gate level), 
@@ -162,8 +163,8 @@ class CircuitLoader:
             # node_info = self.read_node_ckt(circuit, line.strip())
             attr = line.split()
             node_info = dict()
-            node_info["n_type"] = Node.ntype(int(attr[0])).name
-            node_info["g_type"] = Node.gtype(int(attr[2])).name
+            node_info["n_type"] = node.ntype(int(attr[0])).name
+            node_info["g_type"] = node.gtype(int(attr[2])).name
             node_info["num"] = attr[1]
             new_node = Node.gen_node(node_info, std_node_lib)
             # new_node.ntype = n_type

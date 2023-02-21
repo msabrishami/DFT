@@ -39,7 +39,12 @@ def int2binList(val, bitwidth):
 def comp_Zg_Zf_bin(Zg, Zf, bitwidth):
     """ Compare two output dictionaries if the logic values are 
     binary, like in PPSF fault simulation 
-    Zg and Zf are integer values """ 
+    Zg and Zf are integer values.
+    
+    Return
+    -------
+    indices of test patterns that detected a fault
+    """ 
     tps = set()
     for k in Zg:
         val_g = bin(Zg[k])[2:][-bitwidth:]

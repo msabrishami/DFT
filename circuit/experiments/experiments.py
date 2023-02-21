@@ -16,7 +16,7 @@ import utils
 import observation as obsv
 from random import randint
 from circuit.circuit import Circuit
-from circuit.load_circuit import LoadCircuit
+from circuit.circuit_loader import CircuitLoader
 from fault_simulation.pfs import PFS
 from fault_simulation.ppsf import PPSF 
 from fault_simulation.fault import FaultList
@@ -59,7 +59,7 @@ def exp_check_verilog_modelsim():
     for ckt in ["c17", "c432", "c499", "c880", "c1908"]:
         print("\nCircuit: " + ckt)
         circuit = Circuit(ckt)
-        LoadCircuit(circuit, "v")
+        CircuitLoader(circuit, "v")
         circuit.lev()
         path = "../../data/modelsim/golden_IO_from_verilog/golden_" + ckt + "_10_b.txt"
         circuit.golden_test(path)
@@ -69,7 +69,7 @@ def exp_check_c432_behavioral(mode="ckt", tp=100, ):
         raise NameError("mode {} is not accepted".format(mode))
     print("Checking c432 behavioral golden with c432 in {} format".format(mode))
     circuit = Circuit("c432")
-    LoadCircuit(circuit, mode)
+    CircuitLoader(circuit, mode)
     circuit.lev()
     check_c432_logicsim(circuit, tp, mode)
 
@@ -105,15 +105,6 @@ def check_pfs_vs_ppsf(circuit, args):
     if not error:
         print("PFS and PPSF results match!")
 
-
-# def ppsf_thread_old(conn, ckt_name, tp_count, tp_fname, fl_fname):
-#     ckt = Circuit(ckt_name) 
-#     ckt.lev()
-#     tps = ckt.gen_multiple_tp(tp_count)
-#     fault_sim = PPSF(ckt)
-#     fault_sim.fault_list.add_file(fl_fname)
-#     fault_sim.fs_exe(tps)
-#     conn.send(fault_sim.fault_list)
 
 def ppsf_thread(conn, ckt, tp_count, fault_list):
     tps = ckt.gen_multiple_tp(tp_count)
@@ -362,7 +353,7 @@ def ppsf_analysis(circuit, args):
         circuit.c_name, args.tp, args.cpu))
     print("Reading PPSF parallel simulation results from {}".format(fname))
     res = utils.load_ppsf_parallel(fname)
-    for k, v in res.items():
+    for k, v in res.items(): 
         res[k] = np.mean(v), np.std(v)
 
     return res
@@ -398,7 +389,7 @@ def ppsf_analysis(circuit, args):
 #         plt.hist(stafan_pd, bins=bins, color="r", alpha=0.2, label="STAFAN")
 #         plt.hist(ppsf_pd,  bins=bins, color="b", alpha=0.2, label="PPSF")
 #         plt.title("Detection probability histogram\n{}-tp={}".format(
-#             circuit.c_name, args.tpLoad))
+#             circuit.c_name, args.tp``))
 #         plt.legend()
 #         fname = "./results/figures/stafan-vs-ppsf-hist-{}-tpLoad{}-ci{}-cpu{}.png".format(
 #                 circuit.c_name, args.tpLoad, args.ci, args.cpu)

@@ -10,14 +10,11 @@ class PFS(FaultSim):
     """ 
     Parallel Fault Single Pattern, Fault Simulation 
     """
-    def __init__(self, circuit):
-        super().__init__(circuit)
+    def __init__(self, circuit, faults_mode):
+        super().__init__(circuit, fault_mode=faults_mode)
         self.fs_type = "pfs"
-        self.wordlen = int(math.log2(sys.maxsize))+1
-        self.bitwise_not = 2**self.wordlen-1
         self.fs_folder()
         
-    
     def fs_folder(self):
         super().fs_folder()
         path = config.FAULT_SIM_DIR + '/' + self.circuit.c_name + '/' + "pfs"
