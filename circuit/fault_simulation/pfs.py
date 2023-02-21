@@ -1,11 +1,8 @@
-import sys
-
-import math
 import os
 
 import config
 from fault_simulation.simulation import FaultSim
-
+from tp_generator import TPGenerator
 class PFS(FaultSim):
     """ 
     Parallel Fault Single Pattern, Fault Simulation 
@@ -166,11 +163,12 @@ class PFS(FaultSim):
         -------
         tpfc : list of floats , FC percentage (accumulative) value as tps are used for test 
         """
+        tg = TPGenerator(self)
         if isinstance(tps, int):
-            tps = self.circuit.gen_multiple_tp(tps)
+            tps = tg.gen_multiple_tp(tps)
         elif isinstance(tps, str):
-            tps = self.circuit.load_tp_file(tps)
-        else:
+            tps = tg.load_tp_file(tps)
+        elif not isinstance(tps, list):
             raise TypeError("tps should be either int, or file name")
 
         log_fname = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"

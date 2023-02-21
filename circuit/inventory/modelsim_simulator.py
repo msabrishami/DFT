@@ -65,6 +65,7 @@ class Modelsim():
         else:
             self.tp_fname = os.path.join(self.path_in, tp_fname)
         #create test pattern file
+        # update test generation calling
         self.circuit.gen_tp_file(tp_count, fname=self.tp_fname)
         #return tp_fname 
 

@@ -101,6 +101,7 @@ if __name__ == '__main__':
 
     elif args.func == "test-tp-gen":
         # testing tp generation methods
+        # TODO: update test generation calling
         tps = circuit.gen_full_tp_file()
         # print(tps)
         tps = circuit.gen_tp_file(args.tp, mode="b")

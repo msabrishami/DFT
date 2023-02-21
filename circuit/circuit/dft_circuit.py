@@ -5,10 +5,10 @@ import random
 import time
 import pdb
 
-from enum import Enum
 from multiprocessing import Process, Pipe
 
 import config
+from tp_generator import TPGenerator
 from circuit import circuit
 from node import dft_node
 
@@ -40,6 +40,7 @@ class DFTCircuit(circuit.Circuit):
 
     def __init__(self, netlist_fname):
         super().__init__(netlist_fname, DFTCircuit.STD_NODE_LIB)
+        self._executed = False
     
     def SCOAP_CC(self):
         """ Calculates combinational controllability based on SCOAP measure """ 
@@ -103,7 +104,8 @@ class DFTCircuit(circuit.Circuit):
         '''
 
         if isinstance(tp, str):
-            tps = self.load_tp_file(tp)
+            tg = TPGenerator(self)
+            tps = tg.load_tp_file(tp)
             num_pattern = len(tps)
             tp_gen = False 
 
@@ -215,6 +217,8 @@ class DFTCircuit(circuit.Circuit):
         duration = end_time - start_time
         if verbose:
             print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
+        
+        self._executed = True
     
     def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
         if fname == None:
@@ -246,6 +250,7 @@ class DFTCircuit(circuit.Circuit):
             node.S  = float(words[5]) 
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
+        self._executed = True
 
     def STAFAN_FC(self, tp_count):
         """ Estimation of fault coverage for all faults 
@@ -257,6 +262,15 @@ class DFTCircuit(circuit.Circuit):
         tp_count : int
             number of test patterns, used in the fault coverage estimation formula 
         """
+        if isinstance(tp_count, list):
+            tp_count = len(tp_count)
+            #TODO: is this okay? only the size of given tests are used
+        if not self._executed:
+            if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)?'):
+                self.STAFAN(tp_count)
+            else:
+                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
+
         nfc = 0
         for node in self.nodes_lev:
             if None in [node.C0,node.C1,node.B0,node.B1]:

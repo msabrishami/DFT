@@ -16,6 +16,7 @@ import config
 import utils
 from circuit.circuit import Circuit
 from fault_simulation.pfs import PFS
+from tp_generator import TPGenerator
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']
@@ -674,7 +675,8 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
     else:
         nodes = list(circuit.get_rand_nodes(op_count))
 
-    tps = circuit.gen_multiple_tp(tp_count)
+    tg = TPGenerator(circuit)
+    tps = tg.gen_multiple_tp(tp_count)
     tps_detected_init = []
     
     init_pfs = PFS(circuit)

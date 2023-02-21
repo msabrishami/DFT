@@ -8,6 +8,7 @@ import time
 import os
 import math
 import sys
+from tp_generator import TPGenerator
 
 import numpy as np
 
@@ -79,11 +80,13 @@ class PPSF(FaultSim):
         TODO: log_fname
         """
         print("WARNING: ppsf.fs_exe is not tested after a few modifications")
+
+        tg = TPGenerator(self.circuit)
         if isinstance(tps, int):
-            tps = self.circuit.gen_multiple_tp(tps)
+            tps = tg.gen_multiple_tp(tps)
         elif isinstance(tps, str):
             if os.path.exists(tps):
-                tps = self.circuit.load_tp_file(tps)
+                tps = tg.load_tp_file(tps)
             else:
                 raise "path not exist."
         elif not isinstance(tps, list):

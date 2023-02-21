@@ -5,7 +5,7 @@ import utils
 import experiments as exp
 
 from fault_simulation.pfs import PFS
-from fault_simulation.fault import FaultList
+from tp_generator import TPGenerator
 
 def fault_stat(circuit, HTO_th, HTC_th):
     """ categorizes all the nodes in the circuit based on obs and ctrl
@@ -267,7 +267,8 @@ def deltaFC_PFS(circuit, op, tp_count, times, depth=None, log=True):
     delta_fcs = pd.DataFrame(columns=["time","tp","delta_FC","OP_Node"])
 
     for time in range(times):
-        tps = circuit.gen_multiple_tp(tp_count)
+        tg = TPGenerator(circuit=circuit)
+        tps = tg.gen_multiple_tp(tp_count)
         for tp in tps:
             init_pfs = PFS(circuit)
             init_pfs.fault_list.add_nodes(fanin_nodes)
@@ -363,6 +364,6 @@ def OPI_old(circuit, alg, count_op, args):
             break
         new_op = circuit.nodes[list(ops)[0]]
         res.append(new_op.num)
-        make_OP(circuit, new_op)
+        circuit.make_OP( new_op)
   
     return res

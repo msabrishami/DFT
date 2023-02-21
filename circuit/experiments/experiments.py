@@ -79,11 +79,9 @@ def check_pfs_vs_ppsf(circuit, args):
         o.w. args.tp will be used to generate a tp file """
     if len(circuit.PI) < 12:
             tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-            tps = circuit.gen_full_tp_file()
     else:
         tp_fname = "../data/patterns/{}_tp_{}.tp".format(
             circuit.c_name, args.tp)
-        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
  
     pfs = PFS(circuit)
     pfs.fault_list.add_all(circuit)
