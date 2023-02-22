@@ -284,7 +284,6 @@ class PPSF(FaultSim):
             temp_faults = FaultList()
 
             # D_count_list is calculated here
-            # Upper bound of tp/processes
             self._multiprocess_step(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
 
             if log:
