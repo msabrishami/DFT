@@ -14,9 +14,10 @@ DIR5= '../data/verilog/EPFL/v0/'
 DIR6= '../data/verilog/EPFL/v1/'
 DIR7= '../data/verilog/EPFL/v2/'
 
-DIR8 = '../data/verilog/'
+DIR8 = '../data/verilog/ISCAS89'
 
 ALL_DIRS = [DIR1,DIR2,DIR3,DIR4,DIR5,DIR6,DIR7,DIR8]
+
 PRINT_PASSED = False
 
 if __name__ == '__main__':
