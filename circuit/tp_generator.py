@@ -105,7 +105,6 @@ class TPGenerator:
         for line in lines[1:]:
             words = line.rstrip().split(',')
             words = [int(word) if word == '1' or word == '0' else 'X' for word in words]
-            # Not the best practice to have a list with multiple types of elements
             tps.append(words)
         infile.close()
         return tps

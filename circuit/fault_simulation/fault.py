@@ -6,6 +6,7 @@ class Fault():
         self.stuck_val = str(stuck_val)
         self.D_count = 0 
         # Issue: in PPSFm D_count is set as an array
+        self.D_count_list = [] # used in ppsf-bad!
 
     def __str__(self):
         return self.node_num + "@" + self.stuck_val

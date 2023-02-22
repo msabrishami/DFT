@@ -44,7 +44,7 @@ class Circuit:
                     'IPT':node.IPT}
 
 
-    def __init__(self, netlist_fname, std_node_lib=STD_NODE_LIB):
+    def __init__(self, c_fname, std_node_lib=STD_NODE_LIB):
         """ 
         Attributes 
         ----------
@@ -54,13 +54,13 @@ class Circuit:
             the full name of the circuit without path and format 
         """
 
-        self.c_fname = netlist_fname 
-        self.c_name = netlist_fname.split('/')[-1].split('.')[0]
+        self.c_fname = c_fname 
+        self.c_name = c_fname.split('/')[-1].split('.')[0]
         self.nodes = {}     
         self.nodes_lev = [] 
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
-        self._load(netlist_fname, std_node_lib)
+        self._load(c_fname, std_node_lib)
         self.levelize()
 
 
@@ -187,8 +187,6 @@ class Circuit:
         Read a given pattern and perform the logic simulation
         Currently just works with binary logic
         tp is a list of values (currently int) in the same order as in self.PI
-
-        TODO: Maybe returns the output
         """
         node_dict = dict(zip([x.num for x in self.PI], tp))
 
@@ -197,6 +195,9 @@ class Circuit:
                 node.imply(node_dict[node.num])
             else:
                 node.imply()
+        
+        return [pi.value for pi in self.PI]
+
 
     def logic_sim_bitwise(self, tp, fault=None):
         """

@@ -9,8 +9,9 @@ from tp_generator import TPGenerator
 if __name__ == '__main__':
 
     # circuit_path = '../data/verilog/ISCAS85/v1/c17_synV1.v'
-    circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
+    # circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
     # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
+    circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
     # circuit_path = '../data/ckt/c880.ckt'
 
     circuit = DFTCircuit(circuit_path)
@@ -19,18 +20,18 @@ if __name__ == '__main__':
 
     # ppsf = PPSF(circuit, fault_mode='all')
     ppsf = PPSF(circuit)
-    tp = 1000
     
     # good
     # ppsf.fs_exe(tps = tp, verbose=True)
     # print('_'*50)
     
     # error
-    ppsf.parallel_run(steps=config.PPSF_STEPS, verbose=True, cpu=3, ci=2)
+    ppsf.multiprocess_ci_run(tp_steps=config.PPSF_STEPS[:5], verbose=True, ci=1, process=8)
     print('_'*50)
     
     # good
-    # ppsf.parallel_run(tp=tp, verbose=True, cpu=2)
+    # ppsf.simple_multiprocess_run(tp=tp, process=3, verbose=True)
+    # ppsf.parallel_run(tp=tp, verbose=True, process=2)
     # print('_'*50)
     
     ##################### PFS Example ####################

@@ -16,8 +16,8 @@ sys.path.append('../')
 
 """
 Trace functions called during Parallel Fault Simulation: 
-    single_run() -> fs_exe() -> _ppsf_thread() ->
-   _pd_ppsf_step() -> [pd_ppsf_conf() | pd_ppsf_basic()] -> pd_ppsf()
+    single_run() -> fs_exe() -> _single_process_run() ->
+   _multiprocess_step(PARALLEL) -> [multiprocess_ci_run() | simple_multiprocess_run()]
 """
 
 class PPSF(FaultSim):
@@ -88,7 +88,6 @@ class PPSF(FaultSim):
 
         if faults is None and len(self.fault_list.faults):
             faults = self.fault_list
-        
         elif self.fault_list is None or faults is None:
             faults = FaultList()
             faults.add_all(self.circuit)
@@ -114,18 +113,17 @@ class PPSF(FaultSim):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
                 res = self.single_run(tps_pass, fault)
                 fault.D_count += len(res)
-            if verbose and idx % 10 == 0:
+            if verbose and idx % 100 == 0:
                 print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
-
         if verbose:
             print("PPFS completed")
             print(f"FC: {100*faults.calc_fc():.4f}%, tot-faults={len(faults.faults)}")
 
-    def _thread_run(self, conn, tp, faults):
-        self.fs_exe(tps=tp, faults=faults)
+    def _single_process_run(self, conn, tp, faults, verbose):
+        self.fs_exe(tps=tp, faults=faults, verbose = verbose)
         conn.send(faults)
 
-    def _parallel_step(self, tp, fl_curr, cpu=1, log_fname=None, count_cont=False):
+    def _multiprocess_step(self, tp, fl_curr, process=1, log_fname=None, count_cont=False, verbose = False):
         """ Run ppsf in parallel for one step with given list or number of test patterns and fault list, \
         counts the number of the times faults in fault list are detected. 
         The tps are generated in each process separately, but are not stored by default.
@@ -136,7 +134,7 @@ class PPSF(FaultSim):
             Initially is total faults
         tp : int
             The number of test patterns for each process  
-        cpu : int
+        process : int
             Count of parallel processes
         log_fname : str
             File name for the final log fil. If None, does not log results (default is None)
@@ -146,38 +144,29 @@ class PPSF(FaultSim):
         Returns
         ------
         list
-            A fault list with D_count with length equal to given count of CPUs
+            A fault list with D_count with length equal to given count of processes
             An updated version of fault_list --> D-count is added
         """
         time_s = time.time()
         process_list = []
-        print(f'running parallel {tp} test patterns on {cpu} cpu)')
-        for _ in range(cpu):
+        print(f'\nRunning parallel {tp} test patterns divided between {process} process(es)')
+        #Upper bound of tp//process
+        for _ in range(process):
             parent_conn, child_conn = Pipe()
-            p = Process(target=self._thread_run,
-                        args=(child_conn, tp, fl_curr))
+            p = Process(target=self._single_process_run,
+                        args=(child_conn, tp//process+1, fl_curr, verbose))
             p.start()
-            print('Process', p.name, 'started')
             process_list.append((p, parent_conn))
 
         fault_lists = []
         for p, conn in process_list:
-            tup = conn.recv()
-            fault_lists.append(tup)
+            faults_with_D_count = conn.recv()
+            fault_lists.append(faults_with_D_count)
             p.join()
-
-        # why exactly the same for all f?
-        for f in fault_lists:
-            print(f.faults[:5])
-            print(f.faults[-5:])
-            print('____')
-
-        for fault in fl_curr.faults:
-            fault.D_count = []
 
         for fl in fault_lists:
             for idx in range(len(fl_curr.faults)):
-                fl_curr.faults[idx].D_count.append(fl.faults[idx].D_count)
+                fl_curr.faults[idx].D_count_list.append(fl.faults[idx].D_count)
 
         if log_fname:
             # tot_fl.write_file_extra(log_fname) #TODO: tot_fl not defined in this scope
@@ -186,7 +175,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def parallel_general(self, tp, cpu, fault_count=None):
+    def simple_multiprocess_run(self, tp, process, fault_count=None, verbose = False):
         """ Basic parallel PPSF fault simulation
         If fault_count is given, randomly selects faults, o.w. it generates a fault list \
         with all the faults in the circuit. 
@@ -199,7 +188,7 @@ class PPSF(FaultSim):
         circuit : Circuit 
         tp : int
             The number of test patterns for each process  
-        cpu : int
+        process : int
             count of parallel processes
         fault_count : int
             Number of random faults, if None, all faults are considered 
@@ -207,7 +196,7 @@ class PPSF(FaultSim):
         Returns
         ------
         list
-            A fault list with D_count with length equal to given count of CPUs
+            A fault list with D_count with length equal to given count of Processes
         """
 
         tot_fl = FaultList()
@@ -215,17 +204,18 @@ class PPSF(FaultSim):
         
         if fault_count:
             tot_fl.add_random(self.circuit, fault_count)
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-fpb{fault_count}-tp{tp}-cpu{cpu}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-fpb{fault_count}-tp{tp}-process{process}.ppsf")
         else:
             tot_fl.add_all(self.circuit)
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-all-tp{tp}-cpu{cpu}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-all-tp{tp}-process{process}.ppsf")
 
-        return self._parallel_step(fl_curr=tot_fl, tp=tp//cpu, cpu=cpu, log_fname=log_fname)
+        return self._multiprocess_step(fl_curr=tot_fl, tp=tp//process, process=process, log_fname=log_fname, verbose= verbose)
 
-    def parallel_ci(self, tp_steps, op=None, verbose=False, log=True, cpu=1, ci=1, depth=1):
-        """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of CPUs.\
-        All faults are considered. TODO: optional faults
-        The fault is dropped if the ???? times of or probability detection is in the confidential interval.
+    def multiprocess_ci_run(self, tp_steps, op=None, verbose=False, log=True, process=1, ci=1, depth=1):
+        """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
+        All faults are considered. 
+        TODO: optional faults
+        The fault is dropped if the times of o detection is in the confidential interval.
         Finally, for each fault the mean of detection times and the standard \
         deviation is stored in the log file.
 
@@ -234,6 +224,7 @@ class PPSF(FaultSim):
         circuit : Circuit 
         tp_steps : list
             Lengths of tps in each run
+        #TODO: processes might get similar test patterns since they are generated randomly
         op : Node
             Node used for observation point insertion (default is None)
         depth : int
@@ -248,37 +239,36 @@ class PPSF(FaultSim):
         Returns
         ------
         dict : str to float
-            A dictionary of faults to the mean of their detection times \
-            over cpu times of process with cumulative count of test patterns.
+            A dictionary of remained faults to the mean of their detection times \
+            over process times of process with cumulative count of test patterns.
         """
 
-        fl_cont = FaultList()
-        fl_curr = FaultList()
+        cont_faults = FaultList()
+        all_faults = FaultList()
         
         if op is None:
-            fl_cont.add_all(self.circuit)
-            fl_curr.add_all(self.circuit)
+            cont_faults.add_all(self.circuit)
+            all_faults.add_all(self.circuit)
         
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
             for node in fanin_nodes:
-                fl_cont.add(node.num, "1")
-                fl_cont.add(node.num, "0")
-                fl_curr.add(node.num, "1")
-                fl_curr.add(node.num, "0")
+                cont_faults.add(node.num, "1")
+                cont_faults.add(node.num, "0")
+                all_faults.add(node.num, "1")
+                all_faults.add(node.num, "0")
 
         fault_idx = {}
-        for idx, fault in enumerate(fl_cont.faults):
+        for idx, fault in enumerate(cont_faults.faults):
             fault_idx[str(fault)] = idx
-            fault.D_count = np.zeros(cpu, dtype=int)
 
         path = os.path.join(cfg.FAULT_SIM_DIR, self.circuit.c_name)
         if log == False:
             log_fname = None
         elif op == None:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-steps-ci{ci}-process{process}.ppsf")
         else:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-{op.num}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}-{op.num}-ppsf-steps-ci{ci}-process{process}.ppsf")
 
         if log:
             outfile = open(log_fname, "w")
@@ -291,42 +281,43 @@ class PPSF(FaultSim):
             tp = int(tp)
             tp_tot += tp
             time_s = time.time()
-            fl_temp = FaultList()
+            temp_faults = FaultList()
 
-            #D_count is added to the fault objects in fl_curr
-            fl_curr = self._parallel_step(fl_curr=fl_curr, tp=tp, cpu=cpu, log_fname=None, count_cont=True)
+            # D_count_list is calculated here
+            # Upper bound of tp/processes
+            self._multiprocess_step(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
+
             if log:
                 outfile.write(f"#TP={tp}\n")
 
-            for fault in fl_curr.faults:
-                fault_cont = fl_cont.faults[fault_idx[str(fault)]]
-                # print(fault_cont.D_count, fault.D_count)
-                fault_cont.D_count += np.array(fault.D_count)
-                mu = np.mean(fault_cont.D_count)
-                std = np.std(fault_cont.D_count)
-                if mu == 0 and std == 0:
-                    fl_temp.add_str(str(fault))
+            for fault in all_faults.faults:
+                fault_cont = cont_faults.faults[fault_idx[str(fault)]]
+                fault_cont.D_count_list += fault.D_count_list
+                
+                mu = np.mean(fault_cont.D_count_list)
+                std = np.std(fault_cont.D_count_list)
+                if mu == 0 and std == 0: # All zero
+                    temp_faults.add_str(str(fault))
+                elif std == 0:
+                    print(f'{mu=}, {fault_cont.D_count_list}')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if log:
                         outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
                 else:
-                    fl_temp.add_str(str(fault))
+                    temp_faults.add_str(str(fault))
 
             if verbose:
-                print(f"TP={tp} #FL={len(fl_curr.faults)} -> #FL={len(fl_temp.faults)}\ttime={time.time()-time_s:.2f}")
-            
-            if len(fl_curr.faults) == 0:
-                # No new fault is found / Correct?
-                break
+                print(f"TP={tp} #All faults={len(all_faults.faults)} -> #Detected faults={len(temp_faults.faults)}"+
+                      f" - #Remaining faults={len(all_faults.faults)-len(temp_faults.faults)}\ttime={time.time()-time_s:.2f}")
 
         # Writing down the remaining faults
         if log:
             outfile.write("#TP: (remaining faults)\n")
         
-        for fault in fl_curr.faults:
-            mu = np.mean(fault.D_count)
-            std = np.std(fault.D_count)
+        for fault in all_faults.faults:
+            mu = np.mean(fault.D_count_list)
+            std = np.std(fault.D_count_list)
             res_final[str(fault)] = mu/tp_tot
             
             if log:
@@ -336,42 +327,3 @@ class PPSF(FaultSim):
             outfile.close()
 
         return res_final
-
-    def parallel_run(self, tp=None, fault_count=None, steps=None, op=None, verbose=False, log=True, cpu=1, ci=1):
-        """ Parallel Pattern Fault Simulation
-        If steps is given, the ppsfs will be run for all tp counts over the \
-        given count of processes in the args and the mean and std will be save into log file. Else, \
-        the simple parallel pattern fault simulation with the given count of test patterns will be run.
-
-        Parameters
-        ----------
-        circuit : Circuit 
-        args : args
-            Command-line arguments
-        steps : list of ints
-            A list of tp counts for each run
-            (default is None)
-        op : None
-            Node used for observation point insertion (default is None)
-        verbose : boolean
-            If True, print results (default is False)
-        log : boolean
-            If save logs in log file (default is True)
-            Logs are list of faults and the mean of times they were detected over cp times of \
-                process. Logs are separated by the line '#TP=tp_counts' in each step
-
-        Returns
-        ------
-        dict or list
-            According to the steps, it will be determined. If steps is given, returns \
-            a dictionary of faults to means of fault coverage. Otherwise, A fault list with D_count  \
-            with length equal to cpu is returned
-        """
-        if steps:
-            return self.parallel_ci(tp_steps=steps, op=op, verbose=verbose, log=log, ci=ci, cpu=cpu)
-        
-        else:
-            # because of where we call Process()
-            if not isinstance(tp, int):
-                raise TypeError
-            return self.parallel_general(tp=tp, cpu=cpu, fault_count=fault_count)
