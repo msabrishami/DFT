@@ -5,6 +5,7 @@ from fault_simulation.pfs import PFS
 import config
 from tp_generator import TPGenerator
 
+
 if __name__ == '__main__':
 
     # circuit_path = '../data/verilog/ISCAS85/v1/c17_synV1.v'
@@ -16,26 +17,34 @@ if __name__ == '__main__':
 
     # #################### PPSF Example ###################
 
-    ppsf = PPSF(circuit, fault_mode='all')
-    print('all faults:', len(ppsf.fault_list.faults))
-    tp = 200
-    ppsf.pd_ppsf(tp=tp, steps=config.PPSF_STEPS[:3], verbose=True, cpu=3, ci = 2)
-    print('_'*50)
-    ppsf.pd_ppsf(tp=tp, verbose=True, cpu=2)
+    # ppsf = PPSF(circuit, fault_mode='all')
+    ppsf = PPSF(circuit)
+    tp = 1000
+    
+    # good
+    # ppsf.fs_exe(tps = tp, verbose=True)
+    # print('_'*50)
+    
+    # error
+    ppsf.parallel_run(steps=config.PPSF_STEPS, verbose=True, cpu=3, ci=2)
     print('_'*50)
     
+    # good
+    # ppsf.parallel_run(tp=tp, verbose=True, cpu=2)
+    # print('_'*50)
+    
     ##################### PFS Example ####################
-    tg = TPGenerator(circuit)
-    # tp = tg.gen_full_tp()
-    tp = tg.gen_multiple_tp(100)
+    # tg = TPGenerator(circuit)
+    # # tp = tg.gen_full_tp()
+    # tp = tg.gen_multiple_tp(100)
 
-    pfs = PFS(circuit, faults_mode=20)
-    pfs.fs_exe(tp, verbose=True)
-    print('_'*50)
+    # pfs = PFS(circuit, faults_mode=20)
+    # pfs.fs_exe(tp, verbose=True)
+    # print('_'*50)
 
     # #################### STAFAN_FC Example ##############
 
-    circuit.STAFAN(len(tp))
-    fc = circuit.STAFAN_FC(tp)
-    print("Fault Coverage=", fc)
-    print('_'*50)
+    # circuit.STAFAN(len(tp))
+    # fc = circuit.STAFAN_FC(tp)
+    # print("Fault Coverage=", fc)
+    # print('_'*50)

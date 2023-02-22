@@ -4,7 +4,8 @@ class Fault():
     def __init__(self, node_num, stuck_val):
         self.node_num = str(node_num)
         self.stuck_val = str(stuck_val)
-        self.D_count = 0
+        self.D_count = 0 
+        # Issue: in PPSFm D_count is set as an array
 
     def __str__(self):
         return self.node_num + "@" + self.stuck_val

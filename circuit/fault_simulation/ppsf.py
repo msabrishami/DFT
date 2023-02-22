@@ -25,7 +25,7 @@ class PPSF(FaultSim):
     Parallel Patern Single Fault, Fault Simulation 
     """
 
-    def __init__(self, circuit, fault_mode):
+    def __init__(self, circuit, fault_mode=None):
         super().__init__(circuit, fault_mode=fault_mode)
         self.fs_type = "ppsf"
         self.fs_folder()
@@ -61,25 +61,38 @@ class PPSF(FaultSim):
             for j in range(len(tps)):
                 tps_bin[i] += (tps[j][i]*(2**j))
 
-        self.circuit.logic_sim_bitwise(tps_bin)
-        Zg = self.circuit.read_PO()  # Run without fault
+        # Run without fault
+        self.circuit.logic_sim_bitwise(tps_bin) 
+        Zg = self.circuit.read_PO() 
+
+        # Run with fault
         self.circuit.logic_sim_bitwise(tps_bin, fault)
-        Zf = self.circuit.read_PO()  # Run with fault
+        Zf = self.circuit.read_PO()
+
         res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
 
         # The order of tp and res are reversed
         res_fixed = set([self.wordlen-1-k for k in res])
-
+        
         return res_fixed
 
-    def fs_exe(self, tps, log_fname=None, verbose=False):  # good
+    def fs_exe(self, tps, faults=None, log_fname=None, verbose=False):
         """ 
         Runs PPSF for the faults in the fault list, given tp count/list/fname
         For each fault, it counts the number of times it has been detected
         WARNING: this method is not tested after a few modifications 
+
+        if faults is none, consider all faults as default
         TODO: log_fname
         """
-        print("WARNING: ppsf.fs_exe is not tested after a few modifications")
+
+        if faults is None and len(self.fault_list.faults):
+            faults = self.fault_list
+        
+        elif self.fault_list is None or faults is None:
+            faults = FaultList()
+            faults.add_all(self.circuit)
+            #TODO: self.faults+list??
 
         tg = TPGenerator(self.circuit)
         if isinstance(tps, int):
@@ -92,29 +105,27 @@ class PPSF(FaultSim):
         elif not isinstance(tps, list):
             raise TypeError(f"tps should be either int, list, or file name ({type(tps)})")
 
-        if len(self.fault_list.faults) == 0:
+        if len(faults.faults) == 0:
             print("Warning: No fault is added.")
 
-        for idx, fault in enumerate(self.fault_list.faults):
+        for idx, fault in enumerate(faults.faults):
             tot_pass = math.ceil(len(tps)/self.wordlen)
             for _pass in range(tot_pass):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
-                # print(f'pass {_pass}: from {_pass*64} to {(_pass+1)*64}')
                 res = self.single_run(tps_pass, fault)
                 fault.D_count += len(res)
             if verbose and idx % 10 == 0:
-                print(f"{idx:5} \tFC: {100*self.fault_list.calc_fc():.4f}%")
+                print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
 
         if verbose:
             print("PPFS completed")
-            print(
-                f"FC: {100*self.fault_list.calc_fc():.4f}%, tot-faults={len(self.fault_list.faults)}")
+            print(f"FC: {100*faults.calc_fc():.4f}%, tot-faults={len(faults.faults)}")
 
-    def _ppsf_thread(self, conn, tp):  # good
-        self.fs_exe(tp)
-        conn.send(self.fault_list)  # not necessarily
+    def _thread_run(self, conn, tp, faults):
+        self.fs_exe(tps=tp, faults=faults)
+        conn.send(faults)
 
-    def _pd_ppsf_step(self, tp, fl_curr, cpu=1, log_fname=None, count_cont=False):  # good
+    def _parallel_step(self, tp, fl_curr, cpu=1, log_fname=None, count_cont=False):
         """ Run ppsf in parallel for one step with given list or number of test patterns and fault list, \
         counts the number of the times faults in fault list are detected. 
         The tps are generated in each process separately, but are not stored by default.
@@ -143,8 +154,8 @@ class PPSF(FaultSim):
         print(f'running parallel {tp} test patterns on {cpu} cpu)')
         for _ in range(cpu):
             parent_conn, child_conn = Pipe()
-            p = Process(target=self._ppsf_thread,
-                        args=(child_conn, tp))
+            p = Process(target=self._thread_run,
+                        args=(child_conn, tp, fl_curr))
             p.start()
             print('Process', p.name, 'started')
             process_list.append((p, parent_conn))
@@ -159,6 +170,7 @@ class PPSF(FaultSim):
         for f in fault_lists:
             print(f.faults[:5])
             print(f.faults[-5:])
+            print('____')
 
         for fault in fl_curr.faults:
             fault.D_count = []
@@ -174,7 +186,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def pd_ppsf_basic(self, tp, cpu, fault_count=None):
+    def parallel_general(self, tp, cpu, fault_count=None):
         """ Basic parallel PPSF fault simulation
         If fault_count is given, randomly selects faults, o.w. it generates a fault list \
         with all the faults in the circuit. 
@@ -200,6 +212,7 @@ class PPSF(FaultSim):
 
         tot_fl = FaultList()
         path = os.path.join(cfg.FAULT_SIM_DIR, self.circuit.c_name)
+        
         if fault_count:
             tot_fl.add_random(self.circuit, fault_count)
             log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-fpb{fault_count}-tp{tp}-cpu{cpu}.ppsf")
@@ -207,11 +220,11 @@ class PPSF(FaultSim):
             tot_fl.add_all(self.circuit)
             log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-all-tp{tp}-cpu{cpu}.ppsf")
 
-        return self._pd_ppsf_step(fl_curr=tot_fl, tp=tp, cpu=cpu, log_fname=log_fname)
+        return self._parallel_step(fl_curr=tot_fl, tp=tp//cpu, cpu=cpu, log_fname=log_fname)
 
-    def pd_ppsf_conf(self, tp_steps, op=None, verbose=False, log=True, cpu=1, ci=1, depth=1):
+    def parallel_ci(self, tp_steps, op=None, verbose=False, log=True, cpu=1, ci=1, depth=1):
         """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of CPUs.\
-        All faults are considered.
+        All faults are considered. TODO: optional faults
         The fault is dropped if the ???? times of or probability detection is in the confidential interval.
         Finally, for each fault the mean of detection times and the standard \
         deviation is stored in the log file.
@@ -257,7 +270,7 @@ class PPSF(FaultSim):
         fault_idx = {}
         for idx, fault in enumerate(fl_cont.faults):
             fault_idx[str(fault)] = idx
-            fault.D_count = np.zeros(cpu)
+            fault.D_count = np.zeros(cpu, dtype=int)
 
         path = os.path.join(cfg.FAULT_SIM_DIR, self.circuit.c_name)
         if log == False:
@@ -279,15 +292,15 @@ class PPSF(FaultSim):
             tp_tot += tp
             time_s = time.time()
             fl_temp = FaultList()
-            
+
             #D_count is added to the fault objects in fl_curr
-            fl_curr = self._pd_ppsf_step(fl_curr=fl_curr, tp=tp, cpu=cpu, log_fname=None,
-                                         count_cont=True)
+            fl_curr = self._parallel_step(fl_curr=fl_curr, tp=tp, cpu=cpu, log_fname=None, count_cont=True)
             if log:
                 outfile.write(f"#TP={tp}\n")
 
             for fault in fl_curr.faults:
                 fault_cont = fl_cont.faults[fault_idx[str(fault)]]
+                # print(fault_cont.D_count, fault.D_count)
                 fault_cont.D_count += np.array(fault.D_count)
                 mu = np.mean(fault_cont.D_count)
                 std = np.std(fault_cont.D_count)
@@ -324,7 +337,7 @@ class PPSF(FaultSim):
 
         return res_final
 
-    def pd_ppsf(self, tp, fault_count=None, steps=None, op=None, verbose=False, log=True, cpu=1, ci=1): # good
+    def parallel_run(self, tp=None, fault_count=None, steps=None, op=None, verbose=False, log=True, cpu=1, ci=1):
         """ Parallel Pattern Fault Simulation
         If steps is given, the ppsfs will be run for all tp counts over the \
         given count of processes in the args and the mean and std will be save into log file. Else, \
@@ -355,10 +368,10 @@ class PPSF(FaultSim):
             with length equal to cpu is returned
         """
         if steps:
-            return self.pd_ppsf_conf(tp_steps=steps, op=op, verbose=verbose, log=log, ci = ci)
+            return self.parallel_ci(tp_steps=steps, op=op, verbose=verbose, log=log, ci=ci, cpu=cpu)
         
         else:
             # because of where we call Process()
             if not isinstance(tp, int):
                 raise TypeError
-            return self.pd_ppsf_basic(tp=tp//cpu, cpu=cpu, fault_count=fault_count)
+            return self.parallel_general(tp=tp, cpu=cpu, fault_count=fault_count)

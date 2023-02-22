@@ -9,7 +9,7 @@ from fault_simulation import fault
 
 class FaultSim(ABC):
 
-    def __init__(self, circuit, fault_mode="None"):
+    def __init__(self, circuit, fault_mode=None):
         """
         Parameters
         ----------
