@@ -85,11 +85,11 @@ def check_pfs_vs_ppsf(circuit, args):
  
     pfs = PFS(circuit)
     pfs.fault_list.add_all(circuit)
-    pfs.fs_exe(tps=tp_fname)
+    pfs.run(tps=tp_fname)
  
     ppsf = PPSF(circuit)
     ppsf.fault_list.add_all(circuit)
-    ppsf.fs_exe(tp_fname)
+    ppsf.run(tp_fname)
  
     pfs_res = dict()
     for fault in pfs.fault_list.faults:

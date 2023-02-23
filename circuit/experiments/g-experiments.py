@@ -686,7 +686,7 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
     for tp in tps:
         init_pfs = PFS(circuit)
         init_pfs.fault_list.add_all(circuit)
-        tps_detected_init.append([str(x) for x in init_pfs.single_run(tp, fault_drop=1)])
+        tps_detected_init.append([str(x) for x in init_pfs._one_tp_run(tp, fault_drop=1)])
 
     # MSA: the main idea here was to not consider test patterns one after another
     fname_log = "just-test-deltaFC-PFS-{}.log".format(circuit.c_name)
@@ -715,7 +715,7 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
             circuit.PO.append(op)
             orig_ntype = op.ntype
             op.ntype = "PO"
-            delta = set([str(x) for x in new_pfs.single_run(tp, fault_drop=1)])
+            delta = set([str(x) for x in new_pfs._one_tp_run(tp, fault_drop=1)])
             tps_detected_post.append(delta)
         # Calculate TPFC for this OP:
         detected_init = set() # set(all_faults)

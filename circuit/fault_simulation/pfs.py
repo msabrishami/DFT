@@ -1,7 +1,7 @@
 import os
 
 import config
-from fault_simulation.simulation import FaultSim
+from fault_simulation.fault_simulation import FaultSim
 from tp_generator import TPGenerator
 class PFS(FaultSim):
     """ 
@@ -18,7 +18,7 @@ class PFS(FaultSim):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    def single_run(self, tp, fault_drop=None):
+    def _one_tp_run(self, tp, fault_drop=None):
         """
         For one test pattern
         If fault drop is given, faults that have D_count < fault_drop are considered, 
@@ -33,7 +33,6 @@ class PFS(FaultSim):
         ptr0 = 0
         while (ptr0 < len(self.fault_list.faults)):
             pfs_stuck_values = 0
-            read_fault_ind = 0
 
             # fault list for one pass
             mask_dict = {}  # {key: fault_num, value: mask}
@@ -95,9 +94,9 @@ class PFS(FaultSim):
 
         for fault in detected_faults:
             fault.D_count += 1
-        return list(detected_faults)
+        return detected_faults
 
-    def multiple_separate_run(self, tps, log_fname, fault_drop, verbose = True):
+    def _multiple_tp_run(self, tps, log_fname, fault_drop, verbose = True):
         """ 
         FS for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
@@ -110,19 +109,19 @@ class PFS(FaultSim):
         unique_detected_faults = set()
 
         for idx, tp in enumerate(tps):
-            detected_faults = self.single_run(tp, fault_drop)
+            detected_faults = self._one_tp_run(tp, fault_drop)
             
             for df in detected_faults:
                 unique_detected_faults.add(df)
             tpfc.append(len(detected_faults))
             
-            if verbose and idx%(len(tps)//15) == 0:
-                    print(f"{idx:5} \t New: {tpfc[-1]:5}"
-                        f"\t Total: {len(unique_detected_faults):5}"+
-                        f"\tFC: {100*len(unique_detected_faults)/len(self.fault_list.faults):.4f}%")                
+            if verbose and idx%10 == 0:
+                    print(f"{idx:5} \t New faults: {tpfc[-1]:5}"
+                        f"  Total detected faults: {len(unique_detected_faults):5}"+
+                        f"  FC= {100*len(unique_detected_faults)/len(self.fault_list.faults):.4f}%")                
 
             outfile.write(",".join(map(str, tp)) + '\n')
-            outfile.write("Detected {} faults below: \n".format(len(detected_faults)))
+            outfile.write(f"Detected {len(detected_faults)} faults below: \n")
             for fault in detected_faults:
                 outfile.write(str(fault) + '\n')
             outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
@@ -131,17 +130,17 @@ class PFS(FaultSim):
             fault_coverage.append(self.fault_list.calc_fc())
             if fault_coverage[-1] == 1:
                 print(f'All faults were found on test pattern {idx}')
-                outfile.write("Fault Coverage = {:.2f}%\n".format(fault_coverage[-1]*100))
+                outfile.write("Fault Coverage = {fault_coverage[-1]*100:.2f}%\n")
                 return 
         outfile.close()            
                 
-        print(self.fs_type + " (separate mode) completed. ")
-        print("Log file saved in {}".format(log_fname))
+        # print(self.fs_type + " (separate mode) completed. ")
+        print(f"Log file saved in {log_fname}")
 
         return fault_coverage
 
 
-    def fs_exe(self, tps, fault_drop=None, verbose=False):
+    def run(self, tps, fault_drop=None, verbose=False):
         """ 
         Running the PFS simulation and calculating fault coverage (FC) for the number of
         test patterns (tps), which is referred to as TPFC. 
@@ -163,6 +162,7 @@ class PFS(FaultSim):
         -------
         tpfc : list of floats , FC percentage (accumulative) value as tps are used for test 
         """
+
         tg = TPGenerator(self)
         if isinstance(tps, int):
             tps = tg.gen_multiple_tp(tps)
@@ -171,15 +171,14 @@ class PFS(FaultSim):
         elif not isinstance(tps, list):
             raise TypeError("tps should be either int, or file name")
 
-        log_fname = config.FAULT_SIM_DIR + "/" + self.circuit.c_name + "/pfs/"
+        log_fname = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)+'/pfs/'
         if not os.path.exists(log_fname):
             os.makedirs(log_fname)
         log_fname += f"{self.circuit.c_name}-PFS-temp.log"
 
-        fc = self.multiple_separate_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname)
+        fc = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname)
 
         if verbose: 
-            print("TPFC completed:\tFC={:.4f}%, tot-faults={}".format(
-                100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
-
-        return fc
+            print(f"TPFC completed:\tFC={100*self.fault_list.calc_fc():.4f}%, tot-faults={len(self.fault_list.faults)}")
+        
+        return  fc

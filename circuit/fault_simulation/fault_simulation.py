@@ -56,19 +56,19 @@ class FaultSim(ABC):
                 print(f"Creating directory {path}")
                 os.mkdir(path)
 
-    def single(self, input_pattern):
-        """ Single pass of simulation. 
-        DFS/PFSP: single test pattern
-        PPSF: single fault
-        """
-        raise NotImplementedError()
+    # def single(self): -->renamed
+    #     """ Single pass of simulation. 
+    #     DFS/PFSP: single test pattern
+    #     PPSF: single fault
+    #     """
+    #     raise NotImplementedError()
 
-    def fs_for_atpg(self):
-        """ DFS/PFS for ATPG use """
-        raise NotImplementedError()
+    # def fs_for_atpg(self):
+    #     """ DFS/PFS for ATPG use """
+    #     raise NotImplementedError()
 
     @abstractmethod
-    def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
+    def run(self, tp_num=1, t_mode='rand', r_mode='b'):
         """ Defined in children: DFS, PFS """
         pass
 

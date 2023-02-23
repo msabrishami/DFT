@@ -1,4 +1,4 @@
-from fault_simulation.simulation import FaultSim
+from fault_simulation.fault_simulation import FaultSim
 from fault_simulation.fault import FaultList
 import utils
 import config as cfg
@@ -16,8 +16,8 @@ sys.path.append('../')
 
 """
 Trace functions called during Parallel Fault Simulation: 
-    single_run() -> fs_exe() -> _single_process_run() ->
-   _multiprocess_step(PARALLEL) -> [multiprocess_ci_run() | simple_multiprocess_run()]
+    single_run() -> run() -> _single_process_runner() ->
+   _multiprocess_step(PARALLEL) -> [multiprocess_runner_ci() | simple_multiprocess_run()]
 """
 
 class PPSF(FaultSim):
@@ -76,7 +76,7 @@ class PPSF(FaultSim):
         
         return res_fixed
 
-    def fs_exe(self, tps, faults=None, log_fname=None, verbose=False):
+    def run(self, tps, faults=None, log_fname=None, verbose=False):
         """ 
         Runs PPSF for the faults in the fault list, given tp count/list/fname
         For each fault, it counts the number of times it has been detected
@@ -104,6 +104,10 @@ class PPSF(FaultSim):
         elif not isinstance(tps, list):
             raise TypeError(f"tps should be either int, list, or file name ({type(tps)})")
 
+
+        if verbose:
+            print(f"Running Parallel Pattern Fault Simulation with {len(tps)} tps and {len(faults.faults)} faults.")
+
         if len(faults.faults) == 0:
             print("Warning: No fault is added.")
 
@@ -117,13 +121,13 @@ class PPSF(FaultSim):
                 print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
         if verbose:
             print("PPFS completed")
-            print(f"FC: {100*faults.calc_fc():.4f}%, tot-faults={len(faults.faults)}")
+            print(f"FC: {100*faults.calc_fc():.4f}%, total-faults={len(faults.faults)}")
 
-    def _single_process_run(self, conn, tp, faults, verbose):
-        self.fs_exe(tps=tp, faults=faults, verbose = verbose)
+    def _single_process_runner(self, conn, tp, faults, verbose):
+        self.run(tps=tp, faults=faults, verbose = verbose)
         conn.send(faults)
 
-    def _multiprocess_step(self, tp, fl_curr, process=1, log_fname=None, count_cont=False, verbose = False):
+    def _multiprocess_handler(self, tp, fl_curr, process=1, log_fname=None, count_cont=False, verbose = False):
         """ Run ppsf in parallel for one step with given list or number of test patterns and fault list, \
         counts the number of the times faults in fault list are detected. 
         The tps are generated in each process separately, but are not stored by default.
@@ -149,11 +153,9 @@ class PPSF(FaultSim):
         """
         time_s = time.time()
         process_list = []
-        print(f'\nRunning parallel {tp} test patterns divided between {process} process(es)')
-        #Upper bound of tp//process
         for _ in range(process):
             parent_conn, child_conn = Pipe()
-            p = Process(target=self._single_process_run,
+            p = Process(target=self._single_process_runner,
                         args=(child_conn, tp//process+1, fl_curr, verbose))
             p.start()
             process_list.append((p, parent_conn))
@@ -175,43 +177,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def simple_multiprocess_run(self, tp, process, fault_count=None, verbose = False):
-        """ Basic parallel PPSF fault simulation
-        If fault_count is given, randomly selects faults, o.w. it generates a fault list \
-        with all the faults in the circuit. 
-        Logs the results in a file with a default name. 
-        The result is a fault list, and D_count attribute of each fault is a list of \
-        the number of times the fault is detected in each process. 
-
-        Parameters
-        ----------
-        circuit : Circuit 
-        tp : int
-            The number of test patterns for each process  
-        process : int
-            count of parallel processes
-        fault_count : int
-            Number of random faults, if None, all faults are considered 
-
-        Returns
-        ------
-        list
-            A fault list with D_count with length equal to given count of Processes
-        """
-
-        tot_fl = FaultList()
-        path = os.path.join(cfg.FAULT_SIM_DIR, self.circuit.c_name)
-        
-        if fault_count:
-            tot_fl.add_random(self.circuit, fault_count)
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-fpb{fault_count}-tp{tp}-process{process}.ppsf")
-        else:
-            tot_fl.add_all(self.circuit)
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-all-tp{tp}-process{process}.ppsf")
-
-        return self._multiprocess_step(fl_curr=tot_fl, tp=tp//process, process=process, log_fname=log_fname, verbose= verbose)
-
-    def multiprocess_ci_run(self, tp_steps, op=None, verbose=False, log=True, process=1, ci=1, depth=1):
+    def multiprocess_ci_run(self, tp_steps, op=None, verbose=False, log=True, process=1, ci=1, depth=1, fault_count=None):
         """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
         All faults are considered. 
         TODO: optional faults
@@ -233,8 +199,11 @@ class PPSF(FaultSim):
             If True, print results (default is False)
         log : boolean
             If True, save logs in log file (default is True).
-            Logs are list of faults and the mean of times they were detected over cp times of \
-            process. Logs are separated by the line '#TP=tp_counts' in each step.
+            Logs are list of faults and the mean of times they were detected over process times of \
+            processes. Logs are separated by the line '#TP=tp_counts' in each step.
+        fault_count : int
+            if None, all faults are considered. Else, n random faults are considered.
+            # TODO: pass a list of faults
 
         Returns
         ------
@@ -247,17 +216,38 @@ class PPSF(FaultSim):
         all_faults = FaultList()
         
         if op is None:
-            cont_faults.add_all(self.circuit)
-            all_faults.add_all(self.circuit)
+            if fault_count is None or fault_count == 'all':
+                cont_faults.add_all(self.circuit)
+                all_faults.add_all(self.circuit)
+
+            elif isinstance(fault_count, int):
+                cont_faults.add_random(self.circuit, random_num=fault_count)
+                all_faults.faults = cont_faults.faults.copy()
         
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
-            for node in fanin_nodes:
-                cont_faults.add(node.num, "1")
-                cont_faults.add(node.num, "0")
-                all_faults.add(node.num, "1")
-                all_faults.add(node.num, "0")
+            
+            if fault_cont is None or fault_count == 'all':
+                for node in fanin_nodes:
+                    cont_faults.add(node.num, "1")
+                    cont_faults.add(node.num, "0")
+                    all_faults.add(node.num, "1")
+                    all_faults.add(node.num, "0")
+            else:
+                import random
+                random_fanin = fanin_nodes.copy()
+                random.shuffle(random_fanin)
+                for node in random_fanin[:fault_count]:
+                    cont_faults.add(node.num, "1")
+                    cont_faults.add(node.num, "0")
+                    all_faults.add(node.num, "1")
+                    all_faults.add(node.num, "0")
 
+        if verbose:
+            f_count = fault_count if isinstance(fault_count, int) else len(all_faults.faults)
+            print(f"Running PPSF with:\n\t| tp counts = {tp_steps}\n\t| confidence interval = {ci}" +
+                  f"\n\t| fault count = {f_count}\n\t| process(es) = {process}\n\t| BFS depth = {depth}")
+            
         fault_idx = {}
         for idx, fault in enumerate(cont_faults.faults):
             fault_idx[str(fault)] = idx
@@ -273,7 +263,7 @@ class PPSF(FaultSim):
         if log:
             outfile = open(log_fname, "w")
             if verbose:
-                print(f"Log for step based PPSF is being stored in {log_fname}")
+                print(f"Log for step based PPSF is being stored in {log_fname}\n")
                 
         tp_tot = 0
         res_final = {}
@@ -281,10 +271,10 @@ class PPSF(FaultSim):
             tp = int(tp)
             tp_tot += tp
             time_s = time.time()
-            temp_faults = FaultList()
+            detected_faults = FaultList()
 
             # D_count_list is calculated here
-            self._multiprocess_step(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
+            self._multiprocess_handler(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
 
             if log:
                 outfile.write(f"#TP={tp}\n")
@@ -296,19 +286,20 @@ class PPSF(FaultSim):
                 mu = np.mean(fault_cont.D_count_list)
                 std = np.std(fault_cont.D_count_list)
                 if mu == 0 and std == 0: # All zero
-                    temp_faults.add_str(str(fault))
-                elif std == 0:
-                    print(f'{mu=}, {fault_cont.D_count_list}')
+                    detected_faults.add_str(str(fault))
+                elif std == 0: # Why this happens at low number of tps (sometimes)?
+                    print(f'\n(logging){mu=}, {fault_cont.D_count_list}\n')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if log:
                         outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
                 else:
-                    temp_faults.add_str(str(fault))
+                    detected_faults.add_str(str(fault))
 
             if verbose:
-                print(f"TP={tp} #All faults={len(all_faults.faults)} -> #Detected faults={len(temp_faults.faults)}"+
-                      f" - #Remaining faults={len(all_faults.faults)-len(temp_faults.faults)}\ttime={time.time()-time_s:.2f}")
+                print(f"TP = {tp:5}: #All faults = {len(all_faults.faults)} / #Detected faults = {len(detected_faults.faults):4}"+
+                      f" / #Remaining faults = {len(all_faults.faults)-len(detected_faults.faults):4} / FC = {len(detected_faults.faults)/len(all_faults.faults):.3f}"+
+                      f" / time = {time.time()-time_s:.2f}s")
 
         # Writing down the remaining faults
         if log:

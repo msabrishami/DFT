@@ -142,13 +142,13 @@ if __name__ == '__main__':
         tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tps=tp_fname, fault_drop=1, verbose=True)
+        pfs.run(tps=tp_fname, fault_drop=1, verbose=True)
 
 
     elif args.func == "ppsf":
         ppsf = PPSF(circuit)
         ppsf.fault_list.add_all(circuit)
-        ppsf.fs_exe(tp_fname, args.tp, fault_drop=1)
+        ppsf.run(tp_fname, args.tp, fault_drop=1)
 
 
     elif args.func == "pfs-vs-ppsf":
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
         pfs = PFS(circuit)
         pfs.fault_list.add_all(circuit)
-        pfs.fs_exe(tps=tp_fname, fault_drop=1)
+        pfs.run(tps=tp_fname, fault_drop=1)
     
 
     elif args.func == "tpfc-fig":

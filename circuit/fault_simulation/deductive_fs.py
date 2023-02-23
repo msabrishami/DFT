@@ -1,6 +1,6 @@
 import os
 import config
-from fault_simulation.simulation import FaultSim
+from fault_simulation.fault_simulation import FaultSim
 
 class DFS(FaultSim):
     def __init__(self, circuit):
@@ -23,7 +23,7 @@ class DFS(FaultSim):
         # return a fault set
         return fault_set
 
-    def fs_exe(self, tp_num=1, t_mode='rand', r_mode='b'):
+    def run(self, tp_num=1, t_mode='rand', r_mode='b'):
         """
         Execute fs in rand or full mode
         rand: the total faults can be detected by several random patterns
