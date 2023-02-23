@@ -92,7 +92,7 @@ class CircuitLoader:
         _nodes = {}
         for line in new_lines:
 
-            x_type, nets = read_verilog_syntax(line)
+            x_type, nets = self.read_verilog_syntax(line)
 
             if x_type == "module":
                 continue
@@ -119,6 +119,7 @@ class CircuitLoader:
             if x_type == "GATE":
                 gtype, nets = nets
                 if nets[0] not in _nodes:
+                    import pdb
                     pdb.set_trace()
                 _nodes[nets[0]]['g_type'] = gtype 
                 new_node = Node.gen_node(_nodes[nets[0]], std_node_lib)
@@ -128,7 +129,7 @@ class CircuitLoader:
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
-            x_type, nets = read_verilog_syntax(line)
+            x_type, nets = self.read_verilog_syntax(line)
             if x_type == "GATE":
                 gtype, nets = nets
                 for net in nets[1:]:
@@ -146,7 +147,7 @@ class CircuitLoader:
                     branch = Node.gen_node({'num': node.num + '-' + str(idx+1), 
                         'n_type':"FB", 'g_type':"BRCH"}, std_node_lib)
                     branches[branch.num] = branch
-                    insert_branch(node, node.dnodes[0], branch)
+                    CircuitLoader.insert_branch(node, node.dnodes[0], branch)
         circuit.nodes.update(branches)
 
     def read_ckt(self, circuit, circuit_fname, std_node_lib):
@@ -160,7 +161,6 @@ class CircuitLoader:
         for line in lines:
             if len(line) < 6:
                 continue
-            # node_info = self.read_node_ckt(circuit, line.strip())
             attr = line.split()
             node_info = dict()
             node_info["n_type"] = node.ntype(int(attr[0])).name
@@ -177,78 +177,75 @@ class CircuitLoader:
             
         for line in lines:
             self.connect_node(circuit, line.strip())
-        
 
-def verilog_version_gate(line):
-    return {"gate type":"gate", "input-list":[], "output-list":[]}
-
-
-def cell2gate(cell_name):
-    ## Inputs: Verilog gate input formats
-    ## Outputs: gtype corresponding gate name
-    for gname, cell_names in config.CELL_NAMES.items():
-        if cell_name in cell_names:
-            return gname
-    raise NameError(f"Cell type {cell_name} was not found")
-
-def insert_branch(u_node, d_node, i_node):
-    """ This function is used for inserting the BRCH node
-    u_node and d_node are connected originally
-    i_node is the node be inserted between u_node and d_node """ 
-    u_node.dnodes.remove(d_node)
-    u_node.dnodes.append(i_node)
-    d_node.unodes.remove(u_node)
-    d_node.unodes.append(i_node)
-    i_node.unodes.append(u_node)
-    i_node.dnodes.append(d_node)
-
-def read_verilog_syntax(line):
-    if line.strip() == "endmodule":
-        return ("module", None)
-
-    # If there is a "wire" in this line:
-    line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
-        return ("wire", nets)
-     
-    # PI: 
-    line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
-        return ("PI", nets)
+    @staticmethod
+    def cell2gate(cell_name):
+        ## Inputs: Verilog gate input formats
+        ## Outputs: gtype corresponding gate name
+        for gname, cell_names in config.CELL_NAMES.items():
+            if cell_name in cell_names:
+                return gname
+        raise NameError(f"Cell type {cell_name} was not found")
     
-    # PO 
-    line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
-    if line_syntax:
-        nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
-        return ("PO", nets)
+    @staticmethod
+    def insert_branch(u_node, d_node, i_node):
+        """ This function is used for inserting the BRCH node
+        u_node and d_node are connected originally
+        i_node is the node be inserted between u_node and d_node """ 
+        u_node.dnodes.remove(d_node)
+        u_node.dnodes.append(i_node)
+        d_node.unodes.remove(u_node)
+        d_node.unodes.append(i_node)
+        i_node.unodes.append(u_node)
+        i_node.dnodes.append(d_node)
 
-    # Gate
-    line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
-    if line_syntax:
-        if line_syntax.group(1) == "module":
+    def read_verilog_syntax(self,line):
+        if line.strip() == "endmodule":
             return ("module", None)
-        
-        gtype = cell2gate(line_syntax.group(1))
-        #we may not use gname for now. 
-        gname = line_syntax.group(2)
-        
-        # TODO: Saeed fixed this but was not tested on all circuits
-        # It had issues with netlists that have gate description in multiple lines
-        # pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
-        pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
-        if pin_format:
-            #TODO: for now, we considered PO as the last pin
-            if "Z" not in pin_format[-1][0]:
-                raise NameError("Cannot detect the output pin as the last argumet, check code")
-            nets = [pin_format[-1][1]]
-            for x in pin_format[:-1]:
-                nets.append(x[1])
-        else:
-            # verilog with no pin format
-            nets = line_syntax.group(3).replace(' ', '').split(',')
 
-        return ("GATE", (gtype, nets) )
-    
-    raise NameError(f"No suggestion for \n>{line}<\n was found")
+        # If there is a "wire" in this line:
+        line_syntax = re.match(r'^[\s]*wire (.*,*);', line, re.IGNORECASE)
+        if line_syntax:
+            nets = line_syntax.group(1).replace(' ', '').replace('\t', '').split(',')
+            return ("wire", nets)
+        
+        # PI: 
+        line_syntax = re.match(r'^.*input ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+        if line_syntax:
+            nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+            return ("PI", nets)
+        
+        # PO 
+        line_syntax = re.match(r'^.*output ([a-z]+\s)*(.*,*).*;', line, re.IGNORECASE)
+        if line_syntax:
+            nets = line_syntax.group(2).replace(' ', '').replace('\t', '').split(',')
+            return ("PO", nets)
+
+        # Gate
+        line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+        if line_syntax:
+            if line_syntax.group(1) == "module":
+                return ("module", None)
+            
+            gtype = CircuitLoader.cell2gate(line_syntax.group(1))
+            # #we may not use gname for now. 
+            # gname = line_syntax.group(2)
+            
+            # TODO: Saeed fixed this but was not tested on all circuits
+            # It had issues with netlists that have gate description in multiple lines
+            # pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
+            pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
+            if pin_format:
+                #TODO: for now, we considered PO as the last pin
+                if "Z" not in pin_format[-1][0]:
+                    raise NameError("Cannot detect the output pin as the last argumet, check code")
+                nets = [pin_format[-1][1]]
+                for x in pin_format[:-1]:
+                    nets.append(x[1])
+            else:
+                # verilog with no pin format
+                nets = line_syntax.group(3).replace(' ', '').split(',')
+
+            return ("GATE", (gtype, nets) )
+        
+        raise NameError(f"No suggestion for \n>{line}<\n was found")

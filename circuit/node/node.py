@@ -137,6 +137,7 @@ class Node(ABC):
             node_info : dict
          """
         
+        # TODO: How about when n_type is GATE and g_type is IPT? e.g. on 1908.ckt
         if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
             return std_node_lib['IPT'](node_info['n_type'], node_info['g_type'], node_info['num'])
 
