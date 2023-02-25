@@ -17,9 +17,36 @@ class Fault():
 
 class FaultList:
     """ Fault list """
-    #TODO: maybe using dictionary or set instead of a list for faults
-    def __init__(self):
+    def __init__(self, fname = None, fault_list = None, circuit=None, fault_count=None, nodes=None):
+        """
+        fname : str 
+            if not None, all faults from the given file is read and added
+        fault_list: list of Fault
+            if not None, all faults from the given list is added
+        circuit : Circuit
+            if the circuit is given, faults are added according to fault_count
+        fault_count : int or None
+            if None, all possible faults are added. If int, n random unique faults are added
+        nodes : list of Node
+            if given, all faults related to the given nodes are added
+        """
         self.faults = []
+        
+        if fname:
+            self.add_file(fname)
+
+        elif fault_list:
+            for f in fault_list:
+                self.add_fault(f)
+        
+        elif circuit:
+            if fault_count == 'all' or fault_count is None:
+                self.add_all(circuit)
+            elif isinstance(fault_count, int):
+                self.add_random(circuit, fault_count)
+        
+        elif nodes:
+            self.add_nodes(nodes)
 
     def add(self, node_num, stuck_val):
         self.faults.append(Fault(node_num, stuck_val))
@@ -44,7 +71,7 @@ class FaultList:
             self.add(circuit.nodes_lev[idx_random[i]].num, 
                     np.random.randint(0,2))
     
-    def add_fault(self, fault):
+    def add_fault(self, fault: Fault):
         self.faults.append(fault)
 
     def remove_faults(self, faults):
@@ -70,7 +97,7 @@ class FaultList:
         for node in nodes:
             self.add_node(node)
 
-    def add_file(self, fname):
+    def add_file(self, fname): # TODO: get it in the __init__
         """ read faults from a file and add it to the fault list 
         file format: each fault <node-num>@<stuck value> in separate lines
 
