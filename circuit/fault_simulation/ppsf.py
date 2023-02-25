@@ -26,7 +26,7 @@ class PPSF(FaultSim):
     """
 
     def __init__(self, circuit, fault_mode=None):
-        super().__init__(circuit, fault_mode=fault_mode)
+        super().__init__(circuit, faults=fault_mode)
         self.fs_type = "ppsf"
         self.fs_folder()
 
@@ -143,7 +143,7 @@ class PPSF(FaultSim):
         log_fname : str
             File name for the final log fil. If None, does not log results (default is None)
         count_cont: int
-            #TODO: define this (default is False)
+            #TODO: define this (default is False). Still required?
 
         Returns
         ------

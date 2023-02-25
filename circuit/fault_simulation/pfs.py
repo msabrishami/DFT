@@ -7,8 +7,8 @@ class PFS(FaultSim):
     """ 
     Parallel Fault Single Pattern, Fault Simulation 
     """
-    def __init__(self, circuit, faults_mode):
-        super().__init__(circuit, fault_mode=faults_mode)
+    def __init__(self, circuit, faults):
+        super().__init__(circuit, faults=faults)
         self.fs_type = "pfs"
         self.fs_folder()
         
@@ -18,9 +18,9 @@ class PFS(FaultSim):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    def _one_tp_run(self, tp, fault_drop=None):
+    def _one_tp_run(self, tp, fault_drop=None) -> set:
         """
-        For one test pattern
+        Run PFS for one test pattern
         If fault drop is given, faults that have D_count < fault_drop are considered, 
             o.w. all faults in the fault_list are considered.
         Updates the fault.D_count of fault_list.faults
@@ -114,6 +114,7 @@ class PFS(FaultSim):
             for df in detected_faults:
                 unique_detected_faults.add(df)
             tpfc.append(len(detected_faults))
+            fault_coverage.append(self.fault_list.calc_fc())
             
             if verbose and idx%10 == 0:
                     print(f"{idx:5} \t New faults: {tpfc[-1]:5}"
@@ -127,7 +128,6 @@ class PFS(FaultSim):
             outfile.write("Fault Coverage = " + str(fault_coverage) + '\n')
             outfile.write('\n')
             outfile.write("------------\n")
-            fault_coverage.append(self.fault_list.calc_fc())
             if fault_coverage[-1] == 1:
                 print(f'All faults were found on test pattern {idx}')
                 outfile.write("Fault Coverage = {fault_coverage[-1]*100:.2f}%\n")

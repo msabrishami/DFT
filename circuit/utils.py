@@ -200,3 +200,13 @@ def estimate_FC(probs, tp):
         nfc += np.exp(-probs[key] * tp)
 
     return 1 - nfc/len(probs)
+
+def fix_size(number, k):
+
+    while len(number) > k:
+        number = number[1:]
+
+    while len(number) < k:
+        number = '0'+number
+
+    return number    

@@ -9,7 +9,7 @@ from fault_simulation import fault
 
 class FaultSim(ABC):
 
-    def __init__(self, circuit, fault_mode=None):
+    def __init__(self, circuit, faults=None): #TODO: rename fault mode
         """
         Parameters
         ----------
@@ -21,8 +21,10 @@ class FaultSim(ABC):
         """
         self.circuit = circuit
 
-        if not isinstance(fault, fault.FaultList):
+        if not isinstance(faults, fault.FaultList):
             self.fault_list = fault.FaultList()
+        else:
+            self.fault_list = faults
 
         self.fs_type = ""
         self.fault_set_all = set()
@@ -33,11 +35,11 @@ class FaultSim(ABC):
         self.wordlen = int(math.log2(sys.maxsize))+1
         self.bitwise_not = 2**self.wordlen-1
 
-        if fault_mode == 'all':
+        if faults == 'all':
             self.add_all()
 
-        if isinstance(fault_mode, int):
-            self.add_n_random(fault_mode)
+        if isinstance(faults, int):
+            self.add_n_random(faults)
 
     def add_n_random(self, n=1):
         self.fault_list.add_random(self.circuit, random_num=n)
