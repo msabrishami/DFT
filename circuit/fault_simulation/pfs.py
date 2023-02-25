@@ -94,7 +94,7 @@ class PFS(FaultSim):
 
         for fault in detected_faults:
             fault.D_count += 1
-        return detected_faults
+        return list(detected_faults)
 
     def _multiple_tp_run(self, tps, log_fname, fault_drop, verbose = True):
         """ 
