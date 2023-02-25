@@ -1,6 +1,7 @@
 import random
 import config
 import os
+import utils
 
 class TPGenerator:
     def __init__(self, circuit):
@@ -23,7 +24,7 @@ class TPGenerator:
         
         return tp 
     
-    def gen_multiple_tp(self, tp_count, mode="b"):
+    def gen_multiple_tp(self, tp_count, mode="b", unique=False):
         """ Generate multiple random input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -31,7 +32,17 @@ class TPGenerator:
         does not store the generated tps in file 
         """
 
-        tps = [self.gen_single_tp(mode) for _ in range(int(tp_count))]
+        if unique:
+            return [self.gen_single_tp(mode) for _ in range(int(tp_count))]
+
+        tps = []
+        
+        # Bad performance
+        # Can't use random.choices() since it can't fit in integer for large circuits
+        while len(tps) < tp_count: 
+            x = self.gen_single_tp()
+            if x not in tps:
+                tps.append(x)
 
         return tps
 
@@ -63,11 +74,26 @@ class TPGenerator:
         Return all possible test patterns
         #TODO: should we implement all with mode = x?
         """ 
-        tps = []
-        for t in range(2**len(self.circuit.PI)):
-            tp = list(map(int, bin(t)[2:].zfill(len(self.circuit.PI))))
-            tps.append(tp)
+        from queue import Queue
+        tps = Queue()
+    
+        n_digits = len(self.circuit.PI)
+        tps.put(utils.fix_size("0", n_digits))
+        n = 1<<n_digits
         
+        while n:
+            n -= 1
+            s1 = tps.get()    
+            s2 = s1  
+
+            tps.put(utils.fix_size(s1+"0", n_digits)) 
+            tps.put(utils.fix_size(s2+"1", n_digits))
+        
+        for p in tps.queue:
+            print(p)
+        
+        tps = [[*tp] for tp in list(tps.queue)[:-1]]
+
         return tps
 
     def gen_tp_file_full(self, tp_fname=None):
