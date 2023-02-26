@@ -1,3 +1,4 @@
+#TODO: deprecate this file. Similar file exists in ../circuit/
 
 LIB_CELLS_PATH = "../data/library"
 MODELSIM_DIR = "../data/modelsim"

@@ -1,16 +1,15 @@
-from fault_simulation.fault_simulation import FaultSim
-from fault_simulation.fault import FaultList
-import utils
-import config as cfg
-import config
-from multiprocessing import Pipe, Process
-import time
-import os
 import math
+import os
 import sys
-from tp_generator import TPGenerator
+import time
+from multiprocessing import Pipe, Process
 
+import config
 import numpy as np
+import utils
+from fault_simulation.fault import FaultList
+from fault_simulation.fault_simulation import FaultSim
+from tp_generator import TPGenerator
 
 sys.path.append('../')
 
@@ -252,7 +251,7 @@ class PPSF(FaultSim):
         for idx, fault in enumerate(cont_faults.faults):
             fault_idx[str(fault)] = idx
 
-        path = os.path.join(cfg.FAULT_SIM_DIR, self.circuit.c_name)
+        path = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)
         if log == False:
             log_fname = None
         elif op == None:
