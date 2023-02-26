@@ -5,6 +5,12 @@ import numpy as np
 from collections import deque
 from functools import reduce
 
+class bcolors:
+    OKGREEN = '\033[92m'
+    FAIL = '\033[91m'
+    WARNING = '\033[93m'
+    ENDC = '\033[0m'
+
 mul_list = lambda arr: reduce(operator.mul, arr, 1)
 
 not_gate = lambda a: 1-a

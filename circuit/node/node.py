@@ -47,6 +47,9 @@ class Node(ABC):
         list of lower hand node objects
     """
 
+    bitlen = int(math.log2(sys.maxsize))+1 # move to utils
+    bitwise_not = 2**bitlen-1
+
     def __init__(self, n_type, g_type, num):
         self.gtype = g_type
         self.ntype = n_type
@@ -59,9 +62,6 @@ class Node(ABC):
         self.dnodes = []
         self.flagA = None   # Very professional 
         self.flagB = None   # Very professional 
-
-        bitlen = int(math.log2(sys.maxsize))+1
-        self.bitwise_not = 2**bitlen-1
 
         # # SSTA Project
         self.dd_cell = None
@@ -170,7 +170,7 @@ class NOT(Node):
         self.value = 1 if (self.unodes[0].value == 0) else 0
 
     def imply_b(self):
-        self.value = self.unodes[0].value ^ self.bitwise_not  
+        self.value = self.unodes[0].value ^ Node.bitwise_not  
 
 class OR(Node):
     def __init__(self, n_type, g_type, num):
@@ -199,7 +199,7 @@ class NOR(Node):
         self.value = self.unodes[0].value
         for unode in self.unodes[1:]:
             self.value = self.value | unode.value
-        self.value = self.value ^ self.bitwise_not
+        self.value = self.value ^ Node.bitwise_not
 
 class AND(Node):
     def __init__(self, n_type, g_type, num):
@@ -228,7 +228,7 @@ class NAND(Node):
         self.value = self.unodes[0].value
         for unode in self.unodes[1:]:
             self.value = self.value & unode.value
-        self.value = self.value ^ self.bitwise_not
+        self.value = self.value ^ Node.bitwise_not
 
 class XOR(Node):
     def __init__(self, n_type, g_type, num):
@@ -258,7 +258,7 @@ class XNOR(Node):
         self.value = self.unodes[0].value
         for unode in self.unodes[1:]:
             self.value = self.value ^ unode.value
-        self.value = self.value ^ self.bitwise_not
+        self.value = self.value ^ Node.bitwise_not
     
 class IPT(Node):
     def __init__(self, n_type, g_type, num):

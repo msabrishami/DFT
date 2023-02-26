@@ -8,6 +8,8 @@ from fault_simulation import fault
 
 
 class FaultSim(ABC):
+    wordlen = int(math.log2(sys.maxsize))+1 # move to utils
+    bitwise_not = 2**wordlen-1
 
     def __init__(self, circuit, faults=None): #TODO: rename fault mode
         """
@@ -22,7 +24,7 @@ class FaultSim(ABC):
         self.circuit = circuit
 
         if not isinstance(faults, fault.FaultList):
-            self.fault_list = fault.FaultList()
+            self.fault_list = fault.FaultList(circuit)
         else:
             self.fault_list = faults
 
@@ -32,8 +34,6 @@ class FaultSim(ABC):
             self.fault_set_all.add((node.num, 0))
             self.fault_set_all.add((node.num, 1))
         self.fault_set_rest = self.fault_set_all
-        self.wordlen = int(math.log2(sys.maxsize))+1
-        self.bitwise_not = 2**self.wordlen-1
 
         if faults == 'all':
             self.add_all()
@@ -42,10 +42,10 @@ class FaultSim(ABC):
             self.add_n_random(faults)
 
     def add_n_random(self, n=1):
-        self.fault_list.add_random(self.circuit, random_num=n)
+        self.fault_list.add_n_random(random_num=n)
 
     def add_all(self):
-        self.fault_list.add_all(self.circuit)
+        self.fault_list.add_all()
 
     def fs_folder(self):
         """

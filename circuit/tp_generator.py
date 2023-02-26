@@ -7,7 +7,7 @@ class TPGenerator:
     def __init__(self, circuit):
         self.circuit = circuit
         
-    def gen_single_tp(self, mode="b"):
+    def gen_single(self, mode="b"):
         """ Generate a random input pattern.
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -24,7 +24,7 @@ class TPGenerator:
         
         return tp 
     
-    def gen_multiple_tp(self, tp_count, mode="b", unique=False):
+    def gen_n_random(self, tp_count, mode="b", unique=False):
         """ Generate multiple random input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -32,33 +32,36 @@ class TPGenerator:
         does not store the generated tps in file 
         """
 
-        if unique:
-            return [self.gen_single_tp(mode) for _ in range(int(tp_count))]
+        if not unique:
+            return [self.gen_single(mode) for _ in range(int(tp_count))]
 
         tps = []
-        
         # Bad performance
         # Can't use random.choices() since it can't fit in integer for large circuits
         while len(tps) < tp_count: 
-            x = self.gen_single_tp()
+            x = self.gen_single()
             if x not in tps:
                 tps.append(x)
 
         return tps
 
-    def gen_tp_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
+    def gen_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
         """ Create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
         returns a list of random test patterns
         mention the sequence of inputs and tps
+
+        Returns
+        ------
+        tp_fname, tps
         """ 
         fn = os.path.join(config.PATTERN_DIR, 
                 self.circuit.c_name + "_" + str(tp_count) + "_tp_" + mode + ".tp")
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
-        tps = self.gen_multiple_tp(tp_count=tp_count,mode=mode)
+        tps = self.gen_n_random(tp_count=tp_count,mode=mode)
         for tp in tps:
             tp_str = [str(val) for val in tp]
             outfile.write(",".join(tp_str) + "\n")
@@ -67,9 +70,9 @@ class TPGenerator:
         if verbose:
             print(f"Generated {tp_count} test patterns and saved in {tp_fname}")
 
-        return tps # better to return the file name
+        return tp_fname, tps
 
-    def gen_full_tp(self):
+    def gen_full(self):
         """
         Return all possible test patterns
         #TODO: should we implement all with mode = x?
@@ -89,14 +92,11 @@ class TPGenerator:
             tps.put(utils.fix_size(s1+"0", n_digits)) 
             tps.put(utils.fix_size(s2+"1", n_digits))
         
-        for p in tps.queue:
-            print(p)
-        
-        tps = [[*tp] for tp in list(tps.queue)[:-1]]
+        tps = [list(map(int, [*tp])) for tp in list(tps.queue)[:-1]]
 
         return tps
 
-    def gen_tp_file_full(self, tp_fname=None):
+    def gen_full_file(self, tp_fname=None):
         """Create a single file including all possible test patterns""" 
         if len(self.circuit.PI) > 12:
             print("Error: cannot generate full tp file for circuits with PI > 12")
@@ -105,7 +105,7 @@ class TPGenerator:
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
-        tps = self.gen_full_tp()
+        tps = self.gen_full()
         for t in tps:
             outfile.write(",".join(str(t)) + "\n")
         outfile.close()
@@ -114,7 +114,7 @@ class TPGenerator:
         return tps # better to return the file name
 
     @staticmethod
-    def load_tp_file(fname):
+    def load_file(fname):
         """ Load single file with multiple test pattern vectors. 
             Does not warn if the size of input nodes is less than each test pattern""" 
         # do we need to check the order of the inputs in the file?  

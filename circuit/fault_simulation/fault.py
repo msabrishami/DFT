@@ -17,7 +17,7 @@ class Fault():
 
 class FaultList:
     """ Fault list """
-    def __init__(self, fname = None, fault_list = None, circuit=None, fault_count=None, nodes=None):
+    def __init__(self, circuit=None, fname = None, fault_list = None, fault_count=None, nodes=None):
         """
         fname : str 
             if not None, all faults from the given file is read and added
@@ -31,22 +31,24 @@ class FaultList:
             if given, all faults related to the given nodes are added
         """
         self.faults = []
-        
+        self.circuit = circuit
+
         if fname:
             self.add_file(fname)
 
         elif fault_list:
-            for f in fault_list:
+            for f in fault_list.faults:
                 self.add_fault(f)
         
         elif circuit:
-            if fault_count == 'all' or fault_count is None:
-                self.add_all(circuit)
+            if fault_count == 'all':
+                self.add_all()
             elif isinstance(fault_count, int):
-                self.add_random(circuit, fault_count)
+                self.add_n_random(fault_count)
         
         elif nodes:
             self.add_nodes(nodes)
+
 
     def add(self, node_num, stuck_val):
         self.faults.append(Fault(node_num, stuck_val))
@@ -61,14 +63,14 @@ class FaultList:
         for fault in faults_str_list:
             self.add_str(fault)
 
-    def add_all(self, circuit):
-        for node in circuit.nodes_lev:
+    def add_all(self):
+        for node in self.circuit.nodes_lev:
             self.add_node(node)
 
-    def add_random(self, circuit, random_num=1):
-        idx_random = np.random.choice(len(circuit.nodes_lev), random_num, replace=False)
+    def add_n_random(self, random_num=1):
+        idx_random = np.random.choice(len(self.circuit.nodes_lev), random_num, replace=False)
         for i in range(random_num):
-            self.add(circuit.nodes_lev[idx_random[i]].num, 
+            self.add(self.circuit.nodes_lev[idx_random[i]].num, 
                     np.random.randint(0,2))
     
     def add_fault(self, fault: Fault):

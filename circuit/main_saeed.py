@@ -135,7 +135,6 @@ if __name__ == '__main__':
         #TODO: needs review
         circuit.levelize_backward()
 
-
     elif args.func == "pfs":
         tp_fname = "../data/patterns/{}_tp_{}.tp".format(
             circuit.c_name, args.tp)

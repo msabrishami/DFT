@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 
                 try: # [Test 1]
                     tg = TPGenerator(c)
-                    single_tp = tg.gen_single_tp()
+                    single_tp = tg.gen_single()
                     c.logic_sim(single_tp)
                 except Exception as e:
                     # print(e)

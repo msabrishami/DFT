@@ -105,7 +105,7 @@ class DFTCircuit(circuit.Circuit):
 
         if isinstance(tp, str):
             tg = TPGenerator(self)
-            tps = tg.load_tp_file(tp)
+            tps = tg.load_file(tp)
             num_pattern = len(tps)
             tp_gen = False 
 

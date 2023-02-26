@@ -676,7 +676,7 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
         nodes = list(circuit.get_rand_nodes(op_count))
 
     tg = TPGenerator(circuit)
-    tps = tg.gen_multiple_tp(tp_count)
+    tps = tg.gen_n_random(tp_count)
     tps_detected_init = []
     
     init_pfs = PFS(circuit)

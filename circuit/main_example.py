@@ -20,18 +20,18 @@ if __name__ == '__main__':
 
     ppsf = PPSF(circuit)
     
-    # ppsf.run(tps=100, verbose=True)
+    # f_dict = ppsf.run(tps=100, verbose=True, faults=10)
     # print('_'*50)
     
-    ppsf.multiprocess_ci_run(tp_steps=[int(i) for i in config.PPSF_STEPS[1:4]], verbose=True, ci=1, process=8) # fault_count=10
+    ppsf.multiprocess_ci_run(tp_steps=[int(i) for i in config.PPSF_STEPS[1:7]],
+                             verbose=True, ci=1, process=8, fault_count=200)
     print('_'*50)    
     ##################### PFS Example ####################
-    tg = TPGenerator(circuit)
-    # # # tp = tg.gen_full_tp()
-    tp = tg.gen_multiple_tp(200)
+    # tg = TPGenerator(circuit)
+    # tp = tg.gen_n_random(200)
 
-    pfs = PFS(circuit, faults='all')
-    pfs.run(tp, verbose=True)
+    # pfs = PFS(circuit, faults='all')
+    # pfs.run(tp, verbose=True)
     # print('_'*50)
 
     # #################### STAFAN_FC Example ##############

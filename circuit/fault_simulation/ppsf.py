@@ -20,12 +20,10 @@ Trace functions called during Parallel Fault Simulation:
 """
 
 class PPSF(FaultSim):
-    """ 
-    Parallel Patern Single Fault, Fault Simulation 
-    """
+    """ Parallel Patern Single Fault, Fault Simulation """
 
-    def __init__(self, circuit, fault_mode=None):
-        super().__init__(circuit, faults=fault_mode)
+    def __init__(self, circuit, faults=None):
+        super().__init__(circuit, faults=faults)
         self.fs_type = "ppsf"
         self.fs_folder()
 
@@ -35,9 +33,9 @@ class PPSF(FaultSim):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    def single_run(self, tps, fault):
+    def _one_fault_run(self, tps, fault):
         """ 
-        One pass of fault simulation for the given list of test patterns over a single fault. 
+        One pass of fault simulation for the given list of test patterns and a single fault. 
         Number of tps should be less than the system's word length. 
         If a fault is given, injects the fault and then runs logic simulation (bitwise).
 
@@ -50,7 +48,6 @@ class PPSF(FaultSim):
         -------
         res_fixed : set of the indices of tps that could detect the given fault
         """
-        # TODO: Add verbose
         if len(tps) > self.wordlen:
             print("Error: number of tps should be wordlen")
             return None
@@ -81,46 +78,76 @@ class PPSF(FaultSim):
         For each fault, it counts the number of times it has been detected
         WARNING: this method is not tested after a few modifications 
 
-        if faults is none, consider all faults as default
+        Updates fault.D_count
+
         TODO: log_fname
+
+        faults: None: consider self.fault_list if already set, else all faults
+                FaultList: consider given FaultList
+
+        tps : int: number of random tps
+              str: address of file containing tps
+              list: list of test patterns
+        Returns
+        -------
+        fault dict: {fault_str: D_count}  only for detected faults
         """
-
-        if faults is None and len(self.fault_list.faults):
-            faults = self.fault_list
-        elif self.fault_list is None or faults is None:
-            faults = FaultList()
-            faults.add_all(self.circuit)
-            #TODO: self.faults+list??
-
-        tg = TPGenerator(self.circuit)
+        tps_len = None
         if isinstance(tps, int):
-            tps = tg.gen_multiple_tp(tps)
+            tps_len = tps
+            tg = TPGenerator(self.circuit)
+            tps = tg.gen_n_random(tps)
+        elif isinstance(tps, list):
+            tps_len = len(tps)
         elif isinstance(tps, str):
-            if os.path.exists(tps):
-                tps = tg.load_tp_file(tps)
-            else:
-                raise "path not exist."
-        elif not isinstance(tps, list):
-            raise TypeError(f"tps should be either int, list, or file name ({type(tps)})")
+            tg = TPGenerator(self.circuit)
+            tps = tg.load_file(tps)
+            tps_len = len(tps)
 
+        if faults is None and self.fault_list is None:
+            faults = FaultList(circuit=self.circuit)
+            faults.add_all()
+        elif len(self.fault_list.faults):
+            faults=self.fault_list
+        elif isinstance(faults, str):
+            faults = FaultList(self.circuit)
+            faults.add_file(str)
+        elif isinstance(faults, int):
+            nf = faults
+            faults = FaultList(self.circuit)
+            faults.add_n_random(nf)
 
         if verbose:
-            print(f"Running Parallel Pattern Fault Simulation with {len(tps)} tps and {len(faults.faults)} faults.")
+            print(f"Running Parallel Pattern Fault Simulation with {tps_len} tps and {len(faults.faults)} faults.")
 
         if len(faults.faults) == 0:
-            print("Warning: No fault is added.")
+            raise "Warning: No fault is added."
+
+        # Reset D_counts
+        for f in faults.faults:
+            f.D_count = 0
 
         for idx, fault in enumerate(faults.faults):
             tot_pass = math.ceil(len(tps)/self.wordlen)
             for _pass in range(tot_pass):
                 tps_pass = tps[_pass*64:(_pass+1)*64]
-                res = self.single_run(tps_pass, fault)
+                res = self._one_fault_run(tps_pass, fault)
                 fault.D_count += len(res)
-            if verbose and idx % 100 == 0:
+
+            if verbose and idx % 50 == 0:
                 print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
+        
         if verbose:
             print("PPFS completed")
             print(f"FC: {100*faults.calc_fc():.4f}%, total-faults={len(faults.faults)}")
+        
+        fault_dict = {}
+        
+        for f in faults.faults:
+            if f.D_count:
+                fault_dict[f.__str__()] = f.D_count
+        
+        return fault_dict
 
     def _single_process_runner(self, conn, tp, faults, verbose):
         self.run(tps=tp, faults=faults, verbose = verbose)
@@ -147,15 +174,17 @@ class PPSF(FaultSim):
         Returns
         ------
         list
-            A fault list with D_count with length equal to given count of processes
+            A fault list with D_count_list with length equal to given count of processes
             An updated version of fault_list --> D-count is added
         """
         time_s = time.time()
         process_list = []
         for _ in range(process):
             parent_conn, child_conn = Pipe()
+            fault_copy = FaultList()
+            fault_copy.faults = fl_curr.faults.copy()
             p = Process(target=self._single_process_runner,
-                        args=(child_conn, tp//process+1, fl_curr, verbose))
+                        args=(child_conn, tp//process+1, fault_copy, verbose))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -211,18 +240,18 @@ class PPSF(FaultSim):
             over process times of process with cumulative count of test patterns.
         """
 
-        cont_faults = FaultList()
-        all_faults = FaultList()
+        cont_faults = FaultList(self.circuit)
+        all_faults = FaultList(self.circuit)
         
         if op is None:
             if fault_count is None or fault_count == 'all':
-                cont_faults.add_all(self.circuit)
-                all_faults.add_all(self.circuit)
+                cont_faults.add_all()
+                all_faults.add_all()
 
             elif isinstance(fault_count, int):
-                cont_faults.add_random(self.circuit, random_num=fault_count)
+                cont_faults.add_n_random(random_num=fault_count)
                 all_faults.faults = cont_faults.faults.copy()
-        
+
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
             
@@ -234,9 +263,7 @@ class PPSF(FaultSim):
                     all_faults.add(node.num, "0")
             else:
                 import random
-                random_fanin = fanin_nodes.copy()
-                random.shuffle(random_fanin)
-                for node in random_fanin[:fault_count]:
+                for node in random.choices(fanin_nodes, k =fault_count):
                     cont_faults.add(node.num, "1")
                     cont_faults.add(node.num, "0")
                     all_faults.add(node.num, "1")
@@ -270,7 +297,7 @@ class PPSF(FaultSim):
             tp = int(tp)
             tp_tot += tp
             time_s = time.time()
-            detected_faults = FaultList()
+            detected_faults = FaultList(self.circuit)
 
             # D_count_list is calculated here
             self._multiprocess_handler(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
@@ -287,7 +314,7 @@ class PPSF(FaultSim):
                 if mu == 0 and std == 0: # All zero
                     detected_faults.add_str(str(fault))
                 elif std == 0: # Why this happens at low number of tps (sometimes)?
-                    print(f'\n(logging){mu=}, {fault_cont.D_count_list}\n')
+                    print(f'\n(logging) {mu=}, {fault_cont.D_count_list}\n')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if log:
@@ -297,7 +324,8 @@ class PPSF(FaultSim):
 
             if verbose:
                 print(f"TP = {tp:5}: #All faults = {len(all_faults.faults)} / #Detected faults = {len(detected_faults.faults):4}"+
-                      f" / #Remaining faults = {len(all_faults.faults)-len(detected_faults.faults):4} / FC = {len(detected_faults.faults)/len(all_faults.faults):.3f}"+
+                      f" / #Remaining faults = {len(all_faults.faults)-len(detected_faults.faults):4}" +
+                      f" / FC = {100*len(detected_faults.faults)/len(all_faults.faults):.3f}%"+
                       f" / time = {time.time()-time_s:.2f}s")
 
         # Writing down the remaining faults

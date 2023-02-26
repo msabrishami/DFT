@@ -74,17 +74,17 @@ class PFS(FaultSim):
                 
                 # Simple parallel simulation of a node 
                 if node.gtype == "IPT":
-                    node.imply_p(self.bitwise_not, node_dict[node.num])
+                    node.imply_p(node.bitwise_not, node_dict[node.num])
                 else:
-                    node.imply_p(self.bitwise_not)
+                    node.imply_p(node.bitwise_not)
                 
                 # Fault injection 
-                node.insert_f(self.bitwise_not, pfs_stuck_values)
+                node.insert_f(node.bitwise_not, pfs_stuck_values)
             
             # output result
             for i in self.circuit.PO:
                 # if some faults can be detected
-                if (i.pfs_V != 0) and (i.pfs_V != self.bitwise_not):
+                if (i.pfs_V != 0) and (i.pfs_V != node.bitwise_not):
                     pfs_V_str = format(i.pfs_V,"b").zfill(self.wordlen)
                     msb_pfs_V = pfs_V_str[0]        # MSB of pfs_V: good circuit
                     for j in range(self.wordlen-1):
@@ -96,7 +96,7 @@ class PFS(FaultSim):
             fault.D_count += 1
         return list(detected_faults)
 
-    def _multiple_tp_run(self, tps, log_fname, fault_drop=None, verbose = False):
+    def _multiple_tp_run(self, tps, log_fname, fault_drop=None, verbose=False):
         """ 
         FS for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
@@ -116,7 +116,7 @@ class PFS(FaultSim):
             tpfc.append(len(detected_faults))
             fault_coverage.append(self.fault_list.calc_fc())
             
-            if verbose and idx%10 == 0:
+            if verbose and idx%50 == 0:
                     print(f"{idx:5} \t New faults: {tpfc[-1]:5}"
                         f"  Total detected faults: {len(all_detected_faults):5}"+
                         f"  FC= {100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%")                
@@ -129,9 +129,10 @@ class PFS(FaultSim):
             outfile.write('\n')
             outfile.write("------------\n")
             if fault_coverage[-1] == 1:
-                print(f'All faults were found on test pattern {idx}')
+                if verbose:
+                    print(f'All faults were found on test pattern {idx}')
                 outfile.write("Fault Coverage = {fault_coverage[-1]*100:.2f}%\n")
-                return 
+                break   
         outfile.close()            
         # print(self.fs_type + " (separate mode) completed. ")
         if verbose:
@@ -165,9 +166,9 @@ class PFS(FaultSim):
 
         tg = TPGenerator(self)
         if isinstance(tps, int):
-            tps = tg.gen_multiple_tp(tps)
+            tps = tg.gen_n_random(tps)
         elif isinstance(tps, str):
-            tps = tg.load_tp_file(tps)
+            tps = tg.load_file(tps)
         elif not isinstance(tps, list):
             raise TypeError("tps should be either int, or file name")
 
@@ -176,7 +177,7 @@ class PFS(FaultSim):
             os.makedirs(log_fname)
         log_fname += f"{self.circuit.c_name}-PFS-temp.log"
 
-        fc, detected_faults = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname)
+        fc, detected_faults = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname, verbose=verbose)
 
         if verbose: 
             print(f"TPFC completed:\tFC={100*self.fault_list.calc_fc():.4f}%, tot-faults={len(self.fault_list.faults)}")

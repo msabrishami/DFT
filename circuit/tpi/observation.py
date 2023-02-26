@@ -268,7 +268,7 @@ def deltaFC_PFS(circuit, op, tp_count, times, depth=None, log=True):
 
     for time in range(times):
         tg = TPGenerator(circuit=circuit)
-        tps = tg.gen_multiple_tp(tp_count)
+        tps = tg.gen_n_random(tp_count)
         for tp in tps:
             init_pfs = PFS(circuit)
             init_pfs.fault_list.add_nodes(fanin_nodes)
