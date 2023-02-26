@@ -66,7 +66,6 @@ def pfs_tester():
 
         tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/singleFS_{circ.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
 
-
 def pfs_single_tp_checker_pfs_dfs_old():
     """Checks result of DFT.PFS._one_tp_run() and dfs_old for full faults and single tps from dfs_old."""
 
@@ -90,7 +89,7 @@ def pfs_single_tp_checker_pfs_dfs_old():
                 if fault_list_file:
                     fault_list = FaultList(fname=f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/{fault_list_file}')
                     pfs = PFS(circuit,faults=fault_list)
-                    pfs_faults = [f.__str__() for f in pfs._one_tp_run(tp)]
+                    _, pfs_faults = [f.__str__() for f in pfs._one_tp_run(tp)]
                     
                 x = tp_file.replace('.tp','.fs')
                 dfs_list_dir = f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/dfs/{x}'
@@ -104,19 +103,49 @@ def pfs_single_tp_checker_pfs_dfs_old():
 
 def pfs_multiple_tp_checker_pfs_dfs_old():
     """Checks result of DFT.PFS._multiple_run() or run() and dfs_old for full faults and multiple tps from dfs_old."""
-    pass
-        
+    for c_file in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2'):
+        print('\n',c_file)
+        circuit = None    
+        for tp_file_name in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/input/'):
+            pfs_faults = []
+            dfs_faults = []
+            if 'count-1_' not in tp_file_name:
+                tp_file = open(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/input/{tp_file_name}','r')
+                tps = []
+                for line in tp_file.readlines()[1:]:
+                    tps.append(list(map(int, line.replace('\n','').split(','))))
+                circuit = DFTCircuit(f'../data/ckt/{c_file}.ckt')
 
+                fault_list_file = None
+                for fl in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/'):
+                    if '_fs.txt' in fl:
+                        fault_list_file = fl
+                
+                if fault_list_file:
+                    fault_list = FaultList(fname=f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/{fault_list_file}')
+                    pfs = PFS(circuit,faults=fault_list)
+                    _, pfs_faults = [f.__str__() for f in pfs.run(tps)]
+                    
+                x = tp_file_name.replace('.tp','.fs')
+                dfs_list_dir = f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/dfs/{x}'
 
+                if os.path.exists(dfs_list_dir):
+                    dfs_lines = open(dfs_list_dir).readlines()
+                    for line in dfs_lines:
+                        if '@' in line:
+                            dfs_faults.append(line.replace('\n',''))
 
-
+                print(compare_fault_lists(pfs_faults, pfs_faults))
+            
 if __name__ == '__main__':
 
     # dft_pfs_tester()
-    pfs_single_tp_checker_pfs_dfs_old()
+
+    # pfs_single_tp_checker_pfs_dfs_old()
     # Result: 6288
     # for all single tps in /dfs_phase2, dfs finds fault 1290@1 while pfs does not.
 
     pfs_multiple_tp_checker_pfs_dfs_old()
+    # Result: All passed!
 
     

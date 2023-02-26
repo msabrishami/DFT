@@ -96,7 +96,7 @@ class PFS(FaultSim):
             fault.D_count += 1
         return list(detected_faults)
 
-    def _multiple_tp_run(self, tps, log_fname, fault_drop, verbose = True):
+    def _multiple_tp_run(self, tps, log_fname, fault_drop=None, verbose = False):
         """ 
         FS for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:
@@ -106,20 +106,20 @@ class PFS(FaultSim):
 
         fault_coverage = []
         tpfc = []
-        unique_detected_faults = set()
+        all_detected_faults = set()
 
         for idx, tp in enumerate(tps):
             detected_faults = self._one_tp_run(tp, fault_drop)
             
             for df in detected_faults:
-                unique_detected_faults.add(df)
+                all_detected_faults.add(df)
             tpfc.append(len(detected_faults))
             fault_coverage.append(self.fault_list.calc_fc())
             
             if verbose and idx%10 == 0:
                     print(f"{idx:5} \t New faults: {tpfc[-1]:5}"
-                        f"  Total detected faults: {len(unique_detected_faults):5}"+
-                        f"  FC= {100*len(unique_detected_faults)/len(self.fault_list.faults):.4f}%")                
+                        f"  Total detected faults: {len(all_detected_faults):5}"+
+                        f"  FC= {100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%")                
 
             outfile.write(",".join(map(str, tp)) + '\n')
             outfile.write(f"Detected {len(detected_faults)} faults below: \n")
@@ -133,11 +133,11 @@ class PFS(FaultSim):
                 outfile.write("Fault Coverage = {fault_coverage[-1]*100:.2f}%\n")
                 return 
         outfile.close()            
-                
         # print(self.fs_type + " (separate mode) completed. ")
-        print(f"Log file saved in {log_fname}")
+        if verbose:
+            print(f"Log file saved in {log_fname}")
 
-        return fault_coverage
+        return fault_coverage, list(all_detected_faults)
 
 
     def run(self, tps, fault_drop=None, verbose=False):
@@ -176,9 +176,9 @@ class PFS(FaultSim):
             os.makedirs(log_fname)
         log_fname += f"{self.circuit.c_name}-PFS-temp.log"
 
-        fc = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname)
+        fc, detected_faults = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, log_fname=log_fname)
 
         if verbose: 
             print(f"TPFC completed:\tFC={100*self.fault_list.calc_fc():.4f}%, tot-faults={len(self.fault_list.faults)}")
         
-        return  fc
+        return  fc, detected_faults
