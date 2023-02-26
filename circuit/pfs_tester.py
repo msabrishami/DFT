@@ -89,7 +89,7 @@ def pfs_single_tp_checker_pfs_dfs_old():
                 if fault_list_file:
                     fault_list = FaultList(fname=f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/{fault_list_file}')
                     pfs = PFS(circuit,faults=fault_list)
-                    _, pfs_faults = [f.__str__() for f in pfs._one_tp_run(tp)]
+                    pfs_faults = [f.__str__() for f in pfs._one_tp_run(tp)]
                     
                 x = tp_file.replace('.tp','.fs')
                 dfs_list_dir = f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/dfs/{x}'
@@ -141,11 +141,11 @@ if __name__ == '__main__':
 
     # dft_pfs_tester()
 
-    # pfs_single_tp_checker_pfs_dfs_old()
+    pfs_single_tp_checker_pfs_dfs_old()
     # Result: 6288
     # for all single tps in /dfs_phase2, dfs finds fault 1290@1 while pfs does not.
 
-    pfs_multiple_tp_checker_pfs_dfs_old()
+    # pfs_multiple_tp_checker_pfs_dfs_old()
     # Result: All passed!
 
     
