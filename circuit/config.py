@@ -1,19 +1,24 @@
-LIB_CELLS_PATH = "../data/library"
-MODELSIM_DIR = "../data/modelsim"
+# TODO: should be in DFT/ rather than DFT/circuit
+
+import os
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_DIR = os.path.join(ROOT_DIR, '../data/')
+
+LIB_CELLS_PATH = os.path.join(DATA_DIR, "library")
+MODELSIM_DIR = os.path.join(DATA_DIR, "modelsim")
 MODELSIM_INPUT_DIR = "input" 
 MODELSIM_GOLD_DIR = "gold" 
 MODELSIM_OUTPUT_DIR = "output" 
-VERILOG_DIR = "../data/verilog"
-###  VERILOG_DIR = "../data/EPFL" -- deprecated
-PATTERN_DIR ="../data/patterns"
-# in each modelsim prj directory where inputs will be stored
-## TODO for Ting-Yu: read a good description for these constants
+VERILOG_DIR = os.path.join(DATA_DIR, "verilog")
+PATTERN_DIR =os.path.join(DATA_DIR, "patterns")
 
-FAULT_DICT_DIR = "../data/fault_dict"
-FAULT_SIM_DIR = "../data/fault_sim"
-CKT_DIR = "../data/ckt"
-STAFAN_DIR = "../data/stafan-data"
-FIG_DIR = "../data/figures"
+FAULT_DICT_DIR = os.path.join(DATA_DIR, "fault_dict")
+FAULT_SIM_DIR = os.path.join(DATA_DIR, "fault_sim")
+CKT_DIR = os.path.join(DATA_DIR, "ckt")
+STAFAN_DIR = os.path.join(DATA_DIR, "stafan-data")
+FIG_DIR = os.path.join(DATA_DIR, "figures")
+
 # TEST POINT INSERTION PROBLEM:
 HTO_TH = 0.1
 HTC_TH = 0.05
@@ -45,7 +50,9 @@ ALL_ISCAS85=["c17","c432","c499","c880","c1355","c1908","c2670","c3540","c5315",
 ALL_EPFL_EZ=["arbiter", "sin", "bar","dec", "int2float", 
         "multiplier", "cavlc", "adder", "max", "priority", "voter"]
 ALL_EPFL_HARD = ["hyp", "square", "router", "log2", "div", "sqrt", "mem_ctrl", "i2c", "ctrl"]
-SSTA_DATA_DIR = "../data/cell_ssta"
+
+SSTA_DATA_DIR = os.path.join(DATA_DIR, "cell_ssta")
+
 PVS = "vth0-N0.03_lg-N0.05_w-N0.05_toxe-N0.10_ndep-N0.05_MC20000"
 TECH = "MOSFET_45nm_HP"
 

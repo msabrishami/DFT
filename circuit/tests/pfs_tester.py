@@ -6,17 +6,17 @@
 # ppsf: in random k tps, how many times each fault is detected?
 
 import os
+import sys
+sys.path.append('../')
 
-from circuit.circuit import Circuit
 from circuit.dft_circuit import DFTCircuit
-from fault_simulation.ppsf import PPSF
 from fault_simulation.pfs import PFS
 from fault_simulation.fault import FaultList
 from tp_generator import TPGenerator
 import pandas as pd
 
 MAX_TP = (1<<6) #lower it
-PFS_TESTING_DIR = '../data/testings/pfs_single_fault_testing'
+PFS_TESTING_DIR = '../../data/testings/pfs_single_fault_testing'
 
 
 def compare_fault_lists(a , b):
@@ -37,7 +37,7 @@ def pfs_tester():
     tps are full, or randomly generated if input size is large
     """
     for c in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2'):
-        circuit_path = '../data/ckt/'+c+".ckt"
+        circuit_path = '../../data/ckt/'+c+".ckt"
         
         circ = DFTCircuit(circuit_path)
         faults = FaultList()
@@ -79,7 +79,7 @@ def pfs_single_tp_checker_pfs_dfs_old():
             if 'count-1_' in tp_file:
                 tp = open(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/input/{tp_file}','r')
                 tp = list(map(int, tp.readlines()[1].replace('\n','').split(',')))
-                circuit = DFTCircuit(f'../data/ckt/{c_file}.ckt')
+                circuit = DFTCircuit(f'../../data/ckt/{c_file}.ckt')
 
                 fault_list_file = None
                 for fl in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/'):
@@ -114,7 +114,7 @@ def pfs_multiple_tp_checker_pfs_dfs_old():
                 tps = []
                 for line in tp_file.readlines()[1:]:
                     tps.append(list(map(int, line.replace('\n','').split(','))))
-                circuit = DFTCircuit(f'../data/ckt/{c_file}.ckt')
+                circuit = DFTCircuit(f'../../data/ckt/{c_file}.ckt')
 
                 fault_list_file = None
                 for fl in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/'):
@@ -147,5 +147,3 @@ if __name__ == '__main__':
 
     # pfs_multiple_tp_checker_pfs_dfs_old()
     # Result: All passed!
-
-    
