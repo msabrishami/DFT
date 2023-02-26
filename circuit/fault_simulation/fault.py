@@ -67,9 +67,10 @@ class FaultList:
         for node in self.circuit.nodes_lev:
             self.add_node(node)
 
-    def add_n_random(self, random_num=1):
-        idx_random = np.random.choice(len(self.circuit.nodes_lev), random_num, replace=False)
-        for i in range(random_num):
+    def add_n_random(self, n=1): 
+        """Adds 2*n faults (all faults of n nodes)"""
+        idx_random = np.random.choice(len(self.circuit.nodes_lev), n, replace=False)
+        for i in range(n):
             self.add(self.circuit.nodes_lev[idx_random[i]].num, 
                     np.random.randint(0,2))
     

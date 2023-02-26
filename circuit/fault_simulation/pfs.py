@@ -18,7 +18,7 @@ class PFS(FaultSim):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    def _one_tp_run(self, tp, fault_drop=None) -> set:
+    def _one_tp_run(self, tp, fault_drop=None):
         """
         Run PFS for one test pattern
         If fault drop is given, faults that have D_count < fault_drop are considered, 
@@ -134,12 +134,10 @@ class PFS(FaultSim):
                 outfile.write("Fault Coverage = {fault_coverage[-1]*100:.2f}%\n")
                 break   
         outfile.close()            
-        # print(self.fs_type + " (separate mode) completed. ")
         if verbose:
             print(f"Log file saved in {log_fname}")
 
         return fault_coverage, list(all_detected_faults)
-
 
     def run(self, tps, fault_drop=None, verbose=False):
         """ 
@@ -161,7 +159,8 @@ class PFS(FaultSim):
 
         Returns
         -------
-        tpfc : list of floats , FC percentage (accumulative) value as tps are used for test 
+        fc, detected_faults
+        facult_coverage and list
         """
 
         tg = TPGenerator(self)

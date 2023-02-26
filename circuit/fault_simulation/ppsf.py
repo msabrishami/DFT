@@ -147,7 +147,7 @@ class PPSF(FaultSim):
             if f.D_count:
                 fault_dict[f.__str__()] = f.D_count
         
-        return fault_dict
+        return fault_dict #TODO: return fc and Faults Dict
 
     def _single_process_runner(self, conn, tp, faults, verbose):
         self.run(tps=tp, faults=faults, verbose = verbose)
@@ -249,7 +249,7 @@ class PPSF(FaultSim):
                 all_faults.add_all()
 
             elif isinstance(fault_count, int):
-                cont_faults.add_n_random(random_num=fault_count)
+                cont_faults.add_n_random(n=fault_count)
                 all_faults.faults = cont_faults.faults.copy()
 
         else:
