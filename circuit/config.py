@@ -1,27 +1,46 @@
-# TODO: should be in DFT/ rather than DFT/circuit
-
 import os
-# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = '../'
 
-# DATA_DIR = os.path.join(ROOT_DIR, '/data/')
-DATA_DIR = '../data'
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
 LIB_CELLS_PATH = os.path.join(DATA_DIR, "library")
 MODELSIM_DIR = os.path.join(DATA_DIR, "modelsim")
+
 MODELSIM_INPUT_DIR = "input" 
 MODELSIM_GOLD_DIR = "gold" 
 MODELSIM_OUTPUT_DIR = "output" 
-VERILOG_DIR = os.path.join(DATA_DIR, "verilog")
-PATTERN_DIR =os.path.join(DATA_DIR, "patterns")
 
+"""Circuits Absolute Directories"""
+CKT_DIR = os.path.join(DATA_DIR, "ckt")
+VERILOG_DIR = os.path.join(DATA_DIR, 'verilog')
+
+ISAS89_DIR = os.path.join(VERILOG_DIR, 'ISCAS89')
+ISCAS85_DIR = os.path.join(VERILOG_DIR, 'ISCAS85')
+EPFL_DIR = os.path.join(VERILOG_DIR, 'EPFL')
+
+ISCAS85_V0_DIR = os.path.join(ISCAS85_DIR, 'v0')
+ISCAS85_V1_DIR = os.path.join(ISCAS85_DIR, 'v1')
+ISCAS85_V2_DIR = os.path.join(ISCAS85_DIR, 'v2')
+
+EPFL_V0_DIR = os.path.join(EPFL_DIR, 'v0')
+EPFL_V1_DIR = os.path.join(EPFL_DIR, 'v1')
+EPFL_V2_DIR = os.path.join(EPFL_DIR, 'v2')
+
+ISCAS89_DIR = os.path.join(VERILOG_DIR, 'ISCAS89')
+
+ALL_CIRCUIT_DIRS = [CKT_DIR, 
+                    ISCAS85_V0_DIR, ISCAS85_V1_DIR, ISCAS85_V2_DIR,
+                    EPFL_V0_DIR, EPFL_V1_DIR, EPFL_V2_DIR,
+                    ISCAS89_DIR]
+
+"""Others in data/"""
+PATTERN_DIR =os.path.join(DATA_DIR, "patterns")
 FAULT_DICT_DIR = os.path.join(DATA_DIR, "fault_dict")
 FAULT_SIM_DIR = os.path.join(DATA_DIR, "fault_sim")
-CKT_DIR = os.path.join(DATA_DIR, "ckt")
 STAFAN_DIR = os.path.join(DATA_DIR, "stafan-data")
 FIG_DIR = os.path.join(DATA_DIR, "figures")
 
-# TEST POINT INSERTION PROBLEM:
+"""Test Point Insertion Poblem"""
 HTO_TH = 0.1
 HTC_TH = 0.05
 STAFAN_B_MIN = 0.0001
@@ -34,7 +53,7 @@ SAMPLES = 100
 
 V_FORMATS = ["EPFL", "ISCAS85"]
 
-# LOGIC LIBRARY RELATED:
+"""Logic Library Related"""
 CELL_NAMES = {
         "XOR": ["xor", "XOR2", "XOR2_X1"],
         "XNOR": ["xnor", "XNOR2", "XNOR2_X1"],

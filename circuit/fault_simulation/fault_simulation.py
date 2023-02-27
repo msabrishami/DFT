@@ -56,7 +56,7 @@ class FaultSim(ABC):
         for path in paths:
             if not os.path.exists(path):
                 print(f"Creating directory {path}")
-                os.mkdir(path)
+                os.makedirs(path)
 
     # def single(self): -->renamed
     #     """ Single pass of simulation. 
