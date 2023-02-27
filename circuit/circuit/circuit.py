@@ -52,12 +52,16 @@ class Circuit:
             the name of the circuit with path and format
         c_name : str
             the full name of the circuit without path and format 
+        nodes : dict
+            from each node_num to Node objecr
+        nodes_lev: list
+            nodes ordered by level. Ready for logicsim.
         """
 
         self.c_fname = c_fname 
         self.c_name = c_fname.split('/')[-1].split('.')[0]
-        self.nodes = {}     
-        self.nodes_lev = [] 
+        self.nodes = {} # node_num -> obj
+        self.nodes_lev = [] #
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
         self._load(c_fname, std_node_lib)

@@ -1,5 +1,3 @@
-import numpy as np
-
 class Fault():
     def __init__(self, node_num, stuck_val):
         self.node_num = str(node_num)
@@ -67,13 +65,15 @@ class FaultList:
         for node in self.circuit.nodes_lev:
             self.add_node(node)
 
-    def add_n_random(self, n=1): 
-        """Adds 2*n faults (all faults of n nodes)"""
-        idx_random = np.random.choice(len(self.circuit.nodes_lev), n, replace=False)
-        for i in range(n):
-            self.add(self.circuit.nodes_lev[idx_random[i]].num, 
-                    np.random.randint(0,2))
-    
+    def add_n_random(self, n=1):
+        """Add n random unique faults"""
+        if n >= len(self.circuit.nodes_lev):
+            raise "Required random faults are more than number of nodes in your circuit"
+        
+        import random
+        for n_num in random.choices(list(self.circuit.nodes.keys()), k=n):
+            self.add(node_num=n_num, stuck_val=random.randint(0,2))
+
     def add_fault(self, fault: Fault):
         self.faults.append(fault)
 

@@ -72,7 +72,7 @@ class PPSF(FaultSim):
         
         return res_fixed
 
-    def run(self, tps, faults=None, log_fname=None, verbose=False):
+    def run(self, tps, faults=None, save_log=False, verbose=False):
         """ 
         Runs PPSF for the faults in the fault list, given tp count/list/fname
         For each fault, it counts the number of times it has been detected
@@ -96,7 +96,7 @@ class PPSF(FaultSim):
         if isinstance(tps, int):
             tps_len = tps
             tg = TPGenerator(self.circuit)
-            tps = tg.gen_n_random(tps)
+            tps = tg.gen_n_random(tps) # Not unique. Pass unique=True if want so
         elif isinstance(tps, list):
             tps_len = len(tps)
         elif isinstance(tps, str):
@@ -150,7 +150,7 @@ class PPSF(FaultSim):
         return fault_dict #TODO: return fc and Faults Dict
 
     def _single_process_runner(self, conn, tp, faults, verbose=False):
-        self.run(tps=tp, faults=faults, verbose = verbose)
+        self.run(tps=tp, faults=faults, verbose=verbose)
         conn.send(faults)
 
     def _multiprocess_handler(self, tp, fl_curr, process=1, log_fname=None, count_cont=False, verbose = False):
@@ -205,7 +205,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, log=True, process=1, ci=1, depth=1, fault_count=None):
+    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, process=1, ci=1, depth=1, fault_count=None, save_log=False):
         """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
         All faults are considered. 
         TODO: optional faults
@@ -229,9 +229,9 @@ class PPSF(FaultSim):
             If True, save logs in log file (default is True).
             Logs are list of faults and the mean of times they were detected over process times of \
             processes. Logs are separated by the line '#TP=tp_counts' in each step.
-        fault_count : int
-            if None, all faults are considered. Else, n random faults are considered.
-            # TODO: pass a list of faults
+        fault_count : int, str
+            if None or 'all', all faults are considered. Else, fault_count unique random faults are considered.
+        # TODO: pass a list of faults (now, doable in the constructor)
 
         Returns
         ------
@@ -255,7 +255,7 @@ class PPSF(FaultSim):
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
             
-            if fault_cont is None or fault_count == 'all':
+            if fault_count is None or fault_count == 'all':
                 for node in fanin_nodes:
                     cont_faults.add(node.num, "1")
                     cont_faults.add(node.num, "0")
@@ -271,25 +271,36 @@ class PPSF(FaultSim):
 
         if verbose:
             f_count = fault_count if isinstance(fault_count, int) else len(all_faults.faults)
-            print(f"Running PPSF with:\n\t| tp counts = {tp_steps}\n\t| confidence interval = {ci}" +
-                  f"\n\t| fault count = {f_count}\n\t| process(es) = {process}\n\t| BFS depth = {depth}")
+            pr =f"Running PPSF with:\n"
+            pr+=f"\t| tp counts = {tp_steps}\n"
+            pr+=f"\t| confidence interval = {ci}\n"
+            pr+=f"\t| fault count = {f_count}\n"
+            pr+=f"\t| process(es) = {process}\n"
+            pr+=f"\t| BFS depth = {depth}\n"
+        
+            if op:
+                pr+=f"\t| observation point = {op.num}\n"
+            
+            print(pr)
             
         fault_idx = {}
         for idx, fault in enumerate(cont_faults.faults):
             fault_idx[str(fault)] = idx
 
-        path = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)
-        if log == False:
-            log_fname = None
-        elif op == None:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-ppsf-steps-ci{ci}-process{process}.ppsf")
-        else:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}-{op.num}-ppsf-steps-ci{ci}-process{process}.ppsf")
+        path = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name) + '/ppsf/'
+        if not os.path.exists(path):
+            os.makedirs(path)
+            
+        log_fname = None
 
-        if log:
+        # Add BFS depth to the log_fname?
+        if op == None:
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_ci{ci}_process{process}.ppsf")
+        else:
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_op{op.num}_ci{ci}_process{process}.ppsf")
+        
+        if save_log:
             outfile = open(log_fname, "w")
-            if verbose:
-                print(f"Log for step based PPSF is being stored in {log_fname}\n")
                 
         tp_tot = 0
         res_final = {}
@@ -302,7 +313,7 @@ class PPSF(FaultSim):
             # D_count_list is calculated here
             self._multiprocess_handler(fl_curr=all_faults, tp=tp, process=process, log_fname=None, count_cont=True)
 
-            if log:
+            if save_log:
                 outfile.write(f"#TP={tp}\n")
 
             for fault in all_faults.faults:
@@ -317,7 +328,7 @@ class PPSF(FaultSim):
                     print(f'\n(logging) {mu=}, {fault_cont.D_count_list}\n')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
-                    if log:
+                    if save_log:
                         outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
                 else:
                     detected_faults.add_str(str(fault))
@@ -329,7 +340,7 @@ class PPSF(FaultSim):
                       f" / time = {time.time()-time_s:.2f}s")
 
         # Writing down the remaining faults
-        if log:
+        if save_log:
             outfile.write("#TP: (remaining faults)\n")
         
         for fault in all_faults.faults:
@@ -337,10 +348,13 @@ class PPSF(FaultSim):
             std = np.std(fault.D_count_list)
             res_final[str(fault)] = mu/tp_tot
             
-            if log:
+            if save_log:
                 outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
         
-        if log:
+        if save_log:
             outfile.close()
+
+        if save_log:
+            print(f"\nLog for step based PPSF is being stored in {log_fname}")
 
         return res_final

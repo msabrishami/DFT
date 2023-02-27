@@ -150,14 +150,13 @@ class PFS(FaultSim):
                 
         if fault_log_fname and fault_log_file:
             fault_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
+            fault_log_file.close()
+            print(f'\nLog file for faults saved in {fault_log_fname}')
+
         if tpfc_log_file and tpfc_log_fname:
             tpfc_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
-        
-        fault_log_file.close()
-        tpfc_log_file.close()
-        
-        if fault_log_fname: print(f'\nLog file for faults saved in {fault_log_fname}')
-        if tpfc_log_fname: print(f'Log file for tpfc saved in {tpfc_log_fname}')
+            tpfc_log_file.close()
+            print(f'Log file for tpfc saved in {tpfc_log_fname}')
 
         return fault_coverage, list(all_detected_faults)
 
