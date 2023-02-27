@@ -84,13 +84,13 @@ class PPSF(FaultSim):
 
         faults: None: consider self.fault_list if already set, else all faults
                 FaultList: consider given FaultList
-
         tps : int: number of random tps
               str: address of file containing tps
               list: list of test patterns
+
         Returns
         -------
-        fault dict: {fault_str: D_count}  only for detected faults
+        fault_dict: {fault_str: D_count} only for detected faults
         """
         tps_len = None
         if isinstance(tps, int):
@@ -149,7 +149,7 @@ class PPSF(FaultSim):
         
         return fault_dict #TODO: return fc and Faults Dict
 
-    def _single_process_runner(self, conn, tp, faults, verbose):
+    def _single_process_runner(self, conn, tp, faults, verbose=False):
         self.run(tps=tp, faults=faults, verbose = verbose)
         conn.send(faults)
 
@@ -205,7 +205,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def multiprocess_ci_run(self, tp_steps, op=None, verbose=False, log=True, process=1, ci=1, depth=1, fault_count=None):
+    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, log=True, process=1, ci=1, depth=1, fault_count=None):
         """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
         All faults are considered. 
         TODO: optional faults

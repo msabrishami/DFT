@@ -1,9 +1,11 @@
 # TODO: should be in DFT/ rather than DFT/circuit
 
 import os
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = '../'
 
-DATA_DIR = os.path.join(ROOT_DIR, '../data/')
+# DATA_DIR = os.path.join(ROOT_DIR, '/data/')
+DATA_DIR = '../data'
 
 LIB_CELLS_PATH = os.path.join(DATA_DIR, "library")
 MODELSIM_DIR = os.path.join(DATA_DIR, "modelsim")

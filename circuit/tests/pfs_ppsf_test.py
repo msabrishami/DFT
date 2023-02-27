@@ -183,38 +183,40 @@ def ppsf_check_with_dfs_old():
 
 def compare_pfs_ppsf_multiple_tps():
     """ Check whether the results of PFS and PPSF match for multiple random test patterns"""
-    
-    for c in os.listdir(CIRCUIT_DIR):
-        circuit_path = '../../data/ckt/'+c+".ckt"
-        print(c)
-        circuit = DFTCircuit(circuit_path)
-        
-        tg = TPGenerator(circuit=circuit)
-        tps = []
-        if (1<<len(circuit.PI)) < MAX_N_TP:
-            tps = tg.gen_full()
-        else:
-            tps = tg.gen_n_random(MAX_N_TP, unique=True)
+    for c in os.listdir('../../data/ckt/'):
+        try:
+            circuit_path = '../../data/ckt/'+c
+            print(c)
+            circuit = DFTCircuit(circuit_path)
+            
+            tg = TPGenerator(circuit=circuit)
+            tps = []
+            if (1<<len(circuit.PI)) < MAX_N_TP:
+                tps = tg.gen_full()
+            else:
+                tps = tg.gen_n_random(MAX_N_TP, unique=True)
 
-        fault_list = FaultList(circuit)
-        
-        if len(circuit.nodes) < MAX_N_FAULT:
-                fault_list.add_all()
-        else:
-            fault_list.add_n_random(MAX_N_FAULT)
+            fault_list = FaultList(circuit)
+            
+            if len(circuit.nodes) < MAX_N_FAULT:
+                    fault_list.add_all()
+            else:
+                fault_list.add_n_random(MAX_N_FAULT)
 
-        pfs = PFS(circuit=circuit, faults=fault_list)
-        _, pfs_faults =  pfs.run(tps)
-        pfs_faults = [f.__str__() for f in pfs_faults]
-        
-        ppsf = PPSF(circuit,faults=fault_list)
-        ppsf_faults = ppsf.run(tps).keys()
+            pfs = PFS(circuit=circuit, faults=fault_list)
+            _, pfs_faults =  pfs.run(tps)
+            pfs_faults = [f.__str__() for f in pfs_faults]
+            
+            ppsf = PPSF(circuit,faults=fault_list)
+            ppsf_faults = ppsf.run(tps).keys()
 
-        res = compare_two_lists(ppsf_faults, pfs_faults)
-        if res:
-            print(f"{bcolors.OKGREEN}Passed{bcolors.ENDC}")
-        else:
-            print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
+            res = compare_two_lists(ppsf_faults, pfs_faults)
+            if res:
+                print(f"{bcolors.OKGREEN}Passed{bcolors.ENDC}")
+            else:
+                print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
+        except:
+            print(c,'errored')
 
 if __name__ == '__main__':
 
@@ -229,5 +231,5 @@ if __name__ == '__main__':
     # compare_pfs_ppsf_multiple_tps()
     
     # MAX_N_FAULT = 1 # if you want single tp
-    # compare_pfs_ppsf_multiple_tps() # all faults or 500
+    compare_pfs_ppsf_multiple_tps() # all faults or 500
     # Result: All passed, even c6288!
