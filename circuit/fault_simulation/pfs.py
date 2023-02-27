@@ -126,7 +126,12 @@ class PFS(FaultSim):
             if verbose and idx%50 == 0:
                     print(f"{idx:5} \t New faults: {tpfc[-1]:5}"+
                         f"  Total detected faults: {len(all_detected_faults):5}"+
-                        f"  FC={100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%")                
+                        f"  FC={100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%")
+
+            if tpfc_log_fname and tpfc_log_file:
+                       tpfc_log_file.write(f"{idx:5} \t New faults: {tpfc[-1]:5}"+
+                        f"  Total detected faults: {len(all_detected_faults):5}"+
+                        f"  FC={100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%\n")
             
             if fault_log_fname and fault_log_file:
                 fault_log_file.write(",".join(map(str, tp)) + '\n')
@@ -134,22 +139,24 @@ class PFS(FaultSim):
                 
                 for fault in detected_faults:
                     fault_log_file.write(f'{fault}' + '\n')
-                fault_log_file.write("Fault Coverage = " + f'{[f"{f:.3f}" for f in fault_coverage]}'.replace('\'','') + '\n')
+                fault_log_file.write("Fault Coverage = " + f'{[f"{f:.4f}" for f in fault_coverage]}'.replace('\'','') + '\n')
                 fault_log_file.write('\n')
                 fault_log_file.write("------------\n")
             
             if fault_coverage[-1] == 1:
                 if verbose:
                     print(f'\nAll faults were found on test pattern {idx}\n')
-                
-                if fault_log_fname and fault_log_file:
-                    fault_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.3f}%\n")
-                    fault_log_file.close()            
-                
                 break   
+                
+        if fault_log_fname and fault_log_file:
+            fault_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
+        if tpfc_log_file and tpfc_log_fname:
+            tpfc_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
         
+        fault_log_file.close()
+        tpfc_log_file.close()
         
-        if fault_log_fname: print(f'Log file for faults saved in {fault_log_fname}')
+        if fault_log_fname: print(f'\nLog file for faults saved in {fault_log_fname}')
         if tpfc_log_fname: print(f'Log file for tpfc saved in {tpfc_log_fname}')
 
         return fault_coverage, list(all_detected_faults)
