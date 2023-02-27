@@ -117,7 +117,7 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
         if not os.path.exists(fname):
             circuit.STAFAN(tpLoad)
-            circuit.save_TMs(tp=tpLoad, fname=fname)
+            circuit.save_STAFAN(tp=tpLoad, fname=fname)
         else:
             circuit.load_TMs(fname)
 
@@ -175,7 +175,7 @@ def diff_tp_stafan(circuit, tps): #TODO: Must be changed
         if not os.path.exists(fname):
             tpc = re.findall(r"\d+", f)[0]
             circuit.STAFAN(int(tpc))
-            circuit.save_TMs(tp=tp, fname=fname)
+            circuit.save_STAFAN(tp=tp, fname=fname)
         else:
             circuit.load_TMs(fname)
 
@@ -579,7 +579,7 @@ def stafan(circuit, tps, ci = 5):
         fname = f"{path}/{circuit.c_name}-TP{tp}.stafan"
         if not os.path.exists(fname):
             circuit.STAFAN(tp)
-            circuit.save_TMs(tp=tp, fname=fname)
+            circuit.save_STAFAN(tp=tp, fname=fname)
         else:
             circuit.load_TMs(fname)
         for n in circuit.nodes_lev:

@@ -96,7 +96,7 @@ class PPSF(FaultSim):
         if isinstance(tps, int):
             tps_len = tps
             tg = TPGenerator(self.circuit)
-            tps = tg.gen_n_random(tps) # Not unique. Pass unique=True if want so
+            tps = tg.gen_n_random(tps) # Not unique. Pass unique=True if want so --> as warning?
         elif isinstance(tps, list):
             tps_len = len(tps)
         elif isinstance(tps, str):
@@ -295,9 +295,9 @@ class PPSF(FaultSim):
 
         # Add BFS depth to the log_fname?
         if op == None:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_ci{ci}_process{process}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_ci{ci}_proc{process}.ppsf")
         else:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_op{op.num}_ci{ci}_process{process}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_op{op.num}_ci{ci}_proc{process}.ppsf")
         
         if save_log:
             outfile = open(log_fname, "w")

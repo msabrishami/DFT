@@ -115,7 +115,7 @@ if __name__ == '__main__':
         """ Running STAFAN with random TPs and saving TMs into file """
         time_s = time.time()
         circuit.STAFAN(args.tp, args.cpu)
-        circuit.save_TMs(fname)
+        circuit.save_STAFAN(fname)
         print("Time: \t{:.3}".format(time.time() - time_s))
 
 
@@ -127,7 +127,7 @@ if __name__ == '__main__':
             circuit.STAFAN(args.tp, args.cpu)
             fname = cfg.STAFAN_DIR+ "/" + circuit.c_name + "/"
             fname += "{}-TP{}-{}.stafan".format(circuit.c_name, args.tp, ite)
-            circuit.save_TMs(fname)
+            circuit.save_STAFAN(fname)
             print("Time: \t{:.3}".format(time.time() - time_s))
 
 

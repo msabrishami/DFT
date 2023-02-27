@@ -15,7 +15,7 @@ class DFTNode(ABC):
         #self.pfs_S = None  # stuck values of fault for each pass
 
         # Saeed does not confirm
-        self.faultlist_dfs = set() # will be aset
+        # self.faultlist_dfs = set() # will be aset --> used in miscellaneous.py and old_methods.py
 
         # SCOAP measures
         self.CC0 = None
@@ -291,25 +291,32 @@ class DFTNAND(node.NAND, DFTNode):
         for unode in self.unodes:
             try: 
                 unode.B1 = self.B0 * self.C0 / unode.C1
+            
             except ZeroDivisionError:
                 print(f"Warning (NAND.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
                 print(f"|ne|={len(ne_C1)}", end="\t")
+                
                 if 0 in ne_C1:
                     raise ValueError("Error (NAND.stafan_b): unresolved issue")
                 unode.B1 = self.B0
+                
                 for x in ne_C1:
                     unode.B1 *= x 
                 print(f" ==> B1 ~ {unode.B1:.2e}")
+            
             try:
                 unode.B0 = self.B1 * (unode.S - self.C0) / unode.C0 
+            
             except ZeroDivisionError:
                 print(f"Warning (NAND.stafan_b): C0=0 for node {unode.num}", end="\t")
                 ne_C1 = [x.C1 for x in unode.get_neighbors(inclusive=False)]
                 print(f"|ne|={len(ne_C1)}", end="\t")
+                
                 if 0 in ne_C1:
                     raise ValueError("Error (NAND.stafan_b): unresolved issue")
                 unode.B0 = self.B1
+                
                 for x in ne_C1:
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")

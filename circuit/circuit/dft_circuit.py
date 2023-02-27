@@ -1,17 +1,16 @@
 import math
-import re
-import os 
-import random
-import time
+import os
 import pdb
-
-from multiprocessing import Process, Pipe
+import random
+import re
+import time
+from multiprocessing import Pipe, Process
 
 import config
-from tp_generator import TPGenerator
-from circuit import circuit
 from node import dft_node
+from tp_generator import TPGenerator
 
+from circuit import circuit
 
 class DFTCircuit(circuit.Circuit):
     """ 
@@ -40,7 +39,8 @@ class DFTCircuit(circuit.Circuit):
 
     def __init__(self, netlist_fname):
         super().__init__(netlist_fname, DFTCircuit.STD_NODE_LIB)
-        self._executed = False
+        self.stafan_tp_count = None
+        self._stafan_executed = False
     
     def SCOAP_CC(self):
         """ Calculates combinational controllability based on SCOAP measure """ 
@@ -71,14 +71,15 @@ class DFTCircuit(circuit.Circuit):
 
         Arguments
         ---------
-        tp : a single test pattern vector 
+        tp : list 
+            a single test pattern vector 
         """
         self.logic_sim(tp)
         self.STAFAN_reset_flags()
             
         for node in self.nodes_lev:
-            node.one_count = node.one_count + 1 if node.value == 1 else node.one_count
-            node.zero_count = node.zero_count + 1 if node.value ==0 else node.zero_count
+            node.one_count = node.one_count + 1 if node.value==1 else node.one_count
+            node.zero_count = node.zero_count + 1 if node.value==0 else node.zero_count
 
             # sensitization
             if node.is_sensible():
@@ -86,7 +87,7 @@ class DFTCircuit(circuit.Circuit):
                 node.sen_count += 1
 
     def STAFAN_C(self, tp, limit=None):
-        ''' 
+        """ 
         STAFAN controllability 
 
         Arguments: 
@@ -101,70 +102,60 @@ class DFTCircuit(circuit.Circuit):
         
         Note: Random input patterns are generated with replacement (not pseudo-random)
         Note: random.choice method is very inefficient
-        '''
+        """
 
+        tg = TPGenerator(self)
+        tps=[]
         if isinstance(tp, str):
-            tg = TPGenerator(self)
             tps = tg.load_file(tp)
-            num_pattern = len(tps)
-            tp_gen = False 
-
-        elif isinstance(tp,int):
-            tp_gen = True
-            num_pattern = tp
-
+        elif isinstance(tp, int):
+            tps = tg.gen_n_random(tp)
+        else:
+            raise TypeError
+        
         # We need to reset the circuit
         self.STAFAN_reset_counts()
-        if limit == None:
+        self.STAFAN_reset_flags()
+        
+        if limit is None:
             limit = [0, pow(2, len(self.PI))-1]
 
-        for t in range(num_pattern):
-            if tp_gen:
-                # b = (f'{random.randint(limit[0], limit[1]):0%db}'%len(self.PI))
-                b = ('{:0%db}'%len(self.PI)).format(random.randint(limit[0], limit[1]))
-                tp = [int(b[j]) for j in range(len(self.PI))]
-            else:
-                tp = tps[t]
+        for t in tps:
+            self.STAFAN_C_single(t)
 
-            self.STAFAN_C_single(tp)
-
-        # calculate percentage/prob
+        # Calculate percentage/prob
         for node in self.nodes_lev:
-            node.C1 = node.one_count / num_pattern
-            node.C0 = node.zero_count / num_pattern
-            node.S = node.sen_count / num_pattern
-
+            node.C1 = node.one_count / len(tps)
+            node.C0 = node.zero_count / len(tps)
+            node.S = node.sen_count / len(tps)
 
     def STAFAN_B(self):
-        """ calculates the STAFAN observability probabilities for all nodes """
-
+        """ Calculates the STAFAN observability probabilities for all nodes """
         for node in reversed(self.nodes_lev):
-            if node in self.PO:
+            if node.ntype=="PO":
                 node.B0 = 1.0
                 node.B1 = 1.0
             node.stafan_b()
     
-    def STAFAN_ctrl_process(self, conn, id_proc, tot_tp_count, tot_proc):
-        # circuit = DFTCircuit(self.c_fname)
-        # circuit.lev()
-        circuit=self
-        PI_num = len(circuit.PI)
-        tp_count = int(tot_tp_count / tot_proc)
-        limit = [int(pow(2, PI_num)/tot_proc) * id_proc, 
-                int(pow(2, PI_num)/tot_proc)*(id_proc+1)-1]
-        circuit.STAFAN_C(tp_count, limit)
+    def STAFAN_C_handler(self, conn, id_proc, tp_count, tot_proc):
+        limit = [int(pow(2, len(self.PI))/tot_proc) * id_proc, 
+                int(pow(2, len(self.PI))/tot_proc) * (id_proc+1)-1]
+        
+        self.STAFAN_C(tp_count, limit)
 
         one_count_list = []
         zero_count_list = []
         sen_count_list = []
-        for i in circuit.nodes_lev:
+
+        for i in self.nodes_lev:
             one_count_list.append(i.one_count)
             zero_count_list.append(i.zero_count)
             sen_count_list.append(i.sen_count)
+        
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-    def STAFAN(self, total_tp, num_proc=1, verbose=False):
+    def STAFAN(self, total_tp, num_proc=1, verbose=True, save_log=True):
         """ 
         Calculating STAFAN controllability and observability in parallel. 
         Random TPs are generated within the method itself and are not stored. 
@@ -174,15 +165,23 @@ class DFTCircuit(circuit.Circuit):
         total_tp : (int) total number of test pattern vectors (not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
+
+        if verbose:
+            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) with:' + 
+                  f'on {self.c_name} for all nodes ({len(self.nodes)}) with {total_tp} tps ' + 
+                  f'on {num_proc} process(es) ...')
+
         if total_tp < num_proc:
             raise ValueError("Total TPs should be higher than process numbers")
-
+        self.stafan_tp_count = total_tp
+        
         start_time = time.time()
+
         process_list = []
         for id_proc in range(num_proc):
             parent_conn, child_conn = Pipe()
-            p = Process(target = self.STAFAN_ctrl_process, 
-                    args =(child_conn, id_proc, total_tp, num_proc))
+            p = Process(target = self.STAFAN_C_handler, 
+                    args =(child_conn, id_proc, total_tp//num_proc+1 , num_proc))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -211,34 +210,52 @@ class DFTCircuit(circuit.Circuit):
             self.STAFAN_B()
         except ZeroDivisionError:
             print("Node Ctrl is zero")
-            pdb.set_trace()
+            # pdb.set_trace() --> Take an action
         
-        end_time = time.time()
-        duration = end_time - start_time
         if verbose:
-            print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
+            # print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
+            print(f"\nCalculations finished in {time.time() - start_time:.2f} sec.")
         
-        self._executed = True
+        self._stafan_executed = True
+        
+        if save_log:
+            self.save_STAFAN()
     
-    def save_TMs(self, fname=None, tp=None): # Better to be called in STAFAN / change name
-        if fname == None:
-            path = config.STAFAN_DIR+"/"+self.c_name
-            if not os.path.exists(path):
-                os.mkdir(path)
-            fname = os.path.join(path, self.c_name)
-            if not os.path.exists(fname):
-                os.mkdir(fname)
-            fname = os.path.join(fname, f"{self.c_name}-TP{tp}.stafan")
+    def STAFAN_FC(self):
+        """ Estimation of fault coverage for all faults 
+        All faults include all nodes, SS@0 and SS@1 
+        pd stands for probability of detection 
+        """
+        if not self._stafan_executed:
+            if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)? '):
+                self.stafan_tp_count = int(input('Enter Number of test patterns: '))
+                self.STAFAN(self.stafan_tp_count)
+            else:
+                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
 
-        outfile = open(fname, "w")
-        outfile.write("Node,C0,C1,B0,B1,S\n")
+        nfc = 0
         for node in self.nodes_lev:
-            ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
-            outfile.write(",".join([node.num] + ss) + "\n")
-        outfile.close()
-        print(f"Saved circuit STAFAN TMs in {fname}")
+            if None in [node.C0,node.C1,node.B0,node.B1]:
+                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
+            nfc += math.exp(-1 * node.C1 * node.B1 * self.stafan_tp_count) 
+            nfc += math.exp(-1 * node.C0 * node.B0 * self.stafan_tp_count) 
 
-    def load_TMs(self, fname): # change name
+        return 1 - nfc/(2*len(self.nodes)) 
+
+    def save_STAFAN(self):
+        fname = os.path.join(config.STAFAN_DIR, self.c_name)
+        if not os.path.exists(fname):
+            os.makdirs(fname)
+        fname = os.path.join(fname, f"{self.c_name}_tp{self.stafan_tp_count}.stafan")
+
+        with open(fname, 'w') as outfile:
+            outfile.write("Node,C0,C1,B0,B1,S\n")
+            for node in self.nodes_lev:
+                ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
+                outfile.write(",".join([node.num] + ss) + "\n")
+        print(f"\nSaved STAFAN test measuress in {fname}")
+
+    def load_STAFAN(self, fname): # change name
         lines = open(fname).readlines()[1:]
         for line in lines:
             words = line.strip().split(",")
@@ -250,35 +267,8 @@ class DFTCircuit(circuit.Circuit):
             node.S  = float(words[5]) 
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
-        self._executed = True
-
-    def STAFAN_FC(self, tp_count):
-        """ Estimation of fault coverage for all faults 
-        All faults include all nodes, SS@0 and SS@1 
-        pd stands for probability of detection 
-
-        Arguments: 
-        ----------
-        tp_count : int
-            number of test patterns, used in the fault coverage estimation formula 
-        """
-        if isinstance(tp_count, list):
-            tp_count = len(tp_count)
-            #TODO: is this okay? only the size of given tests are used
-        if not self._executed:
-            if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)?'):
-                self.STAFAN(tp_count)
-            else:
-                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
-
-        nfc = 0
-        for node in self.nodes_lev:
-            if None in [node.C0,node.C1,node.B0,node.B1]:
-                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()"
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
-        return 1 - nfc/(2*len(self.nodes)) 
-
+        self._stafan_executed = True
+##### Entropy / OR not called anywhere
 
     def CALC_ENTROPY(self):
         for node in self.nodes_lev:
@@ -359,7 +349,6 @@ class DFTCircuit(circuit.Circuit):
         op.ntype = orig_ntype
         self.PO = self.PO[:-1]
         return count
-
     
     def gen_fault_dic(self):
         """
@@ -410,7 +399,6 @@ class DFTCircuit(circuit.Circuit):
             fault_dict_result.write('\n')
 
         fault_dict_result.close()
-
 
     def gen_fault_dic_multithreading(self, thread_cnt, idx):
         """

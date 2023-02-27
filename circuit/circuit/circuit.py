@@ -60,18 +60,16 @@ class Circuit:
 
         self.c_fname = c_fname 
         self.c_name = c_fname.split('/')[-1].split('.')[0]
-        self.nodes = {} # node_num -> obj
-        self.nodes_lev = [] #
+        self.nodes = {}
+        self.nodes_lev = []
         self.PI = [] # this should repalce input_num_list
         self.PO = [] # this should be created to have a list of outputs
+        
         self._load(c_fname, std_node_lib)
         self.levelize()
 
-
-
     def _load(self, netlist_fname, std_node_lib):
         CircuitLoader(self, netlist_fname, std_node_lib)
-
 
     def levelize(self):  
         """
@@ -79,8 +77,8 @@ class Circuit:
         Branches are also considered as gates: lev(branch) = lev(stem) + 1 
         Algorithm is not efficient at all, don't care now
         """
-        for ptr in self.PI:
-            ptr.lev = 0
+        for po in self.PI:
+            po.lev = 0
 
         flag_change = True
         while flag_change: 
@@ -101,13 +99,14 @@ class Circuit:
     
         self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
 
-
     def levelize_backward(self):
         """ Calculate shortest distace from node to POs for all nodes
             using Dijktra algorithm """
+        #TODO: test it
+
         dist = {} 
         MAX_WEIGHT = 10**9
-        nodes = list(self.nodes.values()) + self.PO + self.PI
+        nodes = list(self.nodes.values()) + self.PO + self.PI #~
 
         for node in nodes:
             dist[node] = MAX_WEIGHT
@@ -123,6 +122,8 @@ class Circuit:
                     dist[unode] = min(1+dist[node],dist[unode])
                     unvisited_nodes.append(unode)
                 unvisited_nodes.remove(node)
+            
+        return dist
 
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
@@ -144,9 +145,9 @@ class Circuit:
         while len(res) < count:
             idx = random.randint(0, len(self.nodes)-1)
             res.add(self.nodes_lev[idx])
+
         return list(res)[0] if count==1 else res  # better to return a list all the time
     
-
     def print_fanin(self, target_node, depth):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
         from collections import deque
@@ -154,7 +155,6 @@ class Circuit:
         queue.append(target_node)
         min_level = max(0, target_node.lev - depth) 
         self.print_fanin_rec(queue, min_level)
-
 
     def print_fanin_rec(self, queue, min_level):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
@@ -169,6 +169,7 @@ class Circuit:
         depth : int 
             search depth for BFS, final node to be printed has depth=zero
         """
+
         print("queue is: " + ",".join([node.num for node in queue]))
         if len(queue) == 0:
             return 
@@ -191,7 +192,12 @@ class Circuit:
         Read a given pattern and perform the logic simulation
         Currently just works with binary logic
         tp is a list of values (currently int) in the same order as in self.PI
+
+        Return
+        ------
+        list of output values
         """
+
         node_dict = dict(zip([x.num for x in self.PI], tp))
 
         for node in self.nodes_lev:
@@ -200,8 +206,7 @@ class Circuit:
             else:
                 node.imply()
         
-        return [pi.value for pi in self.PI]
-
+        return [po.value for po in self.PO]
 
     def logic_sim_bitwise(self, tp, fault=None):
         """
@@ -215,7 +220,9 @@ class Circuit:
         fault : Fault
             node.num@fault --> example: N43@0 means node N43 single stuck at zero 
         
-        TODO: Maybe returns the output
+        Return
+        ------
+        list of output values
         """
 
         node_dict = dict(zip([x.num for x in self.PI], tp))
@@ -239,7 +246,10 @@ class Circuit:
                 else:
                     node.imply_b()
 
+        return [po.value for po in self.PO]
+        
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
+        #TODO: test
         """
         logic simulation with given input vectors from a file
         - generate an output folder in ../data/modelsim/circuit_name/ directory
@@ -292,7 +302,6 @@ class Circuit:
                     outfile.write(val)
                 outfile.write("; } \n")
             outfile.close()
-
 
     def golden_test(self, golden_io_filename):
         # compares the results of logic-sim of this circuit, 
