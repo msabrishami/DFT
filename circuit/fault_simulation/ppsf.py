@@ -13,12 +13,6 @@ from fault_simulation.fault_simulation import FaultSim
 from tp_generator import TPGenerator
 
 
-"""
-Trace functions called during Parallel Fault Simulation: 
-    single_run() -> run() -> _single_process_runner() ->
-   _multiprocess_step(PARALLEL) -> [multiprocess_runner_ci() | simple_multiprocess_run()]
-"""
-
 class PPSF(FaultSim):
     """ Parallel Patern Single Fault, Fault Simulation """
 
