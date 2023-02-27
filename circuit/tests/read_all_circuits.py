@@ -1,30 +1,18 @@
-# Later, these should be tested using pytest
+# written in pfs_ppsf_test.py
 
 import os
 import sys
-sys.path.append('../')
 
-from circuit.circuit import Circuit
+sys.path.append('../')
+import config
 from tp_generator import TPGenerator
 
-DIR1= '../../data/ckt/'
+from circuit.circuit import Circuit
 
-DIR2= '../../data/verilog/ISCAS85/v0/'
-DIR3= '../../data/verilog/ISCAS85/v1/'
-DIR4= '../../data/verilog/ISCAS85/v2/'
-
-DIR5= '../../data/verilog/EPFL/v0/'
-DIR6= '../../data/verilog/EPFL/v1/'
-DIR7= '../../data/verilog/EPFL/v2/'
-
-DIR8 = '../../data/verilog/ISCAS89'
-
-ALL_DIRS = [DIR1,DIR2,DIR3,DIR4,DIR5,DIR6,DIR7,DIR8]
-
-PRINT_PASSED = False
+PRINT_PASSED = True
 
 if __name__ == '__main__':
-    for dir in ALL_DIRS:
+    for dir in config.ALL_CIRCUIT_DIRS:
         for cname in os.listdir(dir):
             if cname.endswith('v') or cname.endswith('ckt'):
                 passed = True

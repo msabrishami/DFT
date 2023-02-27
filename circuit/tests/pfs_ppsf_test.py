@@ -1,41 +1,44 @@
 import os
 import sys
+
 sys.path.append('../')
 
 import pandas as pd
 
-from circuit.dft_circuit import DFTCircuit
+import config
+from utils import bcolors
+from fault_simulation.fault import FaultList
 from fault_simulation.pfs import PFS
 from fault_simulation.ppsf import PPSF
-from fault_simulation.fault import FaultList
 from tp_generator import TPGenerator
-from utils import bcolors
+
+from circuit.circuit import Circuit
+from circuit.dft_circuit import DFTCircuit
 
 MAX_N_TP = (1<<6)
 N_FAULT = 10
 MAX_N_FAULT = 500
 
 PFS_TESTING_DIR = '../../data/testings/pfs_single_fault_testing'
-CIRCUIT_DIR = os.path.join(PFS_TESTING_DIR, 'dfs_phase2')
+CIRCUIT_DIR_DSF_OLD = os.path.join(PFS_TESTING_DIR, 'dfs_phase2')
 
 def compare_two_lists(a , b):
     for x in a:
         if x not in b:
-            print(f'{x=}')
+            print(f'{x} in the first list but not in the second one')
             return False
         
     for y in b:
         if y not in a:
-            print(f'{y=}')
+            print(f'{y} in the second list but not in the first one')
             return False
-        
     return True
 
 def pfs_csv_generator():
     """Creates a csv, containing detected faults of each tp using PFS.
     tps are full, or randomly generated if input size is large
     """
-    for c in os.listdir(CIRCUIT_DIR):
+    for c in os.listdir(config.CKT_DIR):
         circuit_path = '../../data/ckt/'+c+".ckt"
         print(c)
         circuit = DFTCircuit(circuit_path)
@@ -89,7 +92,7 @@ def pfs_check_with_dfs_old():
             if fault_list_file:
                 fault_list = FaultList(fname=f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/{fault_list_file}')
                 pfs = PFS(circuit,faults=fault_list)
-                _, pfs_faults =  pfs.run(tps)
+                _, pfs_faults =  pfs.run(tps, save_log=False)
                 pfs_faults = [f.__str__() for f in pfs_faults]
                 
             x = tp_file_name.replace('.tp','.fs')
@@ -112,7 +115,7 @@ def ppsf_csv_generator():
     """Creates a csv, containing detected faults of each tp using PPSF.
     tps are full, or randomly generated if input size is large
     """
-    for c in os.listdir(CIRCUIT_DIR):
+    for c in os.listdir(config.CKT_DIR):
         circuit_path = '../../data/ckt/'+c+".ckt"
         print(c)
         circuit = DFTCircuit(circuit_path)
@@ -146,7 +149,7 @@ def ppsf_check_with_dfs_old():
         circuit = None    
         for tp_file_name in os.listdir(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/input/'):
             print(tp_file_name)
-            pfs_faults = []
+            ppsf_faults = []
             dfs_faults = []
 
             tp_file = open(f'{PFS_TESTING_DIR}/dfs_phase2/{c_file}/input/{tp_file_name}','r')
@@ -181,11 +184,11 @@ def ppsf_check_with_dfs_old():
             else:
                 print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
 
-def compare_pfs_ppsf_multiple_tps():
+def compare_pfs_ppsf_multiple_tps(circuit_dir=config.CKT_DIR):
     """ Check whether the results of PFS and PPSF match for multiple random test patterns"""
-    for c in os.listdir('../../data/ckt/'):
+    for c in os.listdir(circuit_dir):
         try:
-            circuit_path = '../../data/ckt/'+c
+            circuit_path = os.path.join(circuit_dir, c)
             print(c)
             circuit = DFTCircuit(circuit_path)
             
@@ -204,7 +207,7 @@ def compare_pfs_ppsf_multiple_tps():
                 fault_list.add_n_random(MAX_N_FAULT)
 
             pfs = PFS(circuit=circuit, faults=fault_list)
-            _, pfs_faults =  pfs.run(tps)
+            _, pfs_faults =  pfs.run(tps, save_log=False)
             pfs_faults = [f.__str__() for f in pfs_faults]
             
             ppsf = PPSF(circuit,faults=fault_list)
@@ -212,11 +215,50 @@ def compare_pfs_ppsf_multiple_tps():
 
             res = compare_two_lists(ppsf_faults, pfs_faults)
             if res:
-                print(f"{bcolors.OKGREEN}Passed{bcolors.ENDC}")
+                print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
             else:
-                print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
-        except:
+                print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
+        except Exception as e:
+            print(e)
             print(c,'errored')
+
+
+# move to another file
+def run_logic_sim(circuit_dir=config.CKT_DIR):
+    for c in os.listdir(circuit_dir):
+        try:
+            circuit_path = os.path.join(circuit_dir, c)
+            print(c)
+            circuit = Circuit(circuit_path)
+            
+            tg = TPGenerator(circuit=circuit)
+            tp = tg.gen_single()
+            circuit.logic_sim(tp)
+            print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
+
+        except:
+            print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
+
+def run_logic_sim_bitwise(circuit_dir=config.CKT_DIR):
+    for c in os.listdir(circuit_dir):
+        try:
+            circuit_path = os.path.join(circuit_dir, c)
+            print(c)
+            circuit = Circuit(circuit_path)
+            
+            tg = TPGenerator(circuit=circuit)
+            tps = tg.gen_n_random(100)
+
+            tps_bin = [0] * len(circuit.PI)
+            for i in range(len(tps_bin)):
+                for j in range(len(tps)):
+                    tps_bin[i] += (tps[j][i]*(2**j))
+            
+            circuit.logic_sim_bitwise(tps_bin)
+            print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
+
+        except:
+            print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
 
 if __name__ == '__main__':
 
@@ -228,8 +270,10 @@ if __name__ == '__main__':
 
     # ppsf_check_with_dfs_old()
     # Result: Failed for c6288 with different errors compared to pfs!
-    # compare_pfs_ppsf_multiple_tps()
     
-    # MAX_N_FAULT = 1 # if you want single tp
-    compare_pfs_ppsf_multiple_tps() # all faults or 500
-    # Result: All passed, even c6288!
+    MAX_N_FAULT = 1 # if you want single tp
+    compare_pfs_ppsf_multiple_tps(circuit_dir=config.ISCAS85_V0_DIR) # all faults or 500
+    # Result: Difference in fault detecton on circuits: c880, c6280, c1355
+
+    # run_logic_sim()
+    # run_logic_sim_bitwise()
