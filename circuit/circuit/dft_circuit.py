@@ -155,7 +155,7 @@ class DFTCircuit(circuit.Circuit):
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-    def STAFAN(self, total_tp, num_proc=1, verbose=True, save_log=True):
+    def STAFAN(self, tp_count, num_proc=1, verbose=True, save_log=True):
         """ 
         Calculating STAFAN controllability and observability in parallel. 
         Random TPs are generated within the method itself and are not stored. 
@@ -168,12 +168,12 @@ class DFTCircuit(circuit.Circuit):
 
         if verbose:
             print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) with:' + 
-                  f'on {self.c_name} for all nodes ({len(self.nodes)}) with {total_tp} tps ' + 
+                  f'on {self.c_name} for all nodes ({len(self.nodes)}) with {tp_count} tps ' + 
                   f'on {num_proc} process(es) ...')
 
-        if total_tp < num_proc:
+        if tp_count < num_proc:
             raise ValueError("Total TPs should be higher than process numbers")
-        self.stafan_tp_count = total_tp
+        self.stafan_tp_count = tp_count
         
         start_time = time.time()
 
@@ -181,7 +181,7 @@ class DFTCircuit(circuit.Circuit):
         for id_proc in range(num_proc):
             parent_conn, child_conn = Pipe()
             p = Process(target = self.STAFAN_C_handler, 
-                    args =(child_conn, id_proc, total_tp//num_proc+1 , num_proc))
+                    args =(child_conn, id_proc, tp_count//num_proc+1 , num_proc))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -198,9 +198,9 @@ class DFTCircuit(circuit.Circuit):
             p.join()
         
         for idx, node in enumerate(self.nodes_lev):
-            node.C1 = one_count_list[idx] / total_tp
-            node.C0 = zero_count_list[idx] / total_tp
-            node.S = sen_count_list[idx] / total_tp
+            node.C1 = one_count_list[idx] / tp_count
+            node.C0 = zero_count_list[idx] / tp_count
+            node.S = sen_count_list[idx] / tp_count
 
         if verbose: 
             for node in self.nodes_lev:

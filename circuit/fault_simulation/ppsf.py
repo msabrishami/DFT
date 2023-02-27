@@ -4,6 +4,7 @@ import sys
 import time
 from multiprocessing import Pipe, Process
 
+sys.path.append('../')
 import config
 import numpy as np
 import utils
@@ -11,7 +12,6 @@ from fault_simulation.fault import FaultList
 from fault_simulation.fault_simulation import FaultSim
 from tp_generator import TPGenerator
 
-sys.path.append('../')
 
 """
 Trace functions called during Parallel Fault Simulation: 
@@ -92,6 +92,7 @@ class PPSF(FaultSim):
         -------
         fault_dict: {fault_str: D_count} only for detected faults
         """
+
         tps_len = None
         if isinstance(tps, int):
             tps_len = tps
@@ -199,7 +200,6 @@ class PPSF(FaultSim):
                 fl_curr.faults[idx].D_count_list.append(fl.faults[idx].D_count)
 
         if log_fname:
-            # tot_fl.write_file_extra(log_fname) #TODO: tot_fl not defined in this scope
             with open(log_fname, "a") as outfile:
                 outfile.write(f"Total time: {time.time() - time_s:.2f}\n")
 
@@ -270,16 +270,15 @@ class PPSF(FaultSim):
                     all_faults.add(node.num, "0")
 
         if verbose:
-            f_count = fault_count if isinstance(fault_count, int) else len(all_faults.faults)
             pr =f"Running PPSF with:\n"
-            pr+=f"\t| tp counts = {tp_steps}\n"
+            pr+=f"\t| tp count = {tp_steps}\n"
             pr+=f"\t| confidence interval = {ci}\n"
-            pr+=f"\t| fault count = {f_count}\n"
+            pr+=f"\t| fault count = {len(all_faults.faults)}\n"
             pr+=f"\t| process(es) = {process}\n"
             pr+=f"\t| BFS depth = {depth}\n"
         
             if op:
-                pr+=f"\t| observation point = {op.num}\n"
+                pr+=f"\t| observation point (node_num) = {op.num}\n"
             
             print(pr)
             
@@ -295,9 +294,9 @@ class PPSF(FaultSim):
 
         # Add BFS depth to the log_fname?
         if op == None:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_ci{ci}_proc{process}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(all_faults.faults)}_ci{ci}_proc{process}.ppsf")
         else:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_op{op.num}_ci{ci}_proc{process}.ppsf")
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(all_faults.faults)}_op{op.num}_ci{ci}_proc{process}.ppsf")
         
         if save_log:
             outfile = open(log_fname, "w")
