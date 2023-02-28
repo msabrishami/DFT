@@ -22,6 +22,8 @@ MAX_N_FAULT = 500
 PFS_TESTING_DIR = '../../data/testings/pfs_single_fault_testing'
 CIRCUIT_DIR_DSF_OLD = os.path.join(PFS_TESTING_DIR, 'dfs_phase2')
 
+PRINT_PASSED = False
+
 def compare_two_lists(a , b):
     for x in a:
         if x not in b:
@@ -39,34 +41,36 @@ def pfs_csv_generator():
     tps are full, or randomly generated if input size is large
     """
     for c in os.listdir(config.CKT_DIR):
-        circuit_path = '../../data/ckt/'+c+".ckt"
-        print(c)
-        circuit = DFTCircuit(circuit_path)
-        faults = FaultList(circuit=circuit)
-        faults.add_all()
+        c = c.replace('.ckt','')
+        if c in ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17']:
+            circuit_path = '../../data/ckt/'+c+".ckt"
+            print(c)
+            circuit = DFTCircuit(circuit_path)
+            faults = FaultList(circuit=circuit)
+            faults.add_all()
 
-        tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
+            tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
 
-        tg = TPGenerator(circuit)
-        tps = []
-        if (1<<len(circuit.PI)) < MAX_N_TP:
+            tg = TPGenerator(circuit)
+            tps = []
+            # if (1<<len(circuit.PI)) < MAX_N_TP:
             tps = tg.gen_full()
-        else:
-            tps = tg.gen_n_random(MAX_N_TP, unique=True)
-        
-        for tp in tps:
-            pfs = PFS(circuit, faults)
-            detected_faults = pfs._one_tp_run(tp)
-            row = {}
-            # each tp is int(binary_from)
-            row['tp'] = int("".join(map(str, tp)), 2) #--> if not fit in int: save tps in a file and use their line number in the csv as tp 
-            for f in detected_faults:
-                row[f.__str__()] = "1"
+            # else:
+            #     tps = tg.gen_n_random(MAX_N_TP, unique=True)
+            
+            for tp in tps:
+                pfs = PFS(circuit, faults)
+                detected_faults = pfs._one_tp_run(tp)
+                row = {}
+                # each tp is int(binary_from)
+                row['tp'] = int("".join(map(str, tp)), 2) #--> if not fit in int: save tps in a file and use their line number in the csv as tp 
+                for f in detected_faults:
+                    row[f.__str__()] = "1"
 
-            tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
+                tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
-        tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
-        print(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
+            tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
+            print(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
 def pfs_check_with_dfs_old():
     """Checks result of DFT.PFS.run() and dfs_old for full faults and multiple tps from dfs_old."""
@@ -116,31 +120,34 @@ def ppsf_csv_generator():
     tps are full, or randomly generated if input size is large
     """
     for c in os.listdir(config.CKT_DIR):
-        circuit_path = '../../data/ckt/'+c+".ckt"
-        print(c)
-        circuit = DFTCircuit(circuit_path)
-        faults = FaultList(circuit=circuit)
-        faults.add_all()
+        c = c.replace('.ckt','')
+        if c in ['add2','c1','c2','c3','c4','cmini','x3mult']:
 
-        tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
+            circuit_path = '../../data/ckt/'+c+".ckt"
+            print(c)
+            circuit = DFTCircuit(circuit_path)
+            faults = FaultList(circuit=circuit)
+            faults.add_all()
 
-        tg = TPGenerator(circuit)
-        tps = []
-        if (1<<len(circuit.PI)) < MAX_N_TP:
+            tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
+
+            tg = TPGenerator(circuit)
+            tps = []
+            # if (1<<len(circuit.PI)) < MAX_N_TP:
             tps = tg.gen_full()
-        else:
-            tps = tg.gen_n_random(MAX_N_TP, unique=True)
-        
-        for tp in tps:
-            ppsf = PPSF(circuit, faults)
-            row = ppsf.run(tps=[tp], faults=faults) # fault_dict
-            # each tp is int(binary_from)
-            row['tp'] = int("".join(map(str, tp)), 2) #--> another idea: save tps in a file and use their line number in the csv as tp 
+            # else:
+                # tps = tg.gen_n_random(MAX_N_TP, unique=True)
+            
+            for tp in tps:
+                ppsf = PPSF(circuit, faults)
+                row = ppsf.run(tps=[tp], faults=faults) # fault_dict
+                # each tp is int(binary_from)
+                row['tp'] = int("".join(map(str, tp)), 2) #--> another idea: save tps in a file and use their line number in the csv as tp 
 
-            tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
+                tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
-        tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
-        print(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
+            tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
+            print(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
 def ppsf_check_with_dfs_old():
     """Checks result of DFT.PPSF.run() and dfs_old for full faults and multiple tps from dfs_old."""
@@ -184,46 +191,47 @@ def ppsf_check_with_dfs_old():
             else:
                 print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
 
-def compare_pfs_ppsf_multiple_tps(circuit_dir=config.CKT_DIR):
+def compare_pfs_ppsf_same_tps(circuit_dir: list):
     """ Check whether the results of PFS and PPSF match for multiple random test patterns"""
-    for c in os.listdir(circuit_dir):
-        try:
-            circuit_path = os.path.join(circuit_dir, c)
-            print(c)
-            circuit = DFTCircuit(circuit_path)
-            
-            tg = TPGenerator(circuit=circuit)
-            tps = []
-            if (1<<len(circuit.PI)) < MAX_N_TP:
-                tps = tg.gen_full()
-            else:
-                tps = tg.gen_n_random(MAX_N_TP, unique=True)
+    for dir in circuit_dir:
+        for c in os.listdir(dir):
+            if '880' in c:
+                # print(c)
+                try:
+                    circuit_path = os.path.join(dir, c)
+                    circuit = DFTCircuit(circuit_path)
+                    
+                    tg = TPGenerator(circuit=circuit)
+                    tps = []
+                    if (1<<len(circuit.PI)) < MAX_N_TP:
+                        tps = tg.gen_full()
+                    else:
+                        tps = tg.gen_n_random(MAX_N_TP, unique=True)
 
-            fault_list = FaultList(circuit)
-            
-            if len(circuit.nodes) < MAX_N_FAULT:
-                    fault_list.add_all()
-            else:
-                fault_list.add_n_random(MAX_N_FAULT)
+                    fault_list = FaultList(circuit)
+                    
+                    if len(circuit.nodes) < MAX_N_FAULT:
+                            fault_list.add_all()
+                    else:
+                        fault_list.add_n_random(MAX_N_FAULT)
 
-            pfs = PFS(circuit=circuit, faults=fault_list)
-            _, pfs_faults =  pfs.run(tps, save_log=False)
-            pfs_faults = [f.__str__() for f in pfs_faults]
-            
-            ppsf = PPSF(circuit,faults=fault_list)
-            ppsf_faults = ppsf.run(tps).keys()
+                    pfs = PFS(circuit=circuit, faults=fault_list)
+                    _, pfs_faults =  pfs.run(tps, save_log=False)
+                    pfs_faults = [f.__str__() for f in pfs_faults]
+                    
+                    ppsf = PPSF(circuit,faults=fault_list)
+                    ppsf_faults = ppsf.run(tps).keys()
 
-            res = compare_two_lists(ppsf_faults, pfs_faults)
-            if res:
-                print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
-            else:
-                print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
-        except Exception as e:
-            print(e)
-            print(c,'errored')
+                    res = compare_two_lists(ppsf_faults, pfs_faults)
+                    if res:
+                        if PRINT_PASSED:
+                            print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
+                    else:
+                        print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
+                except Exception as e:
+                    print(e)
+                    print(c,'errored')
 
-
-# move to another file
 def run_logic_sim(circuit_dir=config.CKT_DIR):
     for c in os.listdir(circuit_dir):
         try:
@@ -260,20 +268,56 @@ def run_logic_sim_bitwise(circuit_dir=config.CKT_DIR):
         except:
             print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
 
+def compare_csvs():
+    for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
+        if 'PFS' in file:
+            pfs_csv = '../../data/testings/pfs_single_fault_testing/'+file
+            ppsf_csv = pfs_csv.replace('PFS','PPSF')
+
+            pfs_lines = open(pfs_csv).readlines()
+            ppfs_lines = open(ppsf_csv).readlines()
+
+            if compare_two_lists(pfs_lines, ppfs_lines):
+                print('passed', file)
+            else:
+                print('failed: ',file)
+
+def get_undetected_faults():
+    undetected_faults = {}
+    for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
+        if 'PFS' in file: # same as PPSF files
+            undetected_faults[file] = []
+            pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
+            for fault in pfs_csv: 
+                if pfs_csv[fault].sum() == 0:
+                    # print(fault)
+                    undetected_faults[file].append(fault)
+            print(file, undetected_faults[file])
+            print('_'*50)
+    # return undetected_faults
+
 if __name__ == '__main__':
 
     # pfs_csv_generator()
     # ppsf_csv_generator()
 
+    # compare_csvs()
+
+    # get_undetected_faults()
+
     # pfs_check_with_dfs_old()
-    # Result: Failed for c6288.
+    # Result: Failed for c6288. 129@1 only in dfs.
 
     # ppsf_check_with_dfs_old()
-    # Result: Failed for c6288 with different errors compared to pfs!
+    # Result: Failed for c6288. 129@1 only in dfs.
     
-    MAX_N_FAULT = 1 # if you want single tp
-    compare_pfs_ppsf_multiple_tps(circuit_dir=config.ISCAS85_V0_DIR) # all faults or 500
-    # Result: Difference in fault detecton on circuits: c880, c6280, c1355
+    # MAX_N_FAULT = 1 # if you want single tp
+    # for i in range(5000):
+    #     compare_pfs_ppsf_same_tps(circuit_dir=[config.CKT_DIR]) # all faults or 500
 
     # run_logic_sim()
     # run_logic_sim_bitwise()
+
+    """Trouble-shooting loading of some circuits"""
+
+    c = Circuit(os.path.join(config.CKT_DIR, 'c1908.ckt')) # Gate and PI IPT

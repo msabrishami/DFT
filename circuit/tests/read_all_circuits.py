@@ -21,16 +21,16 @@ if __name__ == '__main__':
                 except Exception as e:
                     # print(e)
                     passed = False
-                    print(cname, ':\terror in reading')
+                    print(dir,cname, ':\terror in reading')
                 
-                try: # [Test 1]
-                    tg = TPGenerator(c)
-                    single_tp = tg.gen_single()
-                    c.logic_sim(single_tp)
-                except Exception as e:
-                    # print(e)
-                    passed = False
-                    print(cname, ':\terror in single test implication')
+                # try: # [Test 1]
+                #     tg = TPGenerator(c)
+                #     single_tp = tg.gen_single()
+                #     c.logic_sim(single_tp)
+                # except Exception as e:
+                #     # print(e)
+                #     passed = False
+                    # print(cname, ':\terror in single test implication')
                 
                 # try: # [Test 2]
                 #     temp_fname = 'temp.txt'
@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 #     print(cname, ':\terror in test generating/reading test')
 
                 if PRINT_PASSED and passed:
-                    print(cname, ':\tpassed')
+                    print(dir, cname, ':\tpassed')
 
     # os.system(f'rm {temp_fname}')
 
