@@ -188,6 +188,8 @@ class PFS(FaultSim):
         fault_drop : int (default None) , number of tps that must detect a fault so that the fault is
          dropped from fault_list, in other words considered completely detected. 
 
+         #TODO: pass faults
+
         Returns
         -------
         fc, detected_faults
