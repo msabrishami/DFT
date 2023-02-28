@@ -72,7 +72,7 @@ class FaultList:
         
         import random
         for n_num in random.choices(list(self.circuit.nodes.keys()), k=n):
-            self.add(node_num=n_num, stuck_val=random.randint(0,2))
+            self.add(node_num=n_num, stuck_val=random.randint(0,1))
 
     def add_fault(self, fault: Fault):
         self.faults.append(fault)
