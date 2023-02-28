@@ -74,10 +74,10 @@ class PPSF(FaultSim):
 
         Updates fault.D_count
 
-        TODO: log_fname
-
         faults: None: consider self.fault_list if already set, else all faults
                 FaultList: consider given FaultList
+                int: n random
+
         tps : int: number of random tps
               str: address of file containing tps
               list: list of test patterns
@@ -86,22 +86,21 @@ class PPSF(FaultSim):
         -------
         fault_dict: {fault_str: D_count} only for detected faults
         """
-
-        tps_len = None
+        
         if isinstance(tps, int):
-            tps_len = tps
             tg = TPGenerator(self.circuit)
             tps = tg.gen_n_random(tps) # Not unique. Pass unique=True if want so --> as warning?
-        elif isinstance(tps, list):
-            tps_len = len(tps)
         elif isinstance(tps, str):
             tg = TPGenerator(self.circuit)
             tps = tg.load_file(tps)
-            tps_len = len(tps)
 
-        if faults is None and self.fault_list is None:
+        if faults is None and len(self.fault_list.faults) == 0:
             faults = FaultList(circuit=self.circuit)
             faults.add_all()
+
+            if verbose:
+                print('All faults are added.')
+
         elif len(self.fault_list.faults):
             faults=self.fault_list
         elif isinstance(faults, str):
@@ -112,12 +111,27 @@ class PPSF(FaultSim):
             faults = FaultList(self.circuit)
             faults.add_n_random(nf)
 
-        if verbose:
-            print(f"Running Parallel Pattern Fault Simulation with {tps_len} tps and {len(faults.faults)} faults.")
 
         if len(faults.faults) == 0:
             raise "Warning: No fault is added."
 
+        if verbose:
+            pr =f"Running PPSF with:\n"
+            pr+=f"\t| tp count = {len(tps)}\n"
+            pr+=f"\t| fault count = {len(faults.faults)}\n"        
+            print(pr)
+        
+        path = None
+        log_fname = None
+        log_file = None
+        if save_log:
+            path = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name) + '/ppsf/'
+            if not os.path.exists(path):
+                os.makedirs(path)
+            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_f{len(faults.faults)}_tp{len(tps)}.ppsf")
+            log_file = open(log_fname, 'w')
+            log_file.write(f"#TP={len(tps)}\n")
+            
         # Reset D_counts
         for f in faults.faults:
             f.D_count = 0
@@ -131,11 +145,26 @@ class PPSF(FaultSim):
 
             if verbose and idx % 50 == 0:
                 print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
-        
+            
+            if log_file:
+                log_file.write(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%\n") #TODO: complete
+
         if verbose:
-            print("PPFS completed")
+            print("\nPPFS completed")
             print(f"FC: {100*faults.calc_fc():.4f}%, total-faults={len(faults.faults)}")
-        
+            
+            print('\nRemaining Faults:')
+            for f in faults.faults:
+                if f.D_count == 0:
+                    print(f.__str__())
+
+        if save_log:
+            log_file.write("remaining faults\n")
+            for f in faults.faults:
+                if f.D_count == 0:
+                    log_file.write(f.__str__()+'\n')
+            print('log saved in', log_fname)
+
         fault_dict = {}
         
         for f in faults.faults:
@@ -145,7 +174,7 @@ class PPSF(FaultSim):
         return fault_dict #TODO: return fc and Faults Dict
 
     def _single_process_runner(self, conn, tp, faults, verbose=False):
-        self.run(tps=tp, faults=faults, verbose=verbose)
+        self.run(tps=tp, faults=faults, verbose=verbose, save_log=False)
         conn.send(faults)
 
     def _multiprocess_handler(self, tp, fl_curr, process=1, log_fname=None, count_cont=False, verbose = False):
@@ -318,7 +347,7 @@ class PPSF(FaultSim):
                 if mu == 0 and std == 0: # All zero
                     detected_faults.add_str(str(fault))
                 elif std == 0: # Why this happens at low number of tps (sometimes)?
-                    print(f'\n(logging) {mu=}, {fault_cont.D_count_list}\n')
+                    print(f'(logging) {mu=}, {fault_cont.D_count_list}')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if save_log:
