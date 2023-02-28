@@ -21,8 +21,10 @@ MAX_N_FAULT = 500
 
 PFS_TESTING_DIR = '../../data/testings/pfs_single_fault_testing'
 CIRCUIT_DIR_DSF_OLD = os.path.join(PFS_TESTING_DIR, 'dfs_phase2')
+EPFL = [config.EPFL_V0_DIR, config.EPFL_V1_DIR, config.EPFL_V2_DIR]
+ISCAS85 = [config.ISCAS85_V0_DIR, config.ISCAS85_V1_DIR, config.ISCAS85_V2_DIR]
 
-PRINT_PASSED = False
+PRINT_PASSED = True
 
 def compare_two_lists(a , b):
     for x in a:
@@ -195,42 +197,41 @@ def compare_pfs_ppsf_same_tps(circuit_dir: list):
     """ Check whether the results of PFS and PPSF match for multiple random test patterns"""
     for dir in circuit_dir:
         for c in os.listdir(dir):
-            if '880' in c:
-                # print(c)
-                try:
-                    circuit_path = os.path.join(dir, c)
-                    circuit = DFTCircuit(circuit_path)
-                    
-                    tg = TPGenerator(circuit=circuit)
-                    tps = []
-                    if (1<<len(circuit.PI)) < MAX_N_TP:
-                        tps = tg.gen_full()
-                    else:
-                        tps = tg.gen_n_random(MAX_N_TP, unique=True)
+            print(c)
+            try:
+                circuit_path = os.path.join(dir, c)
+                circuit = DFTCircuit(circuit_path)
+                
+                tg = TPGenerator(circuit=circuit)
+                tps = []
+                if (1<<len(circuit.PI)) < MAX_N_TP:
+                    tps = tg.gen_full()
+                else:
+                    tps = tg.gen_n_random(MAX_N_TP, unique=True)
 
-                    fault_list = FaultList(circuit)
-                    
-                    if len(circuit.nodes) < MAX_N_FAULT:
-                            fault_list.add_all()
-                    else:
-                        fault_list.add_n_random(MAX_N_FAULT)
+                fault_list = FaultList(circuit)
+                
+                if len(circuit.nodes) < MAX_N_FAULT:
+                        fault_list.add_all()
+                else:
+                    fault_list.add_n_random(MAX_N_FAULT)
 
-                    pfs = PFS(circuit=circuit, faults=fault_list)
-                    _, pfs_faults =  pfs.run(tps, save_log=False)
-                    pfs_faults = [f.__str__() for f in pfs_faults]
-                    
-                    ppsf = PPSF(circuit,faults=fault_list)
-                    ppsf_faults = ppsf.run(tps).keys()
+                pfs = PFS(circuit=circuit, faults=fault_list)
+                _, pfs_faults =  pfs.run(tps, save_log=False)
+                pfs_faults = [f.__str__() for f in pfs_faults]
+                
+                ppsf = PPSF(circuit,faults=fault_list)
+                ppsf_faults = ppsf.run(tps).keys()
 
-                    res = compare_two_lists(ppsf_faults, pfs_faults)
-                    if res:
-                        if PRINT_PASSED:
-                            print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
-                    else:
-                        print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
-                except Exception as e:
-                    print(e)
-                    print(c,'errored')
+                res = compare_two_lists(ppsf_faults, pfs_faults)
+                if res:
+                    if PRINT_PASSED:
+                        print(f"{bcolors.OKGREEN}Passed\n{bcolors.ENDC}")
+                else:
+                    print(f"{bcolors.FAIL}Failed\n{bcolors.ENDC}")
+            except Exception as e:
+                print(e)
+                print(c,'errored')
 
 def run_logic_sim(circuit_dir=config.CKT_DIR):
     for c in os.listdir(circuit_dir):
@@ -283,6 +284,7 @@ def compare_csvs():
                 print('failed: ',file)
 
 def get_undetected_faults():
+    """From CSVs"""
     undetected_faults = {}
     for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
         if 'PFS' in file: # same as PPSF files
@@ -294,7 +296,6 @@ def get_undetected_faults():
                     undetected_faults[file].append(fault)
             print(file, undetected_faults[file])
             print('_'*50)
-    # return undetected_faults
 
 if __name__ == '__main__':
 
@@ -313,11 +314,13 @@ if __name__ == '__main__':
     
     # MAX_N_FAULT = 1 # if you want single tp
     # for i in range(5000):
-    #     compare_pfs_ppsf_same_tps(circuit_dir=[config.CKT_DIR]) # all faults or 500
 
-    # run_logic_sim()
-    # run_logic_sim_bitwise()
+    # compare_pfs_ppsf_same_tps(circuit_dir=ISCAS85)
+    
+    # for e in ISCAS85:
+        # run_logic_sim(circuit_dir=e)
+        # run_logic_sim_bitwise(circuit_dir=e)
 
     """Trouble-shooting loading of some circuits"""
 
-    c = Circuit(os.path.join(config.CKT_DIR, 'c1908.ckt')) # Gate and PI IPT
+    # c = Circuit(os.path.join(config.CKT_DIR, 'c1908.ckt')) # Gate and PI IPT
