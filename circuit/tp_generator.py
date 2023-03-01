@@ -92,7 +92,7 @@ class TPGenerator:
             tps.put(utils.fix_size(s1+"0", n_digits)) 
             tps.put(utils.fix_size(s2+"1", n_digits))
         
-        tps = [list(map(int, [*tp])) for tp in list(tps.queue)[:-1]]
+        tps = [list(map(int, [*tp])) for tp in [['0']*n_digits]+list(tps.queue)[:-2]]
 
         return tps
 
