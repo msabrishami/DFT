@@ -26,6 +26,8 @@ ISCAS85 = [config.ISCAS85_V0_DIR, config.ISCAS85_V1_DIR, config.ISCAS85_V2_DIR]
 
 PRINT_PASSED = True
 
+SIMPLE_CIRCUITS = ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17','FA', 'FA_NAND']
+
 def compare_two_lists(a , b):
     for x in a:
         if x not in b:
@@ -44,7 +46,7 @@ def pfs_csv_generator():
     """
     for c in os.listdir(config.CKT_DIR):
         c = c.replace('.ckt','')
-        if c in ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17']:
+        if c in SIMPLE_CIRCUITS:
             circuit_path = '../../data/ckt/'+c+".ckt"
             print(c)
             circuit = DFTCircuit(circuit_path)
@@ -123,7 +125,7 @@ def ppsf_csv_generator():
     """
     for c in os.listdir(config.CKT_DIR):
         c = c.replace('.ckt','')
-        if c in ['add2','c1','c2','c3','c4','cmini','x3mult']:
+        if c in SIMPLE_CIRCUITS:
 
             circuit_path = '../../data/ckt/'+c+".ckt"
             print(c)
@@ -299,10 +301,10 @@ def get_undetected_faults():
 
 if __name__ == '__main__':
 
-    # pfs_csv_generator()
-    # ppsf_csv_generator()
+    pfs_csv_generator()
+    ppsf_csv_generator()
 
-    # compare_csvs()
+    compare_csvs()
 
     # get_undetected_faults()
 
