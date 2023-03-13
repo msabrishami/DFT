@@ -80,7 +80,7 @@ class Node(ABC):
         self.dnodes.append(dnode)
     
     def unodes_val(self):
-        return [int(unode.value) for unode in self.unodes]
+        return [int(unode.value) if unode.value=='0' or unode.value=='1' else unode.value for unode in self.unodes]
     
     @abstractmethod
     def imply(self):

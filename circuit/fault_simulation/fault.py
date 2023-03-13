@@ -101,6 +101,7 @@ class FaultList:
             self.add_node(node)
 
     def add_file(self, fname): # TODO: get it in the __init__
+                                 #TODO: rename --> load_file
         """ read faults from a file and add it to the fault list 
         file format: each fault <node-num>@<stuck value> in separate lines
 

@@ -45,7 +45,7 @@ class TPGenerator:
 
         return tps
 
-    def gen_file(self, tp_count, tp_fname=None, mode="b", verbose=False):
+    def gen_file(self, tp_count, tp_fname=None, mode="b", verbose=False, unique=False):
         """ Create single file with multiple input patterns
         mode b: generate values in {0, 1}
         mode x: generate values in {0, 1, X}
@@ -61,7 +61,7 @@ class TPGenerator:
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
-        tps = self.gen_n_random(tp_count=tp_count,mode=mode)
+        tps = self.gen_n_random(tp_count=tp_count,mode=mode,unique=unique)
         for tp in tps:
             tp_str = [str(val) for val in tp]
             outfile.write(",".join(tp_str) + "\n")
