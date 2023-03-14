@@ -52,8 +52,8 @@ def pfs_csv_generator():
             circuit = DFTCircuit(circuit_path)
             faults = FaultList(circuit=circuit)
             faults.add_all()
-
-            tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
+            nodes_str = ('/').join([p.num for p in circuit.PI])
+            tp_fault_df = pd.DataFrame(columns = [nodes_str]+[f.__str__() for f in faults.faults])
 
             tg = TPGenerator(circuit)
             tps = []
@@ -67,7 +67,7 @@ def pfs_csv_generator():
                 detected_faults = pfs._one_tp_run(tp)
                 row = {}
                 # each tp is int(binary_from)
-                row['tp'] = int("".join(map(str, tp)), 2) #--> if not fit in int: save tps in a file and use their line number in the csv as tp 
+                row[nodes_str] = int("".join(map(str, tp)), 2) #--> if not fit in int: save tps in a file and use their line number in the csv as tp 
                 for f in detected_faults:
                     row[f.__str__()] = "1"
 
@@ -132,8 +132,8 @@ def ppsf_csv_generator():
             circuit = DFTCircuit(circuit_path)
             faults = FaultList(circuit=circuit)
             faults.add_all()
-
-            tp_fault_df = pd.DataFrame(columns = ['tp']+[f.__str__() for f in faults.faults])
+            nodes_str = ('/').join([p.num for p in circuit.PI])
+            tp_fault_df = pd.DataFrame(columns = [nodes_str]+[f.__str__() for f in faults.faults])
 
             tg = TPGenerator(circuit)
             tps = []
@@ -146,7 +146,7 @@ def ppsf_csv_generator():
                 ppsf = PPSF(circuit, faults)
                 row = ppsf.run(tps=[tp], faults=faults) # fault_dict
                 # each tp is int(binary_from)
-                row['tp'] = int("".join(map(str, tp)), 2) #--> another idea: save tps in a file and use their line number in the csv as tp 
+                row[nodes_str] = int("".join(map(str, tp)), 2) #--> another idea: save tps in a file and use their line number in the csv as tp 
 
                 tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
@@ -302,9 +302,9 @@ def get_undetected_faults():
 if __name__ == '__main__':
 
     pfs_csv_generator()
-    ppsf_csv_generator()
+    # ppsf_csv_generator()
 
-    compare_csvs()
+    # compare_csvs()
 
     # get_undetected_faults()
 
