@@ -1,249 +1,132 @@
 # input file type : .bench
 # output file type : .ckt658
 import re
+import sys
+import pdb
 
-class Gate:
+class Nets:
+    def __init__(self):
+        self.gtype = None
+        self.ntype = None
+        self.output = None
+        self.fanouts = []
+        self.fanins = []
+        self.ntypes = {"GATE":0, "PI":1, "FB":2, "PO":3}
+        self.gtypes = {"XOR":2, 'XOR':2, 'NOR':4, 'OR':3, 
+                'NOT':5, 'NAND':6, 'AND':7}
+    def __str__(self):
+        print(f"{self.ntype}\t{self.output}")
+
+class Stem(Nets):
+    def __init__(self, brch, stem, net_number):
+        """ brch and stem are Gate type """
+        super().__init__()
+        self.ntype = "FB"
+        self.gtype = 1
+        self.fanins = [brch]
+        self.fanouts = [stem]
+        self.output = net_number
+
+    def ckt_line(self):
+        line = f"2 {self.output} 1 {self.fanins[0].output}"
+        return line
+
+class Gate(Nets):
     def __init__(self, line):
-        # for example: 2537 = NAND(2286, 2315, 2361, 2104, 1171)
-        self.type = (line.split(" = ")[1]).split("(")[0]
-        self.numbers = re.findall('\d+', line)
-        for i in range(len(self.numbers)):
-            self.numbers[i] = int(self.numbers[i])
-        self.output = self.numbers[0]
-        self.inputs = self.numbers[1:]
-    def write_back(self):
-        item = str(self.output) + " = " + self.type + "("
-        for input in self.inputs:
-            item = item + str(input) + ", "
-        item = item.strip(", ")
-        item = item + ")"
-        return item
-    def get_type_number(self):
-        if self.type == 'XOR':
-            out = 2
-        elif self.type == 'NOR':
-            out = 4
-        elif self.type == 'OR':
-            out = 3
-        elif self.type == 'NOT':
-            out = 5
-        elif self.type == 'NAND':
-            out = 6
-        elif self.type == 'AND':
-            out = 7
-        return out
+        super().__init__()
+        self.fanouts = []
+        self.fanins = []
+        self.inputs = []
 
-def bench2ckt658(ckt):
-    fin = open (ckt + '.bench','r')
-    f = fin.readlines()
-    fin.close()
-    f = f[6:]
-    count_list = len(f)
-    for i in range(count_list):
-        f[i] = f[i].strip('\n')
-    f.remove('')
-    f.remove('')
+        if line.lower().startswith("input("):
+            self.ntype = "PI"
+            self.gtype = 0
+            self.output = line[:-1].split('(')[-1]
 
-    # delete all buffers
-    buff_exist = 1
-    while buff_exist == 1:
-        buff_exist = 0
-        for line in f:
-            if "BUFF" in line:
-                buff_exist = 1
-                buff = line
-                break
-        if buff_exist == 1:
-            n = re.findall('\d+', buff)
-            f.remove(buff)
-            for i in range(len(f)):
-                if n[0] in re.findall('\d+', f[i]):
-                    if f[i][0] == "O":
-                        f[i] = f[i].replace(n[0], n[1])
-                        continue
-                    numbers = re.findall('\d+', f[i])
-                    # print(f[i])
-                    type = (f[i].split(" = ")[1]).split("(")[0]
-                    for index, item in enumerate(numbers):
-                        if item == n[0]:
-                            numbers[index] = n[1]
-                    new_fi = numbers[0] + " = " + type + "("
-                    for num in numbers[1:]:
-                        new_fi = new_fi + num + ", "
-                    new_fi = new_fi.strip(", ")
-                    new_fi = new_fi + ")"
-                    f[i] = new_fi
-        
-    # input file lists include 3 lists: PI list, PO list, internal list
-    input_list = []
-    output_list = []
-    internal_list = []
-    gate_list = []
-    for line in f:
-        if line[0] == "I":
-            input_list.append(int(re.findall('\d+', line)[0]))
-        elif line[0] == "O":
-            output_list.append(int(re.findall('\d+', line)[0]))
+        elif '=' in line:
+            words = re.split(r',|=|\(|\)', line.replace(')', ''))
+            self.ntype = "GATE"
+            self.gtype = self.gtypes[words[1]]
+            self.output = words[0]
+            self.inputs = words[2:]
+
+    def ckt_line(self):
+        if self.ntype == "PI":
+            line = f"1 {self.output} 0 {len(self.fanouts)} 0"
+        elif self.ntype in ["GATE", "PO"]:
+            line = f"{self.ntypes[self.ntype]} "
+            line += f"{self.output} {self.gtype} {len(self.fanouts)} "
+            line += f"{len(self.fanins)} "
+            line += " ".join([x.output for x in self.fanins])
+        return line 
+    
+
+def new_net(gates):
+    nets = set([int(gate.output) for gate in gates.values()])
+    for net in range(1, max(nets)):
+        if net not in nets:
+            return net
+
+def read_bench(bench_fname):
+    with open(bench_fname, "r") as infile:
+        lines = infile.readlines()
+    lines = [line.strip().replace(' ','') for line in lines if len(line) > 3]
+    lines = [line for line in lines if line[0] != '#']
+
+    lines_po = [line for line in lines if line.startswith("OUTPUT")]
+    lines_pi = [line for line in lines if line.startswith("INPUT")]
+    POs = set([line[:-1].split('(')[-1] for line in lines_po])
+    PIs = set([line[:-1].split('(')[-1] for line in lines_pi])
+
+    gates = dict()
+    for line in lines:
+        if '=' in line or "INPUT" in line:
+            new_gate = Gate(line)
+            gates[new_gate.output] = new_gate
+    
+    # setting the data structure
+    for output, gate in gates.items():
+        for inline in gate.inputs:
+            gates[inline].fanouts.append(gate)
+            gate.fanins.append(gates[inline])
+
+    # Sanity checks
+    for po in POs:
+        # Checking if PO net is not shared with another gate
+        if po in gates:
+            if len(gates[po].fanouts) > 1:
+                print(f"(ERROR): PO {po} is also a branch")
+                pdb.set_trace()
+            else:
+                gates[po].ntype = "PO"
+        # Checking if PO net is also PI net
+        elif po in PIs:
+            print(f"(ERROR): PO {po} is also a PI")
+        # PO should be something! 
         else:
-            internal_list.append(line)
-            gate_list.append(Gate(line))
+            print(f"(ERROR): PO {po} is also a PI")
 
-    net_all = []
-    for line in internal_list:
-        net_all = net_all + re.findall('\d+', line)
-    for i in range(len(net_all)):
-        net_all[i] = int(net_all[i])
-    max_net = max(net_all)
-    net_all.sort(reverse=False)
+    FB_gates = [gate for gate in gates.values() if len(gate.fanouts) > 1]
+    for gate in FB_gates: 
+        if len(gate.fanouts) > 1:
+            # Branch! We need to create stems
+            for stem in gate.fanouts:
+                new_stem = Stem(gate, stem, new_net(gates))
+                gates[new_stem.output] = new_stem
 
-    # find the number of each net and save into branch_list
-    branch_list = [0,0] * len(net_all)
-    a = net_all
-    b = set(a)
-    i = 0
-    for each_b in b:
-        count = 0
-        for each_a in a:
-            if each_b == each_a:
-                count += 1
-        branch_list[i] = [each_b, count]
-        i += 1
-    while 0 in branch_list:
-        branch_list.remove(0)
-    for input in input_list:
-        for i in range(len(branch_list)):
-            if input == branch_list[i][0]:
-                branch_list[i][1] += 1
-    # print("branch_list = " , branch_list)
-
-    branch_dict = dict() # to record new fan-out number for a branch net
-    for net_branch in branch_list:
-        if net_branch[1] <= 2:
-            continue
-        else:
-            net_name = net_branch[0]
-            n_fanout = net_branch[1]
-            branch_dict[net_name] = []
-            for gate in gate_list:
-                if net_name not in gate.inputs:
-                    continue
-                else:
-                    for index, item in enumerate(gate.inputs):
-                        if item == net_name:
-                            gate.inputs[index] = max_net + 1
-                            branch_dict[net_name].append(max_net + 1)
-                            max_net += 1
-    # for gate in gate_list:
-        # print(gate.write_back())
-    # for key in branch_dict:
-        # print(key, branch_dict[key])
-
-    all_nets = input_list + output_list
-    for gate in gate_list:
-        all_nets = all_nets + gate.inputs + [gate.output]
-    all_nets = set(all_nets)
-
-    n_all_nets = len(all_nets)
-    first_column = [-1] * n_all_nets
-    second_column = [-1] * n_all_nets
-    third_column = [-1] * n_all_nets
-    fourth_column = [-1] * n_all_nets
-    fifth_column = [-1] * n_all_nets
-    sixth_column = [-1] * n_all_nets
-
-    for index, item in enumerate(all_nets):
-        second_column[index] = item
-    # print(second_column)
-    # second_column is taken care of
-
-    for input in input_list:
-        in_index = second_column.index(input)
-        first_column[in_index] = 1
-        third_column[in_index] = 0
-    for gate in gate_list:
-        g_o_index = second_column.index(gate.output)
-        first_column[g_o_index] = 0
-        third_column[g_o_index] = gate.get_type_number()
-    for output in output_list:
-        out_index = second_column.index(output)
-        first_column[out_index] = 3
-    for key in branch_dict:
-        fan_out_list = branch_dict[key]
-        for fanout in fan_out_list:
-            f_o_index = second_column.index(fanout)
-            first_column[f_o_index] = 2
-            third_column[f_o_index] = 1
-    # first_column and third_column are taken care of
-
-    for input in input_list:
-        in_index = second_column.index(input)
-        fourth_column[in_index] = 1
-    for gate in gate_list:
-        g_o_index = second_column.index(gate.output)
-        fourth_column[g_o_index] = 1
-    for key in branch_dict:
-        fan_out_list = branch_dict[key]
-        key_index = second_column.index(key)
-        fourth_column[key_index] = len(fan_out_list)
-        for fanout in fan_out_list:
-            f_o_index = second_column.index(fanout)
-            fourth_column[f_o_index] = key
-    for output in output_list:
-        out_index = second_column.index(output)
-        fourth_column[out_index] = 0
-    # fourth_column is taken care of
-
-    for input in input_list:
-        in_index = second_column.index(input)
-        fifth_column[in_index] = 0
-    for gate in gate_list:
-        g_o_index = second_column.index(gate.output)
-        fifth_column[g_o_index] = len(gate.inputs)
-    for key in branch_dict:
-        fan_out_list = branch_dict[key]
-        for fanout in fan_out_list:
-            f_o_index = second_column.index(fanout)
-            fifth_column[f_o_index] = '\t'
-    # fifth_column is taken care of
-
-    for gate in gate_list:
-        g_o_index = second_column.index(gate.output)
-        sixth_column[g_o_index] = gate.inputs
-    for input in input_list:
-        in_index = second_column.index(input)
-        sixth_column[in_index] = ''
-    for key in branch_dict:
-        fan_out_list = branch_dict[key]
-        for fanout in fan_out_list:
-            f_o_index = second_column.index(fanout)
-            sixth_column[f_o_index] = ''
-    # sixth_column is taken care of
-
-    for i in range(n_all_nets):
-        if first_column[i] == -1 or second_column[i] == -1 or\
-           third_column[i] == -1 or fourth_column[i] == -1 or\
-           fifth_column[i] == -1 or sixth_column[i] == -1:
-            print("error found : line index " + i + " has -1 value")
-    # error checking
-
-    ##print(first_column)
-    ##print(second_column)
-    ##print(third_column)
-    ##print(fourth_column)
-    ##print(fifth_column)
-    ##print(sixth_column)
-
-    fv = open(ckt + '.ckt658','w')
-    for i in range(n_all_nets):
-        fv.writelines([str(first_column[i]),'\t',str(second_column[i]),'\t',str(third_column[i]),'\t',\
-                       str(fourth_column[i]),'\t',str(fifth_column[i]),'\t'])
-        if sixth_column[i] != '':
-            for num in sixth_column[i]:
-                fv.writelines([str(num),'\t'])
-        fv.writelines(['\n'])
-    fv.close()
+    return gates    
 
 
+def write_ckt(ckt_fname):
+    with open(ckt_fname, 'w') as outfile:
+        for gate in gates.values():
+            outfile.write(gate.ckt_line() + "\n")
 
 
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("(ERROR) bench and ckt file names should be given as arguments")
+        exit()
+    gates = read_bench(sys.argv[1])
+    write_ckt(sys.argv[2])
 
