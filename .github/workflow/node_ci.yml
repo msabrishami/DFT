@@ -1,0 +1,20 @@
+name: NodeTest
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Run test suite
+        run: |
+          cd circuit/tests/
+          pytest -v test_node.py 
