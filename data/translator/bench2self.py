@@ -4,6 +4,11 @@ import re
 import sys
 import pdb
 
+""" Note: only works with bench files that have integer values for node IDs 
+"""
+
+
+
 class Nets:
     def __init__(self):
         self.gtype = None
@@ -12,8 +17,8 @@ class Nets:
         self.fanouts = []
         self.fanins = []
         self.ntypes = {"GATE":0, "PI":1, "FB":2, "PO":3}
-        self.gtypes = {"XOR":2, 'XOR':2, 'NOR':4, 'OR':3, 
-                'NOT':5, 'NAND':6, 'AND':7}
+        self.gtypes = {"BUFF":1, "BUF":1, "XOR":2, "OR":3, "NOR":4, 
+                "NOT":5, "NAND":6, "AND":7}
     def __str__(self):
         print(f"{self.ntype}\t{self.output}")
 
@@ -46,7 +51,10 @@ class Gate(Nets):
         elif '=' in line:
             words = re.split(r',|=|\(|\)', line.replace(')', ''))
             self.ntype = "GATE"
-            self.gtype = self.gtypes[words[1]]
+            try:
+                self.gtype = self.gtypes[words[1].upper()]
+            except:
+                pdb.set_trace()
             self.output = words[0]
             self.inputs = words[2:]
 
