@@ -5,8 +5,8 @@ import sys
 from enum import Enum
 from abc import ABC, abstractmethod
 
-from ..config import X_VALUE, NOT_X_VALUE
-
+sys.path.append('../')
+from config import X_VALUE, NOT_X_VALUE
 class gtype(Enum):
     IPT = 0
     BRCH = 1
