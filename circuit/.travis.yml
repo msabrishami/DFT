@@ -1,6 +1,0 @@
-language: python
-
-python:
- - "3.10"
-
-script: pytest -v test*.py
