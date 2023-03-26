@@ -16,7 +16,7 @@ class TPGenerator:
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
 
-        bits = ["0","1","X"]
+        bits = [0, 1, config.X_VALUE]
         if mode == "b":
             tp = [int(bits[random.randint(0,1)]) for _ in range(len(self.circuit.PI))]
         elif mode == "x":
