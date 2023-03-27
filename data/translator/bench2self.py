@@ -17,8 +17,8 @@ class Nets:
         self.fanouts = []
         self.fanins = []
         self.ntypes = {"GATE":0, "PI":1, "FB":2, "PO":3}
-        self.gtypes = {"BUFF":1, "BUF":1, "XOR":2, "OR":3, "NOR":4, 
-                "NOT":5, "NAND":6, "AND":7}
+        self.gtypes = {"BUFF":9, "BUF":9, "XOR":2, "OR":3, "NOR":4, 
+                "NOT":5, "NAND":6, "AND":7, "XNOR":8}
     def __str__(self):
         print(f"{self.ntype}\t{self.output}")
 
