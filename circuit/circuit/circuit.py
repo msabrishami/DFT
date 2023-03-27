@@ -56,7 +56,7 @@ class Circuit:
         c_name : str
             the full name of the circuit without path and format 
         nodes : dict
-            from each node_num to Node objecr
+            from each node_num to Node object
         nodes_lev: list
             nodes ordered by level. Ready for logicsim.
         """

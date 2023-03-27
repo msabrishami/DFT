@@ -26,7 +26,8 @@ ISCAS85 = [config.ISCAS85_V0_DIR, config.ISCAS85_V1_DIR, config.ISCAS85_V2_DIR]
 
 PRINT_PASSED = True
 
-SIMPLE_CIRCUITS = ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17','FA', 'FA_NAND']
+# SIMPLE_CIRCUITS = ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17','FA', 'FA_NAND']
+SIMPLE_CIRCUITS = ['c432']
 
 def compare_two_lists(a , b):
     for x in a:
@@ -139,12 +140,13 @@ def ppsf_csv_generator():
             tps = []
             # if (1<<len(circuit.PI)) < MAX_N_TP:
             tps = tg.gen_full()
+            print('tps=', len(tps))
             # else:
                 # tps = tg.gen_n_random(MAX_N_TP, unique=True)
             
             for tp in tps:
                 ppsf = PPSF(circuit, faults)
-                row = ppsf.run(tps=[tp], faults=faults) # fault_dict
+                row = ppsf.run(tps=[tp], faults=faults, verbose=True) # fault_dict
                 # each tp is int(binary_from)
                 row[nodes_str] = int("".join(map(str, tp)), 2) #--> another idea: save tps in a file and use their line number in the csv as tp 
 
@@ -288,10 +290,12 @@ def compare_csvs():
 def get_undetected_faults():
     """From CSVs"""
     undetected_faults = {}
-    for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
+    # for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
+    for file in os.listdir('../../data/testings/ppsf_single_fault_testing/'):
         if 'PFS' in file: # same as PPSF files
             undetected_faults[file] = []
-            pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
+            # pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
+            pfs_csv = pd.read_csv('../../data/testings/ppsf_single_fault_testing/'+file)
             for fault in pfs_csv: 
                 if pfs_csv[fault].sum() == 0:
                     # print(fault)
@@ -301,12 +305,12 @@ def get_undetected_faults():
 
 if __name__ == '__main__':
 
-    pfs_csv_generator()
-    # ppsf_csv_generator()
+    # pfs_csv_generator()
+    ppsf_csv_generator()
 
     # compare_csvs()
 
-    # get_undetected_faults()
+    get_undetected_faults()
 
     # pfs_check_with_dfs_old()
     # Result: Failed for c6288. 129@1 only in dfs.
