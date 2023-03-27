@@ -13,11 +13,17 @@ if __name__ == '__main__':
     # circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
     # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
     # circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
-    circuit_path = '../data/ckt/c6288.ckt'
+    circuit_path = '../data/ckt/c17.ckt'
     # circuit_path = os.path.join(config.ISCAS89_DIR,'arbiter.v')
     # circuit_path = os.path.join(config.ISCAS89_DIR,'bar.v')
 
     circuit = DFTCircuit(circuit_path)
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+
+    for n in circuit.nodes_lev:
+        # print(n.num, f'{n.CO=}', f'{n.CC=}')
+        print(n.num, f'{n.CC0=}', f'{n.CC1=}', f'{n.CO=}')
 
     # #################### PPSF Example ###################
 
@@ -32,10 +38,10 @@ if __name__ == '__main__':
     
     ##################### PFS Example ####################
 
-    tg = TPGenerator(circuit)
-    tp = tg.gen_single(mode='x')
+    # tg = TPGenerator(circuit)
+    # tp = tg.gen_single(mode='x')
 
-    print(circuit.logic_sim_t(tp))
+    # print(circuit.logic_sim_t(tp))
 
 
     # pfs = PFS(circuit, faults='all')

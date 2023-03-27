@@ -395,8 +395,8 @@ class DFTIPT(node.IPT, DFTNode):
         self.pfs_V = pfs_V * bitwise_not
 
     def eval_CC(self):
-        self.CC0 = 0 
-        self.CC1 = 0
+        self.CC0 = 1
+        self.CC1 = 1
 
     def eval_CO(self):
         return 
