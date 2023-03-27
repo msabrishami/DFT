@@ -6,7 +6,7 @@ from enum import Enum
 from abc import ABC, abstractmethod
 
 sys.path.append('../')
-from config import X_VALUE, NOT_X_VALUE
+from config import X_VALUE
 class gtype(Enum):
     IPT = 0
     BRCH = 1
@@ -185,10 +185,7 @@ class NOT(Node):
     def imply_t(self):
         if self.unodes[0].value == 0 or self.unodes[0].value == 1:
             self.value = 1 - self.unodes[0].value
-        else:
-            if self.unodes[0].value == X_VALUE:
-                self.value = NOT_X_VALUE
-            elif self.unodes[0].value == NOT_X_VALUE:
+        elif self.unodes[0].value == X_VALUE:
                 self.value = X_VALUE
 
 class OR(Node):
@@ -208,13 +205,9 @@ class OR(Node):
     def imply_t(self):
         if 1 in self.unodes_val():
             self.value = 1
-        elif X_VALUE in self.unodes_val() and NOT_X_VALUE in self.unodes_val():
-            self.value = 1
         elif X_VALUE in self.unodes_val():
             self.value = X_VALUE
-        elif NOT_X_VALUE in self.unodes_val():
-            self.value = NOT_X_VALUE
-        else: # All zero
+        else:
             self.value = 0
 
 class NOR(Node):
@@ -235,14 +228,10 @@ class NOR(Node):
     def imply_t(self):
         if 1 in self.unodes_val():
             self.value = 0
-        elif X_VALUE in self.unodes_val() and NOT_X_VALUE in self.unodes_val():
-            self.value = 0
-        elif X_VALUE in self.unodes_val(): # X and 0, 0, ...
-            self.value = NOT_X_VALUE
-        elif NOT_X_VALUE in self.unodes_val():
+        elif X_VALUE in self.unodes_val():
             self.value = X_VALUE
-        else: # All zero
-                self.value = 1
+        else:
+            self.value = 1
         
 class AND(Node):
     def __init__(self, n_type, g_type, num):
@@ -262,14 +251,9 @@ class AND(Node):
         if 0 in self.unodes_val():
             self.value = 0
 
-        elif X_VALUE in self.unodes_val() and NOT_X_VALUE in self.unodes_val():
-            self.value = 0
-            
-        # all constants are 1
         elif X_VALUE in self.unodes_val():
             self.value = X_VALUE
-        elif NOT_X_VALUE in self.unodes_val():
-            self.value = NOT_X_VALUE
+        
         else:
             self.value = 1
 
@@ -292,14 +276,9 @@ class NAND(Node):
         if 0 in self.unodes_val():
             self.value = 1
 
-        elif X_VALUE in self.unodes_val() and NOT_X_VALUE in self.unodes_val():
-            self.value = 1
-            
-        # all constants are 1
         elif X_VALUE in self.unodes_val():
-            self.value = NOT_X_VALUE
-        elif NOT_X_VALUE in self.unodes_val():
             self.value = X_VALUE
+        
         else:
             self.value = 0
 
@@ -310,7 +289,7 @@ class XOR(Node):
 
     def imply(self):
         try:
-            self.value = 1 if (sum(self.unodes_val())%2 == 1) else 0
+            self.value = sum(self.unodes_val())%2
         except:
             print("(NODE) ERROR") # TODO: raise exception 
     
@@ -320,35 +299,10 @@ class XOR(Node):
             self.value = self.value ^ unode.value
 
     def imply_t(self):
-        one_count = len([i for i in self.unodes_val() if i == 1]) % 2
-        x_count = len([i for i in self.unodes_val() if i == X_VALUE]) % 2
-        not_x_count = len([i for i in self.unodes_val() if i == NOT_X_VALUE]) % 2
-
-        binary_implication = one_count % 2
-
-        ternary_implication = None
-        if x_count == not_x_count:
-            ternary_implication = x_count % 2
+        if X_VALUE in self.unodes_val():
+            self.value = X_VALUE
         else:
-            if x_count < not_x_count:
-                ternary_implication = NOT_X_VALUE
-            else:
-                ternary_implication = X_VALUE
-        
-        if binary_implication == ternary_implication:
-            self.value = 0
-        elif (binary_implication == 1 and ternary_implication == 0 ) or (binary_implication == 0 and ternary_implication == 1):
-            self.value = 1
-        elif ternary_implication == X_VALUE:
-            if binary_implication == 1:
-                self.value = NOT_X_VALUE
-            elif binary_implication == 0:
-                self.value = X_VALUE
-        elif ternary_implication == NOT_X_VALUE:
-            if binary_implication == 1:
-                self.value = X_VALUE
-            elif binary_implication == 0:
-                self.value = NOT_X_VALUE
+            self.value = sum(self.unodes_val())%2
 
 class XNOR(Node):
     def __init__(self, n_type, g_type, num):
@@ -356,7 +310,7 @@ class XNOR(Node):
         self.c_flag = 0 
 
     def imply(self):
-        self.value = 0 if (sum(self.unodes_val())%2 == 1) else 1
+        self.value = (sum(self.unodes_val())+1)%2
 
     def imply_b(self):
         self.value = self.unodes[0].value
@@ -365,35 +319,10 @@ class XNOR(Node):
         self.value = self.value ^ Node.bitwise_not
     
     def imply_t(self):
-        one_count = len([i for i in self.unodes_val() if i == 1]) % 2
-        x_count = len([i for i in self.unodes_val() if i == X_VALUE]) % 2
-        not_x_count = len([i for i in self.unodes_val() if i == NOT_X_VALUE]) % 2
-
-        binary_implication = 1 - one_count % 2 
-
-        ternary_implication = None
-        if x_count == not_x_count:
-            ternary_implication = 1 - x_count % 2
+        if X_VALUE in self.unodes_val():
+            self.value = X_VALUE
         else:
-            if x_count < not_x_count:
-                ternary_implication = X_VALUE
-            else:
-                ternary_implication = NOT_X_VALUE
-        
-        if binary_implication == ternary_implication:
-            self.value = 1
-        elif (binary_implication == 1 and ternary_implication == 0 ) or (binary_implication == 0 and ternary_implication == 1):
-            self.value = 0
-        elif ternary_implication == X_VALUE:
-            if binary_implication == 1:
-                self.value = X_VALUE
-            elif binary_implication == 0:
-                self.value = NOT_X_VALUE
-        elif ternary_implication == NOT_X_VALUE:
-            if binary_implication == 1:
-                self.value = NOT_X_VALUE
-            elif binary_implication == 0:
-                self.value = X_VALUE
+            self.value = (sum(self.unodes_val())+1) %2
 
 class IPT(Node):
     def __init__(self, n_type, g_type, num):

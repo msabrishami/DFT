@@ -5,7 +5,7 @@ from circuit.circuit_loader import CircuitLoader
 from node import node
 
 sys.path.append('../')
-from config import X_VALUE, NOT_X_VALUE
+from config import X_VALUE
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
 #           for example, we all cell types in method foo after loading the circuit, 
 #           after adding new nodes, results of foo may still not be valid. 
@@ -200,7 +200,7 @@ class Circuit:
         ------
         list of output values
         """
-        if X_VALUE in tp or NOT_X_VALUE in tp:
+        if X_VALUE in tp:
             raise Exception('You have X in test pattern. Use logic_sim_t() instead.')
         
         node_dict = dict(zip([x.num for x in self.PI], tp))

@@ -104,4 +104,3 @@ AUTO_TP = {
         "c6288_synV2": 250}
 
 X_VALUE = 'X'
-NOT_X_VALUE = '~X'

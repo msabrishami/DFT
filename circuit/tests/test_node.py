@@ -1,6 +1,6 @@
 import pytest
 from ..node import node
-from ..config import X_VALUE, NOT_X_VALUE
+from ..config import X_VALUE
 
 #TODO: test with multiple unodes if applicable
 #TODO: see if gtype and ntype is checked in constructors
@@ -27,9 +27,6 @@ def test_ipt_imply_t():
 
     ipt_node.imply_t(X_VALUE)
     assert ipt_node.value == X_VALUE
-
-    ipt_node.imply_t(NOT_X_VALUE)
-    assert ipt_node.value == NOT_X_VALUE
 
 
 @pytest.mark.IPT
@@ -80,10 +77,7 @@ def test_buff_imply_t():
     ipt_node.imply_t(X_VALUE)
     buff_node.imply_t()
     assert buff_node.value == X_VALUE
-    
-    ipt_node.imply_t(NOT_X_VALUE)
-    buff_node.imply_t()
-    assert buff_node.value == NOT_X_VALUE
+
 
 @pytest.mark.BUFF
 def test_buff_imply_b():
@@ -119,10 +113,6 @@ def test_not_imply_t():
     ipt_node.add_dnode(not_node)
 
     ipt_node.imply_t(X_VALUE)
-    not_node.imply_t()
-    assert not_node.value == NOT_X_VALUE
-    
-    ipt_node.imply_t(NOT_X_VALUE)
     not_node.imply_t()
     assert not_node.value == X_VALUE
 
@@ -217,30 +207,10 @@ def test_or_imply_t():
     or_node.imply_t()
     assert or_node.value == 1
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(1)
-    or_node.imply_t()
-    assert or_node.value == 1
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(0)
-    or_node.imply_t()
-    assert or_node.value == NOT_X_VALUE
-
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(X_VALUE)
     or_node.imply_t()
     assert or_node.value == X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    or_node.imply_t()
-    assert or_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    or_node.imply_t()
-    assert or_node.value == 1
 
 @pytest.mark.OR
 def test_or_imply_b():
@@ -311,11 +281,6 @@ def test_nor_imply_t():
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(0)
     nor_node.imply_t()
-    assert nor_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(0)
-    nor_node.imply_t()
     assert nor_node.value == X_VALUE
 
     ipt_node1.imply_t(X_VALUE)
@@ -323,25 +288,10 @@ def test_nor_imply_t():
     nor_node.imply_t()
     assert nor_node.value == 0
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(1)
-    nor_node.imply_t()
-    assert nor_node.value == 0
-
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(X_VALUE)
     nor_node.imply_t()
-    assert nor_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    nor_node.imply_t()
     assert nor_node.value == X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(X_VALUE)
-    nor_node.imply_t()
-    assert nor_node.value == 0
 
 @pytest.mark.NOR
 def test_nor_imply_b():
@@ -441,17 +391,7 @@ def test_and_imply_t():
     and_node.imply_t()
     assert and_node.value == X_VALUE
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(1)
-    and_node.imply_t()
-    assert and_node.value == NOT_X_VALUE
-
     ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(0)
-    and_node.imply_t()
-    assert and_node.value == 0
-
-    ipt_node1.imply_t(NOT_X_VALUE)
     ipt_node2.imply_t(0)
     and_node.imply_t()
     assert and_node.value == 0
@@ -460,21 +400,6 @@ def test_and_imply_t():
     ipt_node2.imply_t(X_VALUE)
     and_node.imply_t()
     assert and_node.value == X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    and_node.imply_t()
-    assert and_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    and_node.imply_t()
-    assert and_node.value == 0
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(X_VALUE)
-    and_node.imply_t()
-    assert and_node.value == 0
 
 @pytest.mark.AND
 def test_and_imply_b():
@@ -553,11 +478,6 @@ def test_nand_imply_t():
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(1)
     nand_node.imply_t()
-    assert nand_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(1)
-    nand_node.imply_t()
     assert nand_node.value == X_VALUE
 
     ipt_node1.imply_t(X_VALUE)
@@ -565,30 +485,10 @@ def test_nand_imply_t():
     nand_node.imply_t()
     assert nand_node.value == 1
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(0)
-    nand_node.imply_t()
-    assert nand_node.value == 1
-
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(X_VALUE)
-    nand_node.imply_t()
-    assert nand_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
     nand_node.imply_t()
     assert nand_node.value == X_VALUE
-
-    ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    nand_node.imply_t()
-    assert nand_node.value == 1
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(X_VALUE)
-    nand_node.imply_t()
-    assert nand_node.value == 1
 
 @pytest.mark.NAND
 def test_nand_imply_b():
@@ -669,17 +569,7 @@ def test_xor_imply_t():
     xor_node.imply_t()
     assert xor_node.value == X_VALUE
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(0)
-    xor_node.imply_t()
-    assert xor_node.value == NOT_X_VALUE
-
     ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(1)
-    xor_node.imply_t()
-    assert xor_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
     ipt_node2.imply_t(1)
     xor_node.imply_t()
     assert xor_node.value == X_VALUE
@@ -687,22 +577,7 @@ def test_xor_imply_t():
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(X_VALUE)
     xor_node.imply_t()
-    assert xor_node.value == 0
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    xor_node.imply_t()
-    assert xor_node.value == 0
-
-    ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    xor_node.imply_t()
-    assert xor_node.value == 1
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(X_VALUE)
-    xor_node.imply_t()
-    assert xor_node.value == 1
+    assert xor_node.value == X_VALUE
 
 @pytest.mark.XOR
 def test_xor_imply_b():
@@ -781,11 +656,6 @@ def test_xnor_imply_t():
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(0)
     xnor_node.imply_t()
-    assert xnor_node.value == NOT_X_VALUE
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(0)
-    xnor_node.imply_t()
     assert xnor_node.value == X_VALUE
 
     ipt_node1.imply_t(X_VALUE)
@@ -793,30 +663,10 @@ def test_xnor_imply_t():
     xnor_node.imply_t()
     assert xnor_node.value == X_VALUE
 
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(1)
-    xnor_node.imply_t()
-    assert xnor_node.value == NOT_X_VALUE
-
     ipt_node1.imply_t(X_VALUE)
     ipt_node2.imply_t(X_VALUE)
     xnor_node.imply_t()
-    assert xnor_node.value == 1
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    xnor_node.imply_t()
-    assert xnor_node.value == 1
-
-    ipt_node1.imply_t(X_VALUE)
-    ipt_node2.imply_t(NOT_X_VALUE)
-    xnor_node.imply_t()
-    assert xnor_node.value == 0
-
-    ipt_node1.imply_t(NOT_X_VALUE)
-    ipt_node2.imply_t(X_VALUE)
-    xnor_node.imply_t()
-    assert xnor_node.value == 0
+    assert xnor_node.value == X_VALUE
 
 @pytest.mark.XNOR
 def test_xnor_imply_b():
@@ -865,10 +715,6 @@ def test_brch_imply_t():
     ipt_node.imply_t(X_VALUE)
     brch_node.imply_t()
     assert brch_node.value == X_VALUE
-
-    ipt_node.imply_t(NOT_X_VALUE)
-    brch_node.imply_t()
-    assert brch_node.value == NOT_X_VALUE
 
 @pytest.mark.BRCH
 def test_brch_imply_b():
