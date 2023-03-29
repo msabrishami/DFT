@@ -59,6 +59,10 @@ class Circuit:
             from each node_num to Node object
         nodes_lev: list
             nodes ordered by level. Ready for logicsim.
+        PI : list
+            list of intput nodes
+        PO : list
+            list of output nodes
         """
 
         self.c_fname = c_fname 

@@ -146,7 +146,7 @@ class PPSF(FaultSim):
                 fault.D_count += len(res)
 
             if verbose and idx % 50 == 0:
-                print(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
+                print(f"#Faults:{idx:5} \tFC: {100*faults.calc_fc():.4f}%")
             
             if log_file:
                 log_file.write(f"{idx:5} \tFC: {100*faults.calc_fc():.4f}%\n")

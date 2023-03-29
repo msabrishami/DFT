@@ -23,7 +23,7 @@ if __name__ == '__main__':
                     passed = False
                     print(dir,cname, ':\terror in reading\n\n\n')
                 # try: # [Test 1]
-                #     tg = TPGenerator(c)
+                    tg = TPGenerator(c)
                 #     single_tp = tg.gen_single()
                 #     c.logic_sim(single_tp)
                 #     print('logic_sim passed')
@@ -34,11 +34,11 @@ if __name__ == '__main__':
                 
                 # try: # [Test 2]
                 #     temp_fname = 'temp.txt'
-                #     tg.gen_tp_file(1, tp_fname=temp_fname)
-                #     single_tp = tg.load_tp_file(temp_fname)
+                #     tg.gen_file(1, tp_fname=temp_fname)
+                #     single_tp = tg.load_file(temp_fname)
                 #     c.logic_sim(single_tp)
                 # except Exception as e:
-                #     # print(e)
+                #     print(e)
                 #     passed = False
                 #     print(cname, ':\terror in test generating/reading test')
 
