@@ -113,19 +113,17 @@ class TPGenerator:
         
         return tps # better to return the file name
     
-    def gen_partial(self, tp, default_value = 0):
+    def gen_partial(self, tp, default_value = 1):
         from collections import deque
         
         for t in range(len(tp)):
-            if tp[t] == '_':
+            if tp[t] == '_' or tp[t] is None: #'_' is different from None
                 tp[t] = default_value
 
         all_tps = deque()
         all_tps.append(tp)
 
         while True:
-            print(all_tps)
-            input()
             front_tp = all_tps.popleft()
             if not config.X_VALUE in front_tp:
                 all_tps.append(front_tp)
@@ -137,17 +135,16 @@ class TPGenerator:
                     first_x = t
                     break
             
-            #substitute zero and one:
+            #substitute zero and one
             if first_x is not None:
-                front_tp[first_x] = 1
-                print('1: ', front_tp)
-                all_tps.append(front_tp)
+                tp_copy = front_tp.copy()
+                tp_copy[first_x] = 1
+                all_tps.append(tp_copy)
 
                 front_tp[first_x] = 0
-                print('0: ', front_tp)
                 all_tps.append(front_tp)
         
-        return all_tps
+        return list(all_tps)
 
     @staticmethod
     def load_file(fname):

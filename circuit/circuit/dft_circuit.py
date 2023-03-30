@@ -347,8 +347,13 @@ class DFTCircuit(circuit.Circuit):
             else:
                 self.set_unodes(node, config.X_VALUE)
         elif node.gtype == 'NAND':
+            # print(node.value)
             if node.value == 0:
+                # print('Zero value')
                 self.set_unodes(node, 1)
+                # print(node.unodes)
+                # for u in node.unodes:
+                #     print(u.value)
             else:
                 self.set_unodes(node, config.X_VALUE)
         elif node.gtype == 'XOR' or node.gtype == 'XNOR':
@@ -438,19 +443,41 @@ class DFTCircuit(circuit.Circuit):
             if pi.value is None:
                 pi.value = '_' #Think! for outputs
 
+    def print_values(self):
+        for n in self.nodes_lev:
+            print(n.num, n.value, end = ' | ')
+
     def imply_and_check_v1(self, fault):
         """Find the tp consist of 1, 0, X and returns it"""
         self.reset_values()
         node = self.fault_to_node(fault)
         stuck_val = int(fault.__str__()[-1])
         self.forward_implication(node, 1-stuck_val)
-        
-        for n in reversed(self.nodes_lev):
-            if n.value:
-                self.backward_implication(n, n.value)    
+        print('\n_______________________________________\n')
+        print(fault.__str__())
+        print('\nAFTER FORWARD: ')
+        self.print_values()
+        # for _ in range(20):
+        # Question: should we forward again, OR repeat this procedure many times?
+        # Write sth to test if values are updates?
+
+        for round in range(2):
+            # print('round', round)
+            for n in reversed(self.nodes_lev):
+                if n.value is not None:
+                    self.backward_implication(n, n.value)
+            print('\nAFTER BACKWARD: ')
+            self.print_values()
+
+            for n in self.nodes_lev:
+                if n.value is not None:
+                    self.forward_implication(n, n.value)
+            print('\nAFTER FORWARD: ')
+            self.print_values()
+
         
         # not necessarily returns
-        return [pi.value if pi.value is not None else '_' for pi in self.PI ]
+        return [pi.value if pi.value is not None else '_' for pi in self.PI ] #
             
 ##### Entropy / OR not called anywhere
 

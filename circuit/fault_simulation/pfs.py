@@ -3,6 +3,8 @@ import os
 import config
 from fault_simulation.fault_simulation import FaultSim
 from tp_generator import TPGenerator
+
+VERBOSE_FREQ = 1
 class PFS(FaultSim):
     """ 
     Parallel Fault Single Pattern, Fault Simulation 
@@ -126,9 +128,9 @@ class PFS(FaultSim):
             tpfc.append(len(detected_faults))
             fault_coverage.append(self.fault_list.calc_fc())
             
-            if verbose and idx%50 == 0:
+            if verbose and idx%VERBOSE_FREQ == 0:
                 print(f"{idx:5} \t Detected faults: {tpfc[-1]:5}" +
-                    f"  New Faults (in 50 passes):{len(all_detected_faults)-all_past_faults_0:5}"
+                    f"  New Faults (in {VERBOSE_FREQ} passes):{len(all_detected_faults)-all_past_faults_0:5}"
                     f"  Total detected faults: {len(all_detected_faults):5}" +
                     f"  FC={100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%")
                 all_past_faults_0 = len(all_detected_faults)

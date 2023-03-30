@@ -7,6 +7,8 @@ from fault_simulation.fault import FaultList
 import config
 from tp_generator import TPGenerator
 
+# RUN = 'TEST'
+RUN = 'V1'
 
 if __name__ == '__main__':
 
@@ -15,12 +17,12 @@ if __name__ == '__main__':
     # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
     # circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
     # circuit_path = '../data/ckt/c432_old.ckt'
-    # circuit_path = '../data/ckt/c432.ckt'
+    circuit_path = '../data/ckt/c432.ckt'
     # circuit_path = '../data/ckt/c3540_old.ckt'
     # circuit_path = '../data/ckt/c499.ckt'
     # circuit_path = '../data/ckt/c1.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
-    circuit_path = '../data/ckt/c4.ckt'
+    # circuit_path = '../data/ckt/c4.ckt'
     # circuit_path = '../data/ckt/c17.ckt'
     # circuit_path = '../data/ckt/c3540.ckt'
     # circuit_path = '../data/ckt/c1908.ckt'
@@ -35,6 +37,18 @@ if __name__ == '__main__':
     #     # print(n.num, f'{n.CO=}', f'{n.CC=}')
     #     print(n.num, f'{n.CC0=}', f'{n.CC1=}', f'{n.CO=}')
 
+    
+    ########################TEST PFS ###############################
+    if RUN == 'TEST':
+        tg = TPGenerator(circuit)
+        tps= tg.gen_full()
+        faults = FaultList(circuit)
+        faults.add_n_random()
+        pfs = PFS(circuit, faults)
+
+        for tp in tps:
+            print(tp)
+            print(pfs._one_tp_run(tp))
     # #################### Ghazal's Experiments ###################
     """V0"""
     po_nums = []
@@ -73,43 +87,70 @@ if __name__ == '__main__':
         fanins_of_fanouts.append(len(circuit.imply_and_check_v0(n)))
     plt.hist(x=fanins_of_fanouts)
     plt.title(circuit.c_name)
-    # plt.show()
+    plt.show()
     
     """V1"""
-    fl = FaultList(circuit)
-    # fl.add_n_random(100)
-    fl.add_all()
-    # random_fault = fl.faults[0]
-    for random_fault in fl.faults:
-        tp = circuit.imply_and_check_v1(random_fault)
-        constants = 0
-        variables = 0
-        ineffective = 0
-        for t in tp:
-            if t == 1 or t == 0:
-                constants+=1
-            elif t == config.X_VALUE:
-                variables+=1
-            elif t == '_':
-                ineffective += 1
-        
-        tg = TPGenerator(circuit)
-        be_tested_tps = tg.gen_partial(tp)
-        print('TP:')
-        print(tp)
-        print('PARTIALS:')
-        print(be_tested_tps)
-        print('______________________')
-        # input()
-        # faults = FaultList()
-        # faults.add(circuit.fault_to_node(random_fault), int(random_fault.__str__()[-1]))
-        # pfs = PFS(circuit, faults)
-        # pfs.run(be_tested_tps)
+    if RUN == 'V1':
+        fl = FaultList(circuit)
+        # fl.add_n_random(100)
+        fl.add_all()
+        for random_fault in fl.faults:
+            tp = circuit.imply_and_check_v1(random_fault)
+            constants = 0
+            variables = 0
+            ineffective = 0
+            for t in tp:
+                if t == 1 or t == 0:
+                    constants+=1
+                elif t == config.X_VALUE:
+                    variables+=1
+                elif t == '_':
+                    ineffective += 1
+            # print(random_fault.__str__())
+            # for n in circuit.nodes_lev:
+            #     print(n.num, n.value, n.gtype)
 
-        # print(f'fault={random_fault.__str__():<5}, gate type={circuit.fault_to_node(random_fault).gtype:<4}'
-            #   f', --> all={len(tp)}, {constants=}, {variables=}, {ineffective=}, input reduction percent={100*(len(tp)-variables)/len(tp):.1f}%')
-        # print(tp)
-        # new_tps.append(tp)
+            """PART 2"""
+            # print(tp)
+            tg = TPGenerator(circuit)
+            be_tested_tps = tg.gen_partial(tp)
+            # print('TP:')
+            # # print('PARTIALS:')
+            # print(be_tested_tps)
+            # for k in be_tested_tps:
+            #     print(k)
+            faults = FaultList()
+            faults.add_fault(random_fault)
+            # for fault in faults.faults:
+                # print(fault.__str__())
+            # x = input()
+            
+            # print(be_tested_tps)
+            # print(random_fault.__str__())
+            pfs = PFS(circuit, faults)
+            # for f in faults.faults:
+                # print(f)
+
+            is_detectable = False
+            for tp_b in be_tested_tps:
+                detected_faults = pfs._one_tp_run(tp_b)
+                if random_fault in detected_faults:
+                    is_detectable = True
+                    break
+
+            if not is_detectable:
+                print(f'Fault {random_fault.__str__()} is not detectable.')
+                # print(detected_faults)
+            print('______________________')
+
+            # ppsf = PPSF(circuit, faults)
+            # pfs.run(be_tested_tps, verbose=True)
+            # ppsf.run(be_tested_tps, verbose=True)
+
+            # print(f'fault={random_fault.__str__():<5}, gate type={circuit.fault_to_node(random_fault).gtype:<4}'
+            #       f', --> all={len(tp)}, {constants=}, {variables=}, {ineffective=}, input reduction percent={100*(len(tp)-variables)/len(tp):.1f}%')
+            # print(tp)
+            # new_tps.append(tp)
 
 
     ################# Manially testing ####################
@@ -139,7 +180,6 @@ if __name__ == '__main__':
     # tp = tg.gen_single(mode='x')
 
     # print(circuit.logic_sim_t(tp))
-
 
     # pfs = PFS(circuit, faults='all')
     # pfs.run(tps=10000, verbose=True, save_log=True)
