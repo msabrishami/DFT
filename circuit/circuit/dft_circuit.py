@@ -1,9 +1,8 @@
 import math
 import os
-import pdb
-import random
 import re
 import time
+from collections import deque
 from multiprocessing import Pipe, Process
 
 import config
@@ -268,6 +267,191 @@ class DFTCircuit(circuit.Circuit):
 
         print("Loaded circuit STAFAN TMs loaded from: " + fname)
         self._stafan_executed = True
+
+##### Ghazal's Experiments
+    def get_fanout_PO(self, n):
+        q = deque()
+        q.append(n)
+        PO_fanouts = set()
+        
+        while q:
+            front = q.popleft()
+            if front.ntype=='PO':
+                PO_fanouts.add(front)
+            for dnode in front.dnodes:
+                if dnode not in q:
+                    q.append(dnode)
+        return PO_fanouts
+
+    def get_fanin_PI(self, n):
+        q = deque()
+        q.append(n)
+        PI_fanin = set()
+        
+        while q:
+            front = q.popleft()
+            if front.ntype=='PI':
+                PI_fanin.add(front)
+            for unode in front.unodes:
+                if unode not in q:
+                    q.append(unode)
+        return PI_fanin
+
+    def imply_and_check_v0(self, n):
+        """
+        Version 0:
+        Gets a node (can be one of remaining faults of ppsf).
+        Returns which PI nodes must be tested.
+        """
+        fanout_PO = self.get_fanout_PO(n)
+        fanin_PI = set()
+        for po in fanout_PO:
+            for pi in self.get_fanin_PI(po):
+                fanin_PI.add(pi)
+        return fanin_PI
+
+    def fault_to_node(self, fault):
+        node_num = fault.__str__()[:-2]
+        
+        for n in self.nodes_lev:
+            if n.num == node_num:
+                return n
+        
+        return None    
+    def reset_values(self):
+        for n in self.nodes_lev:
+            n.value = None
+
+    def set_unodes(self, n , value):
+        for u in n.unodes:
+            u.value = value
+
+    def evaluate_unodes(self, node): #TODO: if this is useful for the future, it should be move to node.py
+        """Updates value of unodes of front node"""
+
+        if node.gtype == 'IPT' or node.gtype == 'BRCH' or node.gtype == 'BUFF':
+            self.set_unodes(node, node.value)
+        elif node.gtype == 'OR':
+            if node.value == 0:
+                self.set_unodes(node, 0)
+            else:
+                self.set_unodes(node, config.X_VALUE)
+        elif node.gtype == 'AND':
+            if node.value == 1:
+                self.set_unodes(node, 1)
+            else:
+                self.set_unodes(node, config.X_VALUE)
+        elif node.gtype == 'NOR':
+            if node.value == 1:
+                self.set_unodes(node, 0)
+            else:
+                self.set_unodes(node, config.X_VALUE)
+        elif node.gtype == 'NAND':
+            if node.value == 0:
+                self.set_unodes(node, 1)
+            else:
+                self.set_unodes(node, config.X_VALUE)
+        elif node.gtype == 'XOR' or node.gtype == 'XNOR':
+            self.set_unodes(node, 'X')
+        elif node.gtype == 'NOT':
+            if node.value == 1:
+                self.set_unodes(node, 0)
+            elif node.value == 0:
+                self.set_unodes(node, 1)
+            else:
+                self.set_unodes(node, config.X_VALUE)
+    
+    def evaluate_dnodes(self, node): #TODO: if this is useful for the future, it should be move to node.py
+        if len(node.dnodes) == 0:
+            return
+        
+        if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
+            node.dnodes[0].value = node.value
+
+        elif node.dnodes[0].gtype == 'OR':
+            for udnode in node.dnodes[0].unodes:
+                if udnode.value == 1:
+                    node.dnodes[0].value = 1
+                    break
+
+        elif node.dnodes[0].gtype == 'AND':
+            for udnode in node.dnodes[0].unodes:
+                if udnode.value == 0:
+                    node.dnodes[0].value = 0
+                    break
+
+        elif node.dnodes[0].gtype == 'NOR':
+            for udnode in node.dnodes[0].unodes:
+                if udnode.value == 1:
+                    node.dnodes[0].value = 0
+                    break
+
+        elif node.dnodes[0].gtype == 'NAND':
+            for udnode in node.dnodes[0].unodes:
+                if udnode.value == 0:
+                    node.dnodes[0].value = 1
+                    break
+        
+        elif node.dnodes[0].gtype == 'XOR' or node.dnodes[0].gtype == 'XNOR':
+            flag = True
+            for udnode in node.dnodes[0].unodes:
+                if udnode.value not in [0, 1]:
+                    flag = False
+                    break
+            if flag:
+                node.dnodes[0].imply()
+
+
+        elif node.dnodes[0].gtype == 'NOT':
+            if node.value == 1:
+                node.dnodes[0].value = 0
+            elif node.value == 0:
+                node.dnodes[0].value = 1
+    
+    def forward_implication(self, node, value):
+        """Update value of nodes as much as we can in fan-out of the given node"""
+        node.value = value
+        q = deque()
+        q.append(node)
+
+        while q:
+            front = q.popleft()
+            self.evaluate_dnodes(front)
+            for dnode in front.dnodes:
+                if dnode not in q:
+                    q.append(dnode)
+
+    def backward_implication(self, node, value):
+        """Update value of nodes as much as we can in fan-in of node"""
+        node.value = value
+        q = deque()
+        q.append(node)
+
+        while q:
+            front = q.popleft()
+            self.evaluate_unodes(front)
+            for unode in front.unodes:
+                if unode not in q:
+                    q.append(unode)
+
+        for pi in self.PI:
+            if pi.value is None:
+                pi.value = '_' #Think! for outputs
+
+    def imply_and_check_v1(self, fault):
+        """Find the tp consist of 1, 0, X and returns it"""
+        self.reset_values()
+        node = self.fault_to_node(fault)
+        stuck_val = int(fault.__str__()[-1])
+        self.forward_implication(node, 1-stuck_val)
+        
+        for n in reversed(self.nodes_lev):
+            if n.value:
+                self.backward_implication(n, n.value)    
+        
+        # not necessarily returns
+        return [pi.value if pi.value is not None else '_' for pi in self.PI ]
+            
 ##### Entropy / OR not called anywhere
 
     def CALC_ENTROPY(self):

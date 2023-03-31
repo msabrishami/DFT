@@ -16,7 +16,7 @@ class TPGenerator:
         if mode not in ["b", "x"]:
             raise NameError("Mode is not acceptable")
 
-        bits = ["0","1","X"]
+        bits = [0, 1, config.X_VALUE]
         if mode == "b":
             tp = [int(bits[random.randint(0,1)]) for _ in range(len(self.circuit.PI))]
         elif mode == "x":
@@ -112,6 +112,42 @@ class TPGenerator:
         print(f"Generated full test patterns and saved in {tp_fname}")
         
         return tps # better to return the file name
+    
+    def gen_partial(self, tp, default_value = 0):
+        from collections import deque
+        
+        for t in range(len(tp)):
+            if tp[t] == '_':
+                tp[t] = default_value
+
+        all_tps = deque()
+        all_tps.append(tp)
+
+        while True:
+            print(all_tps)
+            input()
+            front_tp = all_tps.popleft()
+            if not config.X_VALUE in front_tp:
+                all_tps.append(front_tp)
+                break
+            
+            first_x = None
+            for t in range(len(front_tp)):
+                if front_tp[t] == config.X_VALUE:
+                    first_x = t
+                    break
+            
+            #substitute zero and one:
+            if first_x is not None:
+                front_tp[first_x] = 1
+                print('1: ', front_tp)
+                all_tps.append(front_tp)
+
+                front_tp[first_x] = 0
+                print('0: ', front_tp)
+                all_tps.append(front_tp)
+        
+        return all_tps
 
     @staticmethod
     def load_file(fname):

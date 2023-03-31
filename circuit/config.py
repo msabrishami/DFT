@@ -102,3 +102,5 @@ AUTO_TP = {
         "c6288_synV0": 240,
         "c6288_synV1": 270,
         "c6288_synV2": 250}
+
+X_VALUE = 'X'

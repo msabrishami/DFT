@@ -1,8 +1,11 @@
 import random
+import sys
 
 from circuit.circuit_loader import CircuitLoader
 from node import node
 
+sys.path.append('../')
+from config import X_VALUE
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
 #           for example, we all cell types in method foo after loading the circuit, 
 #           after adding new nodes, results of foo may still not be valid. 
@@ -53,9 +56,13 @@ class Circuit:
         c_name : str
             the full name of the circuit without path and format 
         nodes : dict
-            from each node_num to Node objecr
+            from each node_num to Node object
         nodes_lev: list
             nodes ordered by level. Ready for logicsim.
+        PI : list
+            list of intput nodes
+        PO : list
+            list of output nodes
         """
 
         self.c_fname = c_fname 
@@ -197,7 +204,9 @@ class Circuit:
         ------
         list of output values
         """
-
+        if X_VALUE in tp:
+            raise Exception('You have X in test pattern. Use logic_sim_t() instead.')
+        
         node_dict = dict(zip([x.num for x in self.PI], tp))
 
         for node in self.nodes_lev:
@@ -205,6 +214,28 @@ class Circuit:
                 node.imply(node_dict[node.num])
             else:
                 node.imply()
+        
+        return [po.value for po in self.PO]
+    
+    def logic_sim_t(self, tp):
+        """
+        Logic simulation:
+        Read a given pattern and perform the logic simulation
+        Currently just works with binary logic
+        tp is a list of values (currently int) in the same order as in self.PI
+
+        Return
+        ------
+        list of output values
+        """
+
+        node_dict = dict(zip([x.num for x in self.PI], tp))
+
+        for node in self.nodes_lev:
+            if node.gtype == "IPT":
+                node.imply_t(node_dict[node.num])
+            else:
+                node.imply_t()
         
         return [po.value for po in self.PO]
 
