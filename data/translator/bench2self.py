@@ -32,8 +32,11 @@ class Stem(Nets):
         self.fanouts = [fanout]
         self.output = net_number
 
-        # brch is a fanins 
-        for idx in range(len(
+        # brch is still a fanin to fanout gate, 
+        # bech should be replaced with this new stem in fanout.fanins
+        for idx in range(len(fanout.fanins)):
+            if fanout.fanins[idx].output == brch.output:
+                fanout.fanins[idx] = self
 
     def ckt_line(self):
         line = f"2 {self.output} 1 {self.fanins[0].output}"
@@ -76,7 +79,7 @@ def new_net(gates):
     nets = set([int(gate.output) for gate in gates.values()])
     for net in range(1, max(nets)):
         if net not in nets:
-            return net
+            return str(net)
 
 def read_bench(bench_fname):
     """ TODO: we are not handling a line that is:
