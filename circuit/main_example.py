@@ -8,7 +8,8 @@ import config
 from tp_generator import TPGenerator
 
 # RUN = 'TEST'
-RUN = 'V1'
+RUN = 'V2'
+RUN = 'logicsim'
 
 if __name__ == '__main__':
 
@@ -17,7 +18,11 @@ if __name__ == '__main__':
     # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
     # circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
     # circuit_path = '../data/ckt/c432_old.ckt'
-    circuit_path = '../data/ckt/c432.ckt'
+    circuit_path = '../data/ckt/c432_new.ckt'
+    circuit_path = '../data/ckt/c7552_new.ckt'
+    circuit_path = '../data/ckt/c6288_new.ckt'
+    circuit_path = '../data/ckt/c499_new.ckt'
+    circuit_path = '../data/ckt/c1908_new.ckt'
     # circuit_path = '../data/ckt/c3540_old.ckt'
     # circuit_path = '../data/ckt/c499.ckt'
     # circuit_path = '../data/ckt/c1.ckt'
@@ -37,6 +42,20 @@ if __name__ == '__main__':
     #     # print(n.num, f'{n.CO=}', f'{n.CC=}')
     #     print(n.num, f'{n.CC0=}', f'{n.CC1=}', f'{n.CO=}')
 
+    if RUN == "logicsim":
+        for _ in range(100):
+            # circuit_path =  '../data/ckt/c1355_new.ckt'
+            circuit_path =  '../data/verilog/ISCAS85/v0/c880_synV0.v'
+            circuit = DFTCircuit(circuit_path)
+            tg = TPGenerator(circuit)
+            tp = tg.gen_single()
+            a = circuit.logic_sim(tp)
+
+            circuit_path = '../data/ckt/c880_new.ckt'
+            circuit = DFTCircuit(circuit_path)
+            b = circuit.logic_sim(tp)
+            if a != b:
+                print(False)
     
     ########################TEST PFS ###############################
     if RUN == 'TEST':
@@ -51,44 +70,45 @@ if __name__ == '__main__':
             print(pfs._one_tp_run(tp))
     # #################### Ghazal's Experiments ###################
     """V0"""
-    po_nums = []
-    print('#All PO', len(circuit.PO))
+    if RUN == "V0":
+        po_nums = []
+        print('#All PO', len(circuit.PO))
 
-    for n in circuit.PI:
-        print('node=',n.num, '--> #po=', len(circuit.get_fanout_PO(n)))
-        po_nums.append(len(circuit.get_fanout_PO(n)))
+        for n in circuit.PI:
+            print('node=',n.num, '--> #po=', len(circuit.get_fanout_PO(n)))
+            po_nums.append(len(circuit.get_fanout_PO(n)))
 
-    import matplotlib.pyplot as plt
-    # plt.hist(x=po_nums)
-    # plt.title(circuit.c_name)
-    # plt.show()
-    
-    print('_'*50)
-    pi_nums = []
-    print('#All PI', len(circuit.PI))
+        import matplotlib.pyplot as plt
+        # plt.hist(x=po_nums)
+        # plt.title(circuit.c_name)
+        # plt.show()
+        
+        print('_'*50)
+        pi_nums = []
+        print('#All PI', len(circuit.PI))
 
-    for n in circuit.PO:
-        print('node=',n.num, '<-- #pi=', len(circuit.get_fanin_PI(n)))
-        pi_nums.append(len(circuit.get_fanin_PI(n)))
+        for n in circuit.PO:
+            print('node=',n.num, '<-- #pi=', len(circuit.get_fanin_PI(n)))
+            pi_nums.append(len(circuit.get_fanin_PI(n)))
 
-    # plt.hist(x=pi_nums)
-    # plt.title(circuit.c_name)
-    # plt.show()
-    print('_'*50)
+        # plt.hist(x=pi_nums)
+        # plt.title(circuit.c_name)
+        # plt.show()
+        print('_'*50)
 
-    for n in circuit.nodes_lev:
-        print(f'node:{n.num}, lev={n.lev}, reach to {len(circuit.get_fanout_PO(n))} POs, is fed by {len(circuit.get_fanin_PI(n))} PIs')
-    
-    print('_'*50)
-    
-    fanins_of_fanouts = []
-    for n in circuit.nodes_lev:
-        print(f'node:{n.num}, len(fanins of fanouts) = {len(circuit.imply_and_check_v0(n))}')
-        fanins_of_fanouts.append(len(circuit.imply_and_check_v0(n)))
-    plt.hist(x=fanins_of_fanouts)
-    plt.title(circuit.c_name)
-    plt.show()
-    
+        for n in circuit.nodes_lev:
+            print(f'node:{n.num}, lev={n.lev}, reach to {len(circuit.get_fanout_PO(n))} POs, is fed by {len(circuit.get_fanin_PI(n))} PIs')
+        
+        print('_'*50)
+        
+        fanins_of_fanouts = []
+        for n in circuit.nodes_lev:
+            print(f'node:{n.num}, len(fanins of fanouts) = {len(circuit.imply_and_check_v0(n))}')
+            fanins_of_fanouts.append(len(circuit.imply_and_check_v0(n)))
+        plt.hist(x=fanins_of_fanouts)
+        plt.title(circuit.c_name)
+        plt.show()
+        
     """V1"""
     if RUN == 'V1':
         fl = FaultList(circuit)

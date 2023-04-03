@@ -14,7 +14,7 @@ PRINT_PASSED = True
 if __name__ == '__main__':
     for dir in [config.CKT_DIR]:
         for cname in os.listdir(dir):
-            if cname.endswith('v') or cname.endswith('ckt'):
+            if cname.endswith('v') or cname.endswith('ckt') and '_new' in cname:
                 passed = True
                 try:
                     c = Circuit(os.path.join(dir,cname))
