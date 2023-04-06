@@ -145,4 +145,3 @@ if __name__ == "__main__":
         exit()
     gates = read_bench(sys.argv[1])
     write_ckt(sys.argv[2])
-
