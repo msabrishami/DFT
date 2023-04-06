@@ -8,8 +8,8 @@ import config
 from tp_generator import TPGenerator
 
 # RUN = 'TEST'
-RUN = 'V2'
-RUN = 'logicsim'
+RUN = 'V1'
+# RUN = 'logicsim'
 
 if __name__ == '__main__':
 
@@ -18,14 +18,14 @@ if __name__ == '__main__':
     # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
     # circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
     # circuit_path = '../data/ckt/c432_old.ckt'
-    circuit_path = '../data/ckt/c432_new.ckt'
-    circuit_path = '../data/ckt/c7552_new.ckt'
-    circuit_path = '../data/ckt/c6288_new.ckt'
-    circuit_path = '../data/ckt/c499_new.ckt'
-    circuit_path = '../data/ckt/c1908_new.ckt'
+    # circuit_path = '../data/ckt/c432_new.ckt'
+    # circuit_path = '../data/ckt/c7552_new.ckt'
+    # circuit_path = '../data/ckt/c6288_new.ckt'
+    # circuit_path = '../data/ckt/c499_new.ckt'
+    # circuit_path = '../data/ckt/c1908_new.ckt'
     # circuit_path = '../data/ckt/c3540_old.ckt'
     # circuit_path = '../data/ckt/c499.ckt'
-    # circuit_path = '../data/ckt/c1.ckt'
+    circuit_path = '../data/ckt/c1.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
     # circuit_path = '../data/ckt/c4.ckt'
     # circuit_path = '../data/ckt/c17.ckt'

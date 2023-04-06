@@ -318,6 +318,7 @@ class DFTCircuit(circuit.Circuit):
                 return n
         
         return None    
+    
     def reset_values(self):
         for n in self.nodes_lev:
             n.value = None
@@ -445,7 +446,16 @@ class DFTCircuit(circuit.Circuit):
 
     def print_values(self):
         for n in self.nodes_lev:
-            print(n.num, n.value, end = ' | ')
+            print(n.num, n.value, end = '|')
+    
+    def print_unodes(self, n):
+        print('node is: ', n.num)
+        print('unodes are: ')
+        print([f'{u.num}:{u.value}' for u in n.unodes])
+    
+    def print_inputs(self):
+        print('PI:',[f'{p.num}:{p.value}' for p in self.PI])
+
 
     def imply_and_check_v1(self, fault):
         """Find the tp consist of 1, 0, X and returns it"""
@@ -456,24 +466,29 @@ class DFTCircuit(circuit.Circuit):
         print('\n_______________________________________\n')
         print(fault.__str__())
         print('\nAFTER FORWARD: ')
-        self.print_values()
+        # self.print_values()
         # for _ in range(20):
         # Question: should we forward again, OR repeat this procedure many times?
         # Write sth to test if values are updates?
 
-        for round in range(2):
+        for round in range(1):
             # print('round', round)
             for n in reversed(self.nodes_lev):
                 if n.value is not None:
                     self.backward_implication(n, n.value)
             print('\nAFTER BACKWARD: ')
+            # print(len(self.nodes_lev))
             self.print_values()
+            for n in self.nodes_lev: 
+                self.print_unodes(n)
+            self.print_inputs()
+            input()
 
             for n in self.nodes_lev:
                 if n.value is not None:
                     self.forward_implication(n, n.value)
             print('\nAFTER FORWARD: ')
-            self.print_values()
+            # self.print_values()
 
         
         # not necessarily returns
