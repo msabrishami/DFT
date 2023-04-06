@@ -32,6 +32,9 @@ class TPGenerator:
         does not store the generated tps in file 
         """
 
+        if 1<<len(self.circuit.PI) < tp_count:
+            unique = False
+
         if not unique:
             return [self.gen_single(mode) for _ in range(int(tp_count))]
 
