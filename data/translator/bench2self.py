@@ -23,14 +23,20 @@ class Nets:
         print(f"{self.ntype}\t{self.output}")
 
 class Stem(Nets):
-    def __init__(self, brch, stem, net_number):
+    def __init__(self, brch, fanout, net_number):
         """ brch and stem are Gate type """
         super().__init__()
         self.ntype = "FB"
         self.gtype = 1
         self.fanins = [brch]
-        self.fanouts = [stem]
+        self.fanouts = [fanout]
         self.output = net_number
+
+        # brch is still a fanin to fanout gate, 
+        # bech should be replaced with this new stem in fanout.fanins
+        for idx in range(len(fanout.fanins)):
+            if fanout.fanins[idx].output == brch.output:
+                fanout.fanins[idx] = self
 
     def ckt_line(self):
         line = f"2 {self.output} 1 {self.fanins[0].output}"
@@ -73,9 +79,13 @@ def new_net(gates):
     nets = set([int(gate.output) for gate in gates.values()])
     for net in range(1, max(nets)):
         if net not in nets:
-            return net
+            return str(net)
 
 def read_bench(bench_fname):
+    """ TODO: we are not handling a line that is:
+        both PI and PO
+        both BRCH and PO """
+
     with open(bench_fname, "r") as infile:
         lines = infile.readlines()
     lines = [line.strip().replace(' ','') for line in lines if len(line) > 3]
@@ -115,12 +125,10 @@ def read_bench(bench_fname):
             print(f"(ERROR): PO {po} is also a PI")
 
     FB_gates = [gate for gate in gates.values() if len(gate.fanouts) > 1]
-    for gate in FB_gates: 
-        if len(gate.fanouts) > 1:
-            # Branch! We need to create stems
-            for stem in gate.fanouts:
-                new_stem = Stem(gate, stem, new_net(gates))
-                gates[new_stem.output] = new_stem
+    for brch in FB_gates: 
+        for fanout in brch.fanouts:
+            new_stem = Stem(brch, fanout, new_net(gates))
+            gates[new_stem.output] = new_stem
 
     return gates    
 
