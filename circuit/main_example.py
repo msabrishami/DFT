@@ -8,22 +8,11 @@ import config
 from tp_generator import TPGenerator
 
 # RUN = 'TEST'
-RUN = 'V1'
+RUN = 'V0'
 # RUN = 'logicsim'
 
 if __name__ == '__main__':
 
-    # circuit_path = '../data/verilog/ISCAS85/v1/c17_synV1.v'
-    # circuit_path = '../data/verilog/ISCAS85/v1/c432_synV1.v'
-    # circuit_path = '../data/verilog/ISCAS85/v2/c5315_synV2.v'
-    # circuit_path = '../data/verilog/ISCAS85/v0/c880_synV0.v'
-    # circuit_path = '../data/ckt/c432_old.ckt'
-    # circuit_path = '../data/ckt/c432_new.ckt'
-    # circuit_path = '../data/ckt/c7552_new.ckt'
-    # circuit_path = '../data/ckt/c6288_new.ckt'
-    # circuit_path = '../data/ckt/c499_new.ckt'
-    # circuit_path = '../data/ckt/c1908_new.ckt'
-    # circuit_path = '../data/ckt/c3540_old.ckt'
     # circuit_path = '../data/ckt/c499.ckt'
     circuit_path = '../data/ckt/c1.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
@@ -31,8 +20,6 @@ if __name__ == '__main__':
     # circuit_path = '../data/ckt/c17.ckt'
     # circuit_path = '../data/ckt/c3540.ckt'
     # circuit_path = '../data/ckt/c1908.ckt'
-    # circuit_path = os.path.join(config.ISCAS89_DIR,'arbiter.v')
-    # circuit_path = os.path.join(config.ISCAS89_DIR,'bar.v')
 
     circuit = DFTCircuit(circuit_path)
     # circuit.SCOAP_CC()
@@ -201,8 +188,8 @@ if __name__ == '__main__':
 
     # print(circuit.logic_sim_t(tp))
 
-    # pfs = PFS(circuit, faults='all')
-    # pfs.run(tps=10000, verbose=True, save_log=True)
+    # pfs = PFS(circuit)
+    # pfs.run(tps=10000, verbose=True, save_log=True, faults = 'all')
     # print('_'*50)
 
     # #################### STAFAN_FC Example ##############

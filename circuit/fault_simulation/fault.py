@@ -15,7 +15,7 @@ class Fault():
 
 class FaultList:
     """ Fault list """
-    def __init__(self, circuit=None, fname = None, fault_list = None, fault_count=None, nodes=None):
+    def __init__(self, circuit=None, fname=None, fault_list=None, fault_count=None, nodes=None):
         """
         fname : str 
             if not None, all faults from the given file is read and added
@@ -100,8 +100,7 @@ class FaultList:
         for node in nodes:
             self.add_node(node)
 
-    def add_file(self, fname): # TODO: get it in the __init__
-                                 #TODO: rename --> load_file
+    def add_file(self, fname):
         """ read faults from a file and add it to the fault list 
         file format: each fault <node-num>@<stuck value> in separate lines
 

@@ -2,6 +2,7 @@ import os
 
 import config
 from fault_simulation.fault_simulation import FaultSim
+from fault_simulation.fault import FaultList
 from tp_generator import TPGenerator
 
 VERBOSE_FREQ = 1
@@ -9,7 +10,7 @@ class PFS(FaultSim):
     """ 
     Parallel Fault Single Pattern, Fault Simulation 
     """
-    def __init__(self, circuit, faults):
+    def __init__(self, circuit, faults=None):
         super().__init__(circuit, faults=faults)
         self.fs_type = "pfs"
         self.fs_folder()
@@ -29,9 +30,9 @@ class PFS(FaultSim):
         Returns a list of detected faults in this pass
         tp sequence is important, if circuit.PI=[Na, Nb, Nc], then tp=[Xa, Xb, Xc]
         #TODO: Fix fault drop
-        """        
+        """
         detected_faults = set() 
-        
+
         ptr0 = 0
         while (ptr0 < len(self.fault_list.faults)):
             pfs_stuck_values = 0
@@ -172,7 +173,7 @@ class PFS(FaultSim):
 
         return fault_coverage, list(all_detected_faults)
 
-    def run(self, tps, fault_drop=None, verbose=False, save_log=True):
+    def run(self, tps, faults=None, fault_drop=None, verbose=False, save_log=True):
         """ 
         Running the PFS simulation and calculating fault coverage (FC) for the number of
         test patterns (tps), which is referred to as TPFC. 
@@ -199,6 +200,15 @@ class PFS(FaultSim):
         """
         # TODO: should we take faults as an argument here?
 
+        if isinstance(faults, FaultList):
+            self.fault_list = faults
+        
+        elif faults == 'all':
+            self.fault_list = FaultList(self.circuit)
+            self.fault_list.add_all()
+        else:
+            raise TypeError("Other types not defined yet.")
+        
         tg = TPGenerator(self.circuit)
         if isinstance(tps, int):
             tps = tg.gen_n_random(tps)

@@ -174,6 +174,7 @@ class PPSF(FaultSim):
                 fault_dict[f.__str__()] = f.D_count
         
         return fault_dict #TODO: return fc and Faults Dict
+    
     def _single_process_runner(self, conn, tp, faults, verbose=False):
         self.run(tps=tp, faults=faults, verbose=verbose, save_log=False)
         conn.send(faults)
