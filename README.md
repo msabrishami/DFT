@@ -1,7 +1,7 @@
 # PyCAD: Python Package for Digital Circuit and Computer Aided Design (CAD) Research 
 This package is written to cover different methods used for circuit netlists (graphs). The package reads the standard format circuit netlists and can perfom different *computer aided design* operations, including: 
 - Basic operations: 
-    - Gate level logical simulation
+    - Gate level logical simulation (binary and ternary)
 - Design for test (DFT):
     - Fault analysis, e.g. dominancy and equivalency relations
     - Testability measures (SCOAP)
