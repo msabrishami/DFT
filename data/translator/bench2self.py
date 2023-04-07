@@ -75,9 +75,9 @@ class Gate(Nets):
         return line 
     
 
-def new_net(gates):
+def new_net(gates, start_val=1):
     nets = set([int(gate.output) for gate in gates.values()])
-    for net in range(1, max(nets)):
+    for net in range(start_val, max(nets)):
         if net not in nets:
             return str(net)
 
@@ -127,7 +127,7 @@ def read_bench(bench_fname):
     FB_gates = [gate for gate in gates.values() if len(gate.fanouts) > 1]
     for brch in FB_gates: 
         for fanout in brch.fanouts:
-            new_stem = Stem(brch, fanout, new_net(gates))
+            new_stem = Stem(brch, fanout, new_net(gates, int(brch.output)))
             gates[new_stem.output] = new_stem
 
     return gates    
