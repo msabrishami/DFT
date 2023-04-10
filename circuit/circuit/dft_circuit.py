@@ -458,6 +458,7 @@ class DFTCircuit(circuit.Circuit):
 
 
     def imply_and_check_v1(self, fault):
+        """Has a bug. did not fix it cuz the performance is so bad and it has to be upgraded"""
         """Find the tp consist of 1, 0, X and returns it"""
         self.reset_values()
         node = self.fault_to_node(fault)
@@ -494,6 +495,11 @@ class DFTCircuit(circuit.Circuit):
         # not necessarily returns
         return [pi.value if pi.value is not None else '_' for pi in self.PI ] #
             
+    def imply_and_check_v2(self, fault):
+        self.reset_values()
+        node = self.fault_to_node(fault)
+        stuck_val = int(fault.__str__()[-1])
+
 ##### Entropy / OR not called anywhere
 
     def CALC_ENTROPY(self):
