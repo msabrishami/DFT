@@ -155,10 +155,10 @@ class PPSF(FaultSim):
             print("\nPPFS completed")
             print(f"FC: {100*faults.calc_fc():.4f}%, total-faults={len(faults.faults)}")
             
-            # print('\nRemaining Faults:')
+            # print('\nRemaining Faults:')`
             # for f in faults.faults:
             #     if f.D_count == 0:
-            #         print(f.__str__())
+            #         print(f.__str__())`
 
         if save_log:
             log_file.write("remaining faults\n")
