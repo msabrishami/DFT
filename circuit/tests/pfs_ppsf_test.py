@@ -20,14 +20,15 @@ N_FAULT = 10
 MAX_N_FAULT = 500
 
 PFS_TESTING_DIR = '../../data/testings/pfs_single_fault_testing'
+PPSF_TESTING_DIR = '../../data/testings/ppsf_single_fault_testing'
 CIRCUIT_DIR_DSF_OLD = os.path.join(PFS_TESTING_DIR, 'dfs_phase2')
 EPFL = [config.EPFL_V0_DIR, config.EPFL_V1_DIR, config.EPFL_V2_DIR]
 ISCAS85 = [config.ISCAS85_V0_DIR, config.ISCAS85_V1_DIR, config.ISCAS85_V2_DIR]
 
 PRINT_PASSED = True
 
-# SIMPLE_CIRCUITS = ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17','FA', 'FA_NAND']
-SIMPLE_CIRCUITS = ['c432']
+SIMPLE_CIRCUITS = ['add2','c1','c2','c3','c4','cmini','x3mult', 'c17','FA', 'FA_NAND']
+# SIMPLE_CIRCUITS = ['c432']
 
 def compare_two_lists(a , b):
     for x in a:
@@ -127,7 +128,6 @@ def ppsf_csv_generator():
     for c in os.listdir(config.CKT_DIR):
         c = c.replace('.ckt','')
         if c in SIMPLE_CIRCUITS:
-
             circuit_path = '../../data/ckt/'+c+".ckt"
             print(c)
             circuit = DFTCircuit(circuit_path)
@@ -152,8 +152,8 @@ def ppsf_csv_generator():
 
                 tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
-            tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
-            print(f'{PFS_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
+            tp_fault_df.to_csv(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
+            print(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
 def ppsf_check_with_dfs_old():
     """Checks result of DFT.PPSF.run() and dfs_old for full faults and multiple tps from dfs_old."""
@@ -291,10 +291,10 @@ def get_undetected_faults():
     """From CSVs"""
     undetected_faults = {}
     # for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
-    for file in os.listdir('../../data/testings/ppsf_single_fault_testing/'):
-        if 'PFS' in file: # same as PPSF files
+    for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
+        # if 'PFS' in file: # same as PPSF files
             undetected_faults[file] = []
-            # pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
+            pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
             pfs_csv = pd.read_csv('../../data/testings/ppsf_single_fault_testing/'+file)
             for fault in pfs_csv: 
                 if pfs_csv[fault].sum() == 0:
@@ -305,7 +305,7 @@ def get_undetected_faults():
 
 if __name__ == '__main__':
 
-    # pfs_csv_generator()
+    pfs_csv_generator()
     ppsf_csv_generator()
 
     # compare_csvs()
