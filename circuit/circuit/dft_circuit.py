@@ -325,7 +325,12 @@ class DFTCircuit(circuit.Circuit):
 
     def set_unodes(self, n , value):
         for u in n.unodes:
-            u.value = value
+            if (u.value == 0 and value == 1) or (u.value == 1 and value == 0):
+                print('Conflict!')
+            elif (u.value == 'X' or u.value == None or u.value == '_') and (value == 0 or value == 1):
+                u.value = value
+            elif (u.value == 0 or u.value == 1) and (value == 'X' or value == 'None'):
+                pass
 
     def evaluate_unodes(self, node): #TODO: if this is useful for the future, it should be move to node.py
         """Updates value of unodes of front node"""
@@ -372,7 +377,9 @@ class DFTCircuit(circuit.Circuit):
             return
         
         if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
-            node.dnodes[0].value = node.value
+            for n in node.dnodes:
+                n.value = node.value
+            
 
         elif node.dnodes[0].gtype == 'OR':
             for udnode in node.dnodes[0].unodes:
@@ -416,6 +423,7 @@ class DFTCircuit(circuit.Circuit):
     
     def forward_implication(self, node, value):
         """Update value of nodes as much as we can in fan-out of the given node"""
+        """write v2: returns updated nodes"""
         node.value = value
         q = deque()
         q.append(node)
@@ -429,6 +437,8 @@ class DFTCircuit(circuit.Circuit):
 
     def backward_implication(self, node, value):
         """Update value of nodes as much as we can in fan-in of node"""
+        """write v2: returns updated nodes"""
+
         node.value = value
         q = deque()
         q.append(node)
@@ -464,41 +474,69 @@ class DFTCircuit(circuit.Circuit):
         node = self.fault_to_node(fault)
         stuck_val = int(fault.__str__()[-1])
         self.forward_implication(node, 1-stuck_val)
-        print('\n_______________________________________\n')
-        print(fault.__str__())
-        print('\nAFTER FORWARD: ')
+        # print('\n_______________________________________\n')
+        # print(fault.__str__())
+        # print('\nAFTER FORWARD: ')
         # self.print_values()
         # for _ in range(20):
         # Question: should we forward again, OR repeat this procedure many times?
         # Write sth to test if values are updates?
 
-        for round in range(1):
+        for _ in range(1):
             # print('round', round)
             for n in reversed(self.nodes_lev):
                 if n.value is not None:
                     self.backward_implication(n, n.value)
-            print('\nAFTER BACKWARD: ')
+            # print('\nAFTER BACKWARD: ')
             # print(len(self.nodes_lev))
-            self.print_values()
-            for n in self.nodes_lev: 
-                self.print_unodes(n)
-            self.print_inputs()
-            input()
+            # self.print_values()
+            # for n in self.nodes_lev: 
+            #     self.print_unodes(n)
+            # self.print_inputs()
+            # input()
 
             for n in self.nodes_lev:
                 if n.value is not None:
                     self.forward_implication(n, n.value)
-            print('\nAFTER FORWARD: ')
+            # print('\nAFTER FORWARD: ')
             # self.print_values()
 
         
         # not necessarily returns
         return [pi.value if pi.value is not None else '_' for pi in self.PI ] #
             
-    def imply_and_check_v2(self, fault):
-        self.reset_values()
-        node = self.fault_to_node(fault)
-        stuck_val = int(fault.__str__()[-1])
+    def imply_and_check_v2(self, node):
+        # self.reset_values()
+        # node = self.fault_to_node(fault)
+        # stuck_val = int(fault.__str__()[-1])
+        before_values = [n.value for n in self.nodes_lev]
+        self.forward_implication(node, node.value)
+        after_values_f = [n.value for n in self.nodes_lev]
+        # print('after forward:')
+        # print([f'{n.num}:{n.value}' for n in self.nodes_lev])
+        
+        updated_nodes_f = []
+        for i in range(len(self.nodes_lev)):
+            if after_values_f[i] != before_values[i]:
+                updated_nodes_f.append(self.nodes_lev[i])
+
+        self.backward_implication(node, node.value)
+        after_values_b = [n.value for n in self.nodes_lev]
+        # print('after backward:')
+        # print([f'{n.num}:{n.value}' for n in self.nodes_lev])
+        
+        # input()
+
+        updated_nodes_b = []
+        for i in range(len(self.nodes_lev)):
+            if after_values_b[i] != before_values[i]:
+                updated_nodes_b.append(self.nodes_lev[i])
+        
+        for n in updated_nodes_f+updated_nodes_b:
+            self.imply_and_check_v2(n)
+
+        
+
 
 ##### Entropy / OR not called anywhere
 

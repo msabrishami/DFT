@@ -8,13 +8,13 @@ import config
 from tp_generator import TPGenerator
 
 # RUN = 'TEST'
-RUN = 'V0'
+RUN = 'V3'
 # RUN = 'logicsim'
 
 if __name__ == '__main__':
 
     # circuit_path = '../data/ckt/c499.ckt'
-    circuit_path = '../data/ckt/c1.ckt'
+    circuit_path = '../data/ckt/add2.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
     # circuit_path = '../data/ckt/c4.ckt'
     # circuit_path = '../data/ckt/c17.ckt'
@@ -22,6 +22,10 @@ if __name__ == '__main__':
     # circuit_path = '../data/ckt/c1908.ckt'
 
     circuit = DFTCircuit(circuit_path)
+    f = FaultList(circuit)
+    f.add_all()
+    for fa in f.faults:
+        print(fa)
     # circuit.SCOAP_CC()
     # circuit.SCOAP_CO()
 
@@ -97,7 +101,7 @@ if __name__ == '__main__':
         plt.show()
         
     """V1"""
-    if RUN == 'V1':
+    if RUN == 'V1': # Not correct
         fl = FaultList(circuit)
         # fl.add_n_random(100)
         fl.add_all()
@@ -159,6 +163,14 @@ if __name__ == '__main__':
             # print(tp)
             # new_tps.append(tp)
 
+    if RUN == 'V2':
+        circuit.nodes_lev[11].value = 0
+        print('Before:')
+        print([f'{n.num}:{n.value}' for n in circuit.nodes_lev])
+
+        circuit.imply_and_check_v2(circuit.nodes_lev[5])
+        print('After')
+        print([f'{n.num}:{n.value}' for n in circuit.nodes_lev])
 
     ################# Manially testing ####################
     # for p in circuit.PI:
