@@ -98,7 +98,7 @@ class D_alg():
         return [n.value for n in node.unodes]
 
     def eval_dnodes(self, node): #TODO: DETECT CONFLICT?!
-        if len(node.dnodes) == 0 or node.dnodes[0].value == D_VALUE or node.dnodes[0].value == D_PRIME_VALUE:
+        if len(node.dnodes) == 0:
             return
         
         if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
@@ -331,7 +331,7 @@ class D_alg():
 if __name__ == '__main__':
     """Remove this main scope later"""
     circuit = Circuit('../../data/ckt/c1.ckt')
-    fault = Fault(21, 0)
+    fault = Fault(12, 1)
 
     dalg = D_alg(circuit, fault)
     print(dalg.run())
