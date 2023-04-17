@@ -19,9 +19,6 @@ X_VALUE = 'X'
 class D_alg():
     def __init__(self, circuit: Circuit, fault: Fault) -> None:
         self.circuit = circuit
-        self.D_frontier = deque() #when append? in imply and check? or after it
-        self.J_frontier = deque() #when append? in imply and check? or after it
-        # self.valued_nodes = []
 
         # set all nodes values to X
         for n in self.circuit.nodes_lev:
@@ -40,7 +37,26 @@ class D_alg():
                 break
 
         print(f'D-Algorithm initialized with fault {fault.__str__()} in circuit {circuit.c_name}.\n')
+    
+    def get_D_frontier(self): #optimize later
+        D_frontier = []
+        for n in self.circuit.nodes_lev:
+            for inp in n.unodes:
+                if inp.value == D_VALUE or inp.value == D_PRIME_VALUE:
+                    D_frontier.append(inp)
+                    break
+        return D_frontier
 
+    def get_J_frontier(self): #optimize later
+        J_frontier = []
+        for n in self.circuit.nodes_lev:
+            if n.value!=X_VALUE:
+                for inp in n.unodes:
+                    if inp.value == X_VALUE and inp.gtype != 'IPT':
+                        J_frontier.append(n)
+                        break
+        return J_frontier
+                
     def error_at_PO(self):
         for p in self.circuit.PO:
             if p.value == D_VALUE or p.value == D_PRIME_VALUE:
@@ -65,34 +81,30 @@ class D_alg():
             return D_PRIME_VALUE
         elif value == D_PRIME_VALUE:
             return D_VALUE
-        else:
-            raise Exception("Has no inverse")
     
     def set_unodes(self, n, value):
-        # if n.num == self.faulty_node.num:
-        #     return
-        
+
         for u in n.unodes:
             if u.value == D_VALUE or u.value == D_PRIME_VALUE:
                 continue
             
-            elif (u.value == 0 and value == 1) or (u.value == 1 and value == 0):
+            elif (u.value == ZERO_VALUE and value == ONE_VALUE) or (u.value == ONE_VALUE and value == ZERO_VALUE):
                 print('Conflict!')
                 return False
-            elif (u.value == 'X') and (value == 0 or value == 1):
+            elif (u.value == X_VALUE) and (value == ZERO_VALUE or value == ONE_VALUE):
                 u.value = value
-
 
     def get_unodes_val(self, node):
         return [n.value for n in node.unodes]
 
     def eval_dnodes(self, node): #TODO: DETECT CONFLICT?!
-        if len(node.dnodes) == 0 or node.dnodes[0].num == self.faulty_node.num:
+        if len(node.dnodes) == 0 or node.dnodes[0].value == D_VALUE or node.dnodes[0].value == D_PRIME_VALUE:
             return
         
         if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
             for n in node.dnodes:
-                n.value = node.value
+                if n.value != D_VALUE and n.value != D_PRIME_VALUE:
+                    n.value = node.value
 
         elif node.dnodes[0].gtype == 'OR':
             if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
@@ -153,28 +165,33 @@ class D_alg():
     
     def eval_unodes(self, node):
         if node.gtype == 'IPT' or node.gtype == 'BRCH' or node.gtype == 'BUFF':
-            res = self.set_unodes(node, node.value)
+            if node.value == D_VALUE:
+                res = self.set_unodes(node, ONE_VALUE)
+            elif node.value == D_PRIME_VALUE:
+                res = self.set_unodes(node, ZERO_VALUE)
+            else:
+                res = self.set_unodes(node, node.value)
 
         elif node.gtype == 'OR':
-            if node.value == ZERO_VALUE:
+            if node.value == ZERO_VALUE or node.value == D_PRIME_VALUE:
+                res = self.set_unodes(node, ZERO_VALUE)
+            else:
+                res = self.set_unodes(node, X_VALUE)
+
+        elif node.gtype == 'NOR':
+            if node.value == ONE_VALUE or node.value == D_PRIME_VALUE:
                 res = self.set_unodes(node, ZERO_VALUE)
             else:
                 res = self.set_unodes(node, X_VALUE)
 
         elif node.gtype == 'AND':
-            if node.value == ONE_VALUE:
+            if node.value == ONE_VALUE or node.value == D_VALUE:
                 res = self.set_unodes(node, ONE_VALUE)
             else:
                 res = self.set_unodes(node, X_VALUE)
 
-        elif node.gtype == 'NOR':
-            if node.value == ONE_VALUE:
-                res = self.set_unodes(node, ZERO_VALUE)
-            else:
-                res = self.set_unodes(node, X_VALUE)
-
         elif node.gtype == 'NAND':
-            if node.value == ZERO_VALUE:
+            if node.value == ZERO_VALUE or node.value == D_VALUE:
                 res = self.set_unodes(node, ONE_VALUE)
             else:
                 res = self.set_unodes(node, X_VALUE)
@@ -183,15 +200,15 @@ class D_alg():
             res = self.set_unodes(node, X_VALUE)
         
         elif node.gtype == 'NOT':
-            # res = self.set_unodes(node, D_alg.inverse(node.value))
-            if node.value == ONE_VALUE:
-                res = self.set_unodes(node, ZERO_VALUE)
-            elif node.value == ZERO_VALUE:
-                res = self.set_unodes(node, ONE_VALUE)
-            elif node.value == D_VALUE:
-                res = self.set_unodes(node, ZERO_VALUE)
-            elif node.value == D_PRIME_VALUE:
-                res = self.set_unodes(node, ONE_VALUE)
+            res = self.set_unodes(node, D_alg.inverse(node.value))
+            # if node.value == ONE_VALUE:
+            #     res = self.set_unodes(node, ZERO_VALUE)
+            # elif node.value == ZERO_VALUE:
+            #     res = self.set_unodes(node, ONE_VALUE)
+            # elif node.value == D_VALUE:
+            #     res = self.set_unodes(node, ZERO_VALUE)
+            # elif node.value == D_PRIME_VALUE:
+            #     res = self.set_unodes(node, ONE_VALUE)
         
         return res
             
@@ -223,7 +240,7 @@ class D_alg():
         
         return True
 
-    def imply_and_check(self, node):
+    def imply_and_check(self, node): #optimize get updated nodes.
         """
         Returns: boolean
             the booleans is the result of check part
@@ -231,8 +248,6 @@ class D_alg():
         before_values = [n.value for n in self.circuit.nodes_lev]
         self.imply_forward(node, node.value)
         after_values_f = [n.value for n in self.circuit.nodes_lev]
-        # print('here')
-        # print(before_values, after_values_f)
 
         updated_nodes_f = []
         for i in range(len(self.circuit.nodes_lev)):
@@ -264,16 +279,22 @@ class D_alg():
             return False
         after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
 
+        D_frontier = self.get_D_frontier()
+        J_frontier = self.get_J_frontier()
+
         print('BEFORE IMPLY:')
         print(before_imply)
         print('AFTER IMPLY:')
         print(after_imply)
-        print()
+        # print()
+        print(f'D: {[n.num for n in D_frontier]}')
+        print(f'J: {[n.num for n in J_frontier]}')
+
         if self.error_at_PO():
-            if len(self.D_frontier) == 0:
+            if len(D_frontier) == 0:
                 return False
             
-            untried_D = self.D_frontier.pop()
+            untried_D = D_frontier.pop()
             while untried_D:
                 controlling_value = self.get_controlling_value(untried_D)
                 for k in untried_D:
@@ -282,23 +303,24 @@ class D_alg():
                 if self.run():
                     return True
 
-                if len(self.D_frontier):
-                    untried_D = self.D_frontier.pop()
+                if len(D_frontier):
+                    untried_D = D_frontier.pop()
                 untried_D = None
 
                 #TODO: REVERSE UPDATED VALUES
 
             return False
-
-        if len(self.J_frontier) == 0:
+        #error not at PO
+        if len(J_frontier) == 0:
             return True
 
-        untried_J = self.J_frontier.pop()
+        untried_J = J_frontier.pop()
         c = self.get_controlling_value(untried_J)
+        print(f'{c=}')
                 
         while X_VALUE in [inp.value for inp in untried_J.unodes]:
             
-            j = random.random([inp for inp in untried_J if inp.value == X_VALUE])
+            j = random.choice([inp for inp in untried_J.unodes if inp.value == X_VALUE])
             j.value = c
             if self.run():
                 return True
@@ -309,7 +331,8 @@ class D_alg():
 if __name__ == '__main__':
     """Remove this main scope later"""
     circuit = Circuit('../../data/ckt/c1.ckt')
-    fault = Fault(18, 0)
+    fault = Fault(21, 0)
 
     dalg = D_alg(circuit, fault)
-    dalg.run()
+    print(dalg.run())
+    print([f'{n.num}:{n.value}' for n in circuit.PI])
