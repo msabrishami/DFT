@@ -104,7 +104,7 @@ class D_alg():
     def get_unodes_val(self, node):
         return [n.value for n in node.unodes]
 
-    def eval_dnodes(self, node):  # TODO: DETECT CONFLICT?!
+    def eval_dnodes(self, node):
         if len(node.dnodes) == 0:
             return
         
@@ -113,11 +113,11 @@ class D_alg():
 
         elif node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
             for n in node.dnodes:
-                if n.value != D_VALUE and n.value != D_PRIME_VALUE:
+                # if n.value != D_VALUE and n.value != D_PRIME_VALUE:
                     n.value = node.value
 
         elif node.dnodes[0].gtype == 'OR':
-            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ONE_VALUE
             elif (D_VALUE in self.get_unodes_val(node.dnodes[0])) and (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ONE_VALUE
@@ -128,7 +128,7 @@ class D_alg():
                     node.dnodes[0].value = D_PRIME_VALUE
 
         elif node.dnodes[0].gtype == 'NOR':
-            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ZERO_VALUE
             elif (D_VALUE in self.get_unodes_val(node.dnodes[0])) and (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ZERO_VALUE
@@ -139,7 +139,7 @@ class D_alg():
                     node.dnodes[0].value = D_VALUE
 
         elif node.dnodes[0].gtype == 'AND':
-            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ZERO_VALUE
             elif (D_VALUE in self.get_unodes_val(node.dnodes[0])) and (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ZERO_VALUE
@@ -150,7 +150,7 @@ class D_alg():
                     node.dnodes[0].value = D_PRIME_VALUE
 
         elif node.dnodes[0].gtype == 'NAND':
-            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ONE_VALUE
             elif (D_VALUE in self.get_unodes_val(node.dnodes[0])) and (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 node.dnodes[0].value = ONE_VALUE
@@ -172,49 +172,6 @@ class D_alg():
 
         elif node.dnodes[0].gtype == 'NOT':
             node.dnodes[0].value = D_alg.inverse(node.value)
-
-    # def eval_dnodes(self, node): #TODO: DETECT CONFLICT?!
-    #     if len(node.dnodes) == 0:
-    #         return
-
-    #     if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
-    #         for n in node.dnodes:
-    #             # if n.value != D_VALUE and n.value != D_PRIME_VALUE:
-    #                 n.value = node.value
-
-    #     elif node.dnodes[0].gtype == 'OR':
-    #         if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
-    #             node.dnodes[0].value = ONE_VALUE
-
-    #     elif node.dnodes[0].gtype == 'NOR':
-    #         if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
-    #             node.dnodes[0].value = ZERO_VALUE
-
-    #     elif node.dnodes[0].gtype == 'AND':
-    #         if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
-    #             node.dnodes[0].value = ZERO_VALUE
-
-    #     elif node.dnodes[0].gtype == 'NAND':
-    #         if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
-    #             node.dnodes[0].value = ONE_VALUE
-
-    #     elif node.dnodes[0].gtype == 'XOR' or node.dnodes[0].gtype == 'XNOR':
-    #         # flag = True
-    #         # for udnode in node.dnodes[0].unodes:
-    #         #     if udnode.value not in [ZERO_VALUE, ONE_VALUE]:
-    #         #         flag = False
-    #         #         break
-    #         # if flag:
-    #         #     node.dnodes[0].imply()
-    #         raise NotImplemented
-
-    #     elif node.dnodes[0].gtype == 'NOT':
-    #         if node.dnodes[0].value == ONE_VALUE:
-    #             node.dnodes[0].value = ZERO_VALUE
-    #         elif node.dnodes[0].value == ZERO_VALUE:
-    #             node.dnodes[0].value = ONE_VALUE
-
-    #         # node.dnodes[0].value = D_alg.inverse(node.value)
 
     def eval_unodes(self, node):
         if node.gtype == 'IPT' or node.gtype == 'BRCH' or node.gtype == 'BUFF':
@@ -310,8 +267,16 @@ class D_alg():
                 updated_nodes_f.append(self.circuit.nodes_lev[i])
 
         res = self.imply_backward(node, node.value)
-        if res == False:
-            return False
+        if res == False: #repeated code here.
+            changed_nodes = []
+            final_values = [n.value for n in self.circuit.nodes_lev]
+
+            for i in range(len(self.circuit.nodes_lev)):
+                if initial_values[i] != final_values[i]:
+                    changed_nodes.append(self.circuit.nodes_lev[i])
+            
+            return False, changed_nodes
+        
         after_values_b = [n.value for n in self.circuit.nodes_lev]
 
         updated_nodes_b = []
@@ -344,7 +309,7 @@ class D_alg():
             updated_nodes.add(n)
 
         if not imply_result:
-            return False
+            return False, updated_nodes
         after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
 
         D_frontier = self.get_D_frontier()
@@ -357,7 +322,7 @@ class D_alg():
         # print()
         print(f'D: {[n.num for n in D_frontier]}')
         print(f'J: {[n.num for n in J_frontier]}')
-        input()
+        # input()
 
         if not self.error_at_PO():
             if len(D_frontier) == 0:
@@ -396,8 +361,7 @@ class D_alg():
             untried_J.unodes[j_idx].value = c
             updated_nodes.add(untried_J.unodes[j_idx])
             print('J=', untried_J.unodes[j_idx].num, 'set to', c)
-            res, updated_nodes = self.run(
-                untried_J.unodes[j_idx], updated_nodes.copy())
+            res, updated_nodes = self.run(untried_J.unodes[j_idx], updated_nodes.copy())
 
             if res:
                 return True, updated_nodes
@@ -414,8 +378,8 @@ class D_alg():
 if __name__ == '__main__':
     """Remove this main scope later"""
 
-    circuit = Circuit('../../data/ckt/c1.ckt')
-    fault = Fault(19, 0)
+    circuit = Circuit('../../data/ckt/c2.ckt')
+    fault = Fault(14, 1)
 
     dalg = D_alg(circuit, fault)
     res, _ = dalg.run(dalg.faulty_node)
@@ -423,3 +387,53 @@ if __name__ == '__main__':
     if res:
         print('Final Test Pattern:')
         print([f'{n.num}:{n.value}' for n in circuit.PI])
+
+
+
+
+
+
+
+
+    # def eval_dnodes(self, node): #TODO: DETECT CONFLICT?!
+    #     if len(node.dnodes) == 0:
+    #         return
+
+    #     if node.dnodes[0].gtype == 'IPT' or node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
+    #         for n in node.dnodes:
+    #             # if n.value != D_VALUE and n.value != D_PRIME_VALUE:
+    #                 n.value = node.value
+
+    #     elif node.dnodes[0].gtype == 'OR':
+    #         if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
+    #             node.dnodes[0].value = ONE_VALUE
+
+    #     elif node.dnodes[0].gtype == 'NOR':
+    #         if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
+    #             node.dnodes[0].value = ZERO_VALUE
+
+    #     elif node.dnodes[0].gtype == 'AND':
+    #         if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
+    #             node.dnodes[0].value = ZERO_VALUE
+
+    #     elif node.dnodes[0].gtype == 'NAND':
+    #         if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):# or (D_VALUE in self.get_unodes_val(node.dnodes[0])):
+    #             node.dnodes[0].value = ONE_VALUE
+
+    #     elif node.dnodes[0].gtype == 'XOR' or node.dnodes[0].gtype == 'XNOR':
+    #         # flag = True
+    #         # for udnode in node.dnodes[0].unodes:
+    #         #     if udnode.value not in [ZERO_VALUE, ONE_VALUE]:
+    #         #         flag = False
+    #         #         break
+    #         # if flag:
+    #         #     node.dnodes[0].imply()
+    #         raise NotImplemented
+
+    #     elif node.dnodes[0].gtype == 'NOT':
+    #         if node.dnodes[0].value == ONE_VALUE:
+    #             node.dnodes[0].value = ZERO_VALUE
+    #         elif node.dnodes[0].value == ZERO_VALUE:
+    #             node.dnodes[0].value = ONE_VALUE
+
+    #         # node.dnodes[0].value = D_alg.inverse(node.value)
