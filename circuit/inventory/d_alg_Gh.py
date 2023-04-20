@@ -111,9 +111,16 @@ class D_alg():
 
         
     def eval_dnodes(self, node):
+        one_output=True if len(node.dnodes) == 1 else False
+        old_value = None
+
+        if len(node.dnodes) == 1:
+            one_output = True
+            old_value = node.dnodes[0].value
+        
         if len(node.dnodes) == 0:
             return True
-        
+
         elif node.dnodes[0].gtype == 'BRCH' or node.dnodes[0].gtype == 'BUFF':
             for n in node.dnodes:
                 if n.value != D_VALUE and n.value != D_PRIME_VALUE:
@@ -227,6 +234,19 @@ class D_alg():
             elif node.value == D_PRIME_VALUE:
                 node.dnodes[0].value = D_VALUE
 
+        if one_output:
+            new_value = node.dnodes[0].value
+            if old_value == D_VALUE:
+                if new_value == ZERO_VALUE:
+                    return False
+                elif new_value == ONE_VALUE:
+                    node.dnodes[0].value = D_VALUE
+            elif old_value == D_PRIME_VALUE:
+                if new_value == ONE_VALUE:
+                    return False
+                elif new_value == ZERO_VALUE:
+                    node.dnodes[0].value = D_PRIME_VALUE
+
         return True
         
 
@@ -315,9 +335,12 @@ class D_alg():
             list: list of updated nodes
         """
         initial_values = [n.value for n in self.circuit.nodes_lev]
+        old_value = node.value
         res = self.imply_forward(node, node.value)
+        new_value = node.value
+
         if res is False: #repeated code here.
-            # print('Forward Conflict FALSE')
+            print('Forward Conflict on ',node.num)
             changed_nodes = []
             final_values = [n.value for n in self.circuit.nodes_lev]
 
@@ -335,7 +358,7 @@ class D_alg():
 
         res = self.imply_backward(node, node.value)
         if res is False: #repeated code here.
-            # print('Backward Conflict FALSE')
+            print('Backward Conflict')
 
             changed_nodes = []
             final_values = [n.value for n in self.circuit.nodes_lev]
@@ -365,7 +388,6 @@ class D_alg():
             if initial_values[i] != final_values[i]:
                 changed_nodes.append(self.circuit.nodes_lev[i])
 
-        # print('Why you came here?')
         return True, changed_nodes
 
 
@@ -374,16 +396,13 @@ class D_alg():
 
     def run(self, node, updated_nodes=set()):
         """The exact recursive algorithm"""
-        print('run is called on node', node.num, node.value)
+        # print('run is called on node', node.num, node.value)
         before_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
         imply_result, new_valued_nodes = self.imply_and_check(node)
-        # print('Be FFAALLSSEE!!!!', imply_result)
+        after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
+        
         for n in new_valued_nodes:
             updated_nodes.add(n)
-
-        if not imply_result:
-            return False, updated_nodes
-        after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
 
         D_frontier = self.get_D_frontier()
         J_frontier = self.get_J_frontier()
@@ -393,16 +412,19 @@ class D_alg():
         print('AFTER IMPLY:')
         print(after_imply)
         print()
-        # print(f'D: {[n.num for n in D_frontier]}')
-        # print(f'J: {[n.num for n in J_frontier]}')
+        print(f'D: {[n.num for n in D_frontier]}')
+        print(f'J: {[n.num for n in J_frontier]}')
         # input()
+        
+        if not imply_result:
+            return False, updated_nodes
 
         if not self.error_at_PO():
             if len(D_frontier) == 0:
                 return False, updated_nodes
 
             untried_D = D_frontier.pop()
-            # print('Chosen D:', untried_D.num)
+            print('Chosen D:', untried_D.num)
             while untried_D:
                 controlling_value = self.get_controlling_value(untried_D)
                 for k in untried_D.unodes:
@@ -423,20 +445,21 @@ class D_alg():
             return True, updated_nodes
 
         untried_J = J_frontier.pop()
-        # print('Chosen J', untried_J.num)
+        print('Chosen J', untried_J.num)
         c = self.get_controlling_value(untried_J)
 
         while X_VALUE in [inp.value for inp in untried_J.unodes]:
 
             j_idx = random.choice([inp for inp in range( len(untried_J.unodes)) if untried_J.unodes[inp].value == X_VALUE])
             untried_J.unodes[j_idx].value = c
+            print(f'set {untried_J.unodes[j_idx].num} to {c}.')
             updated_nodes.add(untried_J.unodes[j_idx])
             res, updated_nodes = self.run(untried_J.unodes[j_idx], updated_nodes.copy())
 
             if res:
                 return True, updated_nodes
 
-            print('Going Back on node', node.num)
+            print('Going Back on node', untried_J.unodes[j_idx].num, 'be reset nodes:', [n.num for n in updated_nodes])
             for n in updated_nodes:
                 self.reset_node(n)
             untried_J.unodes[j_idx].value = D_alg.inverse(c)
@@ -447,8 +470,8 @@ class D_alg():
 if __name__ == '__main__':
     """Remove this main scope later"""
 
-    circuit = Circuit('../../data/ckt/c2.ckt')
-    fault = Fault(11, 0)
+    circuit = Circuit('../../data/ckt/c3.ckt')
+    fault = Fault(30, 1)
 
     dalg = D_alg(circuit, fault)
     res, _ = dalg.run(dalg.faulty_node)
