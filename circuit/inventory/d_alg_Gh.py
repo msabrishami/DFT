@@ -382,7 +382,12 @@ class D_alg():
     def reset_node(self, node):
         node.value = X_VALUE
 
-    def run(self, node, updated_nodes=set(), save_node = False):
+    def run_D():
+        pass
+    def run_j():
+        pass
+
+    def run(self, node,  J_updated_nodes=set(), save_J_node = False, save_D_node=False, D_updated_nodes=set()):
         """The exact recursive algorithm"""
         before_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
         
@@ -394,9 +399,9 @@ class D_alg():
         imply_result, new_valued_nodes = self.imply_and_check(node)
         after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
         
-        if save_node:
+        if save_J_node:
             for n in new_valued_nodes:
-                updated_nodes.add(n)
+                J_updated_nodes.add(n)
 
         D_frontier = self.get_D_frontier()
         J_frontier = self.get_J_frontier()
@@ -411,33 +416,33 @@ class D_alg():
             input()
         
         if not imply_result:
-            return False, updated_nodes
+            return False, J_updated_nodes
 
-        if not self.error_at_PO():
+        if not self.error_at_PO(): # HEre must reset nodes that has been updated by the previous DNODE
             if len(D_frontier) == 0:
-                return False, updated_nodes
+                return False, J_updated_nodes
 
             untried_D = D_frontier.pop()
             if PRINT_LOG: print('Chosen D:', untried_D.num)
             while untried_D:
                 self.eval_D_frontier_node(untried_D)
-                if save_node:
-                    updated_nodes.add(untried_D)
+                if save_J_node:
+                    J_updated_nodes.add(untried_D)
                 controlling_value = self.get_controlling_value(untried_D)
                 for k in untried_D.unodes:
                     if k.value == X_VALUE:
                         k.value = D_alg.inverse(controlling_value)
-                        if save_node:
-                            updated_nodes.add(k)
+                        if save_J_node:
+                            J_updated_nodes.add(k)
                 
                 
-                res, new_updated = self.run(k, updated_nodes.copy())
-                if save_node:
+                res, new_updated = self.run(k, J_updated_nodes.copy())
+                if save_J_node:
                     for n in new_updated:
-                        updated_nodes.add(n)
+                        J_updated_nodes.add(n)
                 
                 if res:
-                    return True, updated_nodes
+                    return True, J_updated_nodes
 
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
@@ -445,52 +450,55 @@ class D_alg():
                 else:
                     untried_D = None
 
-            return False, updated_nodes
+            return False, J_updated_nodes
 
         # error at PO
         if len(J_frontier) == 0:
-            return True, updated_nodes
+            return True, J_updated_nodes
 
         untried_J = J_frontier.pop()
         if PRINT_LOG: print('Chosen J', untried_J.num)
         c = self.get_controlling_value(untried_J)
-        save_node=True
+        save_J_node=True
         while X_VALUE in [inp.value for inp in untried_J.unodes]:
 
             j_idx = random.choice([inp for inp in range(len(untried_J.unodes)) if untried_J.unodes[inp].value == X_VALUE])
             untried_J.unodes[j_idx].value = c
-            if save_node:
-                updated_nodes.add(untried_J.unodes[j_idx])
-                print(f'updated_nodes={[f.num for f in updated_nodes]}')
+            if save_J_node:
+                J_updated_nodes.add(untried_J.unodes[j_idx])
+                print(f'updated_nodes={[f.num for f in J_updated_nodes]}')
             if PRINT_LOG: print(f'set {untried_J.unodes[j_idx].num} to {c}.')
-            res, new_updated = self.run(untried_J.unodes[j_idx], updated_nodes.copy(), save_node=True)
+            res, new_updated = self.run(untried_J.unodes[j_idx], J_updated_nodes.copy(), save_J_node=True)
             
-            if save_node:
+            if save_J_node:
                 for n in new_updated:
-                    updated_nodes.add(n)
+                    J_updated_nodes.add(n)
 
             # input()
             if res:
-                return True, updated_nodes
+                return True, J_updated_nodes
 
             if PRINT_LOG: print('Going Back on node', untried_J.unodes[j_idx].num, 'be reset nodes:', [n.num for n in new_updated])
             
             for n in new_updated:
                 self.reset_node(n)
+                J_updated_nodes.remove(n)
             
             untried_J.unodes[j_idx].value = D_alg.inverse(c)
-            res, new = self.run(untried_J.unodes[j_idx],updated_nodes.copy() ,True)
-            for n in new:
-                updated_nodes.add(n)
-            
-                # return res, new
+            res, new = self.run(untried_J.unodes[j_idx],J_updated_nodes.copy() ,True)
 
+            for n in new:
+                J_updated_nodes.add(n)
+            
+            # if res is False:
+
+            
             if len(J_frontier):
                 untried_D = J_frontier.pop()
             else:
                 untried_D = None
 
-        return False, updated_nodes
+        return False, J_updated_nodes
 
 if __name__ == '__main__':
     """Remove this main scope later"""
@@ -509,3 +517,4 @@ if __name__ == '__main__':
             if res:
                 if PRINT_LOG: print('Final Test Pattern:')
                 if PRINT_LOG: print([f'{n.num}:{n.value}' for n in circuit.PI])
+                input()
