@@ -42,7 +42,7 @@ class FaultSim(ABC):
             self.add_n_random(faults)
 
     def add_n_random(self, n=1):
-        self.fault_list.add_n_random(random_num=n)
+        self.fault_list.add_n_random(n)
 
     def add_all(self):
         self.fault_list.add_all()
