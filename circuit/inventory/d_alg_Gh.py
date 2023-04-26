@@ -14,7 +14,7 @@ D_VALUE = "D"
 D_PRIME_VALUE = "~D"
 X_VALUE = 'X'
 
-PRINT_LOG = True
+PRINT_LOG = False
 
 class D_alg():
     def __init__(self, circuit: Circuit, fault: Fault) -> None:
@@ -276,7 +276,7 @@ class D_alg():
                 if dnode not in q:
                     q.append(dnode)
             if res is False:
-                print(f'CONLIFCT ON DNODES ',front.num)
+                if PRINT_LOG: print(f'CONFLICT ON DNODES ',front.num)
                 return res
 
         return True
@@ -380,11 +380,6 @@ class D_alg():
     def reset_node(self, node):
         node.value = X_VALUE
 
-    def run_D():
-        pass
-    def run_j():
-        pass
-
     def run(self, node,  J_updated_nodes=set(), save_J_node = False, save_D_node=False, D_updated_nodes=set()):
         """The exact recursive algorithm"""
         before_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
@@ -426,8 +421,10 @@ class D_alg():
 
             untried_D = D_frontier.pop()
             while untried_D in self.tested_Ds:
-                untried_D = D_frontier.pop()
-                self.tested_Ds.add(untried_D)
+                if len(D_frontier):
+                    untried_D = D_frontier.pop()
+                else:
+                    break
 
             save_D_node=True
             if PRINT_LOG: print('Chosen D:', untried_D.num)
@@ -435,6 +432,7 @@ class D_alg():
                 D_updated_nodes.add(untried_D)
 
             while untried_D:
+                self.tested_Ds.add(untried_D)
                 self.eval_selected_D_frontier(untried_D)
                 if save_J_node:
                     J_updated_nodes.add(untried_D)
@@ -466,6 +464,12 @@ class D_alg():
 
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
+                    while untried_D in self.tested_Ds:
+                        if len(D_frontier):
+                            untried_D = D_frontier.pop()
+                        else:
+                            break
+
                     if PRINT_LOG: print('Chosen D:', untried_D.num)
                 else:
                     untried_D = None
@@ -476,7 +480,7 @@ class D_alg():
 
         # error at PO
         if len(J_frontier) == 0:
-            return True, J_updated_nodes
+            return True, J_updated_nodes, D_updated_nodes
 
         untried_J = J_frontier.pop()
         if PRINT_LOG: print('Chosen J', untried_J.num)
@@ -489,7 +493,7 @@ class D_alg():
             untried_J.unodes[j_idx].value = c
             if save_J_node:
                 J_updated_nodes.add(untried_J.unodes[j_idx])
-                print(f'J updated_nodes={[f.num for f in J_updated_nodes]}')
+                if PRINT_LOG: print(f'J updated_nodes={[f.num for f in J_updated_nodes]}')
             if save_D_node:
                 D_updated_nodes.add(untried_J.unodes[j_idx])
             if PRINT_LOG: print(f'set {untried_J.unodes[j_idx].num} to {c}.')
@@ -501,7 +505,6 @@ class D_alg():
             if save_D_node:
                 for n in new_updated_d:
                     D_updated_nodes.add(n)
-            # input()
             if res:
                 return True, J_updated_nodes, D_updated_nodes
 
@@ -529,10 +532,12 @@ class D_alg():
                     untried_J = J_frontier.pop()
                 else:
                     untried_J = None
-                    print('Done everyting')
+                    if PRINT_LOG: print('Done everyting')
                     return True, J_updated_nodes, D_updated_nodes
             else:
-                print('reversing from latest D:', [n.num for n in D_updated_nodes])
+
+                if PRINT_LOG: 
+                    print('\nreversing from latest chosen D:', [n.num for n in D_updated_nodes])
                 for n in new_d:
                     self.reset_node(n)
                     if n in D_updated_nodes:
@@ -541,20 +546,31 @@ class D_alg():
             
         return False, J_updated_nodes, D_updated_nodes
 
+    def get_final_tp(self):
+        tp = []
+        for n in circuit.PI:
+            if n.value == D_PRIME_VALUE:
+                tp.append(ZERO_VALUE)
+            elif n.value == D_VALUE:
+                tp.append(ONE_VALUE)
+            else:
+                tp.append(n.value)
+        return tp
+
 if __name__ == '__main__':
     """Remove this main scope later"""
 
-    circuit = Circuit('../../data/ckt/c4.ckt')
-    
-    # for n in circuit.nodes_lev:
-    for n in [circuit.nodes_lev[10]]:
-        # for stuck_val in [ONE_VALUE, ZERO_VALUE]:
-        for stuck_val in [1]:
+    circuit = Circuit('../../data/ckt/c3.ckt')
+    PRINT_LOG = False
+    for n in circuit.nodes_lev:
+    # for n in [circuit.nodes_lev[1]]:
+        for stuck_val in [ONE_VALUE, ZERO_VALUE]:
+        # for stuck_val in [0]:
             fault = Fault(n.num, stuck_val)
             dalg = D_alg(circuit, fault)
-            res, _ , __ = dalg.run(dalg.faulty_node)
+            res, _, _ = dalg.run(dalg.faulty_node)
             print('\nIs fault ', fault, 'detectable?', res)
             if res:
-                if PRINT_LOG: print('Final Test Pattern:')
-                if PRINT_LOG: print([f'{n.num}:{n.value}' for n in circuit.PI])
-                input()
+                print('Final Test Pattern:')
+                print(dalg.get_final_tp())
+            input()
