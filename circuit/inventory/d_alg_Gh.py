@@ -573,7 +573,7 @@ class D_alg():
 
 if __name__ == '__main__':
     """Remove this main scope later"""
-    ckt = 'c4.ckt'
+    ckt = 'c1.ckt'
     # PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
     # for n in [circuit.nodes_lev[-4]]:
@@ -584,16 +584,15 @@ if __name__ == '__main__':
             dalg = D_alg(circuit, fault)
             res, _, _ = dalg.run(dalg.faulty_node)
             
-            if not res:
-                print('\nIs fault ', fault, 'detectable?', res)
+            print('\nIs fault ', fault, 'detectable?', res)
             
             if res:
-                print('Final Test Pattern:')
+                print('Detector Test Pattern:')
                 print(dalg.get_final_tp())
             
             del dalg
             del circuit
             circuit = Circuit(f'../../data/ckt/{ckt}')
-            input()
+            # input()
     
-    # c1, c2, c3, c4 correct.
+    # c1, c2, c3, c4, c17 correct.
