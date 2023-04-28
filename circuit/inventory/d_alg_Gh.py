@@ -19,7 +19,6 @@ PRINT_LOG = False
 class D_alg():
     def __init__(self, circuit: Circuit, fault: Fault) -> None:
         self.circuit = circuit
-        self.tested_Ds = set()
         # set all nodes values to X
         for n in self.circuit.nodes_lev:
             self.reset_node(n)
@@ -129,7 +128,7 @@ class D_alg():
                     n.value = node.value
 
         elif node.dnodes[0].gtype == 'OR':
-            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0]) and D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 if node.dnodes[0].value == ZERO_VALUE:
                     return False
                 node.dnodes[0].value = ONE_VALUE
@@ -141,7 +140,7 @@ class D_alg():
                         node.dnodes[0].value = ZERO_VALUE
 
         elif node.dnodes[0].gtype == 'NOR':
-            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ONE_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0]) and D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 if node.dnodes[0].value == ONE_VALUE:
                     return False
                 node.dnodes[0].value = ZERO_VALUE
@@ -153,7 +152,7 @@ class D_alg():
                         node.dnodes[0].value = ONE_VALUE
 
         elif node.dnodes[0].gtype == 'AND':
-            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0]) and D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 if node.dnodes[0].value == ONE_VALUE:
                     return False
                 node.dnodes[0].value = ZERO_VALUE
@@ -165,7 +164,7 @@ class D_alg():
                         node.dnodes[0].value = ONE_VALUE
 
         elif node.dnodes[0].gtype == 'NAND':
-            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])):
+            if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0]) and D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 if node.dnodes[0].value == ZERO_VALUE:
                     return False
                 node.dnodes[0].value = ONE_VALUE
@@ -415,12 +414,13 @@ class D_alg():
             return False, J_updated_nodes, D_updated_nodes
 
         ### RUN_D() ###
+        tried_Ds = set()
         if not self.error_at_PO(): # Here must reset nodes that has been updated by the previous DNODE
             if len(D_frontier) == 0:
                 return False, J_updated_nodes, D_updated_nodes
 
             untried_D = D_frontier.pop()
-            while untried_D in self.tested_Ds:
+            while untried_D in tried_Ds:
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
                 else:
@@ -432,7 +432,7 @@ class D_alg():
                 D_updated_nodes.add(untried_D)
 
             while untried_D:
-                self.tested_Ds.add(untried_D)
+                tried_Ds.add(untried_D)
                 self.eval_selected_D_frontier(untried_D)
                 if save_J_node:
                     J_updated_nodes.add(untried_D)
@@ -449,7 +449,7 @@ class D_alg():
                 
                 
                 # print('before calling new run, D was:', [n.num for n in D_updated_nodes])
-                res, new_updated_j, new_updated_d = self.run(k, J_updated_nodes= J_updated_nodes.copy(), D_updated_nodes= D_updated_nodes.copy(), save_D_node=True)
+                res, new_updated_j, new_updated_d = self.run(untried_D, J_updated_nodes= J_updated_nodes.copy(), D_updated_nodes= D_updated_nodes.copy(), save_D_node=True)
                 # print('these nodes must be add to D_list:', [n.num for n in new_d])
                 
                 if save_J_node:
@@ -464,7 +464,7 @@ class D_alg():
 
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
-                    while untried_D in self.tested_Ds:
+                    while untried_D in tried_Ds:
                         if len(D_frontier):
                             untried_D = D_frontier.pop()
                         else:
@@ -561,9 +561,9 @@ if __name__ == '__main__':
     """Remove this main scope later"""
 
     circuit = Circuit('../../data/ckt/c3.ckt')
-    PRINT_LOG = False
+    # PRINT_LOG = True
     for n in circuit.nodes_lev:
-    # for n in [circuit.nodes_lev[1]]:
+    # for n in [circuit.nodes_lev[3]]:
         for stuck_val in [ONE_VALUE, ZERO_VALUE]:
         # for stuck_val in [0]:
             fault = Fault(n.num, stuck_val)
