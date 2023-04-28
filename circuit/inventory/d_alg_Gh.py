@@ -383,7 +383,6 @@ class D_alg():
         L=[inp for inp in range(len(untried_J.unodes)) if untried_J.unodes[inp].value == X_VALUE]
         return L[-1]
 
-
     def run(self, node,  J_updated_nodes=set(), save_J_node = False, save_D_node=False, D_updated_nodes=set()):
         """The exact recursive algorithm"""
         before_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
@@ -420,7 +419,7 @@ class D_alg():
 
         ### RUN_D() ###
         tried_Ds = set()
-        if not self.error_at_PO(): # Here must reset nodes that has been updated by the previous DNODE
+        if not self.error_at_PO():
             if len(D_frontier) == 0:
                 return False, J_updated_nodes, D_updated_nodes
 
@@ -451,11 +450,8 @@ class D_alg():
                             J_updated_nodes.add(k)
                         if save_D_node:
                             D_updated_nodes.add(k)
-                
-                
-                # print('before calling new run, D was:', [n.num for n in D_updated_nodes])
-                res, new_updated_j, new_updated_d = self.run(untried_D, J_updated_nodes= J_updated_nodes.copy(), D_updated_nodes= D_updated_nodes.copy(), save_D_node=True)
-                # print('these nodes must be add to D_list:', [n.num for n in new_d])
+                                
+                res, new_updated_j, new_updated_d = self.run(untried_D, J_updated_nodes=J_updated_nodes.copy(), D_updated_nodes= D_updated_nodes.copy(), save_D_node=True)
                 
                 if save_J_node:
                     for n in new_updated_j:
@@ -518,9 +514,6 @@ class D_alg():
             
             if res:
                 return True, J_updated_nodes, D_updated_nodes
-            else:
-                if PRINT_LOG: print('res=',res, node.num)
-                # print('called on ', untried_J.unodes[j_idx].num, untried_J.unodes[j_idx].value)
 
             if PRINT_LOG: print('Going Back on node J', untried_J.unodes[j_idx].num, 'be reset nodes:', [n.num for n in new_updated_j])
             
@@ -530,9 +523,8 @@ class D_alg():
 
             
             untried_J.unodes[j_idx].value = D_alg.inverse(c)
-            # print('before calling new run, D was:', [n.num for n in D_updated_nodes])
             res, new_j, new_d= self.run(untried_J.unodes[j_idx],J_updated_nodes= J_updated_nodes.copy(), save_J_node=True, D_updated_nodes=D_updated_nodes.copy(), save_D_node=True)
-            # print('these nodes must be add to D_list:', [n.num for n in new_d])
+
             if res:
                 if save_J_node:
                     for n in new_j:
@@ -546,7 +538,6 @@ class D_alg():
                     untried_J = J_frontier.pop()
                 else:
                     untried_J = None
-                    if PRINT_LOG: print('Done everyting')
                     return True, J_updated_nodes, D_updated_nodes
             else:
 
@@ -573,7 +564,7 @@ class D_alg():
 
 if __name__ == '__main__':
     """Remove this main scope later"""
-    ckt = 'c1.ckt'
+    ckt = 'x3mult.ckt'
     # PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
     # for n in [circuit.nodes_lev[-4]]:
@@ -594,5 +585,3 @@ if __name__ == '__main__':
             del circuit
             circuit = Circuit(f'../../data/ckt/{ckt}')
             # input()
-    
-    # c1, c2, c3, c4, c17 correct.
