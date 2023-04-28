@@ -206,10 +206,12 @@ class D_alg():
             # print(f'{node.num}, old {old_value}, new {new_value}')
             if old_value == D_VALUE:
                 if new_value == ZERO_VALUE:
+                    node.dnodes[0].value = old_value
                     return False
                 node.dnodes[0].value = D_VALUE
             elif old_value == D_PRIME_VALUE:
                 if new_value == ONE_VALUE:
+                    node.dnodes[0].value = old_value
                     return False
                 node.dnodes[0].value = D_PRIME_VALUE
 
@@ -572,12 +574,12 @@ class D_alg():
 if __name__ == '__main__':
     """Remove this main scope later"""
     ckt = 'c4.ckt'
-    PRINT_LOG = True
+    # PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
-    for n in [circuit.nodes_lev[-4]]:
-    # for n in circuit.nodes_lev:
-        # for stuck_val in [ONE_VALUE, ZERO_VALUE]:
-        for stuck_val in [0]:
+    # for n in [circuit.nodes_lev[-4]]:
+    for n in circuit.nodes_lev:
+        for stuck_val in [ONE_VALUE, ZERO_VALUE]:
+        # for stuck_val in [0]:
             fault = Fault(n.num, stuck_val)
             dalg = D_alg(circuit, fault)
             res, _, _ = dalg.run(dalg.faulty_node)
@@ -585,13 +587,13 @@ if __name__ == '__main__':
             if not res:
                 print('\nIs fault ', fault, 'detectable?', res)
             
-            # if res:
-            #     print('Final Test Pattern:')
-            #     print(dalg.get_final_tp())
+            if res:
+                print('Final Test Pattern:')
+                print(dalg.get_final_tp())
             
             del dalg
             del circuit
             circuit = Circuit(f'../../data/ckt/{ckt}')
             input()
     
-    # c1, c2, c3 correct.
+    # c1, c2, c3, c4 correct.
