@@ -1,4 +1,6 @@
 # TODO: xor/xnor
+# TODO: which D_frontier is better
+# TODO: which J_frontier is better
 
 import sys
 sys.path.append('../')
@@ -12,7 +14,7 @@ ONE_VALUE = 1
 ZERO_VALUE = 0
 D_VALUE = "D"
 D_PRIME_VALUE = "~D"
-X_VALUE = 'X'
+X_VALUE = "X"
 
 PRINT_LOG = False
 
@@ -72,6 +74,7 @@ class D_alg():
         elif node.gtype == 'OR' or node.gtype == 'NOR':
             return ONE_VALUE
         elif node.gtype == 'XOR' or node.gtype == 'XNOR':
+            return ONE_VALUE
             raise Exception("Not yet!")
         elif node.gtype == 'NOT':
             return D_alg.inverse(node.value)
@@ -175,15 +178,26 @@ class D_alg():
                     else:
                         node.dnodes[0].value = ZERO_VALUE
 
-        elif node.dnodes[0].gtype == 'XOR' or node.dnodes[0].gtype == 'XNOR':
-            # flag = True
-            # for udnode in node.dnodes[0].unodes:
-            #     if udnode.value not in [ZERO_VALUE, ONE_VALUE]:
-            #         flag = False
-            #         break
-            # if flag:
-            #     node.dnodes[0].imply()
-            raise NotImplemented
+        elif node.dnodes[0].gtype == 'XOR':
+            if X_VALUE not in self.get_unodes_val(node.dnodes[0]):
+                inputs = self.get_unodes_val(node.dnodes[0])
+                for i in range(len(inputs)):
+                    if inputs[i] == D_VALUE:
+                        inputs[i] = ZERO_VALUE
+                    elif inputs[i] == D_PRIME_VALUE:
+                        inputs[i] = ONE_VALUE
+                
+                node.dnodes[0].value = sum(inputs)%2
+
+        elif node.dnodes[0].gtype == 'XNOR':
+            if X_VALUE not in self.get_unodes_val(node.dnodes[0]):
+                inputs = self.get_unodes_val(node.dnodes[0])
+                for i in range(len(inputs)):
+                    if inputs[i] == D_VALUE:
+                        inputs[i] = ZERO_VALUE
+                    elif inputs[i] == D_PRIME_VALUE:
+                        inputs[i] = ONE_VALUE
+                node.dnodes[0].value = (sum(inputs)+1)%2
 
         elif node.dnodes[0].gtype == 'NOT':
             if node.value == ONE_VALUE:
@@ -442,10 +456,14 @@ class D_alg():
                     J_updated_nodes.add(untried_D)
                 if save_D_node:
                     D_updated_nodes.add(untried_D)
+                
+                # if untried_D.gtype not in ['XOR', 'XNOR']:
+
                 controlling_value = self.get_controlling_value(untried_D)
                 for k in untried_D.unodes:
                     if k.value == X_VALUE:
                         k.value = D_alg.inverse(controlling_value)
+                        if PRINT_LOG: (f'{k.num} is set to {k.value}')
                         if save_J_node:
                             J_updated_nodes.add(k)
                         if save_D_node:
@@ -482,9 +500,7 @@ class D_alg():
         # error at PO
         J_frontier = self.get_J_frontier()
 
-        if PRINT_LOG: print('error is present at PO. and len J_FR=',len(J_frontier))
         if len(J_frontier) == 0:
-            if PRINT_LOG: print('returned True',node.num)
             return True, J_updated_nodes, D_updated_nodes
 
         if PRINT_LOG: print('go back on run on ',node.num)        
@@ -563,14 +579,14 @@ class D_alg():
         return tp
 
 if __name__ == '__main__':
+    ckt = 'cmini.ckt'
     """Remove this main scope later"""
-    ckt = 'x3mult.ckt'
-    # PRINT_LOG = True
+    PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
-    # for n in [circuit.nodes_lev[-4]]:
-    for n in circuit.nodes_lev:
-        for stuck_val in [ONE_VALUE, ZERO_VALUE]:
-        # for stuck_val in [0]:
+    for n in [circuit.nodes_lev[1]]:
+    # for n in circuit.nodes_lev:
+        # for stuck_val in [ONE_VALUE, ZERO_VALUE]:
+        for stuck_val in [0]:
             fault = Fault(n.num, stuck_val)
             dalg = D_alg(circuit, fault)
             res, _, _ = dalg.run(dalg.faulty_node)
@@ -584,4 +600,4 @@ if __name__ == '__main__':
             del dalg
             del circuit
             circuit = Circuit(f'../../data/ckt/{ckt}')
-            # input()
+            input()
