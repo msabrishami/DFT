@@ -8,7 +8,7 @@ import random
 import typing
 from collections import deque
 from circuit.circuit import Circuit
-from fault_simulation.fault import Fault, FaultList
+from fault_simulation.fault import Fault
 
 ONE_VALUE = 1
 ZERO_VALUE = 0
@@ -37,6 +37,11 @@ class D_alg():
 
         if PRINT_LOG: print(
             f'D-Algorithm initialized with fault {fault.__str__()} in circuit {circuit.c_name}.\n')
+        
+        self.x_inputs = {}
+        for n in self.circuit.nodes_lev:
+            if n.gtype in ['XOR','XNOR']:
+                self.x_inputs[n.num] = []
 
     def D_in_input(self, node):
         for n in node.unodes:
@@ -68,14 +73,14 @@ class D_alg():
                 return True
         return False
 
+
     def get_controlling_value(self, node):
         if node.gtype == 'AND' or node.gtype == 'NAND':
             return ZERO_VALUE
         elif node.gtype == 'OR' or node.gtype == 'NOR':
             return ONE_VALUE
-        elif node.gtype == 'XOR' or node.gtype == 'XNOR':
+        elif node.gtype == 'XOR' or node.gtype == 'XNOR': #only for use in J section.
             return ONE_VALUE
-            raise Exception("Not yet!")
         elif node.gtype == 'NOT':
             return D_alg.inverse(node.value)
         elif node.gtype == 'BUFF' or node.gtype == 'BRCH':
@@ -168,36 +173,69 @@ class D_alg():
         elif node.dnodes[0].gtype == 'NAND':
             if (ZERO_VALUE in self.get_unodes_val(node.dnodes[0])) or (D_VALUE in self.get_unodes_val(node.dnodes[0]) and D_PRIME_VALUE in self.get_unodes_val(node.dnodes[0])):
                 if node.dnodes[0].value == ZERO_VALUE:
-
                     return False
                 node.dnodes[0].value = ONE_VALUE
             elif X_VALUE not in self.get_unodes_val(node.dnodes[0]):
                 if self.if_all(node.dnodes[0].unodes, ONE_VALUE): #all one
                     if node.dnodes[0].value == ONE_VALUE:
                         return False
-                    else:
-                        node.dnodes[0].value = ZERO_VALUE
+                    node.dnodes[0].value = ZERO_VALUE
 
         elif node.dnodes[0].gtype == 'XOR':
             if X_VALUE not in self.get_unodes_val(node.dnodes[0]):
-                inputs = self.get_unodes_val(node.dnodes[0])
-                for i in range(len(inputs)):
-                    if inputs[i] == D_VALUE:
-                        inputs[i] = ZERO_VALUE
-                    elif inputs[i] == D_PRIME_VALUE:
-                        inputs[i] = ONE_VALUE
-                
-                node.dnodes[0].value = sum(inputs)%2
+                if len(node.dnodes[0].unodes) == 2:
+                    a = node.dnodes[0].unodes[0].value
+                    b = node.dnodes[0].unodes[1].value
 
+                    if a == D_VALUE or a == ZERO_VALUE:
+                        if b == ONE_VALUE or b == D_PRIME_VALUE:
+                            if node.dnodes[0].value == ZERO_VALUE:
+                                return False
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == ZERO_VALUE or b == D_VALUE:
+                            if node.dnodes[0].value == ONE_VALUE:
+                                return False
+                            node.dnodes[0].value = ZERO_VALUE
+
+                    elif a == D_PRIME_VALUE or a == ONE_VALUE:
+                        if b == ONE_VALUE or b == D_PRIME_VALUE:
+                            if node.dnodes[0].value == ONE_VALUE:
+                                return False
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == ZERO_VALUE or b == D_VALUE:
+                            if node.dnodes[0].value == ZERO_VALUE:
+                                return False
+                            node.dnodes[0].value = ONE_VALUE
+                else:
+                    raise Exception('Not Implemented')
+            
         elif node.dnodes[0].gtype == 'XNOR':
             if X_VALUE not in self.get_unodes_val(node.dnodes[0]):
-                inputs = self.get_unodes_val(node.dnodes[0])
-                for i in range(len(inputs)):
-                    if inputs[i] == D_VALUE:
-                        inputs[i] = ZERO_VALUE
-                    elif inputs[i] == D_PRIME_VALUE:
-                        inputs[i] = ONE_VALUE
-                node.dnodes[0].value = (sum(inputs)+1)%2
+                if len(node.dnodes[0].unodes) == 2:
+                    a = node.dnodes[0].unodes[0].value
+                    b = node.dnodes[0].unodes[1].value
+
+                    if a == D_PRIME_VALUE or a == ONE_VALUE:
+                        if b == ONE_VALUE or b == D_PRIME_VALUE:
+                            if node.dnodes[0].value == ZERO_VALUE:
+                                return False
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == ZERO_VALUE or b == D_VALUE:
+                            if node.dnodes[0].value == ONE_VALUE:
+                                return False
+                            node.dnodes[0].value = ZERO_VALUE
+
+                    elif a == D_VALUE or a == ZERO_VALUE:
+                        if b == ONE_VALUE or b == D_PRIME_VALUE:
+                            if node.dnodes[0].value == ONE_VALUE:
+                                return False
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == ZERO_VALUE or b == ONE_VALUE:
+                            if node.dnodes[0].value == ZERO_VALUE:
+                                return False
+                            node.dnodes[0].value = ONE_VALUE
+                else:
+                    raise Exception('Not Implemented')
 
         elif node.dnodes[0].gtype == 'NOT':
             if node.value == ONE_VALUE:
@@ -217,7 +255,6 @@ class D_alg():
 
         if one_output:
             new_value = node.dnodes[0].value
-            # print(f'{node.num}, old {old_value}, new {new_value}')
             if old_value == D_VALUE:
                 if new_value == ZERO_VALUE:
                     node.dnodes[0].value = old_value
@@ -289,7 +326,7 @@ class D_alg():
                 if dnode not in q:
                     q.append(dnode)
             if res is False:
-                if PRINT_LOG: print(f'CONFLICT ON DNODES ',front.num)
+                if PRINT_LOG: print(f'CONFLICT ON DNODES ',front.num, front.value)
                 return res
 
         return True
@@ -390,6 +427,37 @@ class D_alg():
             elif D_VALUE in self.get_unodes_val(n.dnodes[0]):
                 n.dnodes[0].value = D_PRIME_VALUE
 
+        elif n.dnodes[0].gtype == 'XOR':
+            if len(n.dnodes[0].unodes) > 2:
+                raise Exception('Not Implemented')
+            if D_VALUE in self.get_unodes_val(n.dnodes[0]):
+                if ONE_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_PRIME_VALUE
+                elif ZERO_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_VALUE
+            if D_PRIME_VALUE in self.get_unodes_val(n.dnodes[0]):
+                if ONE_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_VALUE
+                elif ZERO_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_PRIME_VALUE
+                                    
+        elif n.dnodes[0].gtype == 'XNOR':
+            if len(n.dnodes[0].unodes) > 2:
+                raise Exception('Not Implemented')
+            if D_VALUE in self.get_unodes_val(n.dnodes[0]):
+                if ONE_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_VALUE
+                elif ZERO_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_PRIME_VALUE
+            if D_PRIME_VALUE in self.get_unodes_val(n.dnodes[0]):
+                print('is called')
+                print('Here!.', self.get_unodes_val(n.dnodes[0]))
+                
+                if ONE_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_PRIME_VALUE
+                elif ZERO_VALUE in self.get_unodes_val(n.dnodes[0]):
+                    n.dnodes[0].value = D_VALUE
+
     def reset_node(self, node):
         node.value = X_VALUE
 
@@ -397,7 +465,63 @@ class D_alg():
         L=[inp for inp in range(len(untried_J.unodes)) if untried_J.unodes[inp].value == X_VALUE]
         return L[-1]
 
-    def run(self, node,  J_updated_nodes=set(), save_J_node = False, save_D_node=False, D_updated_nodes=set()):
+    def get_X_inputs(self, D_node):
+        x = []
+        for u in D_node.unodes:
+            if u.value == X_VALUE:
+                self.x_inputs[D_node.num].append(u)
+                x.append(u)
+        return x
+
+    def get_inp_plus_one(self, tp) -> typing.Tuple[bool, list]:
+        # for t in reversed[tp]:
+        i = len(tp)-1
+        success = False
+        while i>=0:
+            if tp[i] == ZERO_VALUE:
+                tp[i] = ONE_VALUE
+                success = True
+                break
+            else:
+                tp[i] = ZERO_VALUE
+                i-=1
+                if i == -1:
+                    success = False
+                    break
+
+        return success, tp
+    
+    def set_X_inputs_values(self, D_node) -> bool:
+        """
+        if there exist no next input values, return False
+        """
+        xs = self.get_X_inputs(D_node)
+        """Inja bayad ye harekati bezanim! ke reset beshe in xs nemidoonam hala alan
+        shayad vasate algorithm bayad ino bezanim
+        """
+        # set_inp = []
+        # xs = self.x_inputs[D_node.num]
+        print('_______________________________________SET X CALLED')
+        current_inp = [n.value for n in xs]
+        print(f'{current_inp=}')
+        if X_VALUE in current_inp:
+            for n in xs:
+                n.value = ZERO_VALUE
+            return True
+        else:
+            current_inp = []
+            for n in xs:
+                current_inp.append(n.value)
+            succ, next_tp = self.get_inp_plus_one(current_inp)
+            print('Next TP for the chosen X node: ', next_tp)
+            if succ:
+                for i in range(len(xs)):
+                    xs[i].value = next_tp[i]
+                return True
+        return False
+        
+
+    def run(self, node,  J_updated_nodes=set(), save_J_node = False, save_D_node=False, D_updated_nodes=set(), X_updated_nodes=set(), save_X_node=False):
         """The exact recursive algorithm"""
         before_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
         
@@ -415,6 +539,9 @@ class D_alg():
         if save_D_node:
             for n in new_valued_nodes:
                 D_updated_nodes.add(n)
+        if save_X_node:
+            for n in new_valued_nodes:
+                X_updated_nodes.add(n)
 
         D_frontier = self.get_D_frontier()
         J_frontier = self.get_J_frontier()
@@ -429,13 +556,13 @@ class D_alg():
             input()
         
         if not imply_result:
-            return False, J_updated_nodes, D_updated_nodes
+            return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
         ### RUN_D() ###
         tried_Ds = set()
         if not self.error_at_PO():
             if len(D_frontier) == 0:
-                return False, J_updated_nodes, D_updated_nodes
+                return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
             untried_D = D_frontier.pop()
             while untried_D in tried_Ds:
@@ -443,57 +570,96 @@ class D_alg():
                     untried_D = D_frontier.pop()
                 else:
                     break
+            if untried_D:
+                tried_Ds.add(untried_D)
 
             save_D_node=True
             if PRINT_LOG: print('Chosen D:', untried_D.num)
-            if save_D_node:
-                D_updated_nodes.add(untried_D)
-
+                        
             while untried_D:
-                tried_Ds.add(untried_D)
-                self.eval_selected_D_frontier(untried_D)
+                
+                # tried_Ds.add(untried_D)
                 if save_J_node:
                     J_updated_nodes.add(untried_D)
                 if save_D_node:
                     D_updated_nodes.add(untried_D)
-                
-                # if untried_D.gtype not in ['XOR', 'XNOR']:
+                if save_X_node:
+                    X_updated_nodes.add(untried_D)
 
-                controlling_value = self.get_controlling_value(untried_D)
-                for k in untried_D.unodes:
-                    if k.value == X_VALUE:
-                        k.value = D_alg.inverse(controlling_value)
-                        if PRINT_LOG: (f'{k.num} is set to {k.value}')
-                        if save_J_node:
-                            J_updated_nodes.add(k)
-                        if save_D_node:
-                            D_updated_nodes.add(k)
-                                
-                res, new_updated_j, new_updated_d = self.run(untried_D, J_updated_nodes=J_updated_nodes.copy(), D_updated_nodes= D_updated_nodes.copy(), save_D_node=True)
-                
+                is_X_node = True if untried_D.gtype in ['XOR', 'XNOR'] else False
+
+                if not is_X_node:
+                    self.eval_selected_D_frontier(untried_D)
+                    controlling_value = self.get_controlling_value(untried_D)
+                    for k in untried_D.unodes:
+                        if k.value == X_VALUE:
+                            k.value = D_alg.inverse(controlling_value)
+
+                            if PRINT_LOG: (f'{k.num} is set to {k.value}')
+                            if save_J_node:
+                                J_updated_nodes.add(k)
+                            if save_D_node:
+                                D_updated_nodes.add(k)
+                            if save_X_node:
+                                X_updated_nodes.add(k)
+                else:
+                    # self.set_X_inputs(untried_D, node, current_X_input)
+                    success = self.set_X_inputs_values(untried_D)
+                    print(f'-----------------{success=}')
+                    self.eval_selected_D_frontier(untried_D)
+                    if success: # the algorithm is continued
+                        if PRINT_LOG:
+                            print(f'selected X: {untried_D.num}, its inputs{[u.value for u in untried_D.unodes]}')
+                        for u in untried_D.unodes:
+                            if save_J_node:
+                                J_updated_nodes.add(u)
+                            if save_D_node:
+                                D_updated_nodes.add(u)
+                            if save_X_node:
+                                X_updated_nodes.add(u)
+                    else: #no more tp possible
+                        print('X reset:', [n.num for n in self.x_inputs[untried_D.num]])
+                        for n in self.x_inputs[untried_D.num]:
+                            self.reset_node(n)
+                        return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
+                        
+                res, new_updated_j, new_updated_d, new_updated_x = self.run(untried_D, 
+                                                            J_updated_nodes=J_updated_nodes.copy(), save_J_node=True,
+                                                            D_updated_nodes=D_updated_nodes.copy(), save_D_node=True,
+                                                            X_updated_nodes=X_updated_nodes.copy(), save_X_node=True)
+
                 if save_J_node:
                     for n in new_updated_j:
                         J_updated_nodes.add(n)
                 if save_D_node:
                     for n in new_updated_d:
                         D_updated_nodes.add(n)
+                if save_X_node:
+                    for n in new_updated_x:
+                        X_updated_nodes.add(n)
                 
                 if res:
-                    return True, J_updated_nodes, D_updated_nodes
+                    return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
+                
+                # run is failed.
+                # if is_X_node:
 
+                D_frontier = self.get_D_frontier()
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
                     while untried_D in tried_Ds:
                         if len(D_frontier):
                             untried_D = D_frontier.pop()
                         else:
+                            untried_D = None
                             break
+                    # if not untried_D:
+                    if PRINT_LOG and untried_D: print('Chosen D-2:', untried_D.num)
 
-                    if PRINT_LOG: print('Chosen D:', untried_D.num)
                 else:
                     untried_D = None
 
-            return False, J_updated_nodes, D_updated_nodes
+            return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
         ### RUN_J() ###
 
@@ -501,25 +667,30 @@ class D_alg():
         J_frontier = self.get_J_frontier()
 
         if len(J_frontier) == 0:
-            return True, J_updated_nodes, D_updated_nodes
+            return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
-        if PRINT_LOG: print('go back on run on ',node.num)        
+        if PRINT_LOG: print('Go back to run on ',node.num)        
         untried_J = J_frontier.pop()
         if PRINT_LOG: print('Chosen J', untried_J.num)
         c = self.get_controlling_value(untried_J)
+
         save_J_node=True
 
         while X_VALUE in [inp.value for inp in untried_J.unodes]:
-
+            J_frontier = self.get_J_frontier()
             j_idx = self.get_J_index(untried_J)
             untried_J.unodes[j_idx].value = c
             if save_J_node:
                 J_updated_nodes.add(untried_J.unodes[j_idx])
-                if PRINT_LOG: print(f'J updated_nodes={[f.num for f in J_updated_nodes]}')
+                # if PRINT_LOG: print(f'J updated_nodes={[f.num for f in J_updated_nodes]}')
             if save_D_node:
                 D_updated_nodes.add(untried_J.unodes[j_idx])
             if PRINT_LOG: print(f'set {untried_J.unodes[j_idx].num} to {c}.')
-            res, new_updated_j, new_updated_d = self.run(untried_J.unodes[j_idx],  J_updated_nodes=set([untried_J.unodes[j_idx]]),save_J_node=True, D_updated_nodes=D_updated_nodes.copy(), save_D_node=True)
+            if save_X_node:
+                X_updated_nodes.add(untried_J.unodes[j_idx])
+            # res, new_updated_j, new_updated_d, new_updated_x = self.run(untried_J.unodes[j_idx],  J_updated_nodes=set([untried_J.unodes[j_idx]]),save_J_node=True, D_updated_nodes=D_updated_nodes.copy(), save_D_node=True)
+            res, new_updated_j, new_updated_d, new_updated_x = self.run(untried_J.unodes[j_idx],  J_updated_nodes=set([untried_J.unodes[j_idx]]),save_J_node=True,
+                                                                        D_updated_nodes=set(), save_D_node=True)
             
             if save_J_node:
                 for n in new_updated_j:
@@ -527,19 +698,29 @@ class D_alg():
             if save_D_node:
                 for n in new_updated_d:
                     D_updated_nodes.add(n)
+            if save_X_node:
+                for n in new_updated_x:
+                    X_updated_nodes.add(n)
             
             if res:
-                return True, J_updated_nodes, D_updated_nodes
+                return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
-            if PRINT_LOG: print('Going Back on node J', untried_J.unodes[j_idx].num, 'be reset nodes:', [n.num for n in new_updated_j])
+            if PRINT_LOG: print('Going Back on node J', untried_J.unodes[j_idx].num, ', be reset nodes:', [n.num for n in new_updated_j])
             
             for n in new_updated_j:
                 self.reset_node(n)
                 J_updated_nodes.remove(n)
 
+            # if untried_J.unodes[j_idx].value != self.get_controlling_value(untried_J.unodes[j_idx]):
+            #     return False, D_updated_nodes, J_updated_nodes, X_updated_nodes
             
             untried_J.unodes[j_idx].value = D_alg.inverse(c)
-            res, new_j, new_d= self.run(untried_J.unodes[j_idx],J_updated_nodes= J_updated_nodes.copy(), save_J_node=True, D_updated_nodes=D_updated_nodes.copy(), save_D_node=True)
+            
+            if PRINT_LOG: print('set inverse controlling value of', untried_J.unodes[j_idx].num, untried_J.unodes[j_idx].value)
+
+            res, new_j, new_d, new_x= self.run(untried_J.unodes[j_idx],J_updated_nodes= J_updated_nodes.copy(), save_J_node=True,
+                                                                    D_updated_nodes=D_updated_nodes.copy(), save_D_node=True, 
+                                                                    X_updated_nodes=X_updated_nodes.copy(), save_X_node=save_X_node)
 
             if res:
                 if save_J_node:
@@ -548,24 +729,28 @@ class D_alg():
                 if save_D_node:
                     for n in new_d:
                         D_updated_nodes.add(n)
+                if save_X_node:
+                    for n in new_x:
+                        X_updated_nodes.add(n)
 
                 J_frontier = self.get_J_frontier()
                 if len(J_frontier):
                     untried_J = J_frontier.pop()
                 else:
                     untried_J = None
-                    return True, J_updated_nodes, D_updated_nodes
+                    return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
             else:
-
                 if PRINT_LOG: 
-                    print('\nreversing from latest chosen D:', [n.num for n in D_updated_nodes])
+                    print('\nreversing from latest chosen D:', [n.num for n in new_d])
+                    """Take care of this:"""
+                    # self.eval_dnodes(untried_D)
                 for n in new_d:
                     self.reset_node(n)
                     if n in D_updated_nodes:
                         D_updated_nodes.remove(n)
-                return False, J_updated_nodes, D_updated_nodes
+                return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
             
-        return False, J_updated_nodes, D_updated_nodes
+        return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
     def get_final_tp(self):
         tp = []
@@ -581,15 +766,15 @@ class D_alg():
 if __name__ == '__main__':
     ckt = 'cmini.ckt'
     """Remove this main scope later"""
-    PRINT_LOG = True
+    # PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
-    for n in [circuit.nodes_lev[1]]:
-    # for n in circuit.nodes_lev:
-        # for stuck_val in [ONE_VALUE, ZERO_VALUE]:
-        for stuck_val in [0]:
+    # for n in [circuit.nodes_lev[2]]:
+    for n in circuit.nodes_lev:
+        for stuck_val in [ONE_VALUE, ZERO_VALUE]:
+        # for stuck_val in [1]:
             fault = Fault(n.num, stuck_val)
             dalg = D_alg(circuit, fault)
-            res, _, _ = dalg.run(dalg.faulty_node)
+            res, *_= dalg.run(dalg.faulty_node)
             
             print('\nIs fault ', fault, 'detectable?', res)
             
