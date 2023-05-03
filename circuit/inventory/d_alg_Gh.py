@@ -124,11 +124,12 @@ class D_alg():
             return True
 
         # if node.dnodes[0].gtype == 'BRCH':
-            # if node.value == D_VALUE or node.value == D_PRIME_VALUE:
-            #     pass
-            # else:
-            # for n in node.dnodes:
-            #     n.value = node.value
+        #     # if node.value == D_VALUE or node.value == D_PRIME_VALUE:
+        #     #     pass
+        #     # else:
+        #     if node.value == ZERO_VALUE or node.value == ONE_VALUE:
+        #         for n in node.dnodes:
+        #             n.value = node.value
         
         elif node.dnodes[0].gtype == 'BUFF' or node.dnodes[0].gtype == 'BRCH':
             for n in node.dnodes:
@@ -434,6 +435,15 @@ class D_alg():
     def propagate_error(self, node):
         if PRINT_LOG: print('propagate called on ', node.num)
         n = node.unodes[0]
+        if n.dnodes[0].gtype == 'BRCH':
+            n.dnodes[0].value = n.value
+            for i in range(1, len(n.dnodes)):
+                if n.value == D_VALUE:
+                    n.dnodes[i].value = ZERO_VALUE
+                elif n.value == D_PRIME_VALUE:
+                    n.dnodes[i].value = ONE_VALUE
+            # print(node.num, '@_@_@_@_@_@_@_@_@_@_@_@_@_@_ ')
+
         if n.dnodes[0].gtype == 'OR' or n.dnodes[0].gtype == 'AND':
             if D_VALUE in self.get_unodes_val(n.dnodes[0]):
                     n.dnodes[0].value = D_VALUE
@@ -776,12 +786,12 @@ class D_alg():
 if __name__ == '__main__':
     ckt = 'cmini.ckt'
     """Remove this main scope later"""
-    # PRINT_LOG = True
+    PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
-    # for n in [circuit.nodes_lev[0]]:
-    for n in circuit.nodes_lev:
-        for stuck_val in [ONE_VALUE, ZERO_VALUE]:
-        # for stuck_val in [0]:
+    for n in [circuit.nodes_lev[1]]:
+    # for n in circuit.nodes_lev:
+        # for stuck_val in [ONE_VALUE, ZERO_VALUE]:
+        for stuck_val in [0]:
             fault = Fault(n.num, stuck_val)
             dalg = D_alg(circuit, fault)
             res, *_= dalg.run(dalg.faulty_node)
