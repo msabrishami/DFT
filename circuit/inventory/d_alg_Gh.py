@@ -117,7 +117,7 @@ class D_alg():
                 return False
         return True
 
-    def eval_dnodes(self, node):
+    def eval_dnodes(self, node): # Complete it
         one_output = True if len(node.dnodes) == 1 else False
         old_value = None
 
@@ -202,6 +202,25 @@ class D_alg():
                             node.dnodes[0].value = ZERO_VALUE
                         elif b == D_PRIME_VALUE:
                             node.dnodes[0].value = ONE_VALUE
+                    elif a==ONE_VALUE:
+                        if b == ZERO_VALUE:
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == ONE_VALUE:
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == D_VALUE:
+                            node.dnodes[0].value = D_VALUE
+                        elif b == D_PRIME_VALUE:
+                            node.dnodes[0].value = D_PRIME_VALUE
+                    elif a==ZERO_VALUE:
+                        if b == ZERO_VALUE:
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == ONE_VALUE:
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == D_VALUE:
+                            node.dnodes[0].value = D_PRIME_VALUE
+                        elif b == D_PRIME_VALUE:
+                            node.dnodes[0].value = D_VALUE
+
                     
                 else:
                     raise Exception('Not Implemented')
@@ -232,6 +251,24 @@ class D_alg():
                             node.dnodes[0].value = ONE_VALUE
                         elif b == D_PRIME_VALUE:
                             node.dnodes[0].value = ZERO_VALUE
+                    elif a==ZERO_VALUE:
+                        if b == ZERO_VALUE:
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == ONE_VALUE:
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == D_VALUE:
+                            node.dnodes[0].value = D_VALUE
+                        elif b == D_PRIME_VALUE:
+                            node.dnodes[0].value = D_PRIME_VALUE
+                    elif a==ONE_VALUE:
+                        if b == ZERO_VALUE:
+                            node.dnodes[0].value = ONE_VALUE
+                        elif b == ONE_VALUE:
+                            node.dnodes[0].value = ZERO_VALUE
+                        elif b == D_VALUE:
+                            node.dnodes[0].value = D_PRIME_VALUE
+                        elif b == D_PRIME_VALUE:
+                            node.dnodes[0].value = D_VALUE
 
                 else:
                     raise Exception('Not Implemented')
@@ -298,7 +335,7 @@ class D_alg():
                 
         return res
 
-    def imply_forward(self, node, value) -> bool:
+    def imply_forward(self, node, value) -> bool: # only run on updated ones
         node.value = value
         q = deque()
         q.append(node)
@@ -315,7 +352,7 @@ class D_alg():
 
         return True
 
-    def imply_backward(self, node, value) -> bool:
+    def imply_backward(self, node, value) -> bool: # only run on updated ones
         # print('\nBackward Implication is called on ', node.num, value,'\n')
         node.value = value
         q = deque()
@@ -445,7 +482,6 @@ class D_alg():
                 else:
                     n.dnodes[0].value = D_PRIME_VALUE
             if D_PRIME_VALUE in self.get_unodes_val(n.dnodes[0]):
-                print('Here!.', self.get_unodes_val(n.dnodes[0]))
                 if ONE_VALUE in self.get_unodes_val(n.dnodes[0]):
                     n.dnodes[0].value = D_PRIME_VALUE
                 else:
@@ -463,6 +499,7 @@ class D_alg():
         for u in D_node.unodes:
             if u.value == X_VALUE:
                 x.append(u)
+        print(f'===== GET X INPUTS: {D_node.value}:{[n.num for n in x]}')
         return x
 
     def get_inp_plus_one(self, tp) -> typing.Tuple[bool, list]:
@@ -523,9 +560,8 @@ class D_alg():
             print('run is called on node', node.num, node.value)
             print('BEFORE IMPLY:')
             print(before_imply)
-        # print(self.circuit.nodes_lev[19].value)
+
         imply_result, new_valued_nodes = self.imply_and_check(node)
-        # print(self.circuit.nodes_lev[19].value)
         after_imply = [f'{n.num}:{n.value}' for n in self.circuit.nodes_lev]
         
         if save_J_node:
@@ -538,15 +574,10 @@ class D_alg():
             for n in new_valued_nodes:
                 X_updated_nodes.add(n)
 
-        D_frontier = self.get_D_frontier()
-        J_frontier = self.get_J_frontier()
-
         if PRINT_LOG:
             print('AFTER IMPLY:')
             print(after_imply)
             print()
-            print(f'D: {[n.num for n in D_frontier]}')
-            print(f'J: {[n.num for n in J_frontier]}')
 
             input()
         
@@ -554,7 +585,14 @@ class D_alg():
             return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
         ### RUN_D() ###
+        D_frontier = self.get_D_frontier()
+        J_frontier = self.get_J_frontier()
+        if PRINT_LOG:
+            print(f'D: {[n.num for n in D_frontier]}')
+            print(f'J: {[n.num for n in J_frontier]}')
+
         tried_Ds = set()
+
         if not self.error_at_PO():
             if len(D_frontier) == 0:
                 return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
@@ -580,6 +618,7 @@ class D_alg():
                     X_updated_nodes.add(untried_D)
 
                 is_X_node = True if untried_D.gtype in ['XOR', 'XNOR'] else False
+                X_finished = False
 
                 if not is_X_node:
                     self.propagate_error(untried_D)
@@ -596,29 +635,33 @@ class D_alg():
                             if save_X_node:
                                 X_updated_nodes.add(k)
                 else:
+                    save_X_node = True
                     self.propagate_error(untried_D)
+                    # if save_X_node: #NEW ONE!
+                    #     X_updated_nodes.add(untried_D)
                     success = self.set_X_inputs_values(untried_D)
                     if PRINT_LOG: print(f'-----------------{success=}')
                     if success: # the algorithm is continued
                         if PRINT_LOG: print(f'selected X as D: {untried_D.num}, its inputs{[u.value for u in untried_D.unodes]}')
                         for u in untried_D.unodes:
-                            if save_J_node:
-                                J_updated_nodes.add(u)
-                            if save_D_node:
-                                D_updated_nodes.add(u)
-                            if save_X_node:
-                                X_updated_nodes.add(u)
+                            if u in self.x_inputs[untried_D.num]:
+                                if save_J_node:
+                                    J_updated_nodes.add(u)
+                                if save_D_node:
+                                    D_updated_nodes.add(u)
+                                # if save_X_node:
+                                #     X_updated_nodes.add(u)
                     else: #no more tp possible
                         if PRINT_LOG: print('X reset:', [n.num for n in self.x_inputs[untried_D.num]])
                         for n in self.x_inputs[untried_D.num]:
-                            if n not in untried_D.unodes:
+                            if n not in untried_D.unodes: #what about J?
                                 self.reset_node(n)
-                        # return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
+                        X_finished = True
+
                 res, new_updated_j, new_updated_d, new_updated_x = self.run(untried_D, 
                                                             J_updated_nodes=J_updated_nodes.copy(), save_J_node=True,
                                                             D_updated_nodes=D_updated_nodes.copy(), save_D_node=True,
                                                             X_updated_nodes=X_updated_nodes.copy(), save_X_node=True)
-                
                 if save_J_node:
                     for n in new_updated_j:
                         J_updated_nodes.add(n)
@@ -634,8 +677,17 @@ class D_alg():
                 
                 """
                 Inja nabayd D ro bere entekhab kone. bayad bere X baa'di, agar hich Xi javab nadad, bargarde bere D ro avaz kone hala. I got it! I guessssss
+                res is False
                 """
-                D_frontier = self.get_D_frontier()
+                if is_X_node:
+                    print('Xs to be reset:', [x.num for x in X_updated_nodes])
+                    for x in X_updated_nodes:
+                        self.reset_node(x)
+                    if not X_finished:
+                        continue
+
+                # D_frontier = self.get_D_frontier()
+                # print('New D_fr', [f.num for f in D_frontier])
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
                     while untried_D in tried_Ds:
@@ -755,8 +807,8 @@ if __name__ == '__main__':
     ckt = 'cmini.ckt'
     # PRINT_LOG = True
     circuit = Circuit(f'../../data/ckt/{ckt}')
-    # for n in [circuit.nodes_lev[2]]:
-        # for stuck_val in [1]:
+    # for n in [circuit.nodes_lev[8]]:
+    #     for stuck_val in [1]:
     for n in circuit.nodes_lev:
         for stuck_val in [ONE_VALUE, ZERO_VALUE]:
             fault = Fault(n.num, stuck_val)
