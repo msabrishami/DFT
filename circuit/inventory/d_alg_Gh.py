@@ -75,7 +75,6 @@ class D_alg():
         elif node.gtype == 'OR' or node.gtype == 'NOR':
             return ONE_VALUE
         elif node.gtype == 'XOR' or node.gtype == 'XNOR': #only for use in J section.
-            # raise Exception('Not Defined')
             return ONE_VALUE
         elif node.gtype == 'NOT':
             return D_alg.inverse(node.value)
@@ -99,11 +98,9 @@ class D_alg():
                 continue
 
             elif (u.value == X_VALUE):
-                # print(f'here2, {u.num}, {u.value=}, {value=}')
                 if (value == ZERO_VALUE or value == ONE_VALUE):
                     u.value = value
             elif u.value != value and value != X_VALUE:
-                # print(f'here3, {u.num}, {u.value=}, {value=}')
                 return False
 
         return True
@@ -117,7 +114,7 @@ class D_alg():
                 return False
         return True
 
-    def eval_dnodes(self, node): # Complete it
+    def eval_dnodes(self, node):
         one_output = True if len(node.dnodes) == 1 else False
         old_value = None
 
@@ -376,7 +373,6 @@ class D_alg():
             booleans: the result of check part
             list: list of updated nodes
         """
-        # print(f'\n\nimply and check called on {node.num}')
         initial_values = [n.value for n in self.circuit.nodes_lev]
         res = self.imply_forward(node, node.value)
 
@@ -396,8 +392,7 @@ class D_alg():
             if after_values_f[i] != initial_values[i]:
                 updated_nodes_f.append(self.circuit.nodes_lev[i])
         res = self.imply_backward(node, node.value)
-        # print('_____________________________')
-        if res is False: #repeated code here.
+        if res is False: #repeated code here
             if PRINT_LOG: print('Backward Conflict on unodes of', node.num)
 
             changed_nodes = []
@@ -523,15 +518,10 @@ class D_alg():
         """
         if there exist no next input values, return False
         """
-        """Inja bayad ye harekati bezanim! ke reset beshe in xs nemidoonam hala alan
-        shayad vasate algorithm bayad ino bezanim
-        """
-        # set_inp = []
         if D_node.num not in self.x_inputs.keys():
             self.x_inputs[D_node.num] = self.get_X_inputs(D_node)
             
         xs = self.x_inputs[D_node.num]
-        # xs = self.x_inputs[D_node.num]
         current_inp = [n.value for n in xs]
         if PRINT_LOG: print(f'{current_inp=}')
         if X_VALUE in current_inp:
@@ -650,7 +640,7 @@ class D_alg():
                     else: #no more tp possible
                         if PRINT_LOG: print('(no more tp possible) X reset:', [n.num for n in self.x_inputs[untried_D.num]])
                         for n in self.x_inputs[untried_D.num]:
-                            if n not in untried_D.unodes: #what about J?
+                            if n not in untried_D.unodes:
                                 self.reset_node(n)
                         X_finished = True
 
