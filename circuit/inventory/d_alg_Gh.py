@@ -19,6 +19,7 @@ X_VALUE = "X"
 
 PRINT_LOG = False
 
+
 class D_alg():
     def __init__(self, circuit: DFTCircuit, fault: Fault) -> None:
         self.circuit = circuit
@@ -30,9 +31,9 @@ class D_alg():
         for n in self.circuit.nodes_lev:
             if n.num == fault.node_num:
                 self.faulty_node = n
-                if fault.stuck_val == "1":
+                if fault.stuck_val == "1" or fault.stuck_val == ONE_VALUE:
                     n.value = D_PRIME_VALUE
-                elif fault.stuck_val == "0":
+                elif fault.stuck_val == "0" or fault.stuck_val == ZERO_VALUE:
                     n.value = D_VALUE
                 break
 
@@ -64,10 +65,17 @@ class D_alg():
         return J_frontier
 
     def error_at_PO(self):
+        flag1 = False
         for p in self.circuit.PO:
             if p.value == D_VALUE or p.value == D_PRIME_VALUE:
-                return True
-        return False
+                flag1 = True
+                break
+        # flag2= False
+        # for p in self.circuit.PO:
+        #     if p.value == X_VALUE:
+        #         flag2 = True
+
+        return flag1
 
     def get_controlling_value(self, node):
         if node.gtype == 'AND' or node.gtype == 'NAND':
@@ -438,13 +446,6 @@ class D_alg():
     def propagate_error(self, node):
         if PRINT_LOG: print('propagate called on ', node.num)
         n = node.unodes[0]
-        if n.dnodes[0].gtype == 'BRCH':
-            n.dnodes[0].value = n.value
-            for i in range(1, len(n.dnodes)):
-                if n.value == D_VALUE:
-                    n.dnodes[i].value = ZERO_VALUE
-                elif n.value == D_PRIME_VALUE:
-                    n.dnodes[i].value = ONE_VALUE
 
         if n.dnodes[0].gtype == 'OR' or n.dnodes[0].gtype == 'AND':
             if D_VALUE in self.get_unodes_val(n.dnodes[0]):
@@ -587,15 +588,16 @@ class D_alg():
         D_frontier = self.get_D_frontier()
         J_frontier = self.get_J_frontier()
 
+
+
         if PRINT_LOG:
             print(f'D: {[n.num for n in D_frontier]}')
             print(f'J: {[n.num for n in J_frontier]}')
 
-        tried_Ds = set()
 
         if not self.error_at_PO():
+            tried_Ds = set()
             if len(D_frontier) == 0:
-
                 return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
             untried_D = D_frontier.pop()
@@ -604,9 +606,11 @@ class D_alg():
                     untried_D = D_frontier.pop()
                 else:
                     untried_D = None
-                    break
 
+                    return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
+            
             if untried_D and (untried_D.num not in tried_Ds):
+
                 tried_Ds.add(untried_D.num)
             else:
                 untried_D = None
@@ -624,9 +628,12 @@ class D_alg():
                 is_X_node = True if untried_D.gtype in ['XOR', 'XNOR'] else False
                 X_finished = False
                 
+                updated_unodes = set()
+
                 if not is_X_node:
                     self.propagate_error(untried_D)
                     controlling_value = self.get_controlling_value(untried_D)
+
                     for k in untried_D.unodes:
                         if k.value == X_VALUE:
                             k.value = D_alg.inverse(controlling_value)
@@ -638,6 +645,7 @@ class D_alg():
                                 D_updated_nodes.add(k.num)
                             if save_X_node:
                                 X_updated_nodes.add(k.num)
+                            updated_unodes.add(k.num)
                 else:
                     save_X_node = True
                     self.propagate_error(untried_D)
@@ -656,6 +664,7 @@ class D_alg():
                                     J_updated_nodes.add(u.num)
                                 if save_D_node:
                                     D_updated_nodes.add(u.num)
+                                updated_unodes.add(u.num)
 
                     else: #no more tp possible
                         if PRINT_LOG: print('(no more tp possible) X reset:', [n.num for n in self.x_inputs[untried_D.num]])
@@ -664,9 +673,15 @@ class D_alg():
                                 self.reset_node(n)
                         X_finished = True
 
+                new_set = set()
+                for d in untried_D.dnodes:
+                    new_set.add(d.num)
+                for u in updated_unodes:
+                    new_set.add(u)
+                
                 res, new_updated_j, new_updated_d, new_updated_x = self.run(untried_D, 
                                                             J_updated_nodes=J_updated_nodes.copy(), save_J_node=True,
-                                                            D_updated_nodes=set(), save_D_node=True,
+                                                            D_updated_nodes=new_set, save_D_node=True,
                                                             X_updated_nodes=set(), save_X_node=True)
                 
                 if save_J_node:
@@ -695,13 +710,10 @@ class D_alg():
                             self.reset_node(u)
                         return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
                         
-                
-                if PRINT_LOG:
-                    print('Reversing from last D:', [n for n in D_updated_nodes])
-                for n in D_updated_nodes:
+                if PRINT_LOG: print('Reversing from last D:', untried_D.num,[n for n in new_updated_d])
+                for n in new_updated_d:
                     self.reset_node(n)
                 
-
                 D_frontier = self.get_D_frontier()
                 if len(D_frontier):
                     untried_D = D_frontier.pop()
@@ -713,23 +725,41 @@ class D_alg():
                             break
                 else:
                     untried_D = None
+                    break
+                # print('+++++++++++++++++++++', tried_Ds)
+                
 
                 if untried_D and (untried_D.num not in tried_Ds):
+                    print('___________________',tried_Ds)
                     tried_Ds.add(untried_D.num)
                     if PRINT_LOG and untried_D: print('Chosen D-2:', untried_D.num)
-
+            
             return False, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
         ### RUN_J() ###
 
         # error at PO
         J_frontier = self.get_J_frontier()
+        # tested_Js = set()
 
         if len(J_frontier) == 0:
             return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
 
         if PRINT_LOG: print('Go back to run on ',node.num)        
+
         untried_J = J_frontier.pop()
+        # while untried_J.num in tested_Js:
+        #     if len(J_frontier):
+        #         untried_J = J_frontier.pop()
+        #     else:
+        #         untried_J = None
+            
+        # if untried_J:
+        #     tested_Js.add(untried_J.num)
+        # else:
+        #     return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
+            # raise Exception('What happens next?')
+
         if PRINT_LOG: print('Chosen J', untried_J.num)
         c = self.get_controlling_value(untried_J)
 
@@ -794,11 +824,10 @@ class D_alg():
                 if len(J_frontier):
                     untried_J = J_frontier.pop()
                 else:
-                    untried_J = None
+                    J_frontier = None
                     return True, J_updated_nodes, D_updated_nodes, X_updated_nodes
             else:
-                if PRINT_LOG: 
-                    print('\nreversing from latest chosen D:', [n for n in new_d])
+                if PRINT_LOG: print('\nreversing from latest chosen D:', [n for n in new_d])
 
                 for n in new_d:
                     self.reset_node(n)
@@ -903,10 +932,9 @@ def check_answer(given_tp, circuit, fault_str):
 if __name__ == '__main__':
     """Remove this main scope later"""
 
-    ckt = 'c3.ckt'
+    ckt = 'c4.ckt'
     # type = 'large'
     type = 'mini'
-    # PRINT_LOG = True
 
     circuit = DFTCircuit(f'../../data/ckt/{ckt}')
     good_faults = FaultList(circuit)
@@ -915,10 +943,17 @@ if __name__ == '__main__':
     elif type == 'mini':
         good_faults.add_all()
     
-    for fault in good_faults.faults:
-    # if True:
-            # fault = Fault(16, 1)
+    PRINT_LOG = True
+    # for n in circuit.nodes_lev:
+    #     for sv in [ZERO_VALUE, ONE_VALUE]:
+    if True:
+    # for fault in good_faults.faults:
+            # fault = Fault(f.node_num), int(f.stuck_val))
+            fault = Fault(19, 1)
+            # fault = Fault(n.num, sv)
+            circuit = DFTCircuit(f'../../data/ckt/{ckt}')
             dalg = D_alg(circuit, fault)
+
             res, *_= dalg.run(dalg.faulty_node)
             
             print('\nIs fault ', fault, 'detectable?', res)
@@ -928,7 +963,7 @@ if __name__ == '__main__':
                 print(dalg.get_final_tp())
             if res:
                 print(check_answer(dalg.get_final_tp(), circuit, fault.__str__()))
+            
             del dalg
             del circuit
-            circuit = DFTCircuit(f'../../data/ckt/{ckt}')
             input()
