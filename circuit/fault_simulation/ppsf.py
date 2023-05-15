@@ -363,7 +363,7 @@ class PPSF(FaultSim):
             if verbose:
                 print(f"TP = {tp:5}: #All faults = {len(fl_curr.faults)} / #Detected faults = {len(fl_curr.faults)-len(fl_temp.faults):4}"+
                       f" / #Remaining faults = {len(fl_temp.faults):4}" +
-                      f" / FC = {100*(len(fl_curr.faults)-len(fl_temp.faults))/len(fl_curr.faults):.3f}%"+
+                    #   f" / FC = {100*(len(fl_curr.faults)-len(fl_temp.faults))/len(fl_curr.faults):.3f}%"+
                       f" / time = {time.time()-time_s:.2f}s")
             
             fl_curr = fl_temp
