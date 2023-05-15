@@ -378,7 +378,7 @@ class PPSF(FaultSim):
                 # print(fault.D_count_list)
                 mu = np.mean(fault.D_count_list) 
                 std = np.std(fault.D_count_list)
-                outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
+                # outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
                 
                 res_final[str(fault)] = mu/tp_tot
 
