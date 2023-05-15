@@ -185,8 +185,8 @@ if __name__ == '__main__':
 
     ppsf = PPSF(circuit)
     tg = TPGenerator(circuit)
-    ppsf.multiprocess_ci_run(tp_steps=[10, 20, 30, 1000, 10000],#op=circuit.nodes_lev[5],
-                             verbose=True, ci=1, num_proc=8, fault_count='all', save_log=True)
+    ppsf.multiprocess_ci_run(tp_steps=[10, 20, 30],#op=circuit.nodes_lev[5],
+                             verbose=True, ci=3, num_proc=8, fault_count='all', save_log=True)
     # tps = tg.gen_full()
     # f_dict = ppsf.run(tps=20000, verbose=True, save_log=True)
     # # print('_'*50)
