@@ -300,10 +300,10 @@ class PPSF(FaultSim):
             pr+=f"\t| confidence interval = {ci}\n"
             pr+=f"\t| fault count = {len(current_faults.faults)}\n"
             pr+=f"\t| num_proc(es) = {num_proc}\n"
-            pr+=f"\t| BFS depth = {depth}\n"
         
             if op:
                 pr+=f"\t| observation point (node_num) = {op.num}\n"
+                pr+=f"\t| BFS depth = {depth}\n"
             
             print(pr)
             
