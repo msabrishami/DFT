@@ -8,24 +8,25 @@ import config
 from tp_generator import TPGenerator
 
 # RUN = 'TEST'
-RUN = 'V3'
+RUN = '-'
 # RUN = 'logicsim'
 
 if __name__ == '__main__':
 
-    # circuit_path = '../data/ckt/c499.ckt'
-    circuit_path = '../data/ckt/add2.ckt'
+    circuit_path = '../data/ckt/c432.ckt'
+    # circuit_path = '../data/ckt/add2.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
     # circuit_path = '../data/ckt/c4.ckt'
     # circuit_path = '../data/ckt/c17.ckt'
     # circuit_path = '../data/ckt/c3540.ckt'
     # circuit_path = '../data/ckt/c1908.ckt'
+    # circuit_path = '../data/ckt/c5315.ckt'
 
     circuit = DFTCircuit(circuit_path)
-    f = FaultList(circuit)
-    f.add_all()
-    for fa in f.faults:
-        print(fa)
+    # f = FaultList(circuit)
+    # f.add_all()
+    # for fa in f.faults:
+    #     print(fa)
     # circuit.SCOAP_CC()
     # circuit.SCOAP_CO()
 
@@ -144,8 +145,8 @@ if __name__ == '__main__':
 
             is_detectable = False
             for tp_b in be_tested_tps:
-                detected_faults = pfs._one_tp_run(tp_b)
-                if random_fault in detected_faults:
+                fl_temp = pfs._one_tp_run(tp_b)
+                if random_fault in fl_temp:
                     is_detectable = True
                     break
 
@@ -172,7 +173,7 @@ if __name__ == '__main__':
         print('After')
         print([f'{n.num}:{n.value}' for n in circuit.nodes_lev])
 
-    ################# Manially testing ####################
+    ################# Manually testing ####################
     # for p in circuit.PI:
     #     print(p.num)
     # tp = [1, 1, 1, 1, 1]
@@ -182,15 +183,13 @@ if __name__ == '__main__':
 
     # #################### PPSF Example ###################
 
-    # ppsf = PPSF(circuit)
-    # tg = TPGenerator(circuit)
-    # # tps = tg.gen_full()
+    ppsf = PPSF(circuit)
+    tg = TPGenerator(circuit)
+    ppsf.multiprocess_ci_run(tp_steps=[10, 20, 30, 1000, 10000],#op=circuit.nodes_lev[5],
+                             verbose=True, ci=1, num_proc=8, fault_count='all', save_log=True)
+    # tps = tg.gen_full()
     # f_dict = ppsf.run(tps=20000, verbose=True, save_log=True)
-    # ppsf._multiprocess_handler()
     # # print('_'*50)
-    # ppsf.multiprocess_ci_run(tp_steps=[10, 20, 30],#op=circuit.nodes_lev[5],
-    #                          verbose=True, ci=1, process=8, fault_count='all', save_log=True)
-    # ppsf.
     # print('_'*50)    
     
     ##################### PFS Example ####################
