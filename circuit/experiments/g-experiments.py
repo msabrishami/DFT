@@ -12,6 +12,8 @@ import pandas as pd
 import sys
 sys.path.append('../')
 
+FIG_DIR = "results/figures/"
+
 import config
 import utils
 from circuit.dft_circuit import DFTCircuit
@@ -92,7 +94,6 @@ def node_info(node):
 
     return node_parameters
 
-
 def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
     """ Run and plot the TPFC figure usin STAFAN values.
     If times > 1, then  several STAFAN values are calculated using different sets of 
@@ -142,8 +143,6 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
         for circuit {circuit.c_name}\n \
         method: STAFAN ({tpLoad})", fontsize=13)
 
-    # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
-    path = "./results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -151,7 +150,6 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
     plt.tight_layout()
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
-
 
 # # TODO-Ghazal: not checked by MSA
 # def diff_tp_stafan(circuit, tps): #TODO: Must be changed
@@ -206,7 +204,6 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
 #     plt.tight_layout()
 #     plt.savefig(fname)
 
-# TODO-Ghazal: This is NOT WORKING
 def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     """ Run and plot the TPFC figure by doing real fault simulation (PFS).
     If times > 1, then the fault simulation is done several times with different sets of 
@@ -239,27 +236,27 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
             outfile.write(",".join([str(x) for x in fc]))
             outfile.close()
         arr = [list(range(1, tp+1)), fc, [batch]*tp]
-        df = df.append(pd.DataFrame(np.array(arr).T, columns=["tp", "fc", "batch"]),
-                       ignore_index=True)
-    return 
+        df = pd.concat([df, pd.DataFrame(np.array(arr).T, columns=["tp", "fc", "batch"])],ignore_index=True)
+
     plot = sns.lineplot(x=df["tp"], y=df["fc"], alpha=0.8,
-                        color="b", ci=plot_ci, label="PFS")
+                        color="b", errorbar=('ci', plot_ci), label="PFS")
     
     plt.xlim=(50,tp)
     plt.ylim(min(df[df["tp"] == 50]["fc"].tolist()), 100)
+    
     if log_yscale:
         plot.set_yscale("function", functions=(exp, log))
         plot.set_yticks(yticks)
+
     plot.grid()
     plot.set_ylabel(f"Fault Coverage", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
     plot.set_title(f"Dependency of fault coverage on\n \
             random test patterns for {circuit.c_name}", fontsize=13)
 
-    path = "results/figures/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    fname = path + f"tpfc-pfs-{circuit.c_name}-TP{tp}-times{times}.png"
+    if not os.path.exists(FIG_DIR):
+        os.makedirs(FIG_DIR)
+    fname = FIG_DIR + f"tpfc-pfs-{circuit.c_name}-TP{tp}-times{times}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
@@ -344,11 +341,11 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
             fontsize=13)
 
     # path = f"{config.FIG_DIR}/{circuit.c_name}/compare/"
-    path = "./results/figures/"
-    if not os.path.exists(path):
-        os.makedirs(path)
 
-    fname = path + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}"
+    if not os.path.exists(FIG_DIR):
+        os.makedirs(FIG_DIR)
+
+    fname = FIG_DIR + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}"
     fname += f"-tpLoad{tpLoad}-cpu{cpu}-Kpfs{times_pfs}-Kstafan{times_stafan}.png"
     plt.tight_layout()
     plt.savefig(fname)
@@ -395,7 +392,6 @@ def ppsf_ci(circuit, cpu, _cis):
     plt.title(f"Detection probability histogram with PPSF\n\
         for circuit{circuit.c_name}")
     # path = f"{config.FIG_DIR}/{circuit.c_name}/ppsf/"
-    path = f"./results/figures/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -471,10 +467,9 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     fig.suptitle("Mean of detection probability which are\n\
     in the given confidence interval.", fontsize=16)
     fig.tight_layout()
-    fname = f"results/figures/ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-cpu{cpu}.png"
+    fname = f"{path}ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-cpu{cpu}.png"
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
-
 
 def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     """ Histogram or scatter plot for relative error of different PPSF fault coverage results \
@@ -555,7 +550,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.xlabel(f"PD using PPSF with CI={max_ci}")
         plt.ylabel(f"Relative error with respect to PPSF with CI={max_ci}")
 
-    fname = "results/figures/ppsf-error-{}-maxCI{}-{}plot-cpu{}.png".format(
+    fname = "pathppsf-error-{}-maxCI{}-{}plot-cpu{}.png".format(
             circuit.c_name, max_ci, hist_scatter, cpu)
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
@@ -649,8 +644,7 @@ def stafan(circuit, tps, ci = 5):
                 Showing errors distribution with CI={ci}")
         plt.tight_layout()
         plt.show()
-        path = "./results/figures/"
-        fname = path + f"stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
+        fname = f"{path}stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
         plt.close()

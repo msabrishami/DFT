@@ -53,6 +53,8 @@ class Node(ABC):
     bitwise_not = 2**bitlen-1
 
     def __init__(self, n_type, g_type, num):
+        self.bitwise_not = Node.bitwise_not
+        self.bitlen = Node.bitlen
         self.gtype = g_type
         self.ntype = n_type
         self.num = num

@@ -143,8 +143,6 @@ class PFS(FaultSim):
                 f"  Total detected faults: {len(all_detected_faults):5}" +
                 f"  FC={100*len(all_detected_faults)/len(self.fault_list.faults):.4f}%\n")
                 all_past_faults_1 = len(all_detected_faults)
-            
-            
 
             if fault_log_fname and fault_log_file:
                 fault_log_file.write(",".join(map(str, tp)) + '\n')
@@ -241,3 +239,67 @@ class PFS(FaultSim):
             print(f"\nTPFC completed:\tFC={100*fc[-1]:.4f}%, tot-faults={len(detected_faults)}")
         
         return  fc, detected_faults
+
+    def tpfc(self, tps, log_fname=None, fault_drop=None, verbose=False):
+        """ 
+        Running the PFS simulation and calculating fault coverage (FC) for the number of
+        test patterns (tps), which is referred to as TPFC. 
+        If the real test pattern is given (i.e. tp is a list indicating a set of test patterns), 
+        then those test patterns will be used for fault simulation, if tp is just an integer, 
+        then tps number of test patterns will be generated randomly and used for TPFC. 
+        In calculating FC, faults in the fault list are considered.  
+
+        Parameters
+        ----------
+        tps : two options
+            1. list of lists , test patterns 
+            2. int , number of random test patterns to be generated 
+        
+        log_fname : str (default None) , name of log file to record results
+            if not given, the results will not be logged
+
+        fault_drop : int (default None) , number of tps that must detect a fault so it will 
+            be dropped from fault_list, in other words considered completely detected. 
+
+        Returns
+        -------
+        tpfc : list of floats , FC percentage (accumulative) value as tps are used for test 
+        """
+
+        tpfc = []
+        fc_seq = []
+
+        if isinstance(tps, int):
+            tg = TPGenerator(self.circuit)
+            _, tps = tg.gen_file(tps)
+        
+        if len(self.fault_list.faults)==0:
+            print('Warning: No fault is added. Therefore all faults are considered.')
+            self.fault_list.add_all()
+        
+        for idx, tp in enumerate(tps):
+            tpfc.append(len(self._one_tp_run(tp, fault_drop)))
+
+            fc_seq.append(100*sum(tpfc)/len(self.fault_list.faults))
+            if verbose:
+                if idx%100 == 0:
+                    print("{:5} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
+                        idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
+        fault_coverage = self.fault_list.calc_fc() 
+
+        # TODO: MS-old: just double check this, the reason fault_coverage is not the same as 
+        # tpfc[-1] is fault_drop -- I guess ... 
+        if log_fname:
+            outfile = open(log_fname, mode='w')
+            for k in range(len(tpfc)):
+                outfile.write("{:3} \t New: {} \t Total: {} \t FC: {:.4f}%\n".format(
+                    k, tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
+            outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
+            outfile.close()
+            print("Log file saved in {}".format(log_fname))
+        
+        if verbose: 
+            print("TPFC completed:\tFC={:.4f}%, tot-faults={}".format(
+                100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
+
+        return fc_seq 
