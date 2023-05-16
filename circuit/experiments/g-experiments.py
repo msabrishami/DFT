@@ -431,9 +431,13 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
             path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
-            print(f"Data is not available for CI={c}")
+            print(f"Data is not available for CI={c}. You should put the data in {path}.")
             continue
         cis.append(PPSF.load_pd_ppsf_conf(fname))
+    
+    if len(cis) == 0:
+        raise Exception('No data was loaded.')
+    
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
         row = {"fault": f}
