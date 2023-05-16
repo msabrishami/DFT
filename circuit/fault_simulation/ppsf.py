@@ -381,3 +381,36 @@ class PPSF(FaultSim):
             outfile.close()
         
         return res_final
+
+    def load_ppsf_parallel(fname):
+        """ loads a ppsf_parallel simulated log file 
+        the last line is time """ 
+        if not os.path.exists(fname):
+            raise Exception(f'File {fname} not exist.')
+        lines = open(fname, "r").readlines()
+        res = {}
+        for line in lines[:-1]:
+            words = line.strip().split(",")
+            res[words[0]] = [int(x) for x in words[1:]]
+        return res
+
+    def load_pd_ppsf_conf(fname):
+        """ loads a ppsf with confidence log file """ 
+        if not os.path.exists(fname):
+            raise Exception(f'File {fname} not exists')
+        lines = open(fname, "r").readlines()
+        res = {}
+        current_tp = 0
+        for line in lines:
+            if line.startswith("#TP="):
+                current_tp += float(line.split("=")[-1])
+                continue
+            if line.startswith("#TP: (remaining"):
+                if lines[-1] == line:
+                    break
+                print("Warning: PPSF was not completed with enough confidence for some faults")
+                break
+            words = line.split()
+            res[words[0]] = float(words[1])/current_tp
+        
+        return res

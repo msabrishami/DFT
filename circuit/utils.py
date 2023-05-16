@@ -1,4 +1,4 @@
-
+import os
 import operator
 import numpy as np
 
@@ -163,37 +163,6 @@ def get_fanin_BFS(circuit, node, lev_depth=False):
     
     for n in res:
         n.flagA = None
-    
-    return res
-    
-def load_ppsf_parallel(fname):
-    """ loads a ppsf_parallel simulated log file 
-    the last line is time """ 
-    lines = open(fname, "r").readlines()
-    res = {}
-    for line in lines[:-1]:
-        words = line.strip().split(",")
-        res[words[0]] = [int(x) for x in words[1:]]
-    return res
-
-def load_pd_ppsf_conf(fname):
-    #TODO 4 Ghazal: documentation 
-    """ loads a ppsf with confidence log file 
-    """ 
-    lines = open(fname, "r").readlines()
-    res = {}
-    current_tp = 0
-    for line in lines:
-        if line.startswith("#TP="):
-            current_tp += float(line.split("=")[-1])
-            continue
-        if line.startswith("#TP: (remaining"):
-            if lines[-1] == line:
-                break
-            print("Warning: PPSF was not completed with enough confidence for some faults")
-            break
-        words = line.split()
-        res[words[0]] = float(words[1])/current_tp
     
     return res
 

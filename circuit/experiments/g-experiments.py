@@ -14,17 +14,24 @@ sys.path.append('../')
 
 FIG_DIR = "results/figures/"
 
+PLOT_MIN_TP = 50
+PLOT_MIN_Y = 80
+PLOT_MAX_Y = 100
+
 import config
 import utils
 from circuit.dft_circuit import DFTCircuit
 from fault_simulation.pfs import PFS
+from fault_simulation.ppsf import PPSF
+
 from tp_generator import TPGenerator
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']
 
-exp = lambda x: 1.1**(x)
-log = lambda x: np.log(x)
+const_base = 1.08
+exp = lambda x: (const_base**(x))
+log = lambda y: np.log(y) / np.log(const_base)
 yticks = [80,90,95,97.5,99,99.5,99.75,100]
 
 def pars_args():
@@ -132,7 +139,7 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
                         color="green", errorbar=('ci', 99.99), label=f"STAFAN ({tpLoad})")
 
     plot.set_yscale("function", functions=(exp, log))
-    plot.set(xlim=(50,tp), ylim=(80,100))
+    plot.set(xlim=(PLOT_MIN_TP,tp), ylim=(PLOT_MIN_Y,PLOT_MAX_Y))
     plot.set_yticks(yticks)
     plot.grid()
 
@@ -241,9 +248,9 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     plot = sns.lineplot(x=df["tp"], y=df["fc"], alpha=0.8,
                         color="b", errorbar=('ci', plot_ci), label="PFS")
     
-    plt.xlim=(50,tp)
-    plt.ylim(min(df[df["tp"] == 50]["fc"].tolist()), 100)
-    
+    plt.xlim=(PLOT_MIN_TP,tp)
+    plt.ylim(min(df[df["tp"] == PLOT_MIN_TP]["fc"].tolist()), 100)
+
     if log_yscale:
         plot.set_yscale("function", functions=(exp, log))
         plot.set_yticks(yticks)
@@ -279,7 +286,8 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, ci, cpu))
-    p_init = utils.load_pd_ppsf_conf(fname)
+    print(fname)
+    p_init = PPSF.load_pd_ppsf_conf(fname)    
     tps = np.arange(0, tp+1, 10)
     fcs = []
     # flag = True
@@ -291,12 +299,13 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         #         print("Saturated at tp={}".format(tp))
         #         flag = False
     plot = sns.lineplot(x=tps, y=fcs, color="red", label="PPSF")
-    
     plot.set_yscale("function", functions=(exp, log))
     plot.set_yticks(yticks)
-    plt.xlim=(50,tp)
-    plt.ylim(min(80, 100))
+    plt.xlim=(PLOT_MIN_TP,tp)
+    plot.set(xlim=(PLOT_MIN_TP,tp), ylim=(PLOT_MIN_Y,PLOT_MAX_Y))
+
     plot.grid()
+    plt.show()
 
     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
@@ -306,7 +315,6 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         method: PPSF", fontsize=13)
 
     path = "./results/figures"
-    # path = f"{config.FIG_DIR}/{circuit.c_name}/fc-estimation/"
     fname = f"{path}/tpfc-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-cpu{cpu}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
@@ -340,8 +348,6 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     plt.title(f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", 
             fontsize=13)
 
-    # path = f"{config.FIG_DIR}/{circuit.c_name}/compare/"
-
     if not os.path.exists(FIG_DIR):
         os.makedirs(FIG_DIR)
 
@@ -374,7 +380,7 @@ def ppsf_ci(circuit, cpu, _cis):
             _cis.remove(ci)
             print(f"Data is not available for CI={ci}")
             continue
-        res_ppsf = utils.load_pd_ppsf_conf(fname)
+        res_ppsf = PPSF.load_pd_ppsf_conf(fname)
         ppsf_pd = [x for x in res_ppsf.values()]
         bins = np.logspace(np.floor(np.log10(min(ppsf_pd))),
                            np.log10(max(ppsf_pd)), 20)
@@ -427,7 +433,7 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
             _cis.remove(c)
             print(f"Data is not available for CI={c}")
             continue
-        cis.append(utils.load_pd_ppsf_conf(fname))
+        cis.append(PPSF.load_pd_ppsf_conf(fname))
 
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
@@ -498,16 +504,14 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
             _cis.remove(c)
             print(f"Data is not available for CI={c}")
             continue
-        cis.append(utils.load_pd_ppsf_conf(fname))
+        cis.append(PPSF.load_pd_ppsf_conf(fname))
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
         row = {"fault": f}
         for idx, c in enumerate(_cis):
-                row["ci" + str(c)] = cis[idx][f]
-        try:
-            df = df.append(row, ignore_index=True)
-        except:
-            pass
+            row["ci" + str(c)] = cis[idx][f]
+        # df = df.app[dend(row, ignore_index=True)
+        df = pd.concat([df, pd.DataFrame(row)], ignore_index = True)
 
     max_ci = max(_cis)
     _cis.remove(max_ci)
@@ -749,12 +753,6 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
     # log_df.to_csv(fname)
     # print(f"logs saved in {fname}")
 
-
-def dfc_pfs():
-    """Plot"""
-    pass
-
-
 def gen_graph(circuit, tp_count):
     print("Let's start with generating a graph for features")
     circuit.SCOAP_CC()
@@ -823,4 +821,3 @@ if __name__ == "__main__":
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
-    
