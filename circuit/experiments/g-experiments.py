@@ -166,7 +166,7 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
         #TODO > Saeed changed this for timing reasons ... 
         path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
         fc_fname = os.path.join(path, f"tpfc-pfs-{circuit.c_name}-tp{tp}-part{batch}.csv")
-        
+
         if os.path.exists(fc_fname):
             print(f"PFS results available, loading from {fc_fname}")
             fc = [float(x) for x in open(fc_fname, "r").readline().split(",")]
@@ -686,7 +686,7 @@ def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
     # fname += f"deltaFC-PFS-{circuit.c_name}-op{op_count}-tp{tp}-times{times}.csv"
     # log_df.to_csv(fname)
     # print(f"logs saved in {fname}")
-
+    
 def gen_graph(circuit, tp_count):
     print("Let's start with generating a graph for features")
     circuit.SCOAP_CC()
