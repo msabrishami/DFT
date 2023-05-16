@@ -11,13 +11,12 @@ import pandas as pd
 import sys
 sys.path.append('../')
 
-from config import FIG_DIR
+from config import FIG_DIR, STAFAN_DIR, FAULT_SIM_DIR, AUTO_TP
 
 PLOT_MIN_TP = 50
 PLOT_MIN_Y = 80
 PLOT_MAX_Y = 100
 
-import config
 import utils
 from circuit.dft_circuit import DFTCircuit
 from fault_simulation.pfs import PFS
@@ -75,6 +74,14 @@ def pars_args():
 
     return args
 
+def prepare_env():
+    if not os.path.exists(FIG_DIR):
+        os.makedirs(FIG_DIR)
+    if not os.path.exists(STAFAN_DIR):
+        os.makedirs(STAFAN_DIR)
+    if not os.path.exists(FAULT_SIM_DIR):
+        os.makedirs(FAULT_SIM_DIR)
+    
 def node_info(node):
     node_parameters = {}
     node_parameters["C0"] = node.C0
@@ -106,10 +113,7 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
 
     df = pd.DataFrame(columns=["tp", "fc", "batch"])
     for i in range(times):
-        # TODO-Ghazal:
-        # this not-existing path shouldn't be a major concern in this function. 
-        # Whoever wants to save a file should check for this
-        path = f"{config.STAFAN_DIR}/{circuit.c_name}"
+        path = f"{STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
@@ -164,7 +168,7 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
 
     for batch in range(times):
         #TODO > Saeed changed this for timing reasons ... 
-        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
         fc_fname = os.path.join(path, f"tpfc-pfs-{circuit.c_name}-tp{tp}-part{batch}.csv")
 
         if os.path.exists(fc_fname):
@@ -197,9 +201,7 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     plot.set_title(f"Dependency of fault coverage on\n \
             random test patterns for {circuit.c_name}", fontsize=13)
 
-    if not os.path.exists(FIG_DIR):
-        os.makedirs(FIG_DIR)
-    fname = FIG_DIR + f"tpfc-pfs-{circuit.c_name}-TP{tp}-times{times}.png"
+    fname = os.path.join(FIG_DIR, f"tpfc-pfs-{circuit.c_name}-TP{tp}-times{times}.png")
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
@@ -219,10 +221,12 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         Count of CPU used to execute PPSF.
     """
 
-    path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+    path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
+    if not os.path.exists(path):
+        os.makedirs(path)
     fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
         circuit.c_name, ci, cpu))
-    print(fname)
+
     p_init = PPSF.load_pd_ppsf_conf(fname)    
     tps = np.arange(0, tp+1, 10)
     fcs = []
@@ -281,9 +285,6 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     plt.title(f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", 
             fontsize=13)
 
-    if not os.path.exists(FIG_DIR):
-        os.makedirs(FIG_DIR)
-
     fname = FIG_DIR + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}"
     fname += f"-tpLoad{tpLoad}-cpu{cpu}-Kpfs{times_pfs}-Kstafan{times_stafan}.png"
     plt.tight_layout()
@@ -305,7 +306,7 @@ def ppsf_ci(circuit, cpu, _cis):
 
     copy_cis = _cis.copy()
     for idx, ci in enumerate(copy_cis):
-        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(
             path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
@@ -329,7 +330,7 @@ def ppsf_ci(circuit, cpu, _cis):
     plt.ylabel("Count of faults")
     plt.title(f"Detection probability histogram with PPSF\n\
         for circuit{circuit.c_name}")
-    # path = f"{config.FIG_DIR}/{circuit.c_name}/ppsf/"
+
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -357,9 +358,8 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     cis = []
     copy_cis = _cis.copy()
     for c in copy_cis:
-        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
-        fname = os.path.join(
-            path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
+        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
+        fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
             print(f"Data is not available for CI={c}")
@@ -426,7 +426,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     cis = []
     copy_cis = _cis.copy()
     for c in copy_cis:
-        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
         fname = os.path.join(
             path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
@@ -510,7 +510,7 @@ def stafan(circuit: DFTCircuit, tps, ci = 5):
     
     df = pd.DataFrame(columns=["Node", "C0", "C1", "B0", "B1","D0", "D1" ,"TP"])
     for tp in tps:
-        path = f"{config.STAFAN_DIR}/{circuit.c_name}"
+        path = f"{STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tp}.stafan"
@@ -565,14 +565,11 @@ def stafan(circuit: DFTCircuit, tps, ci = 5):
         plt.rcParams['patch.linewidth'] = 0
         plt.rcParams['patch.edgecolor'] = 'none'
 
-        plot = sns.histplot(data=data, x=p, hue="TP",
-                # bins=bins, 
+        sns.histplot(data=data, x=p, hue="TP",
                 alpha=0.1, 
                 kde=True, 
                 palette=colors[:len(tps)])
-        # plot."log")
-        # plot.set_yscale("log")
-        # plot.set_yticks([2**i for i in range(8)])
+
 
         plt.rcParams["patch.force_edgecolor"] = False
         plt.rcParams['patch.linewidth'] = 0
@@ -702,7 +699,8 @@ def gen_graph(circuit, tp_count):
 
 if __name__ == "__main__":
     args = pars_args()
-    plt.rcParams["figure.figsize"]=9,8
+    prepare_env()
+    plt.rcParams["figure.figsize"]= 9,8
 
     cis = [1, 2, 3, 4, 5, 6, 10]
 
@@ -713,20 +711,20 @@ if __name__ == "__main__":
                     tpLoad=args.tpLoad, tp=args.tp)
 
     elif args.func == "tpfc-pfs":
-        if circuit.c_name in config.AUTO_TP:
+        if circuit.c_name in AUTO_TP:
             print("TP count is automatically changed from {} to {}".format(
-                        args.tp, config.AUTO_TP[circuit.c_name]))
-            args.tp = config.AUTO_TP[circuit.c_name] 
+                        args.tp, AUTO_TP[circuit.c_name]))
+            args.tp = AUTO_TP[circuit.c_name] 
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
 
     elif args.func == "tpfc-ppsf":
-        if circuit.c_name in config.AUTO_TP:
-            args.tp = config.AUTO_TP[circuit.c_name] 
+        if circuit.c_name in AUTO_TP:
+            args.tp = AUTO_TP[circuit.c_name] 
         print(args.tp)
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
 
     elif args.func == "compare-tpfc":
-        args.tp = config.AUTO_TP[circuit.c_name] 
+        args.tp = AUTO_TP[circuit.c_name] 
         compare_tpfc(circuit, times_stafan=1, times_pfs=args.times, 
                 tp=args.tp, tpLoad=args.tpLoad, ci=args.ci, cpu=args.cpu)
 
@@ -748,7 +746,7 @@ if __name__ == "__main__":
         stafan(circuit, tps=[100,2000,3000,4000], ci=1)
     
     #testd up to here.
-    
+
     #Delta FC
     elif args.func == "dfc-pfs":
         dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, op_count=args.opCount)
