@@ -222,7 +222,6 @@ class PFS(FaultSim):
             print(pr)
 
         faults_log_fname=None
-        tpfc_log_fname = None
         
         if save_log:
             log_dir = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)+'/pfs/'
@@ -276,6 +275,12 @@ class PFS(FaultSim):
         if len(self.fault_list.faults)==0:
             print('Warning: No fault is added. Therefore all faults are considered.')
             self.fault_list.add_all()
+   
+        if verbose:
+            pr =f"Running PFS-TPFC with:\n"
+            pr+=f"\t| tp count = {len(tps)}\n"
+            pr+=f"\t| fault count = {len(self.fault_list.faults)}\n"        
+            print(pr)
         
         for idx, tp in enumerate(tps):
             tpfc.append(len(self._one_tp_run(tp, fault_drop)))
@@ -289,16 +294,23 @@ class PFS(FaultSim):
 
         # TODO: MS-old: just double check this, the reason fault_coverage is not the same as 
         # tpfc[-1] is fault_drop -- I guess ... 
-        if log_fname:
-            outfile = open(log_fname, mode='w')
-            for k in range(len(tpfc)):
-                outfile.write("{:3} \t New: {} \t Total: {} \t FC: {:.4f}%\n".format(
-                    k, tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
-            outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
-            outfile.close()
-            print("Log file saved in {}".format(log_fname))
+        
+        log_dir = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)+'/pfs/'
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        if log_fname is None:
+            log_fname = f"{log_dir}{self.circuit.c_name}_PFS_TPFC_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
+        else:
+            log_fname = os.path.join(log_dir, log_fname)
+        outfile = open(log_fname, mode='w')
+        for k in range(len(tpfc)):
+            outfile.write("{:3} \t New: {} \t Total: {} \t FC: {:.4f}%\n".format(
+                k, tpfc[k], sum(tpfc[:k]), 100*sum(tpfc[:k])/len(self.fault_list.faults)))
+        outfile.write("Fault Coverage = {:.4f}%\n".format(fault_coverage*100))
+        outfile.close()
         
         if verbose: 
+            print("Log file saved in {}".format(log_fname))
             print("TPFC completed:\tFC={:.4f}%, tot-faults={}".format(
                 100*self.fault_list.calc_fc(), len(self.fault_list.faults)))
 

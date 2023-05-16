@@ -224,8 +224,7 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
     if not os.path.exists(path):
         os.makedirs(path)
-    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
-        circuit.c_name, ci, cpu))
+    fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
 
     p_init = PPSF.load_pd_ppsf_conf(fname)    
     tps = np.arange(0, tp+1, 10)

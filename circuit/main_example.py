@@ -13,7 +13,7 @@ RUN = '-'
 
 if __name__ == '__main__':
 
-    circuit_path = '../data/ckt/c432.ckt'
+    circuit_path = '../data/ckt/c17.ckt'
     # circuit_path = '../data/ckt/add2.ckt'
     # circuit_path = '../data/ckt/c2.ckt'
     # circuit_path = '../data/ckt/c4.ckt'
@@ -36,10 +36,10 @@ if __name__ == '__main__':
 
     # #################### PPSF Example ###################
 
-    # ppsf = PPSF(circuit)
-    # tg = TPGenerator(circuit)
-    # ppsf.multiprocess_ci_run(tp_steps=[10, 20, 300],#op=circuit.nodes_lev[5],
-    #                          verbose=True, ci=3, num_proc=8, fault_count='all', save_log=True)
+    ppsf = PPSF(circuit)
+    tg = TPGenerator(circuit)
+    ppsf.multiprocess_ci_run(tp_steps=[10, 20, 300],#op=circuit.nodes_lev[5],
+                             verbose=True, ci=3, num_proc=8, fault_count='all', save_log=True)
     
     # tps = tg.gen_full()
     # f_dict = ppsf.run(tps=20000, verbose=True, save_log=True)
@@ -48,10 +48,10 @@ if __name__ == '__main__':
     
     ##################### PFS Example ####################
 
-    tg = TPGenerator(circuit)
+    # tg = TPGenerator(circuit)
 
-    pfs = PFS(circuit)
-    pfs.tpfc(1000, verbose=True)
+    # pfs = PFS(circuit)
+    # pfs.tpfc(1000, verbose=True)
     # pfs.run(tps=10000, verbose=True, save_log=True, faults = 'all')
     # print('_'*50)
 

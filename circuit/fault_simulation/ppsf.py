@@ -293,7 +293,7 @@ class PPSF(FaultSim):
 
         if verbose:
             pr =f"Running PPSF with:\n"
-            pr+=f"\t| tp count = {tp_steps}\n"
+            pr+=f"\t| tp steps = {tp_steps}\n"
             pr+=f"\t| confidence interval = {ci}\n"
             pr+=f"\t| fault count = {len(fl_curr.faults)}\n"
             pr+=f"\t| CPU count = {num_proc}\n"
@@ -317,12 +317,13 @@ class PPSF(FaultSim):
         if log_fname is None:
             if op == None:
                 # Add BFS depth to the log_fname?
-                log_fname = f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_ci{ci}_proc{num_proc}.ppsf"
+                log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_ci{ci}_cpu{num_proc}.ppsf"
             else:
-                log_fname = f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
+                log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_cpu{num_proc}.ppsf"
         
+        log_fname = os.path.join(path, log_fname)
         if save_log:
-            outfile = open(os.path.join(path, log_fname), "w")
+            outfile = open(log_fname, "w")
                 
         tp_tot = 0
         res_final = {}
@@ -352,7 +353,7 @@ class PPSF(FaultSim):
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if save_log:
-                        outfile.write(f"{fault}\t{mu=:.2e}\t{std=:.2e}\n")
+                        outfile.write(f"{fault}\t{mu:.2e}\t{std:.2e}\n")
                 else:
                     fl_temp.copy_fault(fault)
 
@@ -373,17 +374,17 @@ class PPSF(FaultSim):
             for fault in fl_curr.faults:
                 mu = np.mean(fault.D_count_list) 
                 std = np.std(fault.D_count_list)
-                outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
+                outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
                 
                 res_final[str(fault)] = mu/tp_tot
 
-            print(f"\nLog for step based PPSF is being stored in {log_fname}")
+            print(f"\nLog for step-based PPSF is saved in {log_fname}")
             outfile.close()
         
         return res_final
 
     def load_ppsf_parallel(fname):
-        """ loads a ppsf_parallel simulated log file 
+        """load a ppsf_parallel simulated log file 
         the last line is time """ 
         if not os.path.exists(fname):
             raise Exception(f'File {fname} not exist.')
@@ -395,7 +396,7 @@ class PPSF(FaultSim):
         return res
 
     def load_pd_ppsf_conf(fname):
-        """ loads a ppsf with confidence log file """ 
+        """load a ppsf log file with confidence log file """ 
         if not os.path.exists(fname):
             raise Exception(f'File {fname} not exists')
         lines = open(fname, "r").readlines()
