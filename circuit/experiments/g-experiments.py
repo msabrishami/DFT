@@ -431,7 +431,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
             path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
-            print(f"Data is not available for CI={c}. You should put the data in {path}.")
+            print(f"Data is not available for CI={c}. You should put the data in {path}/")
             continue
         cis.append(PPSF.load_pd_ppsf_conf(fname))
     
@@ -746,6 +746,8 @@ if __name__ == "__main__":
     elif args.func == "stafan":
         # stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
         stafan(circuit, tps=[100,2000,3000,4000], ci=1)
+    
+    #testd up to here.
     
     #Delta FC
     elif args.func == "dfc-pfs":
