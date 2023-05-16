@@ -274,10 +274,6 @@ class PPSF(FaultSim):
                 fl_cont.add_all()
                 fl_curr.add_all()
 
-            # elif isinstance(fault_count, int):
-            #     fl_cont.add_n_random(n=fault_count)
-            #     fl_curr.faults = fl_cont.faults.copy()
-
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
             
@@ -319,8 +315,8 @@ class PPSF(FaultSim):
             
         log_fname = None
 
-        # Add BFS depth to the log_fname?
         if op == None:
+            # Add BFS depth to the log_fname?
             log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_ci{ci}_proc{num_proc}.ppsf")
         else:
             log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_proc{num_proc}.ppsf")
@@ -337,7 +333,9 @@ class PPSF(FaultSim):
             time_s = time.time()
             fl_temp = FaultList(self.circuit)
 
-            # D_count_list is calculated here
+            # D_count_list is updated here
+            for f in fl_curr.faults:
+                f.D_count_list = []
             self._multiprocess_handler(fl_curr=fl_curr, tp=tp, num_proc=num_proc, log_fname=None, count_cont=True)
             if save_log:
                 outfile.write(f"#TP={tp}\n")
@@ -347,9 +345,8 @@ class PPSF(FaultSim):
                 fault_cont.D_count_list += np.array(fault.D_count_list)
                 mu = np.mean(fault_cont.D_count_list/tp_tot)
                 std = np.std(fault_cont.D_count_list/tp_tot)
-                if mu == 0 and std == 0: # All zero
-                    fl_temp.add_str(str(fault))
-                    # fl_temp.add_fault(fault)
+                if mu == 0 and std == 0: # all zero
+                    fl_temp.copy_fault(fault)
                 elif std == 0: # Why this happens at low number of tps (sometimes)?
                     print(f'(logging) {mu=}, {fault_cont.D_count_list}')
                 elif mu/std > ci:
@@ -357,16 +354,15 @@ class PPSF(FaultSim):
                     if save_log:
                         outfile.write(f"{fault}\t{mu=:.2e}\t{std=:.2e}\n")
                 else:
-                    fl_temp.add_str(str(fault))
-                    # fl_temp.add_fault(fault)
+                    fl_temp.copy_fault(fault)
 
             if verbose:
                 print(f"TP = {tp:5}: #All faults = {len(fl_curr.faults)} / #Detected faults = {len(fl_curr.faults)-len(fl_temp.faults):4}"+
                       f" / #Remaining faults = {len(fl_temp.faults):4}" +
-                    #   f" / FC = {100*(len(fl_curr.faults)-len(fl_temp.faults))/len(fl_curr.faults):.3f}%"+
                       f" / time = {time.time()-time_s:.2f}s")
-            
+
             fl_curr = fl_temp
+
             if len(fl_curr.faults) == 0:
                 break
 
@@ -375,10 +371,9 @@ class PPSF(FaultSim):
             outfile.write("\n#TP: (remaining faults)\n")
         
             for fault in fl_curr.faults:
-                # print(fault.D_count_list)
-                # mu = np.mean(fault.D_count_list) 
-                # std = np.std(fault.D_count_list)
-                # outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
+                mu = np.mean(fault.D_count_list) 
+                std = np.std(fault.D_count_list)
+                outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
                 
                 res_final[str(fault)] = mu/tp_tot
 

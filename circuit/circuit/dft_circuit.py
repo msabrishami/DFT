@@ -165,8 +165,8 @@ class DFTCircuit(circuit.Circuit):
         """
 
         if verbose:
-            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1):' + 
-                  f'\n\ton {self.c_name} for all nodes ({len(self.nodes)}) with {tp_count} tps ' + 
+            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) with:' + 
+                  f'on {self.c_name} for all nodes ({len(self.nodes)}) with {tp_count} tps ' + 
                   f'on {num_proc} process(es) ...')
 
         if tp_count < num_proc:
@@ -211,24 +211,22 @@ class DFTCircuit(circuit.Circuit):
         
         if verbose:
             # print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
-            print(f"Calculations finished in {time.time() - start_time:.2f} sec.")
+            print(f"\nCalculations finished in {time.time() - start_time:.2f} sec.")
         
         self._stafan_executed = True
         
         if save_log:
-            self.save_STAFAN()
+            self.save_STAFAN(tp_count)
     
-    def STAFAN_FC(self, tp_count):
+    def STAFAN_FC(self, tp):
         """ Estimation of fault coverage for all faults 
         All faults include all nodes, SS@0 and SS@1 
         pd stands for probability of detection 
         """
-        import pdb
         if not self._stafan_executed:
             if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)? '):
-                # TODO-Ghazal
-                tp_count = int(input('Enter Number of test patterns: '))
-                # self.STAFAN(self.tp_count)
+                tp = int(input('Enter Number of test patterns: '))
+                self.STAFAN(tp)
             else:
                 raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
 
@@ -236,23 +234,16 @@ class DFTCircuit(circuit.Circuit):
         for node in self.nodes_lev:
             if None in [node.C0,node.C1,node.B0,node.B1]:
                 raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp_count) 
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp_count) 
+            nfc += math.exp(-1 * node.C1 * node.B1 * tp) 
+            nfc += math.exp(-1 * node.C0 * node.B0 * tp) 
 
         return 1 - nfc/(2*len(self.nodes)) 
 
-    def save_STAFAN(self, fname=None, tp_count=None):
-        _fname = os.path.join(config.STAFAN_DIR, self.c_name)
-        if not os.path.exists(_fname):
-            os.makdirs(_fname)
-        
-        #TODO-Ghazal: clean up
-        if fname is None and tp_count is None:
-            fname = os.path.join(_fname, f"{self.c_name}.stafan")
-        elif fname is None:
-            fname = os.path.join(_fname, f"{self.c_name}_tp{tp_count}.stafan")
-        else:
-            fname = os.path.join(_fname, fname)
+    def save_STAFAN(self, tp):
+        fname = os.path.join(config.STAFAN_DIR, self.c_name)
+        if not os.path.exists(fname):
+            os.makedirs(fname)
+        fname = os.path.join(fname, f"{self.c_name}_tp{tp}.stafan")
 
         with open(fname, 'w') as outfile:
             outfile.write("Node,C0,C1,B0,B1,S\n")

@@ -47,7 +47,6 @@ class FaultList:
         elif nodes:
             self.add_nodes(nodes)
 
-
     def add(self, node_num, stuck_val):
         self.faults.append(Fault(node_num, stuck_val))
 
@@ -76,6 +75,11 @@ class FaultList:
 
     def add_fault(self, fault: Fault):
         self.faults.append(fault)
+    
+    def copy_fault(self, fault: Fault):
+        new_f = Fault(fault.node_num, fault.stuck_val)
+        new_f.D_count_list = fault.D_count_list.copy()
+        self.add_fault(new_f)
 
     def remove_faults(self, faults):
         # TODO: this is not a good method, to be modified after

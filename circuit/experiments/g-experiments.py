@@ -157,58 +157,59 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
-# TODO-Ghazal: not checked by MSA
-def diff_tp_stafan(circuit, tps): #TODO: Must be changed
-    """
-    Fault coverage estimation
-    STAFAN measures are calculates many times with different tpLoad count of test patterns.
-    Then, the fault coverage is calculated using STAFAN values with the correspoing tp count.
-    TODO: list of tps should be generated automatically according to ?
-    """
 
-    set = 0
-    fc_sequence = []
-    tp_sequence = []
-    for tp in tps:
-        f = f"{tp}-{set}"
-        path = f"{config.STAFAN_DIR}/{circuit.c_name}"
-        if not os.path.exists(path):
-            os.makedirs(path)
-        fname = f"{path}/{circuit.c_name}-TP{f}.stafan"
-        if not os.path.exists(fname):
-            tpc = re.findall(r"\d+", f)[0]
-            circuit.STAFAN(int(tpc))
-            circuit.save_STAFAN(tp=tp, fname=fname)
-        else:
-            circuit.load_TMs(fname)
+# # TODO-Ghazal: not checked by MSA
+# def diff_tp_stafan(circuit, tps): #TODO: Must be changed
+#     """
+#     Fault coverage estimation
+#     STAFAN measures are calculates many times with different tpLoad count of test patterns.
+#     Then, the fault coverage is calculated using STAFAN values with the correspoing tp count.
+#     TODO: list of tps should be generated automatically according to ?
+#     """
 
-        try:
-            fc_sequence.append(circuit.STAFAN_FC(tp)*100)
-            tp_sequence.append(tp)
-        except:
-            continue
+#     set = 0
+#     fc_sequence = []
+#     tp_sequence = []
+#     for tp in tps:
+#         f = f"{tp}-{set}"
+#         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
+#         if not os.path.exists(path):
+#             os.makedirs(path)
+#         fname = f"{path}/{circuit.c_name}-TP{f}.stafan"
+#         if not os.path.exists(fname):
+#             tpc = re.findall(r"\d+", f)[0]
+#             circuit.STAFAN(int(tpc))
+#             circuit.save_STAFAN(tp=tp, fname=fname)
+#         else:
+#             circuit.load_TMs(fname)
 
-    plot = sns.lineplot(x=tp_sequence, y=fc_sequence,
-                        color="green", label = "STAFAN (different tpLoads)")
-    plot = sns.scatterplot(x=tp_sequence, y=fc_sequence, color="green") #draw dots
+#         try:
+#             fc_sequence.append(circuit.STAFAN_FC(tp)*100)
+#             tp_sequence.append(tp)
+#         except:
+#             continue
+
+#     plot = sns.lineplot(x=tp_sequence, y=fc_sequence,
+#                         color="green", label = "STAFAN (different tpLoads)")
+#     plot = sns.scatterplot(x=tp_sequence, y=fc_sequence, color="green") #draw dots
     
-    plt.xscale("log")
-    plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
-    plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
-    plot.set_title(
-        f"Dependency of fault coverage on random test patterns\n\
-        for circuit {circuit.c_name}\n \
-        method: STAFAN (different tpLoads)", fontsize=13)
+#     plt.xscale("log")
+#     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
+#     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
+#     plot.set_title(
+#         f"Dependency of fault coverage on random test patterns\n\
+#         for circuit {circuit.c_name}\n \
+#         method: STAFAN (different tpLoads)", fontsize=13)
 
-    # path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
-    path = "./results/figures/"
-    if not os.path.exists(path):
-        os.makedirs(path)
+#     # path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
+#     path = "./results/figures/"
+#     if not os.path.exists(path):
+#         os.makedirs(path)
 
-    fname = path+f"tpfc-stafan-diff-tpLoad-{circuit.c_name}.png"
-    print(f"Figure saved in {fname}")
-    plt.tight_layout()
-    plt.savefig(fname)
+#     fname = path+f"tpfc-stafan-diff-tpLoad-{circuit.c_name}.png"
+#     print(f"Figure saved in {fname}")
+#     plt.tight_layout()
+#     plt.savefig(fname)
 
 # TODO-Ghazal: This is NOT WORKING
 def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
