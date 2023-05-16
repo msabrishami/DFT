@@ -1,7 +1,6 @@
 import argparse
 import math
 import os
-import re
 import pdb
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,7 @@ import pandas as pd
 import sys
 sys.path.append('../')
 
-FIG_DIR = "results/figures/"
+from config import FIG_DIR
 
 PLOT_MIN_TP = 50
 PLOT_MIN_Y = 80
@@ -29,7 +28,7 @@ from tp_generator import TPGenerator
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
           'purple', 'turquoise', 'salmon', 'skyblue']
 
-const_base = 1.08
+const_base = 1.1
 exp = lambda x: (const_base**(x))
 log = lambda y: np.log(y) / np.log(const_base)
 yticks = [80,90,95,97.5,99,99.5,99.75,100]
@@ -38,8 +37,8 @@ def pars_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-ckt", type=str, required=False,
                         help="ckt file address")
-    parser.add_argument("-v", type=str, required=False,
-                        help="verilog file address")
+    # parser.add_argument("-v", type=str, required=False,   # no need. ckt works for both.
+    #                     help="verilog file address")
     parser.add_argument("-synv", type=str, required=False, help="syn ver")
     parser.add_argument("-tp", type=int, required=False,
                         help="tp count for random sim")
@@ -70,25 +69,13 @@ def pars_args():
                         help="Repetition count for figures")
     parser.add_argument("-ci", type=int, required=False,
                         help="Confidence value (mu/std)")
-    parser.add_argument("-figmode", type=str, required=False, #options are hist, scatter, both
-                        help="Draw histogram or scatter plot for function ppsf-error-ci")
+    parser.add_argument("-figmode", type=str, required=False, choices=['hist', 'scatter','both'],
+                        help="Draw histogram or scatter plot for function ppsf-error-ci",)
     args = parser.parse_args()
 
     return args
 
-
-def read_circuit(args):
-    circuit = None
-    if args.ckt:
-        circuit = DFTCircuit(args.ckt)
-
-    elif args.v:
-        circuit = DFTCircuit(args.v)
-    return circuit
-
-
 def node_info(node):
-
     node_parameters = {}
     node_parameters["C0"] = node.C0
     node_parameters["C1"] = node.C1
@@ -158,59 +145,6 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
-# # TODO-Ghazal: not checked by MSA
-# def diff_tp_stafan(circuit, tps): #TODO: Must be changed
-#     """
-#     Fault coverage estimation
-#     STAFAN measures are calculates many times with different tpLoad count of test patterns.
-#     Then, the fault coverage is calculated using STAFAN values with the correspoing tp count.
-#     TODO: list of tps should be generated automatically according to ?
-#     """
-
-#     set = 0
-#     fc_sequence = []
-#     tp_sequence = []
-#     for tp in tps:
-#         f = f"{tp}-{set}"
-#         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
-#         if not os.path.exists(path):
-#             os.makedirs(path)
-#         fname = f"{path}/{circuit.c_name}-TP{f}.stafan"
-#         if not os.path.exists(fname):
-#             tpc = re.findall(r"\d+", f)[0]
-#             circuit.STAFAN(int(tpc))
-#             circuit.save_STAFAN(tp=tp, fname=fname)
-#         else:
-#             circuit.load_TMs(fname)
-
-#         try:
-#             fc_sequence.append(circuit.STAFAN_FC(tp)*100)
-#             tp_sequence.append(tp)
-#         except:
-#             continue
-
-#     plot = sns.lineplot(x=tp_sequence, y=fc_sequence,
-#                         color="green", label = "STAFAN (different tpLoads)")
-#     plot = sns.scatterplot(x=tp_sequence, y=fc_sequence, color="green") #draw dots
-    
-#     plt.xscale("log")
-#     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
-#     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
-#     plot.set_title(
-#         f"Dependency of fault coverage on random test patterns\n\
-#         for circuit {circuit.c_name}\n \
-#         method: STAFAN (different tpLoads)", fontsize=13)
-
-#     # path = f"{config.FIG_DIR}/{circuit.c_name}/estimation-diff-tploads/"
-#     path = "./results/figures/"
-#     if not os.path.exists(path):
-#         os.makedirs(path)
-
-#     fname = path+f"tpfc-stafan-diff-tpLoad-{circuit.c_name}.png"
-#     print(f"Figure saved in {fname}")
-#     plt.tight_layout()
-#     plt.savefig(fname)
-
 def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     """ Run and plot the TPFC figure by doing real fault simulation (PFS).
     If times > 1, then the fault simulation is done several times with different sets of 
@@ -230,15 +164,17 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
 
     for batch in range(times):
         #TODO > Saeed changed this for timing reasons ... 
-        fc_fname = f"./results/fc_pfs/tpfc-pfs-{circuit.c_name}-tp{tp}-part{batch}.csv"
+        path = os.path.join(config.FAULT_SIM_DIR, circuit.c_name)
+        fc_fname = os.path.join(path, f"tpfc-pfs-{circuit.c_name}-tp{tp}-part{batch}.csv")
+        
         if os.path.exists(fc_fname):
             print(f"PFS results available, loading from {fc_fname}")
             fc = [float(x) for x in open(fc_fname, "r").readline().split(",")]
         else:
-            print(f"PFS results NOT available, saving into {fc_fname}")
+            print(f"PFS results NOT available, start running and saving into {fc_fname}")
             pfs = PFS(circuit)
             pfs.fault_list.add_all()
-            fc = pfs.tpfc(tp, fault_drop=1, verbose=True)
+            fc = pfs.tpfc(tp, fault_drop=1, verbose=False)
             outfile = open(fc_fname, "w")
             outfile.write(",".join([str(x) for x in fc]))
             outfile.close()
@@ -305,7 +241,6 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     plot.set(xlim=(PLOT_MIN_TP,tp), ylim=(PLOT_MIN_Y,PLOT_MAX_Y))
 
     plot.grid()
-    plt.show()
 
     plot.set_ylabel(f"Fault Coverage (FC%)", fontsize=13)
     plot.set_xlabel("Test Pattern Count #TP", fontsize=13)
@@ -314,12 +249,10 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         for circuit {circuit.c_name} \n \
         method: PPSF", fontsize=13)
 
-    path = "./results/figures"
-    fname = f"{path}/tpfc-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-cpu{cpu}.png"
+    fname = f"{FIG_DIR}/tpfc-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-cpu{cpu}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
-
 
 def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     """ A plot comparing fault coverage using STAFAN vs. PFS vs. PPSF.
@@ -357,7 +290,6 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     plt.savefig(fname)
     print(f"Final figure saved in {fname}")
 
-
 def ppsf_ci(circuit, cpu, _cis):
     """ Histogram for probability detection of faults.
     The graph is drawn for the given CIs.
@@ -378,7 +310,7 @@ def ppsf_ci(circuit, cpu, _cis):
             path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(ci)
-            print(f"Data is not available for CI={ci}")
+            print(f"Warning: Data is not available for CI={ci}")
             continue
         res_ppsf = PPSF.load_pd_ppsf_conf(fname)
         ppsf_pd = [x for x in res_ppsf.values()]
@@ -404,8 +336,7 @@ def ppsf_ci(circuit, cpu, _cis):
     fname = path+f"ppsf-CI-{circuit.c_name}-maxCI{max(_cis)}.png"
     plt.tight_layout()
     plt.savefig(fname)
-    print(f"\nFigure saved in {fname}.")
-
+    print(f"\nFigure saved in {fname}")
 
 def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     """ Scatter plot for each CI comparing to the maximum given CI. Drawing heatmap is optional.
@@ -439,11 +370,8 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     for f in fault_list:
         row = {"fault": f}
         for idx, c in enumerate(_cis):
-                row["ci" + str(c)] = cis[idx][f]
-        try:
-            df = df.append(row, ignore_index=True)
-        except:
-            pass
+            row["ci" + str(c)] = cis[idx][f]
+            df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index=True)
 
     max_ci = max(_cis)
     _cis.remove(max_ci)
@@ -470,8 +398,8 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     if heatmap:
         sns.heatmap(df.corr(), annot=True, fmt="f", cmap="YlGnBu")
 
-    fig.suptitle("Mean of detection probability which are\n\
-    in the given confidence interval.", fontsize=16)
+    fig.suptitle("Mean of detection probability\n\
+    in the given confidence interval", fontsize=16)
     fig.tight_layout()
     fname = f"{path}ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-cpu{cpu}.png"
     plt.savefig(fname)
@@ -492,7 +420,8 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     _cis : list
         List of CIs that the PPSF results are reported if the fault convergence is in.
     """
-
+    if hist_scatter not in ['hist', 'scatter']:
+        raise Exception('Warning: flag "figmode" is not passed.')
     df = pd.DataFrame(columns=["fault"].extend(["ci"+str(x) for x in _cis]))
     cis = []
     copy_cis = _cis.copy()
@@ -509,9 +438,12 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     for f in fault_list:
         row = {"fault": f}
         for idx, c in enumerate(_cis):
-            row["ci" + str(c)] = cis[idx][f]
-        # df = df.app[dend(row, ignore_index=True)
-        df = pd.concat([df, pd.DataFrame(row)], ignore_index = True)
+            try:
+                row["ci" + str(c)] = cis[idx][f]
+            except:
+                continue
+
+        df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index = True)
 
     max_ci = max(_cis)
     _cis.remove(max_ci)
@@ -554,21 +486,24 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.xlabel(f"PD using PPSF with CI={max_ci}")
         plt.ylabel(f"Relative error with respect to PPSF with CI={max_ci}")
 
-    fname = "pathppsf-error-{}-maxCI{}-{}plot-cpu{}.png".format(
-            circuit.c_name, max_ci, hist_scatter, cpu)
+    fname = f"{path}ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-cpu{cpu}.png"
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
-
-def stafan(circuit, tps, ci = 5): 
+def stafan(circuit: DFTCircuit, tps, ci = 5): 
     """
-    TODO: 
+    TODO: Description.
+    TODO: finalize axis scales
     Parameters:
     -----------
     circuit : Circuit
     tps :  list
 
     """
+
+    if len(tps)<2:
+        raise Exception('Pass a list with at least two elements for tp')
+    
     df = pd.DataFrame(columns=["Node", "C0", "C1", "B0", "B1","D0", "D1" ,"TP"])
     for tp in tps:
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
@@ -577,14 +512,15 @@ def stafan(circuit, tps, ci = 5):
         fname = f"{path}/{circuit.c_name}-TP{tp}.stafan"
         if not os.path.exists(fname):
             circuit.STAFAN(tp)
-            circuit.save_STAFAN(tp=tp, fname=fname)
+            circuit.save_STAFAN(fname=fname, verbose=False)
         else:
-            circuit.load_TMs(fname)
+            circuit.load_STAFAN(fname)
         for n in circuit.nodes_lev:
-            df = df.append({"Node":n.num, "C0": n.C0, "C1": n.C1,
+            row = {"Node":n.num, "C0": n.C0, "C1": n.C1,
                             "B0": n.B0, "B1": n.B1,
                             "D0":n.B1*n.C1 ,"D1":n.B0*n.C0,
-                            "TP":tp}, ignore_index=True)
+                            "TP":tp}
+            df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index=True)
 
     max_tp = max(tps)
     tps.remove(max_tp)
@@ -600,16 +536,17 @@ def stafan(circuit, tps, ci = 5):
             for p in ["C0", "C1", "B0", "B1", "D0", "D1"]:
                 a = float(dftp[dftp["Node"]==n.num][p])
                 b = float(df_max[df_max["Node"]==n.num][p])
-                row[f"{p}-error"] = (a-b)/b
-            df_error = df_error.append(row,ignore_index=True)
-    
-    # del df
-    # del df_max
+                if b!= 0:
+                    row[f"{p}-error"] = (a-b)/b
+                else:
+                    row[f"{p}-error"] = 0
+
+            df_error = pd.concat([df_error, pd.DataFrame(row, index=[0])], ignore_index=True)
     
     df_p = pd.DataFrame(columns=["C", "B", "D", "TP"])
     for p in [ "C", "B", "D"]:
-        df_p[p] = df_error[f"{p}0-error"].append(df_error[f"{p}1-error"],ignore_index=True)
-        df_p["TP"] = df_error["TP"].append(df_error["TP"],ignore_index=True)
+        df_p[p] = pd.concat([df_error[f"{p}0-error"], df_error[f"{p}1-error"]], ignore_index=True)
+        df_p["TP"] = pd.concat([df_error["TP"],df_error["TP"]], ignore_index=True)
 
     for p in ["C", "B", "D"]:
         mean = df_p[df_p["TP"]==min(tps)][p].mean(skipna=True)
@@ -618,16 +555,14 @@ def stafan(circuit, tps, ci = 5):
         min_val = max(mean-ci*std, min(df_p[df_p["TP"]==min(tps)][p]))
         max_val = min(mean+ci*std, max(df_p[df_p["TP"]==min(tps)][p]))
         bins_count = 20 if len(circuit.nodes_lev) < 500 else 40 
-        bins = np.linspace(min_val, max_val, bins_count)
+        # bins = np.linspace(min_val, max_val, bins_count)
         data = df_p[(df_p[p]>min_val) & (df_p[p]<max_val)]
         plt.rcParams["patch.force_edgecolor"] = False
         plt.rcParams['patch.linewidth'] = 0
         plt.rcParams['patch.edgecolor'] = 'none'
 
-        # print([10**i for i in range(int(np.log10(data[p].value_counts().max())+1))])
         plot = sns.histplot(data=data, x=p, hue="TP",
                 # bins=bins, 
-                # log_scale=(False, True),
                 alpha=0.1, 
                 kde=True, 
                 palette=colors[:len(tps)])
@@ -647,7 +582,6 @@ def stafan(circuit, tps, ci = 5):
                 compared to the maximum TP={max_tp}.\n \
                 Showing errors distribution with CI={ci}")
         plt.tight_layout()
-        plt.show()
         fname = f"{path}stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
@@ -655,7 +589,7 @@ def stafan(circuit, tps, ci = 5):
 
     return 
 
-def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
+def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
     """ 
     TODOs: 
     - log fname
@@ -677,12 +611,12 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
     tps_detected_init = []
     
     init_pfs = PFS(circuit)
-    init_pfs.fault_list.add_all(circuit)
+    init_pfs.fault_list.add_all()
     all_faults = set([str(x) for x in init_pfs.fault_list.faults])
 
     for tp in tps:
         init_pfs = PFS(circuit)
-        init_pfs.fault_list.add_all(circuit)
+        init_pfs.fault_list.add_all()
         tps_detected_init.append([str(x) for x in init_pfs._one_tp_run(tp, fault_drop=1)])
 
     # MSA: the main idea here was to not consider test patterns one after another
@@ -768,11 +702,7 @@ if __name__ == "__main__":
 
     cis = [1, 2, 3, 4, 5, 6, 10]
 
-    circuit = read_circuit(args)
-    circuit.levelize()
-
-    ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
-
+    circuit = DFTCircuit(args.ckt)
 
     if args.func == "tpfc-stafan":
         tpfc_stafan(circuit=circuit, times=args.times,
@@ -810,7 +740,8 @@ if __name__ == "__main__":
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
+        # stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
+        stafan(circuit, tps=[100,2000,3000,4000], ci=1)
     
     #Delta FC
     elif args.func == "dfc-pfs":
@@ -821,3 +752,5 @@ if __name__ == "__main__":
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
+    
+    plt.show()

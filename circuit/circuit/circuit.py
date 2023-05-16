@@ -148,12 +148,8 @@ class Circuit:
         if count > len(self.nodes):
             print("Error: count should be less than count of total nodes")
             return None
-        res = set() 
-        while len(res) < count:
-            idx = random.randint(0, len(self.nodes)-1)
-            res.add(self.nodes_lev[idx])
 
-        return list(res)[0] if count==1 else res  # better to return a list all the time
+        return random.choices(self.nodes_lev,k=count)
     
     def print_fanin(self, target_node, depth):
         # TODO: needs to be checked and tested -- maybe using utils.get_fanin?

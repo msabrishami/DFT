@@ -211,7 +211,7 @@ class PPSF(FaultSim):
             fault_copy = FaultList()
             fault_copy.faults = fl_curr.faults.copy()
             p = Process(target=self._single_process_runner,
-                        args=(child_conn, tp//num_proc+1, fault_copy, verbose))
+                        args=(child_conn, tp, fault_copy, verbose))
             p.start()
             process_list.append((p, parent_conn))
 
@@ -231,7 +231,7 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, num_proc=1, ci=1, depth=1, fault_count=None, save_log=False):
+    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, log_fname=None):
         """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
         All faults are considered. 
         TODO: optional faults
@@ -313,16 +313,16 @@ class PPSF(FaultSim):
         if not os.path.exists(path):
             os.makedirs(path)
             
-        log_fname = None
-
-        if op == None:
-            # Add BFS depth to the log_fname?
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_ci{ci}_proc{num_proc}.ppsf")
-        else:
-            log_fname = os.path.join(path, f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_proc{num_proc}.ppsf")
+        
+        if log_fname is None:
+            if op == None:
+                # Add BFS depth to the log_fname?
+                log_fname = f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_ci{ci}_proc{num_proc}.ppsf"
+            else:
+                log_fname = f"{self.circuit.c_name}_PPSF_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
         
         if save_log:
-            outfile = open(log_fname, "w")
+            outfile = open(os.path.join(path, log_fname), "w")
                 
         tp_tot = 0
         res_final = {}
@@ -412,5 +412,5 @@ class PPSF(FaultSim):
                 break
             words = line.split()
             res[words[0]] = float(words[1])/current_tp
-        
+        print(f'Data of {fname} was loaded successfully.')
         return res
