@@ -241,12 +241,15 @@ class DFTCircuit(circuit.Circuit):
         return 1 - nfc/(2*len(self.nodes)) 
 
     def save_STAFAN(self, fname=None, verbose=True):
+        path = os.path.join(config.STAFAN_DIR, self.c_name)
+        
+        if not os.path.exists(path):
+            os.makedirs(path)
         if not fname:
-            fname = os.path.join(config.STAFAN_DIR, self.c_name)
-            if not os.path.exists(fname):
-                os.makedirs(fname)
-            fname = os.path.join(fname, f"{self.c_name}_tp{self._stafan_tp}.stafan")
-
+            fname = f"{self.c_name}_tp{self._stafan_tp}.stafan"
+        
+        fname = os.path.join(path, fname)
+        
         with open(fname, 'w') as outfile:
             outfile.write("Node,C0,C1,B0,B1,S\n")
             for node in self.nodes_lev:

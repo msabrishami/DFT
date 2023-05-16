@@ -61,6 +61,8 @@ class TPGenerator:
         """ 
         fn = os.path.join(config.PATTERN_DIR, 
                 self.circuit.c_name + "_" + str(tp_count) + "_tp_" + mode + ".tp")
+        if not os.path.exists(fn):
+            os.makedirs(fn)
         tp_fname = fn if tp_fname==None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
