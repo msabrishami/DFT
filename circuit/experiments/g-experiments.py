@@ -93,7 +93,7 @@ def node_info(node):
     return node_parameters
 
 
-def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
+def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
     """ Run and plot the TPFC figure usin STAFAN values.
     If times > 1, then  several STAFAN values are calculated using different sets of 
     random test patterns. The figure will show the range and the mean of FC value.
@@ -119,21 +119,16 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
         if not os.path.exists(fname):
-            # TODO-Ghazal: there was a reason that we passed the filename
-            circuit.STAFAN(tpLoad, save_log=False)
-            circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan")
+            circuit.STAFAN(tpLoad, save_log=False, verbose=False)
+            circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan", verbose = False)
         else:
             circuit.load_STAFAN(fname)
         for tpc in range(0, tp+1, 10):
-            # TODO-Ghazal: why try and except? 
-            try:
-                row = {"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, "batch": i}
-                df = df.append(row, ignore_index=True)
-            except:
-                continue
+            row = pd.DataFrame({"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, "batch": i}, index=[0])
+            df = pd.concat([df, row], ignore_index=True)
+
     plot = sns.lineplot(x=df["tp"], y=df["fc"],
                         color="green", errorbar=('ci', 99.99), label=f"STAFAN ({tpLoad})")
-
 
     plot.set_yscale("function", functions=(exp, log))
     plot.set(xlim=(50,tp), ylim=(80,100))

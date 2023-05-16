@@ -163,7 +163,7 @@ class DFTCircuit(circuit.Circuit):
         total_tp : (int) total number of test pattern vectors (not less than num_proc)
         num_proc : (int) number of processors that will be used in parallel processing 
         """
-
+        self._stafan_tp = tp_count
         if verbose:
             print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) with:' + 
                   f'on {self.c_name} for all nodes ({len(self.nodes)}) with {tp_count} tps ' + 
@@ -223,6 +223,7 @@ class DFTCircuit(circuit.Circuit):
         All faults include all nodes, SS@0 and SS@1 
         pd stands for probability of detection 
         """
+        self._stafan_tp = tp
         if not self._stafan_executed:
             if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)? '):
                 tp = int(input('Enter Number of test patterns: '))
@@ -239,18 +240,20 @@ class DFTCircuit(circuit.Circuit):
 
         return 1 - nfc/(2*len(self.nodes)) 
 
-    def save_STAFAN(self, tp):
-        fname = os.path.join(config.STAFAN_DIR, self.c_name)
-        if not os.path.exists(fname):
-            os.makedirs(fname)
-        fname = os.path.join(fname, f"{self.c_name}_tp{tp}.stafan")
+    def save_STAFAN(self, fname=None, verbose=True):
+        if not fname:
+            fname = os.path.join(config.STAFAN_DIR, self.c_name)
+            if not os.path.exists(fname):
+                os.makedirs(fname)
+            fname = os.path.join(fname, f"{self.c_name}_tp{self._stafan_tp}.stafan")
 
         with open(fname, 'w') as outfile:
             outfile.write("Node,C0,C1,B0,B1,S\n")
             for node in self.nodes_lev:
                 ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
                 outfile.write(",".join([node.num] + ss) + "\n")
-        print(f"\nSaved STAFAN test measuress in {fname}")
+        if verbose:
+            print(f"\nSaved STAFAN test measuress in {fname}")
 
     def load_STAFAN(self, fname): # change name
         lines = open(fname).readlines()[1:]
