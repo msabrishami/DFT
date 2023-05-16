@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from multiprocessing import Pipe, Process
+import pdb
 
 sys.path.append('../')
 import config
@@ -344,9 +345,8 @@ class PPSF(FaultSim):
             for fault in fl_curr.faults:
                 fault_cont = fl_cont.faults[fault_idx[str(fault)]]
                 fault_cont.D_count_list += np.array(fault.D_count_list)
-
-                mu = np.mean(fault_cont.D_count_list)
-                std = np.std(fault_cont.D_count_list)
+                mu = np.mean(fault_cont.D_count_list/tp_tot)
+                std = np.std(fault_cont.D_count_list/tp_tot)
                 if mu == 0 and std == 0: # All zero
                     fl_temp.add_str(str(fault))
                     # fl_temp.add_fault(fault)
@@ -355,7 +355,7 @@ class PPSF(FaultSim):
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if save_log:
-                        outfile.write(f"{fault}\t{mu=:.2f}\t{std=:.2f}\n")
+                        outfile.write(f"{fault}\t{mu=:.2e}\t{std=:.2e}\n")
                 else:
                     fl_temp.add_str(str(fault))
                     # fl_temp.add_fault(fault)

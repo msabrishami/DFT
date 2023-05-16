@@ -14,7 +14,7 @@ sys.path.append('../')
 
 import config
 import utils
-from circuit.circuit import Circuit
+from circuit.dft_circuit import DFTCircuit
 from fault_simulation.pfs import PFS
 from tp_generator import TPGenerator
 
@@ -71,10 +71,10 @@ def pars_args():
 def read_circuit(args):
     circuit = None
     if args.ckt:
-        circuit = Circuit(args.ckt)
+        circuit = DFTCircuit(args.ckt)
 
     elif args.v:
-        circuit = Circuit(args.v)
+        circuit = DFTCircuit(args.v)
     return circuit
 
 
@@ -111,27 +111,30 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
 
     df = pd.DataFrame(columns=["tp", "fc", "batch"])
     for i in range(times):
+        # TODO-Ghazal:
+        # this not-existing path shouldn't be a major concern in this function. 
+        # Whoever wants to save a file should check for this
         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
         if not os.path.exists(path):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
         if not os.path.exists(fname):
-            circuit.STAFAN(tpLoad)
-            circuit.save_STAFAN(tp=tpLoad, fname=fname)
+            # TODO-Ghazal: there was a reason that we passed the filename
+            circuit.STAFAN(tpLoad, save_log=False)
+            circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan")
         else:
-            circuit.load_TMs(fname)
-
+            circuit.load_STAFAN(fname)
         for tpc in range(0, tp+1, 10):
+            # TODO-Ghazal: why try and except? 
             try:
                 row = {"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, "batch": i}
                 df = df.append(row, ignore_index=True)
             except:
                 continue
-
     plot = sns.lineplot(x=df["tp"], y=df["fc"],
-                        color="green", ci=99.99, label=f"STAFAN ({tpLoad})")
+                        color="green", errorbar=('ci', 99.99), label=f"STAFAN ({tpLoad})")
 
-    
+
     plot.set_yscale("function", functions=(exp, log))
     plot.set(xlim=(50,tp), ylim=(80,100))
     plot.set_yticks(yticks)
@@ -154,7 +157,7 @@ def tpfc_stafan(circuit, tp=100, tpLoad=100, times=1,):
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
-
+# TODO-Ghazal: not checked by MSA
 def diff_tp_stafan(circuit, tps): #TODO: Must be changed
     """
     Fault coverage estimation
@@ -207,7 +210,7 @@ def diff_tp_stafan(circuit, tps): #TODO: Must be changed
     plt.tight_layout()
     plt.savefig(fname)
 
-
+# TODO-Ghazal: This is NOT WORKING
 def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
     """ Run and plot the TPFC figure by doing real fault simulation (PFS).
     If times > 1, then the fault simulation is done several times with different sets of 
@@ -234,7 +237,7 @@ def tpfc_pfs(circuit, tp, times, plot_ci=99.99, log_yscale=True):
         else:
             print(f"PFS results NOT available, saving into {fc_fname}")
             pfs = PFS(circuit)
-            pfs.fault_list.add_all(circuit)
+            pfs.fault_list.add_all()
             fc = pfs.tpfc(tp, fault_drop=1, verbose=True)
             outfile = open(fc_fname, "w")
             outfile.write(",".join([str(x) for x in fc]))
@@ -735,7 +738,6 @@ def dfc_pfs_analysis(circuit, tp_count, times, op_count, log=True):
     # path = f"../data/delta_FC_PFS/{circuit.c_name}/nodes"
     # if not os.path.exists(path):
     #     os.makedirs(path)
-    pdb.set_trace()
     
     # for node in nodes:
     #     delta_fcs = delta_fcs.append(obsv.deltaFC_PFS(circuit, node, tp, times, 5, log))
@@ -763,6 +765,15 @@ def dfc_pfs():
     pass
 
 
+def gen_graph(circuit, tp_count):
+    print("Let's start with generating a graph for features")
+    circuit.SCOAP_CC()
+    circuit.SCOAP_CO()
+    circuit.STAFAN(tp_count=tp_count)
+    graph = circuit.gen_graph()
+    pdb.set_trace()
+
+
 if __name__ == "__main__":
     args = pars_args()
     plt.rcParams["figure.figsize"]=9,8
@@ -770,7 +781,7 @@ if __name__ == "__main__":
     cis = [1, 2, 3, 4, 5, 6, 10]
 
     circuit = read_circuit(args)
-    circuit.lev()
+    circuit.levelize()
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
@@ -816,6 +827,9 @@ if __name__ == "__main__":
     #Delta FC
     elif args.func == "dfc-pfs":
         dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, op_count=args.opCount)
+    
+    elif args.func == "gen-graph":
+        gen_graph(circuit, tp_count=args.tp)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
