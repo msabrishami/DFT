@@ -220,13 +220,13 @@ if __name__ == '__main__':
     
 
     elif args.func == "tpfc-fig":
-        path = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
-        path += "tpfc_tp-" + str(args.tp)
+        fn = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
+        fn += "tpfc_tp-" + str(args.tp)
         for i in range(1, 20):
             tmp = str(i)
             for i in range(3-len(tmp)):
                 tmp = "0" + tmp
-            log_fname = "{}_{}.log".format(path, tmp)
+            log_fname = "{}_{}.log".format(fn, tmp)
             print(log_fname)
             infile = open(log_fname, "r")
             lines = infile.readlines()

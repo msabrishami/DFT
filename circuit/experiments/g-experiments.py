@@ -686,7 +686,7 @@ def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
     # fname += f"deltaFC-PFS-{circuit.c_name}-op{op_count}-tp{tp}-times{times}.csv"
     # log_df.to_csv(fname)
     # print(f"logs saved in {fname}")
-    
+
 def gen_graph(circuit, tp_count):
     print("Let's start with generating a graph for features")
     circuit.SCOAP_CC()
