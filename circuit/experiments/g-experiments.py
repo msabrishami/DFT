@@ -14,7 +14,7 @@ sys.path.append('../')
 from config import FIG_DIR, STAFAN_DIR, FAULT_SIM_DIR, AUTO_TP
 
 PLOT_MIN_TP = 50
-PLOT_MIN_Y = 80
+PLOT_MIN_Y = 40
 PLOT_MAX_Y = 100
 
 import utils
@@ -224,7 +224,12 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
     if not os.path.exists(path):
         os.makedirs(path)
-    fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+    # fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+    fname = os.path.join(path, f"ppsf/{circuit.c_name}_ppsf_ci{ci}_proc{cpu}.ppsf")
+    print("\t" + path)
+    if not os.path.exists(fname):
+        gen_ppsf(circuit, tp_steps=[200, 500, 1000, 2000, 5000, 10000, 2000, 5000, 10000], 
+                 ci=ci, num_proc=cpu)
 
     p_init = PPSF.load_pd_ppsf_conf(fname)    
     tps = np.arange(0, tp+1, 10)
@@ -237,6 +242,7 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         #     if (fcs[-1]-fcs[-5]) < 0.01:
         #         print("Saturated at tp={}".format(tp))
         #         flag = False
+    pdb.set_trace()
     plot = sns.lineplot(x=tps, y=fcs, color="red", label="PPSF")
     plot.set_yscale("function", functions=(exp, log))
     plot.set_yticks(yticks)
@@ -696,6 +702,13 @@ def gen_graph(circuit, tp_count):
     pdb.set_trace()
 
 
+def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
+    ppsf = PPSF(circuit)
+    tg = TPGenerator(circuit)
+    ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
+                             verbose=True, ci=ci, num_proc=num_proc, 
+                             fault_count='all', save_log=True)
+    
 if __name__ == "__main__":
     args = pars_args()
     prepare_env()
@@ -753,7 +766,10 @@ if __name__ == "__main__":
     elif args.func == "gen-graph":
         gen_graph(circuit, tp_count=args.tp)
 
+    elif args.func == "gen-ppsf":
+        gen_ppsf(circuit, tp_steps=[50, 100, 200, 500, 1000, 2000, 5000], 
+                 ci=args.ci, num_proc=args.cpu)
+
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
     
-    plt.show()

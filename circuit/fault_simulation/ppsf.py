@@ -317,9 +317,12 @@ class PPSF(FaultSim):
         if log_fname is None:
             if op == None:
                 # Add BFS depth to the log_fname?
-                log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_ci{ci}_cpu{num_proc}.ppsf"
+                # TODO-Ghazal clean this up 
+                # log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_ci{ci}_cpu{num_proc}.ppsf"
+                log_fname = f"{self.circuit.c_name}_ppsf_ci{ci}_proc{num_proc}.ppsf"
             else:
-                log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_cpu{num_proc}.ppsf"
+                # log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_cpu{num_proc}.ppsf"
+                log_fname = f"{self.circuit.c_name}_ppsf_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
         
         log_fname = os.path.join(path, log_fname)
         if save_log:
@@ -403,15 +406,22 @@ class PPSF(FaultSim):
         res = {}
         current_tp = 0
         for line in lines:
-            if line.startswith("#TP="):
+            if line == "\n":
+                continue
+            elif line.startswith("#TP="):
                 current_tp += float(line.split("=")[-1])
                 continue
-            if line.startswith("#TP: (remaining"):
+            elif line.startswith("#TP: (remaining"):
                 if lines[-1] == line:
                     break
                 print("Warning: PPSF was not completed with enough confidence for some faults")
                 break
             words = line.split()
-            res[words[0]] = float(words[1])/current_tp
+            #TODO-Ghazal: we need to make sure we are saving files correctly, 
+            # no end line 
+            try:
+                res[words[0]] = float(words[1])/current_tp
+            except:
+                pdb.set_trace()
         print(f'Data of {fname} was loaded successfully.')
         return res
