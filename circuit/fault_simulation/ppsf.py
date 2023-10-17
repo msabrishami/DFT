@@ -180,9 +180,11 @@ class PPSF(FaultSim):
         self.run(tps=tp, faults=faults, verbose=verbose, save_log=False)
         conn.send(faults)
 
-    def _multiprocess_handler(self, tp, fl_curr, num_proc=1, log_fname=None, count_cont=False, verbose = False):
-        """ Run ppsf in parallel for one step with given list or number of test patterns and fault list, \
-        counts the number of the times faults in fault list are detected. 
+    def _multiprocess_handler(self, tp, fl_curr, num_proc=1, log_fname=None, 
+            count_cont=False, verbose = False):
+        """ Run ppsf in parallel for one step with given list or number of 
+            test patterns and fault list, counts the number of the 
+            times faults in fault list are detected. 
         The tps are generated in each process separately, but are not stored by default.
 
         Parameters
@@ -231,12 +233,15 @@ class PPSF(FaultSim):
 
         return fl_curr
 
-    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, log_fname=None):
-        """ (many times ppsf) Run Parallel Fault Simulation with count of test patterns in tp_steps list over the given number of Processes.\
+    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
+            num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, 
+            log_fname=None):
+        """ (many times ppsf) Run Parallel Fault Simulation with count of 
+        test patterns in tp_steps list over the given number of Processes.
         All faults are considered. 
         TODO: optional faults
         The fault is dropped if the times of o detection is in the confidential interval.
-        Finally, for each fault the mean of detection times and the standard \
+        Finally, for each fault the mean of detection times and the standard
         deviation is stored in the log file.
 
         Parameters
@@ -244,7 +249,7 @@ class PPSF(FaultSim):
         circuit : Circuit 
         tp_steps : list
             Lengths of tps in each run
-        #TODO: processes might get similar test patterns since they are generated randomly
+
         op : Node
             Node used for observation point insertion (default is None)
         depth : int
@@ -253,10 +258,14 @@ class PPSF(FaultSim):
             If True, print results (default is False)
         log : boolean
             If True, save logs in log file (default is True).
-            Logs are list of faults and the mean of times they were detected over process times of \
-            processes. Logs are separated by the line '#TP=tp_counts' in each step.
+            Logs are list of faults and the mean of times they were detected 
+            over process times of processes. Logs are separated by 
+            the line '#TP=tp_counts' in each step.
         fault_count : int, str
-            if None or 'all', all faults are considered. Else, fault_count unique random faults are considered.
+            if None or 'all', all faults are considered. Else, fault_count 
+            unique random faults are considered.
+        
+        # TODO: processes might get similar TPs as they are generated randomly
         # TODO: pass a list of faults (now, doable in the constructor)
 
         Returns
@@ -269,6 +278,7 @@ class PPSF(FaultSim):
         fl_curr = FaultList(self.circuit)
         fl_cont = FaultList(self.circuit)
         
+        # Creating fault list (fl_curr) based on given OP and fault_count
         if op is None:
             if fault_count is None or fault_count == 'all':
                 fl_cont.add_all()
@@ -314,20 +324,21 @@ class PPSF(FaultSim):
             os.makedirs(path)
             
         
+        ### Setting log file name and path 
         if log_fname is None:
+            # TODO: Add BFS depth to the log_fname?
+            log_fname = f"{self.circuit.c_name}_ppsf"
             if op == None:
-                # Add BFS depth to the log_fname?
-                # TODO-Ghazal clean this up 
-                # log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_ci{ci}_cpu{num_proc}.ppsf"
-                log_fname = f"{self.circuit.c_name}_ppsf_ci{ci}_proc{num_proc}.ppsf"
+                log_fname += f"_ci{ci}_proc{num_proc}.ppsf"
             else:
-                # log_fname = f"{self.circuit.c_name}_ppsf_steps_f{len(fl_curr.faults)}_op{op.num}_ci{ci}_cpu{num_proc}.ppsf"
-                log_fname = f"{self.circuit.c_name}_ppsf_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
+                log_fname += f"_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
         
         log_fname = os.path.join(path, log_fname)
         if save_log:
             outfile = open(log_fname, "w")
                 
+        
+        ### Starting PPSF simulation 
         tp_tot = 0
         res_final = {}
         
@@ -335,12 +346,15 @@ class PPSF(FaultSim):
             tp = int(tp)
             tp_tot += tp
             time_s = time.time()
+
+            # To be used for TODO
             fl_temp = FaultList(self.circuit)
 
             # D_count_list is updated here
             for f in fl_curr.faults:
                 f.D_count_list = []
-            self._multiprocess_handler(fl_curr=fl_curr, tp=tp, num_proc=num_proc, log_fname=None, count_cont=True)
+            self._multiprocess_handler(fl_curr=fl_curr, tp=tp, num_proc=num_proc, 
+                    log_fname=None, count_cont=True)
             if save_log:
                 outfile.write(f"#TP={tp}\n")
 
@@ -352,7 +366,7 @@ class PPSF(FaultSim):
                 if mu == 0 and std == 0: # all zero
                     fl_temp.copy_fault(fault)
                 elif std == 0: # Why this happens at low number of tps (sometimes)?
-                    print(f'(logging) {mu=}, {fault_cont.D_count_list}')
+                    print(f'(logging) {str(fault)}\tmu={mu}, {fault_cont.D_count_list}')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
                     if save_log:
@@ -361,9 +375,11 @@ class PPSF(FaultSim):
                     fl_temp.copy_fault(fault)
 
             if verbose:
-                print(f"TP = {tp:5}: #All faults = {len(fl_curr.faults)} / #Detected faults = {len(fl_curr.faults)-len(fl_temp.faults):4}"+
-                      f" / #Remaining faults = {len(fl_temp.faults):4}" +
-                      f" / time = {time.time()-time_s:.2f}s")
+                msg = f"TP = {tp:5}: Simulated faults = #{len(fl_curr.faults)}\t"
+                msg += f"Finalized faults = #{len(fl_curr.faults)-len(fl_temp.faults):4}"
+                msg += f"\tRemaining faults = #{len(fl_temp.faults):4}"
+                msg += f"\tElpased time = {time.time()-time_s:.2f}s"
+                print(msg)
 
             fl_curr = fl_temp
 
@@ -375,11 +391,16 @@ class PPSF(FaultSim):
             outfile.write("\n#TP: (remaining faults)\n")
         
             for fault in fl_curr.faults:
-                mu = np.mean(fault.D_count_list) 
-                std = np.std(fault.D_count_list)
-                outfile.write(f"{fault}\t{mu:.2f}\t{std:.2f}\n")
+                fault_cont = fl_cont.faults[fault_idx[str(fault)]]
+                fault_cont.D_count_list += np.array(fault.D_count_list)
+                mu = np.mean(fault_cont.D_count_list/tp_tot)
+                std = np.std(fault_cont.D_count_list/tp_tot)
+
+                # mu = np.mean(fault.D_count_list/tp_tot) 
+                # std = np.std(fault.D_count_list/tp_tot)
+                outfile.write(f"{fault}\t{mu:.2e}\t{std:.2e}\n")
                 
-                res_final[str(fault)] = mu/tp_tot
+                res_final[str(fault)] = mu
 
             print(f"\nLog for step-based PPSF is saved in {log_fname}")
             outfile.close()
@@ -398,8 +419,11 @@ class PPSF(FaultSim):
             res[words[0]] = [int(x) for x in words[1:]]
         return res
 
-    def load_pd_ppsf_conf(fname):
+    def load_pd_ppsf_conf(self, fname):
         """load a ppsf log file with confidence log file """ 
+        #TODO We need to make sure files are saved correctly 
+        #TODO Consider writing down the policy for continual TP 
+        #TODO This method is also defined in utils and other places! 
         if not os.path.exists(fname):
             raise Exception(f'File {fname} not exists')
         lines = open(fname, "r").readlines()
@@ -413,15 +437,20 @@ class PPSF(FaultSim):
                 continue
             elif line.startswith("#TP: (remaining"):
                 if lines[-1] == line:
+                    print("(ERROR) What is this?")
                     break
-                print("Warning: PPSF was not completed with enough confidence for some faults")
-                break
-            words = line.split()
-            #TODO-Ghazal: we need to make sure we are saving files correctly, 
-            # no end line 
+                print("(Warning) PPSF was not completed with the given " + 
+                        "confidence interval for some of the faults")
+                continue
+            fault, mu_d, sigma_d = line.split()
+            node, ssaf = fault.split('@')
+            node = self.circuit.nodes[node]
+            node.stat["DP" + ssaf] = mu_d
             try:
-                res[words[0]] = float(words[1])/current_tp
+                res[fault] = mu_d # float(words[1])/current_tp
+
             except:
                 pdb.set_trace()
-        print(f'Data of {fname} was loaded successfully.')
+
+        print(f'Loaded PPSF data from: {fname}')
         return res

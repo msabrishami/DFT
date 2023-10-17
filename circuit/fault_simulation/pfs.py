@@ -197,7 +197,6 @@ class PFS(FaultSim):
         facult_coverage list and list of detected faults' strings
         """
         # TODO: should we take faults as an argument here?
-
         if isinstance(faults, FaultList):
             self.fault_list = faults
         
@@ -283,13 +282,21 @@ class PFS(FaultSim):
             print(pr)
         
         for idx, tp in enumerate(tps):
-            tpfc.append(len(self._one_tp_run(tp, fault_drop)))
+
+            tpfc.append(len(self._one_tp_run(tp, fault_drop=1)))
 
             fc_seq.append(100*sum(tpfc)/len(self.fault_list.faults))
+            print("-------------------------------")
+            print(idx)
+            print(sum([x.D_count for x in self.fault_list.faults]))
+            print("TPFC: " + " ".join(["{}".format(x) for x in tpfc]))
+            print("FC-SEQ: " + " ".join(["{:.2f}".format(x) for x in fc_seq]))
             if verbose:
                 if idx%100 == 0:
                     print("{:5} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
-                        idx, tpfc[-1], sum(tpfc), 100*sum(tpfc)/len(self.fault_list.faults)))
+                        idx, tpfc[-1], sum(tpfc), 
+                        100*sum(tpfc)/len(self.fault_list.faults)))
+
         fault_coverage = self.fault_list.calc_fc() 
 
         # TODO: MS-old: just double check this, the reason fault_coverage is not the same as 

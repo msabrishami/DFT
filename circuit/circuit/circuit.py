@@ -367,7 +367,8 @@ class Circuit:
 
     def gen_graph(self):
         """
-        Generate directed graph of the circuit, each node has attributes: CC0, CC1, CO, lev
+        Generate directed graph of the circuit 
+        Each node has attributes: lev
         """
         import networkx as nx
         G = nx.DiGraph()
@@ -377,14 +378,6 @@ class Circuit:
             G.nodes[n_num_normal]['lev'] = n.lev
             G.nodes[n_num_normal]['gtype'] = n.gtype
             G.nodes[n_num_normal]['ntype'] = n.ntype
-            G.nodes[n_num_normal]['CC0'] = n.CC0
-            G.nodes[n_num_normal]['CC1'] = n.CC1
-            G.nodes[n_num_normal]['CO'] = n.CO
-            G.nodes[n_num_normal]['C0'] = n.C0
-            G.nodes[n_num_normal]['C1'] = n.C1
-            G.nodes[n_num_normal]['S'] = n.S
-            G.nodes[n_num_normal]['B0'] = n.B0
-            G.nodes[n_num_normal]['B1'] = n.B1
             if n.gtype != 'IPT':
                 for unode in n.unodes:
                     G.add_edge(unode.num, n_num_normal)

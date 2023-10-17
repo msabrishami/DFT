@@ -52,6 +52,10 @@ class DFTCircuit(circuit.Circuit):
 
         for node in reversed(self.nodes_lev):
             node.eval_CO()
+    
+    def SCOAP(self):
+        self.SCOAP_CC()
+        self.SCOAP_CO()
 
     def STAFAN_reset_counts(self):
         for node in self.nodes_lev:
@@ -153,7 +157,7 @@ class DFTCircuit(circuit.Circuit):
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
-    def STAFAN(self, tp_count, num_proc=1, verbose=True, save_log=True):
+    def STAFAN(self, tp_count, num_proc=1, verbose=True, save_log=False):
         """ 
         Calculating STAFAN controllability and observability in parallel. 
         Random TPs are generated within the method itself and are not stored. 
@@ -269,10 +273,10 @@ class DFTCircuit(circuit.Circuit):
             node.B1 = float(words[4]) 
             node.S  = float(words[5]) 
 
-        print("Loaded circuit STAFAN TMs loaded from: " + fname)
+        print("Loaded circuit STAFAN TMs from: " + fname)
         self._stafan_executed = True
 
-##### Entropy / OR not called anywhere
+    ##### Entropy / OR not called anywhere
 
     def CALC_ENTROPY(self):
         for node in self.nodes_lev:
@@ -283,7 +287,7 @@ class DFTCircuit(circuit.Circuit):
         print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
         for node in self.nodes_lev:
             node.print_info(print_labels=False)
-
+    
     def CALC_TPI(self, num_TPI, fname):
         TPI_list = [] #list of node entropy 
         for node in self.nodes_lev:
@@ -453,13 +457,51 @@ class DFTCircuit(circuit.Circuit):
         self.fd_data = fd.read()
         fd.close()
 
-    def save_circuit_entropy(self, fname):
-        if not os.path.exists('../data/stafan-data'):
-            os.makedirs('../data/stafan-data')
-        outfile = open(fname, "w")
-        for node in self.nodes_lev:
-            arr = [node.num,node.Entropy] 
-            arr = [str(x) for x in arr]
-            ss = ",".join(arr)
-            outfile.write(ss + "\n")
-        outfile.close()
+    def save_scoap(self, fname=None):
+        if fname is None:
+            path = config.SCOAP_DIR
+            if not os.path.exists(path):
+                os.makedirs(path)
+            fname = os.path.join(path, f"{self.c_name}_scoap.txt")
+        with open(fname, "w") as outfile:
+            outfile.write("CC0,CC1,CO\n")
+            for node in self.nodes_lev:
+                outfile.write(f"{node.CC0},{node.CC1},{node.CO}\n")
+        print(f"SCOAP metrics saved in {fname}")
+
+    
+    def gen_graph(self):
+        """
+        Generate directed graph of the circuit 
+        Each node has attributes: 
+            basic: lev, gtype, ntype
+            SCOAP: CC0, CC1, CO
+            STAFAN: C0, C1, S, B0, B1
+            Detection probability (by PPSF-CI): DP0, DP1
+        """
+        import networkx as nx
+        G = nx.DiGraph()
+        for n in self.nodes_lev:
+            n_num_normal = n.num
+            G.add_node(n_num_normal)
+            G.nodes[n_num_normal]['lev'] = n.lev
+            G.nodes[n_num_normal]['gtype'] = n.gtype
+            G.nodes[n_num_normal]['ntype'] = n.ntype
+            G.nodes[n_num_normal]['CC0'] = n.CC0
+            G.nodes[n_num_normal]['CC1'] = n.CC1
+            G.nodes[n_num_normal]['CO'] = n.CO
+            G.nodes[n_num_normal]['C0'] = n.C0
+            G.nodes[n_num_normal]['C1'] = n.C1
+            G.nodes[n_num_normal]['S'] = n.S
+            G.nodes[n_num_normal]['B0'] = n.B0
+            G.nodes[n_num_normal]['B1'] = n.B1
+            if "DP0" in n.stat:
+                G.nodes[n_num_normal]['DP0'] = n.stat["DP0"]
+                G.nodes[n_num_normal]['DP1'] = n.stat["DP1"]
+            if n.gtype != 'IPT':
+                for unode in n.unodes:
+                    G.add_edge(unode.num, n_num_normal)
+            else:
+                pass
+        return G
+

@@ -119,15 +119,17 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
         if not os.path.exists(fname):
             circuit.STAFAN(tpLoad, save_log=False, verbose=False)
-            circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan", verbose = False)
+            circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan", 
+                    verbose = False)
         else:
             circuit.load_STAFAN(fname)
         for tpc in range(0, tp+1, 10):
-            row = pd.DataFrame({"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, "batch": i}, index=[0])
+            row = pd.DataFrame({"tp": tpc, "fc": circuit.STAFAN_FC(tpc)*100, 
+                "batch": i}, index=[0])
             df = pd.concat([df, row], ignore_index=True)
 
-    plot = sns.lineplot(x=df["tp"], y=df["fc"],
-                        color="green", errorbar=('ci', 99.99), label=f"STAFAN ({tpLoad})")
+    plot = sns.lineplot(x=df["tp"], y=df["fc"], color="green", 
+            errorbar=('ci', 99.99), label=f"STAFAN ({tpLoad})")
 
     plot.set_yscale("function", functions=(exp, log))
     plot.set(xlim=(PLOT_MIN_TP,tp), ylim=(PLOT_MIN_Y,PLOT_MAX_Y))
@@ -345,7 +347,8 @@ def ppsf_ci(circuit, cpu, _cis):
     print(f"\nFigure saved in {fname}")
 
 def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
-    """ Scatter plot for each CI comparing to the maximum given CI. Drawing heatmap is optional.
+    """ Scatter plot for each CI comparing to the maximum given CI. 
+    Drawing heatmap is optional.
     Be careful about subplots. According to the list of CIs, some of them are empty.
     
     Parameters:

@@ -39,6 +39,7 @@ FAULT_DICT_DIR = os.path.join(DATA_DIR, "fault_dict")
 FAULT_SIM_DIR = os.path.join(DATA_DIR, "fault_sim")
 STAFAN_DIR = os.path.join(DATA_DIR, "stafan-data")
 FIG_DIR = os.path.join(DATA_DIR, "figures")
+SCOAP_DIR = os.path.join(DATA_DIR, "scoap-data")
 
 """Test Point Insertion Poblem"""
 HTO_TH = 0.1

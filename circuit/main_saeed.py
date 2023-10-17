@@ -4,7 +4,7 @@ import pandas as pd
 import time
 import sys
 import pdb
-
+import IPython 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,6 +16,8 @@ import experiments.experiments as exp
 from fault_simulation.ppsf import PPSF
 from fault_simulation.pfs import PFS
 from circuit.circuit import Circuit
+from circuit.dft_circuit import DFTCircuit
+from tp_generator import TPGenerator
 
 sys.path.insert(1, "../data/netlist_behavioral")
 
@@ -69,10 +71,10 @@ def pars_args():
 def read_circuit(args):
     circuit = None
     if args.ckt:
-        circuit = Circuit(args.ckt)
+        circuit = DFTCircuit(args.ckt)
 
     elif args.v:
-        circuit = Circuit(args.v)
+        circuit = DFTCircuit(args.v)
     return circuit
 
 
@@ -84,40 +86,93 @@ if __name__ == '__main__':
     # cfg.HTC_TH = args.HTC_th if args.HTC_th else cfg.HTC_TH
 
     circuit = read_circuit(args)
-    circuit.lev()
+    circuit.levelize()
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
     print("\n-----------------------------------------------")
     print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
         circuit.c_fname, args.tp, args.tpLoad, args.cpu))
+    
+    if args.func == "jrn-0":
+        
+        ## SCOAP 
+        circuit.SCOAP()
 
-    if args.func == "test0":
+        ## STAFAN 
+        stafan_fname = f"{circuit.c_name}_tp{args.tp}.stafan"
+        path = os.path.join(cfg.STAFAN_DIR, circuit.c_name)
+        path = os.path.join(path, stafan_fname)
+        try: 
+            circuit.load_STAFAN(path)
+        except:
+            circuit.STAFAN(args.tp, args.cpu, save_log=True)
+        
+        # ../data/fault_sim/c432_synV0/ppsf/c432_synV0_ppsf_ci6_proc10.ppsf 
+        ## Load/Generate PPSF
+        fname = f"{circuit.c_name}_ppsf_ci{args.ci}_proc{args.cpu}.ppsf"
+        fname = os.path.join(f"{circuit.c_name}/ppsf", fname)
+        path = os.path.join(cfg.FAULT_SIM_DIR, fname)
+        ppsf = PPSF(circuit)
+        if os.path.exists(path):
+            ppsf_res = ppsf.load_pd_ppsf_conf(path)
+        else:
+            tp_steps=[100, 500, 1000, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6]
+            ppsf_res = ppsf.multiprocess_ci_run(tp_steps=tp_steps, 
+                    # op=circuit.nodes_lev[5],
+                    verbose=True, ci=args.ci, num_proc=args.cpu, fault_count='all', 
+                    save_log=True)
+
+        ## Generate Graph 
+        IPython.embed()
+        graph = circuit.gen_graph()
+
+        ## Save as CSV 
+        fname = f"../data/tm-data/{circuit.c_name}-stafan{args.tp}.csv"
+        outfile = open(fname, "w")
+        
+        _node = graph.nodes[list(graph.nodes)[0]]
+        cols = [x for x  in _node.keys() if "type" not in x]
+        header = "Node," + ",".join(cols)
+        outfile.write(header + "\n")
+        
+        for node,feats in graph.nodes.items():
+            row = ",".join([f"{feats[feat]:.2e}" for feat in cols])
+            outfile.write(f"{node},{row}\n")
+        outfile.close()
+        print(f"Testability measures data saved in: {fname}")
+
+    elif args.func == "test0":
         circuit.SCOAP_CC()
         circuit.SCOAP_CO()
-        circuit.STAFAN(args.tp, args.cpu)
-        circuit.co_ob_info()
-        print(circuit)
+        circuit.STAFAN(tp_count=args.tp, num_proc=args.cpu, save_log=True)
+        # circuit.co_ob_info()
+        circuit.save_scoap()
+        # print(circuit)
 
     elif args.func == "test-tp-gen":
         # testing tp generation methods
         # TODO: update test generation calling
-        tps = circuit.gen_full_tp_file()
+        tpGen = TPGenerator(circuit)
+        tps = tpGen.gen_full()
         # print(tps)
-        tps = circuit.gen_tp_file(args.tp, mode="b")
+        tps = tpGen.gen_n_random(args.tp, mode="b")
         # print(tps)
-        tps = circuit.gen_tp_file(args.tp, mode="x")
+        tps = tpGen.gen_n_random(args.tp, mode="x")
         # print(tps)
-        tps = circuit.load_tp_file('../data/patterns/c2_TP3.tp')
+        fname = f"../data/patterns/{circuit.c_name}-{args.tp}.tp"
+        tps = tpGen.gen_file(args.tp, fname, mode="b") 
+        tps = tpGen.load_file(fname)
         # print(tps)
 
     elif args.func == "stafan-save":
         """ Running STAFAN with random TPs and saving TMs into file """
         time_s = time.time()
-        circuit.STAFAN(args.tp, args.cpu)
-        circuit.save_STAFAN(fname)
+        circuit.STAFAN(args.tp, args.cpu, save_log=False)
+        # fname = f"../data/stafan-data/{circuit.c_name}/"
+        # fname += f"{circuit.c_name}-tp{args.tp}.stafan"
+        circuit.save_STAFAN()
         print("Time: \t{:.3}".format(time.time() - time_s))
-
 
     elif args.func == "stafan-save-coded":
         """ Running STAFAN with random TPs, for args.code times 
@@ -130,7 +185,6 @@ if __name__ == '__main__':
             circuit.save_STAFAN(fname)
             print("Time: \t{:.3}".format(time.time() - time_s))
 
-
     elif args.func == "lev-backward":
         #TODO: needs review
         circuit.levelize_backward()
@@ -138,22 +192,32 @@ if __name__ == '__main__':
     elif args.func == "pfs":
         tp_fname = "../data/patterns/{}_tp_{}.tp".format(
             circuit.c_name, args.tp)
-        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        tpGen = TPGenerator(circuit)
+        tps = tpGen.gen_file(args.tp, tp_fname=tp_fname)
         pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
-        pfs.run(tps=tp_fname, fault_drop=1, verbose=True)
+        # pfs.fault_list.add_all()
+        pfs.run(tps=tp_fname, faults="all", fault_drop=1, verbose=True)
 
 
     elif args.func == "ppsf":
         ppsf = PPSF(circuit)
-        ppsf.fault_list.add_all(circuit)
-        ppsf.run(tp_fname, args.tp, fault_drop=1)
+        ppsf.fault_list.add_all()
+        ppsf.run(tps=args.tp, verbose=True)
+
+    elif args.func == "ppsf-ci":
+        ppsf = PPSF(circuit)
+        tp_steps=[50, 100, 500, 1000, 5000, 10000, 20000, 50000]
+        ppsf.multiprocess_ci_run(tp_steps=tp_steps, 
+                # op=circuit.nodes_lev[5],
+                verbose=True, ci=6, num_proc=10, fault_count='all', 
+                save_log=True)
+
 
 
     elif args.func == "pfs-vs-ppsf":
         exp.check_pfs_vs_ppsf(circuit, args)
         
-    
+    # TODO: Not working propperly  
     elif args.func == "pd-ppsf":
         # TODO full review and documentation  
         time_s = time.time()

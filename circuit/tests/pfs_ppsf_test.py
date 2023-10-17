@@ -75,6 +75,8 @@ def pfs_csv_generator():
 
                 tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
+            if not os.path.exists(f'{PFS_TESTING_DIR}'):
+                os.makedirs(f'{PFS_TESTING_DIR}')
             tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
             print(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
@@ -152,6 +154,8 @@ def ppsf_csv_generator():
 
                 tp_fault_df = pd.concat([tp_fault_df, pd.DataFrame.from_records([row])])
 
+            if not os.path.exists(f'{PPSF_TESTING_DIR}'):
+                os.makedirs(f'{PPSF_TESTING_DIR}')
             tp_fault_df.to_csv(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
             print(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 

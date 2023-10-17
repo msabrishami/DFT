@@ -124,8 +124,7 @@ class Node(ABC):
 
     def print_info(self, get_labels=False, print_labels=True):
         if get_labels:
-            return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
-                    "C1", "S", "B0", "B1"]
+            return ["N", "LEV", "GATE"]
         if print_labels:
             print(f"N:{str(self.num).zfill(4)}\t", end="")
             print(f"LEV:{str(self.lev).zfill(2)}\t", end="")

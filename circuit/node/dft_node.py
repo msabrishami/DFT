@@ -46,6 +46,24 @@ class DFTNode(ABC):
         """ insert a fault for pdf in this node """ 
         pfs_I_bar = self.pfs_I ^ bitwise_not
         self.pfs_V = (pfs_I_bar & self.pfs_V) | (self.pfs_I & pfs_S)         
+    
+
+    def print_info(self, co_ob=True, get_labels=False, print_labels=True):
+        if get_labels:
+            return ["N", "LEV", "GATE", "CC0", "CC1", "CO", "C0",
+                    "C1", "S", "B0", "B1"]
+        if print_labels:
+            print(f"N:{str(self.num).zfill(4)}\t", end="")
+            print(f"LEV:{str(self.lev).zfill(2)}\t", end="")
+            print(f"GATE:{self.gtype}\t", end="")
+            print()
+        else:
+            print(f"N:{str(self.num).zfill(4)}\t", end="")
+            print(f"{str(self.lev).zfill(2)}\t", end="")
+            print(f"{self.gtype}\t", end="")
+            print(f"{self.CC0}\t{self.CC1}\t{self.CO}\t", end="")
+            print(f"{self.C0}\t{self.C1}\t{self.S}\t{self.B0}\t{self.B1}", end="")
+            print()
 
     @abstractmethod
     def eval_CC(self):
@@ -89,7 +107,8 @@ class DFTNode(ABC):
             print("(NODE_TEST) ERROR") # TODO: raise exception 
 
 
-class DFTBUFF(node.BUFF, DFTNode):
+# class DFTBUFF(node.BUFF, DFTNode):
+class DFTBUFF(DFTNode, node.BUFF):
     """ This gate is yet not tested""" 
     def __init__(self, n_type, g_type, num):
         node.BUFF.__init__(self, n_type, g_type, num)
@@ -267,7 +286,8 @@ class DFTAND(node.AND, DFTNode):
                     unode.B0 *= x 
                 print(f" ==> node.B0 ~ {unode.B0:.2e}")
 
-class DFTNAND(node.NAND, DFTNode):
+#class DFTNAND(node.NAND, DFTNode):
+class DFTNAND(DFTNode, node.NAND):
     def __init__(self, n_type, g_type, num):
         node.NAND.__init__(self, n_type, g_type, num)
         DFTNode.__init__(self)

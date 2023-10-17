@@ -26,6 +26,7 @@ data/ob_stat/
 data/cell_ssta/
 data/fault_dict/
 data/fault_list/
+data/scoap-data/
 
 # **.graphml
 **.png

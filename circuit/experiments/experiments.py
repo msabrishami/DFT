@@ -13,7 +13,7 @@ sys.path.append('../')
 
 import config as cfg
 import utils
-import observation as obsv
+import tpi.observation as obsv
 from random import randint
 from circuit.circuit import Circuit
 from circuit.circuit_loader import CircuitLoader
