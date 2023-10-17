@@ -1,5 +1,6 @@
 import random
 import sys
+import networkx as nx
 
 from circuit.circuit_loader import CircuitLoader
 from node import node
@@ -370,7 +371,6 @@ class Circuit:
         Generate directed graph of the circuit 
         Each node has attributes: lev
         """
-        import networkx as nx
         G = nx.DiGraph()
         for n in self.nodes_lev:
             n_num_normal = n.num

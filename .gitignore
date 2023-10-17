@@ -27,6 +27,7 @@ data/cell_ssta/
 data/fault_dict/
 data/fault_list/
 data/scoap-data/
+data/graph-data/
 
 # **.graphml
 **.png

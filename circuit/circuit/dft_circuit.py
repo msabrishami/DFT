@@ -4,6 +4,7 @@ import re
 import time
 from collections import deque
 from multiprocessing import Pipe, Process
+import networkx as nx
 
 import config
 from node import dft_node
@@ -169,9 +170,9 @@ class DFTCircuit(circuit.Circuit):
         """
         self._stafan_tp = tp_count
         if verbose:
-            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) with:' + 
-                  f'on {self.c_name} for all nodes ({len(self.nodes)}) with {tp_count} tps ' + 
-                  f'on {num_proc} process(es) ...')
+            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) ' + 
+                  f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
+                  f' with {tp_count} tps on {num_proc} process(es) ...')
 
         if tp_count < num_proc:
             raise ValueError("Total TPs should be higher than process numbers")
@@ -470,7 +471,7 @@ class DFTCircuit(circuit.Circuit):
         print(f"SCOAP metrics saved in {fname}")
 
     
-    def gen_graph(self):
+    def gen_graph(self, fname=None):
         """
         Generate directed graph of the circuit 
         Each node has attributes: 
@@ -479,7 +480,7 @@ class DFTCircuit(circuit.Circuit):
             STAFAN: C0, C1, S, B0, B1
             Detection probability (by PPSF-CI): DP0, DP1
         """
-        import networkx as nx
+
         G = nx.DiGraph()
         for n in self.nodes_lev:
             n_num_normal = n.num
@@ -503,5 +504,17 @@ class DFTCircuit(circuit.Circuit):
                     G.add_edge(unode.num, n_num_normal)
             else:
                 pass
+
+        if fname is not None:
+            nx.write_gml(G, fname)
+            print(f"Saved graph with testability features in: {fname}")
+
         return G
+
+    def load_graph(self, fname):
+        #TODO: needs to load the info into circuit features
+        graph = nx.read_gml(fname)
+        print(f"Loaded graph with testability features from: {fname}")
+        return graph 
+
 

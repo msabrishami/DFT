@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     ckt_name = args.ckt + "_" + args.synv if args.synv else args.ckt
 
-    print("\n-----------------------------------------------")
+    print("-----------------------------------------------")
     print("Run | circuit: {} | Test Count: {}/{} | CPUs: {}".format(
         circuit.c_fname, args.tp, args.tpLoad, args.cpu))
     
@@ -123,24 +123,32 @@ if __name__ == '__main__':
                     verbose=True, ci=args.ci, num_proc=args.cpu, fault_count='all', 
                     save_log=True)
 
-        ## Generate Graph 
-        IPython.embed()
-        graph = circuit.gen_graph()
+        ## Generate Graph and save it  
+        if not os.path.exists(cfg.GRAPH_DIR):
+            os.mkdir(cfg.GRAPH_DIR)
+        _fname = f"{circuit.c_name}-stafan{args.tp}-ci{args.ci}-proc{args.cpu}"
+        fname = os.path.join(cfg.GRAPH_DIR, _fname + ".gml")
+        graph = circuit.gen_graph(fname)
+
 
         ## Save as CSV 
-        fname = f"../data/tm-data/{circuit.c_name}-stafan{args.tp}.csv"
+        fname = f"../data/tm-data/{_fname}.csv"
         outfile = open(fname, "w")
         
         _node = graph.nodes[list(graph.nodes)[0]]
         cols = [x for x  in _node.keys() if "type" not in x]
         header = "Node," + ",".join(cols)
         outfile.write(header + "\n")
-        
         for node,feats in graph.nodes.items():
             row = ",".join([f"{feats[feat]:.2e}" for feat in cols])
             outfile.write(f"{node},{row}\n")
         outfile.close()
-        print(f"Testability measures data saved in: {fname}")
+        print(f"Saved testability measures data in: {fname}")
+
+    elif args.func == "jrn-1":
+        _fname = f"{circuit.c_name}-stafan{args.tp}-ci{args.ci}-proc{args.cpu}"
+        fname = os.path.join(cfg.GRAPH_DIR, _fname + ".gml")
+        graph2 = circuit.load_graph(fname)
 
     elif args.func == "test0":
         circuit.SCOAP_CC()

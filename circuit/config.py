@@ -40,6 +40,7 @@ FAULT_SIM_DIR = os.path.join(DATA_DIR, "fault_sim")
 STAFAN_DIR = os.path.join(DATA_DIR, "stafan-data")
 FIG_DIR = os.path.join(DATA_DIR, "figures")
 SCOAP_DIR = os.path.join(DATA_DIR, "scoap-data")
+GRAPH_DIR = os.path.join(DATA_DIR, "graph-data")
 
 """Test Point Insertion Poblem"""
 HTO_TH = 0.1
@@ -68,7 +69,9 @@ CELL_NAMES = {
             "BUF_X1", "BUF_X2", "BUF_X4", "BUF_X8"]
         }
 
-ALL_ISCAS85=["c17","c432","c499","c880","c1355","c1908","c2670","c3540","c5315","c6288","c7552"] 
+# ALL_ISCAS85=["c17","c432","c499","c880","c1355","c1908","c2670", 
+#         "c3540","c5315","c6288","c7552"] 
+ALL_ISCAS85=["c17","c432","c499","c880","c1355","c1908","c3540","c5315","c6288","c7552"] 
 ALL_EPFL_EZ=["arbiter", "sin", "bar","dec", "int2float", 
         "multiplier", "cavlc", "adder", "max", "priority", "voter"]
 ALL_EPFL_HARD = ["hyp", "square", "router", "log2", "div", "sqrt", "mem_ctrl", "i2c", "ctrl"]

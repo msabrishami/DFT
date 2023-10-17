@@ -387,7 +387,7 @@ class PPSF(FaultSim):
                 break
 
         # Writing down the remaining faults
-        if save_log:
+        if save_log and (len(fl_curr.faults) != 0):
             outfile.write("\n#TP: (remaining faults)\n")
         
             for fault in fl_curr.faults:
@@ -434,23 +434,15 @@ class PPSF(FaultSim):
                 continue
             elif line.startswith("#TP="):
                 current_tp += float(line.split("=")[-1])
-                continue
             elif line.startswith("#TP: (remaining"):
-                if lines[-1] == line:
-                    print("(ERROR) What is this?")
-                    break
                 print("(Warning) PPSF was not completed with the given " + 
                         "confidence interval for some of the faults")
-                continue
-            fault, mu_d, sigma_d = line.split()
-            node, ssaf = fault.split('@')
-            node = self.circuit.nodes[node]
-            node.stat["DP" + ssaf] = mu_d
-            try:
-                res[fault] = mu_d # float(words[1])/current_tp
-
-            except:
-                pdb.set_trace()
+            else:
+                fault, mu_d, sigma_d = line.split()
+                node, ssaf = fault.split('@')
+                node = self.circuit.nodes[node]
+                node.stat["DP" + ssaf] = float(mu_d)
+                res[fault] = float(mu_d)
 
         print(f'Loaded PPSF data from: {fname}')
         return res
