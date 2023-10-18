@@ -199,10 +199,11 @@ class PFS(FaultSim):
         # TODO: should we take faults as an argument here?
         if isinstance(faults, FaultList):
             self.fault_list = faults
-        
         elif faults == 'all':
             self.fault_list = FaultList(self.circuit)
             self.fault_list.add_all()
+        elif (faults is None) and (len(self.fault_list.faults)>0):
+            pass
         else:
             raise TypeError("Other types not defined yet.")
         
@@ -221,17 +222,20 @@ class PFS(FaultSim):
             print(pr)
 
         faults_log_fname=None
+        tpfc_log_fname=None
         
         if save_log:
             log_dir = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)+'/pfs/'
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
-            faults_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_Fault_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
-            tpfc_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_TPFC_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
+            faults_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_Fault" + \
+                    f"_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
+            tpfc_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_TPFC" + \
+                    f"_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
 
 
         fc, detected_faults = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, 
-                                                    log_fname=[faults_log_fname, tpfc_log_fname], verbose=verbose)
+                log_fname=[faults_log_fname, tpfc_log_fname], verbose=verbose)
 
         if verbose: 
             print(f"\nTPFC completed:\tFC={100*fc[-1]:.4f}%, tot-faults={len(detected_faults)}")

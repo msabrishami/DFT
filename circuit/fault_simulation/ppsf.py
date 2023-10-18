@@ -83,8 +83,6 @@ class PPSF(FaultSim):
               str: address of file containing tps
               list: list of test patterns
 
-        num_proc : int
-            Number of processes. Default is 1. if more than 1, algorithm is run in parallel.
 
         Returns
         -------
@@ -173,7 +171,6 @@ class PPSF(FaultSim):
         for f in faults.faults:
             if f.D_count:
                 fault_dict[f.__str__()] = f.D_count
-        
         return fault_dict #TODO: return fc and Faults Dict
     
     def _single_process_runner(self, conn, tp, faults, verbose=False):
@@ -230,7 +227,7 @@ class PPSF(FaultSim):
         if log_fname:
             with open(log_fname, "a") as outfile:
                 outfile.write(f"Total time: {time.time() - time_s:.2f}\n")
-
+        
         return fl_curr
 
     def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
@@ -347,17 +344,21 @@ class PPSF(FaultSim):
             tp_tot += tp
             time_s = time.time()
 
-            # To be used for TODO
+            # To be used for recording faults that still need simulation  
             fl_temp = FaultList(self.circuit)
 
-            # D_count_list is updated here
+            # fl_curr is only used for this simulation pass with given tp
+            # therefore, D_count_list of faults in fl_curr record a list, each item 
+            # of the list is corresponding to number of detections for a processor 
             for f in fl_curr.faults:
                 f.D_count_list = []
+            # fl_curr will be updated by parallel simulation below 
+            # for faults in fl_curr, D_count_list will be updated, and not D_count
             self._multiprocess_handler(fl_curr=fl_curr, tp=tp, num_proc=num_proc, 
                     log_fname=None, count_cont=True)
             if save_log:
                 outfile.write(f"#TP={tp}\n")
-
+            
             for fault in fl_curr.faults:
                 fault_cont = fl_cont.faults[fault_idx[str(fault)]]
                 fault_cont.D_count_list += np.array(fault.D_count_list)
@@ -369,8 +370,12 @@ class PPSF(FaultSim):
                     print(f'(logging) {str(fault)}\tmu={mu}, {fault_cont.D_count_list}')
                 elif mu/std > ci:
                     res_final[str(fault)] = mu/tp_tot
+                    # MSA added for debugging purposes
+                    fault_cont.final_mu = mu
+                    fault_cont.final_std = std
+                    fault_cont.final_tp = tp_tot 
                     if save_log:
-                        outfile.write(f"{fault}\t{mu:.2e}\t{std:.2e}\n")
+                        outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
                 else:
                     fl_temp.copy_fault(fault)
 
@@ -395,17 +400,14 @@ class PPSF(FaultSim):
                 fault_cont.D_count_list += np.array(fault.D_count_list)
                 mu = np.mean(fault_cont.D_count_list/tp_tot)
                 std = np.std(fault_cont.D_count_list/tp_tot)
-
-                # mu = np.mean(fault.D_count_list/tp_tot) 
-                # std = np.std(fault.D_count_list/tp_tot)
-                outfile.write(f"{fault}\t{mu:.2e}\t{std:.2e}\n")
+                outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
                 
                 res_final[str(fault)] = mu
 
             print(f"\nLog for step-based PPSF is saved in {log_fname}")
             outfile.close()
         
-        return res_final
+        return res_final, fl_cont
 
     def load_ppsf_parallel(fname):
         """load a ppsf_parallel simulated log file 
