@@ -15,6 +15,8 @@ from tp_generator import TPGenerator
 from circuit.circuit import Circuit
 from circuit.dft_circuit import DFTCircuit
 
+import IPython
+
 MAX_N_TP = (1<<6)
 N_FAULT = 10
 MAX_N_FAULT = 500
@@ -77,8 +79,8 @@ def pfs_csv_generator():
 
             if not os.path.exists(f'{PFS_TESTING_DIR}'):
                 os.makedirs(f'{PFS_TESTING_DIR}')
-            tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
-            print(f'{PFS_TESTING_DIR}/single_tp_PFS_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
+            tp_fault_df.to_csv(f'{PFS_TESTING_DIR}/single_tp_pfs_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
+            print(f'{PFS_TESTING_DIR}/single_tp_pfs_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
 def pfs_check_with_dfs_old():
     """Checks result of DFT.PFS.run() and dfs_old for full faults and multiple tps from dfs_old."""
@@ -156,8 +158,8 @@ def ppsf_csv_generator():
 
             if not os.path.exists(f'{PPSF_TESTING_DIR}'):
                 os.makedirs(f'{PPSF_TESTING_DIR}')
-            tp_fault_df.to_csv(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
-            print(f'{PPSF_TESTING_DIR}/single_tp_PPSF_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
+            tp_fault_df.to_csv(f'{PPSF_TESTING_DIR}/single_tp_ppsf_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv',index=False)            
+            print(f'{PPSF_TESTING_DIR}/single_tp_ppsf_{circuit.c_name}_{len(faults.faults)}f_{len(tps)}tp.csv was saved.')
 
 def ppsf_check_with_dfs_old():
     """Checks result of DFT.PPSF.run() and dfs_old for full faults and multiple tps from dfs_old."""
@@ -202,10 +204,13 @@ def ppsf_check_with_dfs_old():
                 print(f"{bcolors.FAIL}Failed{bcolors.ENDC}")
 
 def compare_pfs_ppsf_same_tps(circuit_dir: list):
-    """ Check whether the results of PFS and PPSF match for multiple random test patterns"""
+    """ Check whether the results of PFS and PPSF 
+    match for multiple random test patterns
+    """
     for dir in circuit_dir:
         for c in os.listdir(dir):
             print(c)
+
             try:
                 circuit_path = os.path.join(dir, c)
                 circuit = DFTCircuit(circuit_path)
@@ -279,9 +284,9 @@ def run_logic_sim_bitwise(circuit_dir=config.CKT_DIR):
 
 def compare_csvs():
     for file in os.listdir('../../data/testings/pfs_single_fault_testing/'):
-        if 'PFS' in file:
+        if 'pfs' in file:
             pfs_csv = '../../data/testings/pfs_single_fault_testing/'+file
-            ppsf_csv = pfs_csv.replace('PFS','PPSF')
+            ppsf_csv = pfs_csv.replace('pfs','ppsf')
 
             pfs_lines = open(pfs_csv).readlines()
             ppfs_lines = open(ppsf_csv).readlines()
@@ -299,7 +304,7 @@ def get_undetected_faults():
         # if 'PFS' in file: # same as PPSF files
             undetected_faults[file] = []
             pfs_csv = pd.read_csv('../../data/testings/pfs_single_fault_testing/'+file)
-            pfs_csv = pd.read_csv('../../data/testings/ppsf_single_fault_testing/'+file)
+            # pfs_csv = pd.read_csv('../../data/testings/ppsf_single_fault_testing/'+file)
             for fault in pfs_csv: 
                 if pfs_csv[fault].sum() == 0:
                     # print(fault)
@@ -312,20 +317,17 @@ if __name__ == '__main__':
     pfs_csv_generator()
     ppsf_csv_generator()
 
-    # compare_csvs()
+    compare_csvs()
 
     get_undetected_faults()
 
-    # pfs_check_with_dfs_old()
+    # pfs_check_with_dfs_old() ## buggy
     # Result: Failed for c6288. 129@1 only in dfs.
 
-    # ppsf_check_with_dfs_old()
+    # ppsf_check_with_dfs_old() ## buggy 
     # Result: Failed for c6288. 129@1 only in dfs.
     
-    # MAX_N_FAULT = 1 # if you want single tp
-    # for i in range(5000):
-
-    # compare_pfs_ppsf_same_tps(circuit_dir=ISCAS85)
+    compare_pfs_ppsf_same_tps(circuit_dir=ISCAS85[:2])
     
     # for e in ISCAS85:
         # run_logic_sim(circuit_dir=e)
