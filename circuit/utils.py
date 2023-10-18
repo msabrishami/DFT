@@ -4,6 +4,7 @@ import numpy as np
 
 from collections import deque
 from functools import reduce
+import config as cfg
 
 class bcolors:
     OKGREEN = '\033[92m'
@@ -185,3 +186,22 @@ def fix_size(number, k):
         number = '0'+number
 
     return number    
+
+
+def path_ppsf():
+    pass
+
+
+def path_ppsf_ci():
+    pass
+
+def path_ppsf_ci_try(c_name, ci, cpu, max_idx=20):
+    path = os.path.join(cfg.FAULT_SIM_DIR, c_name)
+    path = os.path.join(path, "ppsf")
+
+    for i in range(max_idx):
+        fname = f"{c_name}-ppsf-ci{ci}-cpu{cpu}-try{i}.log"
+        fname = os.path.join(path, fname)
+        if not os.path.exists(fname):
+            break
+    return fname

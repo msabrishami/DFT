@@ -140,7 +140,7 @@ if __name__ == '__main__':
         header = "Node," + ",".join(cols)
         outfile.write(header + "\n")
         for node,feats in graph.nodes.items():
-            row = ",".join([f"{feats[feat]:.2e}" for feat in cols])
+            row = ",".join([f"{feats[feat]:.4e}" for feat in cols])
             outfile.write(f"{node},{row}\n")
         outfile.close()
         print(f"Saved testability measures data in: {fname}")
@@ -210,17 +210,24 @@ if __name__ == '__main__':
     elif args.func == "ppsf":
         ppsf = PPSF(circuit)
         ppsf.fault_list.add_all()
-        ppsf.run(tps=args.tp, verbose=True)
+        res = ppsf.run(tps=args.tp, verbose=True)
 
     elif args.func == "ppsf-ci":
         ppsf = PPSF(circuit)
         tp_steps=[50, 100, 500, 1000, 5000, 10000, 20000, 50000]
-        ppsf.multiprocess_ci_run(tp_steps=tp_steps, 
+        _, fault_list = ppsf.multiprocess_ci_run(tp_steps=tp_steps, 
                 # op=circuit.nodes_lev[5],
                 verbose=True, ci=6, num_proc=10, fault_count='all', 
                 save_log=True)
-
-
+        
+        _fname = utils.path_ppsf_ci_try(circuit.c_name, args.ci, args.cpu) 
+        outfile = open(_fname, "w")
+        for fault in fault_list.faults:
+            temp = ",".join([str(x) for x in fault.D_count_list])
+            outfile.write(f"{fault}\t{fault.final_mu:.4e}\t" + 
+                    f"{fault.final_std:.4e}\t{fault.final_tp}\t{temp}\n")
+        outfile.close()
+        print(f"Saved PPSF with CI log in: " + _fname)
 
     elif args.func == "pfs-vs-ppsf":
         exp.check_pfs_vs_ppsf(circuit, args)
