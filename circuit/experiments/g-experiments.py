@@ -116,7 +116,7 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1, num_proc=1):
     for i in range(times):
         fname = utils.path_stafan_code(circuit.c_name, tpLoad, i)
         if not os.path.exists(fname):
-            circuit.STAFAN(tpLoad, num_proc=num_proc, save_log=False, verbose=False)
+            circuit.STAFAN(tpLoad, num_proc=num_proc, save_log=False, verbose=True)
             circuit.save_STAFAN(fname=fname, verbose=True)
         else:
             circuit.load_STAFAN(fname)
@@ -269,7 +269,7 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
         Count of CPU used to execute PPSF.
     """
     
-    tpfc_stafan(circuit, tpLoad=tpLoad, tp=tp, times=times_stafan)
+    tpfc_stafan(circuit, tpLoad=tpLoad, tp=tp, times=times_stafan, num_proc=cpu)
     tpfc_pfs(circuit, times=times_pfs, tp=tp)
     tpfc_ppsf(circuit, ci=ci, cpu=cpu, tp=tp)
 
