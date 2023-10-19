@@ -247,13 +247,13 @@ class DFTCircuit(circuit.Circuit):
 
     def save_STAFAN(self, fname=None, verbose=True):
         path = os.path.join(config.STAFAN_DIR, self.c_name)
-        
         if not os.path.exists(path):
             os.makedirs(path)
-        if not fname:
-            fname = f"{self.c_name}_tp{self._stafan_tp}.stafan"
         
-        fname = os.path.join(path, fname)
+        if fname is None:
+            fname = utils.path_stafan_code(self.c_name, self._stafan_tp) 
+        else:
+            fname = os.path.join(path, fname)
         
         with open(fname, 'w') as outfile:
             outfile.write("Node,C0,C1,B0,B1,S\n")
@@ -261,7 +261,7 @@ class DFTCircuit(circuit.Circuit):
                 ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
                 outfile.write(",".join([node.num] + ss) + "\n")
         if verbose:
-            print(f"\nSaved STAFAN test measuress in {fname}")
+            print(f"Saved STAFAN test measuress in: {fname}")
 
     def load_STAFAN(self, fname): # change name
         lines = open(fname).readlines()[1:]
