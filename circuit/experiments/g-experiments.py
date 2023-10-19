@@ -12,6 +12,7 @@ import sys
 sys.path.append('../')
 
 from config import FIG_DIR, STAFAN_DIR, FAULT_SIM_DIR, AUTO_TP
+from config import PPSF_CI_TP_STEPS
 
 PLOT_MIN_TP = 50
 PLOT_MIN_Y = 40
@@ -229,7 +230,8 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     fname = os.path.join(path, f"ppsf/{circuit.c_name}_ppsf_ci{ci}_proc{cpu}.ppsf")
 
     if not os.path.exists(fname):
-        gen_ppsf(circuit, tp_steps=[200, 500, 1000, 2000, 5000, 10000, 2000, 5000, 10000], 
+        tp_steps = PPSF_CI_TP_STEPS 
+        gen_ppsf(circuit, tp_steps=tp_steps, 
                  ci=ci, num_proc=cpu)
     ppsf = PPSF(circuit)
     p_init = ppsf.load_pd_ppsf_conf(fname)    

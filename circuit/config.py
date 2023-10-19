@@ -108,3 +108,5 @@ AUTO_TP = {
         "c6288_synV2": 250}
 
 X_VALUE = 'X'
+
+PPSF_CI_TP_STEPS = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6]
