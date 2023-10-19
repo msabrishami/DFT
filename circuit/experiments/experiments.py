@@ -18,8 +18,9 @@ from random import randint
 from circuit.circuit import Circuit
 from circuit.circuit_loader import CircuitLoader
 from fault_simulation.pfs import PFS
-from fault_simulation.ppsf import PPSF 
+from fault_simulation.ppsf import PPSF
 from fault_simulation.fault import FaultList
+from tp_generator import TPGenerator
 
 
 def check_c432_logicsim(circuit, tp=1, mode="ckt"):
@@ -77,20 +78,29 @@ def check_pfs_vs_ppsf(circuit, args):
     """ checking whether the results of PFS and PPSF match 
         if number of PIs in circuit <12, all possible tps are checked,
         o.w. args.tp will be used to generate a tp file """
-    if len(circuit.PI) < 12:
-            tp_fname = "../data/patterns/{}_tp_full.tp".format(circuit.c_name)
-    else:
-        tp_fname = "../data/patterns/{}_tp_{}.tp".format(
-            circuit.c_name, args.tp)
  
+
+    tg = TPGenerator(circuit)
+    if len(circuit.PI) < 12:
+        tps = tg.gen_full()
+    else:
+        tps = tg.gen_n_random(args.tp)
+
     pfs = PFS(circuit)
-    pfs.fault_list.add_all(circuit)
-    pfs.run(tps=tp_fname)
+    pfs.fault_list.add_all()
+    pfs.run(tps=tps,verbose=True, save_log=True)
  
     ppsf = PPSF(circuit)
-    ppsf.fault_list.add_all(circuit)
-    ppsf.run(tp_fname)
- 
+    ppsf.fault_list.add_all()
+    ppsf.run(tps,verbose=True,save_log=True)
+
+    """
+    for idx in range(len(pfs.fault_list.faults)):
+        fault_pfs = pfs.fault_list.faults[idx]
+        fault_ppsf = ppsf.fault_list.faults[idx]
+        print(fault_pfs, fault_pfs.D_count, fault_ppsf, fault_ppsf.D_count)
+    """
+
     pfs_res = dict()
     for fault in pfs.fault_list.faults:
         pfs_res[str(fault)] = fault.D_count
@@ -106,10 +116,12 @@ def check_pfs_vs_ppsf(circuit, args):
 def ppsf_analysis(circuit, args):
     # TODO: let's get rid of this or at least change the name
     fname = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    fname = os.path.join(fname, "{}-ppsf-all-tp{}-cpu{}.ppsf".format(
+    fname = os.path.join(fname, "{}-ppsf-all-tp{}-proc{}.ppsf".format(
         circuit.c_name, args.tp, args.cpu))
     print("Reading PPSF parallel simulation results from {}".format(fname))
-    res = utils.load_ppsf_parallel(fname)
+    ppsf = PPSF(circuit)
+
+    res = load_ppsf_parallel(fname)
     for k, v in res.items(): 
         res[k] = np.mean(v), np.std(v)
 
@@ -163,7 +175,7 @@ def FCTP_analysis(circuit, args):
     
     # Loading PPSF data
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-proc{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
     p_init = utils.load_pd_ppsf_conf(fname) 
 
@@ -232,7 +244,7 @@ def OP_impact(circuit, args):
     
     # Read and load characterized PPSF prob. values 
     path = os.path.join(cfg.FAULT_SIM_DIR, circuit.c_name)
-    fname = os.path.join(path, "{}-ppsf-steps-ci{}-cpu{}.ppsf".format(
+    fname = os.path.join(path, "{}-ppsf-steps-ci{}-proc{}.ppsf".format(
         circuit.c_name, args.ci, args.cpu))
     p_init = utils.load_pd_ppsf_conf(fname)
     

@@ -122,8 +122,8 @@ class PFS(FaultSim):
         all_past_faults_0, all_past_faults_1 = 0, 0
 
         for idx, tp in enumerate(tps):
-            detected_faults = self._one_tp_run(tp, fault_drop)
             
+            detected_faults = self._one_tp_run(tp, fault_drop)
             for df in detected_faults:
                 all_detected_faults.add(df)
             tpfc.append(len(detected_faults))
@@ -154,11 +154,6 @@ class PFS(FaultSim):
                 fault_log_file.write('\n')
                 fault_log_file.write("------------\n")
             
-            if fault_coverage[-1] == 1:
-                if verbose:
-                    print(f'\nAll faults were found on test pattern {idx}\n')
-                break   
-                
         if fault_log_fname and fault_log_file:
             fault_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
             fault_log_file.close()
@@ -168,7 +163,7 @@ class PFS(FaultSim):
             tpfc_log_file.write(f"Fault Coverage = {fault_coverage[-1]*100:.4f}%\n")
             tpfc_log_file.close()
             print(f'Log file for tpfc saved in {tpfc_log_fname}')
-
+        
         return fault_coverage, list(all_detected_faults)
 
     def run(self, tps, faults=None, fault_drop=None, verbose=False, save_log=True):
@@ -196,7 +191,16 @@ class PFS(FaultSim):
         fc, detected_faults
         facult_coverage list and list of detected faults' strings
         """
-        # TODO: should we take faults as an argument here?
+        
+        if isinstance(tps, int):
+            tg = TPGenerator(self.circuit)
+            tps = tg.gen_n_random(tps) # Not unique tps 
+        elif isinstance(tps, str):
+            tg = TPGenerator(self.circuit)
+            tps = tg.load_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be either int, or file name")
+
         if isinstance(faults, FaultList):
             self.fault_list = faults
         elif faults == 'all':
@@ -207,14 +211,6 @@ class PFS(FaultSim):
         else:
             raise TypeError("Other types not defined yet.")
         
-        tg = TPGenerator(self.circuit)
-        if isinstance(tps, int):
-            tps = tg.gen_n_random(tps)
-        elif isinstance(tps, str):
-            tps = tg.load_file(tps)
-        elif not isinstance(tps, list):
-            raise TypeError("tps should be either int, or file name")
-
         if verbose:
             pr =f"Running PFS with:\n"
             pr+=f"\t| tp count = {len(tps)}\n"
@@ -228,10 +224,10 @@ class PFS(FaultSim):
             log_dir = os.path.join(config.FAULT_SIM_DIR, self.circuit.c_name)+'/pfs/'
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
-            faults_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_Fault" + \
-                    f"_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
-            tpfc_log_fname = f"{log_dir}{self.circuit.c_name}_PFS_TPFC" + \
-                    f"_tp{len(tps)}_f{len(self.fault_list.faults)}.log"
+            faults_log_fname = f"{log_dir}{self.circuit.c_name}-pfs-" + \
+                    f"tp{len(tps)}-f{len(self.fault_list.faults)}.log"
+            tpfc_log_fname = f"{log_dir}{self.circuit.c_name}-pfs-tpfc" + \
+                    f"-tp{len(tps)}_f{len(self.fault_list.faults)}.log"
 
 
         fc, detected_faults = self._multiple_tp_run(tps=tps, fault_drop=fault_drop, 
@@ -290,12 +286,13 @@ class PFS(FaultSim):
             tpfc.append(len(self._one_tp_run(tp, fault_drop=1)))
 
             fc_seq.append(100*sum(tpfc)/len(self.fault_list.faults))
-            print("-------------------------------")
-            print(idx)
-            print(sum([x.D_count for x in self.fault_list.faults]))
-            print("TPFC: " + " ".join(["{}".format(x) for x in tpfc]))
-            print("FC-SEQ: " + " ".join(["{:.2f}".format(x) for x in fc_seq]))
+            
             if verbose:
+                print("-------------------------------")
+                print(idx)
+                print(sum([x.D_count for x in self.fault_list.faults]))
+                print("TPFC: " + " ".join(["{}".format(x) for x in tpfc]))
+                print("FC-SEQ: " + " ".join(["{:.2f}".format(x) for x in fc_seq]))
                 if idx%100 == 0:
                     print("{:5} \t New: {:5} \t Total: {:5} \t FC: {:.4f}%".format(
                         idx, tpfc[-1], sum(tpfc), 

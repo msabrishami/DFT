@@ -100,19 +100,20 @@ if __name__ == '__main__':
         circuit.SCOAP()
 
         ## STAFAN 
-        stafan_fname = f"{circuit.c_name}_tp{args.tp}.stafan"
-        path = os.path.join(cfg.STAFAN_DIR, circuit.c_name)
-        path = os.path.join(path, stafan_fname)
+        # stafan_fname = f"{circuit.c_name}_tp{args.tp}.stafan"
+        # path = os.path.join(cfg.STAFAN_DIR, circuit.c_name)
+        # path = os.path.join(path, stafan_fname)
+        path = utils.path_stafan(circuit.c_name, args.tp)
         try: 
             circuit.load_STAFAN(path)
         except:
             circuit.STAFAN(args.tp, args.cpu, save_log=True)
         
-        # ../data/fault_sim/c432_synV0/ppsf/c432_synV0_ppsf_ci6_proc10.ppsf 
         ## Load/Generate PPSF
-        fname = f"{circuit.c_name}_ppsf_ci{args.ci}_proc{args.cpu}.ppsf"
-        fname = os.path.join(f"{circuit.c_name}/ppsf", fname)
-        path = os.path.join(cfg.FAULT_SIM_DIR, fname)
+        # fname = f"{circuit.c_name}_ppsf_ci{args.ci}_proc{args.cpu}.ppsf"
+        # fname = os.path.join(f"{circuit.c_name}/ppsf", fname)
+        # path = os.path.join(cfg.FAULT_SIM_DIR, fname)
+        path = utils.path_ppsf_ci(circuit.c_name, args.ci, args.cpu)
         ppsf = PPSF(circuit)
         if os.path.exists(path):
             ppsf_res = ppsf.load_pd_ppsf_conf(path)
@@ -126,11 +127,12 @@ if __name__ == '__main__':
         ## Generate Graph and save it  
         if not os.path.exists(cfg.GRAPH_DIR):
             os.mkdir(cfg.GRAPH_DIR)
-        _fname = f"{circuit.c_name}-stafan{args.tp}-ci{args.ci}-proc{args.cpu}"
-        fname = os.path.join(cfg.GRAPH_DIR, _fname + ".gml")
+        fname = utils.path_graph_v0(circuit.c_name, args.tp, args.ci, args.cpu)
+        # _fname = f"{circuit.c_name}-stafan{args.tp}-ci{args.ci}-proc{args.cpu}"
+        # fname = os.path.join(cfg.GRAPH_DIR, _fname + ".gml")
         graph = circuit.gen_graph(fname)
-
-
+        
+        ### TODO: This whole part needs to be moved to g-experiments
         ## Save as CSV 
         fname = f"../data/tm-data/{_fname}.csv"
         outfile = open(fname, "w")
@@ -228,23 +230,27 @@ if __name__ == '__main__':
                     f"{fault.final_std:.4e}\t{fault.final_tp}\t{temp}\n")
         outfile.close()
         print(f"Saved PPSF with CI log in: " + _fname)
-
+    
+    # OK
     elif args.func == "pfs-vs-ppsf":
         exp.check_pfs_vs_ppsf(circuit, args)
         
-    # TODO: Not working propperly  
+    # Deprecated  
     elif args.func == "pd-ppsf":
+        print("Deprecated")
+        exit()
         # TODO full review and documentation  
         time_s = time.time()
         exp.pd_ppsf(circuit, args, steps=cfg.PPSF_STEPS, verbose=True)
         print("Total time = {:.2f}".format(time.time() - time_s))
     
-
     elif args.func == "ppsf-vs-stafan":
         exp.compare_ppsf_stafan(circuit, args, mode="hist")
 
-
+    # Deprecated
     elif args.func == "ppsf_analysis":
+        print("Deprecated")
+        exit()
         mu = {}
         std = {}
         TPs = [10, 20, 30, 40, 50, 100, 200, 500, 1000]
@@ -281,6 +287,7 @@ if __name__ == '__main__':
             # print("TP={}\t (mu/std > 2.0) = {:.1f}% \t{:.1f}".format(
             #     tp, 100*ratio, 1/(1-ratio)))
     
+    # OK! Works with PFS
     elif args.func == "tpfc":
         """ Generating random test patterns and running fault simulation, using parallel 
         fault simulation with fault drop equal to 1. 
@@ -289,18 +296,20 @@ if __name__ == '__main__':
             overwriting tp files. 
         """
         tp_fname = os.path.join(cfg.PATTERN_DIR, 
-                "{}_tp_{}_{}.tp".format(circuit.c_name, args.tp, args.code))
-        tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+                "{}-tp{}-{}.tp".format(circuit.c_name, args.tp, args.code))
+        tg = TPGenerator(circuit)
+        # tps = circuit.gen_tp_file(args.tp, tp_fname=tp_fname)
+        tp_fname, tps = tg.gen_file(args.tp, tp_fname)
         log_fname = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
-        log_fname += "tpfc_tp-" + str(args.tp) + "_" + args.code + ".log"
+        log_fname += "tpfc-tp" + str(args.tp) + "-" + args.code + ".log"
         pfs = PFS(circuit)
-        pfs.fault_list.add_all(circuit)
+        pfs.fault_list.add_all()
         pfs.run(tps=tp_fname, fault_drop=1)
     
-
+    # Not working right now, "code" argument is not integrated 
     elif args.func == "tpfc-fig":
         fn = cfg.FAULT_SIM_DIR + "/" + circuit.c_name + "/pfs/"
-        fn += "tpfc_tp-" + str(args.tp)
+        fn += circuit.c_name + "-pfs-tpfc-tp-" + str(args.tp)
         for i in range(1, 20):
             tmp = str(i)
             for i in range(3-len(tmp)):
@@ -317,9 +326,11 @@ if __name__ == '__main__':
     elif args.func == "fc-sta-fs":
         TPs = [x*100 for x in range(1,21)]
         exp.FCTP_analysis(circuit, args)
-
+    
+    # Not tested 
     elif args.func == "BFS-DFS":
-        #TODO: review is required
+        print("Review is required, not available")
+        exit()
         node = circuit.get_rand_nodes()
         print(node)
 
@@ -332,8 +343,8 @@ if __name__ == '__main__':
         print(len(res_DFS))
         res_BFS = utils.get_fanin_BFS(circuit, node)
         print(len(res_BFS))
-        # TODO: check if the results of BFS and DFS are the same 
 
+    # Not tested 
     elif args.func == "fanin-analysis":
         # exp.fanin_analysis(circuit, args)
         colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
@@ -356,14 +367,15 @@ if __name__ == '__main__':
         plt.savefig(f"fanin-depth-{circuit.c_name}.png")
         plt.close()
         
-    
+    # Not tested 
     elif args.func == "deltaFCP":
         """ calculating deltaFC and deltaP of random OPs 
         based on STAFAN and PPSF results """ 
         time_s = time.time()
         df = exp.OP_impact(circuit, args)
         print("Total time = {:.2f}".format(time.time() - time_s))
-
+    
+    # Not tested 
     elif args.func == "deltaFCP-alt": 
         fname = "./results/csv/OPI-report-{}-ci{}-op{}.csv".format(
                 circuit.c_name, args.ci, args.opCount)

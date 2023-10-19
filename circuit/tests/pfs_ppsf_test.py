@@ -15,8 +15,6 @@ from tp_generator import TPGenerator
 from circuit.circuit import Circuit
 from circuit.dft_circuit import DFTCircuit
 
-import IPython
-
 MAX_N_TP = (1<<6)
 N_FAULT = 10
 MAX_N_FAULT = 500

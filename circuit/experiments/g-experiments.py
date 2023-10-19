@@ -95,7 +95,7 @@ def node_info(node):
 
     return node_parameters
 
-def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
+def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1, num_proc=1):
     """ Run and plot the TPFC figure usin STAFAN values.
     If times > 1, then  several STAFAN values are calculated using different sets of 
     random test patterns. The figure will show the range and the mean of FC value.
@@ -118,7 +118,7 @@ def tpfc_stafan(circuit: DFTCircuit, tp=100, tpLoad=100, times=1):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tpLoad}-{i}.stafan"
         if not os.path.exists(fname):
-            circuit.STAFAN(tpLoad, save_log=False, verbose=False)
+            circuit.STAFAN(tpLoad, num_proc=num_proc, save_log=False, verbose=False)
             circuit.save_STAFAN(fname=f"{circuit.c_name}-TP{tpLoad}-{i}.stafan", 
                     verbose = False)
         else:
@@ -226,14 +226,13 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
     path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
     if not os.path.exists(path):
         os.makedirs(path)
-    # fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
     fname = os.path.join(path, f"ppsf/{circuit.c_name}_ppsf_ci{ci}_proc{cpu}.ppsf")
-    print("\t" + path)
+
     if not os.path.exists(fname):
         gen_ppsf(circuit, tp_steps=[200, 500, 1000, 2000, 5000, 10000, 2000, 5000, 10000], 
                  ci=ci, num_proc=cpu)
-
-    p_init = PPSF.load_pd_ppsf_conf(fname)    
+    ppsf = PPSF(circuit)
+    p_init = ppsf.load_pd_ppsf_conf(fname)    
     tps = np.arange(0, tp+1, 10)
     fcs = []
     # flag = True
@@ -244,7 +243,6 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         #     if (fcs[-1]-fcs[-5]) < 0.01:
         #         print("Saturated at tp={}".format(tp))
         #         flag = False
-    pdb.set_trace()
     plot = sns.lineplot(x=tps, y=fcs, color="red", label="PPSF")
     plot.set_yscale("function", functions=(exp, log))
     plot.set_yticks(yticks)
@@ -260,7 +258,7 @@ def tpfc_ppsf(circuit, ci, cpu, tp):
         for circuit {circuit.c_name} \n \
         method: PPSF", fontsize=13)
 
-    fname = f"{FIG_DIR}/tpfc-ppsf-{circuit.c_name}-TP{tp}-CI{ci}-cpu{cpu}.png"
+    fname = f"{FIG_DIR}/tpfc-ppsf-{circuit.c_name}-tp{tp}-ci{ci}-proc{cpu}.png"
     print(f"Figure saved in {fname}")
     plt.tight_layout()
     plt.savefig(fname)
@@ -292,8 +290,8 @@ def compare_tpfc(circuit, times_stafan, times_pfs, tp, tpLoad, ci, cpu):
     plt.title(f"Dependency of fault coverage on\nrandom test patterns for {circuit.c_name}", 
             fontsize=13)
 
-    fname = FIG_DIR + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-TP{tp}-CI{ci}"
-    fname += f"-tpLoad{tpLoad}-cpu{cpu}-Kpfs{times_pfs}-Kstafan{times_stafan}.png"
+    fname = FIG_DIR + "/" + f"tpfc-compare-stafan-pfs-ppsf-{circuit.c_name}-tp{tp}-ci{ci}"
+    fname += f"-tpLoad{tpLoad}-proc{cpu}-Kpfs{times_pfs}-Kstafan{times_stafan}.png"
     plt.tight_layout()
     plt.savefig(fname)
     print(f"Final figure saved in {fname}")
@@ -313,14 +311,13 @@ def ppsf_ci(circuit, cpu, _cis):
 
     copy_cis = _cis.copy()
     for idx, ci in enumerate(copy_cis):
-        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
-        fname = os.path.join(
-            path, f"{circuit.c_name}-ppsf-steps-ci{ci}-cpu{cpu}.ppsf")
+        fname = utils.path_ppsf_ci(circuit.c_name, ci, cpu)
         if not os.path.exists(fname):
             _cis.remove(ci)
-            print(f"Warning: Data is not available for CI={ci}")
+            print(f"Warning: Data is not available for CI={ci} in {fname}")
             continue
-        res_ppsf = PPSF.load_pd_ppsf_conf(fname)
+        ppsf = PPSF(circuit)
+        res_ppsf = ppsf.load_pd_ppsf_conf(fname)
         ppsf_pd = [x for x in res_ppsf.values()]
         bins = np.logspace(np.floor(np.log10(min(ppsf_pd))),
                            np.log10(max(ppsf_pd)), 20)
@@ -338,10 +335,11 @@ def ppsf_ci(circuit, cpu, _cis):
     plt.title(f"Detection probability histogram with PPSF\n\
         for circuit{circuit.c_name}")
 
+    path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fname = path+f"ppsf-CI-{circuit.c_name}-maxCI{max(_cis)}.png"
+    fname = os.path.join(path, f"ppsf-ci-{circuit.c_name}-maxCI{max(_cis)}.png")
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFigure saved in {fname}")
@@ -366,13 +364,16 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     cis = []
     copy_cis = _cis.copy()
     for c in copy_cis:
-        path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
-        fname = os.path.join(path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
+
+        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu)
+
+        # fname = os.path.join(path, f"{circuit.c_name}_ppsf_ci{c}_proc{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
-            print(f"Data is not available for CI={c}")
+            print(f"Data is not available for CI={c} in :{fname}")
             continue
-        cis.append(PPSF.load_pd_ppsf_conf(fname))
+        ppsf = PPSF(circuit)
+        cis.append(ppsf.load_pd_ppsf_conf(fname))
 
     fault_list = [i for i in cis[0].keys()]
     for f in fault_list:
@@ -409,7 +410,9 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     fig.suptitle("Mean of detection probability\n\
     in the given confidence interval", fontsize=16)
     fig.tight_layout()
-    fname = f"{path}ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-cpu{cpu}.png"
+    
+    path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
+    fname = f"{path}/ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-proc{cpu}.png"
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
@@ -434,14 +437,14 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     cis = []
     copy_cis = _cis.copy()
     for c in copy_cis:
+        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu)
         path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
-        fname = os.path.join(
-            path, f"{circuit.c_name}-ppsf-steps-ci{c}-cpu{cpu}.ppsf")
         if not os.path.exists(fname):
             _cis.remove(c)
-            print(f"Data is not available for CI={c}. You should put the data in {path}/")
+            print(f"Data is not available in: {fname}")
             continue
-        cis.append(PPSF.load_pd_ppsf_conf(fname))
+        ppsf = PPSF(circuit)
+        cis.append(ppsf.load_pd_ppsf_conf(fname))
     
     if len(cis) == 0:
         raise Exception('No data was loaded.')
@@ -498,11 +501,12 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.xlabel(f"PD using PPSF with CI={max_ci}")
         plt.ylabel(f"Relative error with respect to PPSF with CI={max_ci}")
 
-    fname = f"{path}ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-cpu{cpu}.png"
+    path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
+    fname = f"{path}/ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-proc{cpu}.png"
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
-def stafan(circuit: DFTCircuit, tps, ci = 5): 
+def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5): 
     """
     TODO: Description.
     TODO: finalize axis scales
@@ -523,7 +527,7 @@ def stafan(circuit: DFTCircuit, tps, ci = 5):
             os.makedirs(path)
         fname = f"{path}/{circuit.c_name}-TP{tp}.stafan"
         if not os.path.exists(fname):
-            circuit.STAFAN(tp)
+            circuit.STAFAN(tp, num_proc=num_proc)
             circuit.save_STAFAN(fname=fname, verbose=False)
         else:
             circuit.load_STAFAN(fname)
@@ -591,7 +595,7 @@ def stafan(circuit: DFTCircuit, tps, ci = 5):
                 compared to the maximum TP={max_tp}.\n \
                 Showing errors distribution with CI={ci}")
         plt.tight_layout()
-        fname = f"{path}stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
+        fname = f"{path}/stafan-error-{v}-{circuit.c_name}-maxTP{max_tp}-CI{ci}.png"
         plt.savefig(fname)
         print(f"Figure saved in {fname}")
         plt.close()
@@ -696,13 +700,32 @@ def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
     # log_df.to_csv(fname)
     # print(f"logs saved in {fname}")
 
-def gen_graph(circuit, tp_count):
-    print("Let's start with generating a graph for features")
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
-    circuit.STAFAN(tp_count=tp_count)
+def gen_graph(circuit, tp_count, num_proc=20, ci=3):
+    
+    # SCOAP
+    circuit.SCOAP()
+
+    # STAFAN
+    fname = utils.path_stafan(circuit.c_name, tp_count)
+    try: 
+        circuit.load_STAFAN(fname)
+    except:
+        circuit.STAFAN(tp_count=tp_count, num_proc=num_proc, save_log=True)
+    
+    # PPSF with CI
+    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc)
+    ppsf = PPSF(circuit)
+    if os.path.exists(fname):
+        ppsf_res = ppsf.load_pd_ppsf_conf(fname)
+    else:
+        tp_steps=[100, 500, 1000, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6]
+        gen_ppsf(circuit,tp_steps, ci, num_proc)  
+
+    ## Graph  
+    fname = utils.path_graph_v0(circuit.c_name, tp_count, ci, num_proc) 
+    graph = circuit.gen_graph(fname)
+
     graph = circuit.gen_graph()
-    pdb.set_trace()
 
 
 def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
@@ -723,7 +746,7 @@ if __name__ == "__main__":
 
     if args.func == "tpfc-stafan":
         tpfc_stafan(circuit=circuit, times=args.times,
-                    tpLoad=args.tpLoad, tp=args.tp)
+                    tpLoad=args.tpLoad, tp=args.tp, num_proc=args.cpu)
 
     elif args.func == "tpfc-pfs":
         if circuit.c_name in AUTO_TP:
@@ -735,8 +758,11 @@ if __name__ == "__main__":
     elif args.func == "tpfc-ppsf":
         if circuit.c_name in AUTO_TP:
             args.tp = AUTO_TP[circuit.c_name] 
-        print(args.tp)
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
+    
+    elif args.func == "gen-ppsf":
+        gen_ppsf(circuit, tp_steps=[50, 100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5], 
+                 ci=args.ci, num_proc=args.cpu)
 
     elif args.func == "compare-tpfc":
         args.tp = AUTO_TP[circuit.c_name] 
@@ -757,8 +783,9 @@ if __name__ == "__main__":
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        # stafan(circuit, tps=[5000,10000,100000,1000000,10000000], ci=1)
-        stafan(circuit, tps=[100,2000,3000,4000], ci=1)
+        tps = [1000,2000,5000,10**4,10**5,10**6]
+        stafan(circuit, tps=tps, ci=1, num_proc=args.cpu)
+        #TODO Some of the pandas methods are going to be deprecated 
     
     #testd up to here.
 
@@ -767,11 +794,7 @@ if __name__ == "__main__":
         dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, op_count=args.opCount)
     
     elif args.func == "gen-graph":
-        gen_graph(circuit, tp_count=args.tp)
-
-    elif args.func == "gen-ppsf":
-        gen_ppsf(circuit, tp_steps=[50, 100, 200, 500, 1000, 2000, 5000], 
-                 ci=args.ci, num_proc=args.cpu)
+        gen_graph(circuit, tp_count=args.tp, num_proc=args.cpu, ci=args.ci)
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")

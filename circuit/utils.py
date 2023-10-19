@@ -192,16 +192,33 @@ def path_ppsf():
     pass
 
 
-def path_ppsf_ci():
-    pass
+def path_ppsf_ci(c_name, ci, cpu):
+    path = os.path.join(cfg.FAULT_SIM_DIR, c_name)
+    path = os.path.join(path, "ppsf")
+    fname = f"{c_name}_ppsf_ci{ci}_proc{cpu}.ppsf"
+    fname = os.path.join(path, fname)
+    return fname
 
 def path_ppsf_ci_try(c_name, ci, cpu, max_idx=20):
     path = os.path.join(cfg.FAULT_SIM_DIR, c_name)
     path = os.path.join(path, "ppsf")
 
     for i in range(max_idx):
-        fname = f"{c_name}-ppsf-ci{ci}-cpu{cpu}-try{i}.log"
+        fname = f"{c_name}-ppsf-ci{ci}-proc{cpu}-try{i}.log"
         fname = os.path.join(path, fname)
         if not os.path.exists(fname):
             break
     return fname
+
+def path_stafan(c_name, tp):
+    path = os.path.join(cfg.STAFAN_DIR, c_name)
+    fname = os.path.join(path, f"{c_name}_tp{tp}.stafan")
+    return fname
+
+def path_graph_v0(c_name, tp, ci, cpu):
+    if not os.path.exists(cfg.GRAPH_DIR):
+        os.mkdir(cfg.GRAPH_DIR)
+    fname = f"{c_name}-stafan{tp}-ci{ci}-proc{cpu}"
+    fname = os.path.join(cfg.GRAPH_DIR, fname + ".gml")
+    return fname 
+

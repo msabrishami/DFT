@@ -91,18 +91,19 @@ class PPSF(FaultSim):
         
         if isinstance(tps, int):
             tg = TPGenerator(self.circuit)
-            tps = tg.gen_n_random(tps) # Not unique. Pass unique=True if want so --> as warning?
+            tps = tg.gen_n_random(tps) # Not unique tps 
         elif isinstance(tps, str):
             tg = TPGenerator(self.circuit)
             tps = tg.load_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be either int, or file name")
 
-        if faults is None and len(self.fault_list.faults) == 0:
-            faults = FaultList(circuit=self.circuit)
+        if isinstance(faults, FaultList):
+            pass
+        elif (faults == 'all') or \
+                (faults is None and len(self.fault_list.faults) == 0):
+            faults = FaultList(self.circuit)
             faults.add_all()
-
-            if verbose:
-                print('All faults are added.')
-
         elif len(self.fault_list.faults):
             faults=self.fault_list
         elif isinstance(faults, str):
