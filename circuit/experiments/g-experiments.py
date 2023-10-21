@@ -737,7 +737,8 @@ if __name__ == "__main__":
         if circuit.c_name in AUTO_TP:
             print("TP count is automatically changed from {} to {}".format(
                         args.tp, AUTO_TP[circuit.c_name]))
-            args.tp = AUTO_TP[circuit.c_name] 
+            # args.tp = AUTO_TP[circuit.c_name] 
+            args.tp = AUTO_TP[circuit.c_name]*2
         tpfc_pfs(circuit=circuit, tp=args.tp, times=args.times)
 
     elif args.func == "tpfc-ppsf":
@@ -746,7 +747,8 @@ if __name__ == "__main__":
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
     
     elif args.func == "gen-ppsf":
-        gen_ppsf(circuit, tp_steps=[50, 100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5], 
+        gen_ppsf(circuit, tp_steps=[100, 200, 500, 1e3, 2e3, 5e3, 1e4, 
+            2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7], 
                  ci=args.ci, num_proc=args.cpu)
 
     elif args.func == "compare-tpfc":
