@@ -324,17 +324,12 @@ class PPSF(FaultSim):
         
         ### Setting log file name and path 
         if log_fname is None:
-            # TODO: Add BFS depth to the log_fname?
-            log_fname = f"{self.circuit.c_name}_ppsf"
-            if op == None:
-                log_fname += f"_ci{ci}_proc{num_proc}.ppsf"
-            else:
-                log_fname += f"_op{op.num}_ci{ci}_proc{num_proc}.ppsf"
-        
+            log_fname = utils.path_ppsf_ci(self.circuit.c_name, ci, num_proc)
+
         log_fname = os.path.join(path, log_fname)
         if save_log:
             outfile = open(log_fname, "w")
-                
+        
         
         ### Starting PPSF simulation 
         tp_tot = 0
