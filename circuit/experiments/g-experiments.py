@@ -520,7 +520,7 @@ def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5):
                             "D0":n.B1*n.C1 ,"D1":n.B0*n.C0,
                             "TP":tp}
             df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index=True)
-
+    
     max_tp = max(tps)
     tps.remove(max_tp)
 
@@ -716,10 +716,16 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
 def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
     ppsf = PPSF(circuit)
     tg = TPGenerator(circuit)
-    ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
-                             verbose=True, ci=ci, num_proc=num_proc, 
-                             fault_count='all', save_log=True)
-    
+    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc)
+    if os.path.exists(fname):
+        print(f"Data exists in: {fname}")
+    else:
+        print(f"Generating date for {fname}")
+        ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
+                verbose=True, ci=ci, num_proc=num_proc, 
+                fault_count='all', save_log=True)
+
+
 if __name__ == "__main__":
     args = pars_args()
     prepare_env()
@@ -752,7 +758,7 @@ if __name__ == "__main__":
                  ci=args.ci, num_proc=args.cpu)
 
     elif args.func == "compare-tpfc":
-        args.tp = AUTO_TP[circuit.c_name] 
+        args.tp = 2*AUTO_TP[circuit.c_name] 
         compare_tpfc(circuit, times_stafan=1, times_pfs=args.times, 
                 tp=args.tp, tpLoad=args.tpLoad, ci=args.ci, cpu=args.cpu)
 
@@ -770,7 +776,7 @@ if __name__ == "__main__":
             ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        tps = [1000,2000,5000,10**4,10**5,10**6]
+        tps = [1000,2000,5000,10**4,10**5,10**6, 10**7,10**8]
         stafan(circuit, tps=tps, ci=1, num_proc=args.cpu)
         #TODO Some of the pandas methods are going to be deprecated 
     
