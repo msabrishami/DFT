@@ -230,7 +230,8 @@ class PPSF(FaultSim):
                 outfile.write(f"Total time: {time.time() - time_s:.2f}\n")
         
         return fl_curr
-
+    
+    #TODO MSA: add the value of dp to node.stat["DP0"] and ["DP1"]
     def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
             num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, 
             log_fname=None):

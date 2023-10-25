@@ -197,7 +197,7 @@ def path_ppsf_ci(c_name, ci, cpu):
     path = os.path.join(path, "ppsf")
     if not os.path.exists(path):
         os.makedirs(path)
-    fname = f"{c_name}_ppsf_ci{ci}_proc{cpu}.ppsf"
+    fname = f"{c_name}-ppsf-ci{ci}-proc{cpu}.ppsf"
     fname = os.path.join(path, fname)
     return fname
 
@@ -214,7 +214,7 @@ def path_ppsf_ci_try(c_name, ci, cpu, max_idx=20):
 
 def path_stafan(c_name, tp):
     path = os.path.join(cfg.STAFAN_DIR, c_name)
-    fname = os.path.join(path, f"{c_name}_tp{tp}.stafan")
+    fname = os.path.join(path, f"{c_name}-tp{tp}.stafan")
     return fname
 
 def path_graph_v0(c_name, tp, ci, cpu):

@@ -608,7 +608,10 @@ def ppsf_stafan(circuit: DFTCircuit, tp, ci, num_proc):
     plt.title("Relative error of PPSF and STAFAN based on PPSF for " + circuit.c_name)
     plt.ylabel("Relative Error: abs(stafan-ppsf)/ppsf")
     plt.xlabel(f"PPSF detection probability, ci={ci}")
-    plt.savefig(f"STAFAN-vs-PPSF-{circuit.c_name}-ci{ci}-proc{num_proc}")
+    fname = f"STAFAN-vs-PPSF-{circuit.c_name}-ci{ci}-proc{num_proc}.png" 
+    fname = os.path.join(FIG_DIR, fname)
+    plt.savefig(fname)
+    print(f"Figure saved in: {fname}")
 
 
 def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
@@ -716,9 +719,10 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
 
     # STAFAN
     fname = utils.path_stafan(circuit.c_name, tp_count)
-    try: 
+    if os.path.exists(fname):
         circuit.load_STAFAN(fname)
-    except:
+    else:
+        IPython.embed()
         circuit.STAFAN(tp_count=tp_count, num_proc=num_proc, save_log=True)
     
     # PPSF with CI
@@ -726,8 +730,13 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
     ppsf = PPSF(circuit)
     if os.path.exists(fname):
         ppsf_res = ppsf.load_pd_ppsf_conf(fname)
+        if len(ppsf_res) != 2*len(circuit.nodes_lev):
+            print("\n\nWRONG FILE: " + fname)
+            os.system(f"rm {fname}")
+            tp_steps=[100,200,500,1000,5e3,1e4,2e4,5e4,1e5,2e5,5e5,1e6,2e6,5e6,1e7]
+            gen_ppsf(circuit,tp_steps, ci, num_proc)
     else:
-        tp_steps=[100, 500, 1000, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6]
+        tp_steps=[100,200,500,1000,5e3,1e4,2e4,5e4,1e5,2e5,5e5,1e6,2e6,5e6,1e7]
         gen_ppsf(circuit,tp_steps, ci, num_proc)  
 
     ## Graph  
@@ -743,7 +752,7 @@ def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
     if os.path.exists(fname):
         print(f"Data exists in: {fname}")
     else:
-        print(f"Generating date for {fname}")
+        print(f"Generating data for {fname}")
         _res, fl = ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
                 verbose=True, ci=ci, num_proc=num_proc, 
                 fault_count='all', save_log=True)
