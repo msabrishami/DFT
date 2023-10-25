@@ -7,6 +7,7 @@ from multiprocessing import Pipe, Process
 import networkx as nx
 
 import config
+import utils
 from node import dft_node
 from tp_generator import TPGenerator
 

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
+import IPython
 
 import sys
 sys.path.append('../')
@@ -587,6 +588,29 @@ def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5):
 
     return 
 
+
+def ppsf_stafan(circuit: DFTCircuit, tp, ci, num_proc): 
+    graph = gen_graph(circuit, tp_count=tp, num_proc=num_proc, ci=ci)
+    dp_ppsf = []
+    dp_stafan = []
+    rel_error = []
+    for gnode in graph.nodes:
+        gnode = graph.nodes[gnode]
+        dp_ppsf.append(gnode["DP0"])
+        dp_stafan.append(gnode["C1"]*gnode["B1"])
+        dp_ppsf.append(gnode["DP1"])
+        dp_stafan.append(gnode["C0"]*gnode["B0"])
+    for idx in range(len(dp_ppsf)):
+        rel_error.append(abs(dp_ppsf[idx]-dp_stafan[idx])/dp_ppsf[idx])
+    sns.scatterplot(x=dp_ppsf, y=rel_error)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.title("Relative error of PPSF and STAFAN based on PPSF for " + circuit.c_name)
+    plt.ylabel("Relative Error: abs(stafan-ppsf)/ppsf")
+    plt.xlabel(f"PPSF detection probability, ci={ci}")
+    plt.savefig(f"STAFAN-vs-PPSF-{circuit.c_name}-ci{ci}-proc{num_proc}")
+
+
 def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
     """ 
     TODOs: 
@@ -709,8 +733,7 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
     ## Graph  
     fname = utils.path_graph_v0(circuit.c_name, tp_count, ci, num_proc) 
     graph = circuit.gen_graph(fname)
-
-    graph = circuit.gen_graph()
+    return graph
 
 
 def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
@@ -721,9 +744,15 @@ def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
         print(f"Data exists in: {fname}")
     else:
         print(f"Generating date for {fname}")
-        ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
+        _res, fl = ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
                 verbose=True, ci=ci, num_proc=num_proc, 
                 fault_count='all', save_log=True)
+        #TODO: maybe integrate this update into ppsf.multiprocess_ci_run
+        for fault, dp in _res.items():
+            node = fault.split('@')[0]
+            stuck = fault.split('@')[1]
+            circuit.nodes[node].stat["DP" + stuck] = dp
+
 
 
 if __name__ == "__main__":
@@ -780,15 +809,20 @@ if __name__ == "__main__":
         stafan(circuit, tps=tps, ci=1, num_proc=args.cpu)
         #TODO Some of the pandas methods are going to be deprecated 
     
-    #testd up to here.
+    elif args.func == "gen-graph":
+        gen_graph(circuit, tp_count=args.tp, num_proc=args.cpu, ci=args.ci)
+    
+    elif args.func == "ppsf-stafan":
+        ppsf_stafan(circuit, tp=args.tp, ci=args.ci, num_proc=args.cpu)
+
+    # ^^ Testd up to here ^^
 
     #Delta FC
     elif args.func == "dfc-pfs":
-        dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, op_count=args.opCount)
+        dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, 
+                op_count=args.opCount)
     
-    elif args.func == "gen-graph":
-        gen_graph(circuit, tp_count=args.tp, num_proc=args.cpu, ci=args.ci)
-
+    
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
     
