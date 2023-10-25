@@ -17,7 +17,7 @@
 #         path = f"{config.STAFAN_DIR}/{circuit.c_name}"
 #         if not os.path.exists(path):
 #             os.makedirs(path)
-#         fname = f"{path}/{circuit.c_name}-TP{f}.stafan"
+#         fname = f"{path}/{circuit.c_name}-tp{f}.stafan"
 #         if not os.path.exists(fname):
 #             tpc = re.findall(r"\d+", f)[0]
 #             circuit.STAFAN(int(tpc))

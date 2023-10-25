@@ -229,9 +229,9 @@ def path_stafan_code(c_name, tp, code=None):
     if not os.path.exists(path):
         os.makedirs(path)
     if code is None:
-        fname = os.path.join(path, f"{c_name}-TP{tp}.stafan")
+        fname = os.path.join(path, f"{c_name}-tp{tp}.stafan")
     else:
-        fname = os.path.join(path, f"{c_name}-TP{tp}-{code}.stafan")
+        fname = os.path.join(path, f"{c_name}-tp{tp}-{code}.stafan")
     return fname 
 
 def path_tpfc_pfs(c_name, tp, idx):

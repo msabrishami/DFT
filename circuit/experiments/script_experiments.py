@@ -78,7 +78,7 @@ for tp in [1]: # STAFAN_TPs:
             continue
 
             for tp in STAFAN_TPs:
-                if f"{ckt_name}/{ckt_name}-TP{tp}.stafan" not in fnames:
+                if f"{ckt_name}/{ckt_name}-tp{tp}.stafan" not in fnames:
                     not_found.append(str(tp))
             if len(not_found) == 0:
                 print(f"{ckt_name} DONE!")
@@ -135,7 +135,7 @@ exit()
 # for ckt in all_netlists:
 #     for version in ["synV0"]:
 #         for tp in tps:
-#             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
+#             if os.path.exists("../data/stafan-data/{}_{}-tp{}.stafan".format(ckt, version, tp)):
 #                 # print("file exists for ckt: {} version {} tp: {}!".format(ckt, version, tp))
 #                 continue
 #             else:
@@ -157,8 +157,8 @@ exit()
 # for ckt in all_netlists:
 #     for version in versions:
 #         for tp in tps:
-#             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
-#                 if os.path.exists("../data/ob_stat/{}_{}_TP{}.obs".format(ckt, version, tp)):
+#             if os.path.exists("../data/stafan-data/{}_{}-tp{}.stafan".format(ckt, version, tp)):
+#                 if os.path.exists("../data/ob_stat/{}_{}_tp{}.obs".format(ckt, version, tp)):
 #                     print("{} {} {} exists".format(ckt, version, tp))
 #                     continue
 #                 sc = script.replace("$CKT$", ckt)
@@ -208,7 +208,7 @@ exit()
 # version = "synV1"
 # for cnt in count:
 #     for b in bth:            
-#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-TP{tp}.stafan"):
+#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-tp{tp}.stafan"):
 #             if os.path.exists(f"../data/observations/{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op"):
 #                 print(f"{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op exists")
 #                 continue
@@ -223,7 +223,7 @@ exit()
 #     for version in ["synV1"]
 #         for tp in tps:
 # 
-#             if os.path.exists("../data/stafan-data/{}_{}-TP{}.stafan".format(ckt, version, tp)):
+#             if os.path.exists("../data/stafan-data/{}_{}-tp{}.stafan".format(ckt, version, tp)):
 #                 sc = script.replace("$CKT$", ckt)
 #                 sc = sc.replace("$VER$", version)
 #                 sc = sc.replace("$TP$", str(tp))
@@ -248,7 +248,7 @@ exit()
 # version = "synV1"
 # for cnt in count:
 #     for b in bth:            
-#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-TP{tp}.stafan"):
+#         if os.path.exists(f"../data/stafan-data/{ckt}_{version}-tp{tp}.stafan"):
 #             if os.path.exists(f"../data/observations/{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op"):
 #                 print(f"{ckt}_{version}_{f}_B-{b}_Count-{cnt}.op exists")
 #                 continue

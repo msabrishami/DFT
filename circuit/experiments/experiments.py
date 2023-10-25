@@ -169,8 +169,8 @@ def FCTP_analysis(circuit, args):
     None
     """
     # Loading STAFAN data
-    fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
-            circuit.c_name, circuit.c_name, args.tpLoad) 
+
+    fname = utils.path_stafan(circuit.c_name, args.tpLoad)
     circuit.load_TMs(fname)
     
     # Loading PPSF data
@@ -238,8 +238,7 @@ def OP_impact(circuit, args):
     steps = cfg.PPSF_STEPS 
     
     # Read and load characterized STAFAN prob. values 
-    fname = cfg.STAFAN_DIR + "/{}/{}-TP{}.stafan".format(
-            circuit.c_name, circuit.c_name, args.tpLoad) 
+    fname = utils.path_stafan(circuit.c_name, args.tpLoad)
     circuit.load_TMs(fname)
     
     # Read and load characterized PPSF prob. values 
