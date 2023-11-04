@@ -322,11 +322,11 @@ def ppsf_ci(circuit, cpu, _cis):
     plt.title(f"Detection probability histogram with PPSF\n\
         for circuit{circuit.c_name}")
 
-    path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
+    path = os.path.join(FAULT_SIM_DIR, circuit.c_name + "/ppsf/")
     if not os.path.exists(path):
         os.makedirs(path)
-
-    fname = os.path.join(path, f"ppsf-ci-{circuit.c_name}-maxCI{max(_cis)}.png")
+    fname = f"ppsf-ci-{circuit.c_name}-minCI{min(_cis)}-maxCI{max(_cis)}.png"
+    fname = os.path.join(path, fname)
     plt.tight_layout()
     plt.savefig(fname)
     print(f"\nFigure saved in {fname}")
@@ -404,9 +404,9 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     print(f"Figure saved in {fname}")
 
 def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
-    """ Histogram or scatter plot for relative error of different PPSF fault coverage results \
-    using different CIs with respect to the maximum given CI. In case of histogram, KDE \
-    (Kernel Density Estimation) line is also drawn.
+    """ Histogram or scatter plot for relative error of different PPSF fault coverage 
+    results using different CIs with respect to the maximum given CI. In case of 
+    histogram, KDE (Kernel Density Estimation) line is also drawn.
 
     Parameters:
     -----------
@@ -427,7 +427,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         fname = utils.path_ppsf_ci(circuit.c_name, c, cpu)
         path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
         if not os.path.exists(fname):
-            _cis.remove(c)
+            copy_cis.remove(c)
             print(f"Data is not available in: {fname}")
             continue
         ppsf = PPSF(circuit)
@@ -447,16 +447,16 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
 
         df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index = True)
 
-    max_ci = max(_cis)
-    _cis.remove(max_ci)
+    max_ci = max(copy_cis)
+    copy_cis.remove(max_ci)
     max_ci_col = "ci" + str(max_ci)
-    min_val = max(min((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), -0.2)
-    max_val = min(max((df["ci" + str(min(_cis))]-df[max_ci_col]) / df[max_ci_col]), 0.2)
+    min_val = max(min((df["ci"+str(min(copy_cis))]-df[max_ci_col]) / df[max_ci_col]), -0.2)
+    max_val = min(max((df["ci"+str(min(copy_cis))]-df[max_ci_col]) / df[max_ci_col]), 0.2)
     bins = np.linspace(min_val, max_val, 40)
     temp = []
     plt.rcParams["patch.force_edgecolor"] = False
-    plt.figure(figsize=(12, 6))
-    for idx, c in enumerate(_cis):
+    plt.figure(figsize=(24, 12))
+    for idx, c in enumerate(copy_cis):
         col = "ci" + str(c)
         df[col+"_error"] = (df[col]-df[max_ci_col])/df[max_ci_col]
         temp.append(col+"_error")
@@ -475,12 +475,14 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
                             label=col.replace("ci", "CI="))
 
             plt.xscale("log")
-
-    plt.title(f"Comparing error in detection probability (DP) of faults measured with PPSF \n\
-    for different confidence intervals (CIs) \n\
-    CI = {max_ci} is used as the reference for error. \n\
-    Number of parallel processes for PPSF = {cpu} \n\
-    Circuit = {circuit.c_name}")
+    
+    min_ci = min(copy_cis)
+    plt.title(f"Comparing error in faults detection probability (DP) measured" + \
+            f"with PPSF \n\
+            for different confidence intervals (CIs) \n\
+            CI = {max_ci} is used as the reference for error. \n\
+            Number of parallel processes for PPSF = {cpu} \n\
+            Circuit = {circuit.c_name}")
     if hist_scatter == "hist":
         plt.xlabel(f"Relative error with respect to PPSF with CI={max_ci}")
         plt.ylabel("Count of faults")
@@ -489,7 +491,8 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
         plt.ylabel(f"Relative error with respect to PPSF with CI={max_ci}")
 
     path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
-    fname = f"{path}/ppsf-error-{circuit.c_name}-maxCI{max_ci}-{hist_scatter}plot-proc{cpu}.png"
+    fname = f"{path}/ppsf/ppsf-error-{circuit.c_name}-maxCI{max_ci}-minCI{min_ci}-" + \
+            f"{hist_scatter}plot-proc{cpu}.png"
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
@@ -801,17 +804,20 @@ if __name__ == "__main__":
                 tp=args.tp, tpLoad=args.tpLoad, ci=args.ci, cpu=args.cpu)
 
     elif args.func == "ppsf-ci":
+        cis = [2, 5, 10]
         ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=cis)
 
     elif args.func == "ppsf-corr":
         ppsf_corr_ci(circuit=circuit, _cis=cis, cpu=args.cpu)
 
     elif args.func == "ppsf-error":
+        cis = [2, 3, 4, 5, 6, 7, 8, 9, 10]
         if args.figmode == "both":
             ppsf_error_ci(circuit=circuit, hist_scatter="hist", cpu=args.cpu, _cis=cis)
             ppsf_error_ci(circuit=circuit, hist_scatter="scatter", cpu=args.cpu, _cis=cis)
         else:
-            ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, cpu=args.cpu, _cis=cis)
+            ppsf_error_ci(circuit=circuit, hist_scatter=args.figmode, 
+                    cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
         tps = [1000,2000,5000,10**4,10**5,10**6, 10**7,10**8]

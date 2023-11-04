@@ -234,7 +234,7 @@ class PPSF(FaultSim):
     #TODO MSA: add the value of dp to node.stat["DP0"] and ["DP1"]
     def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
             num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, 
-            log_fname=None):
+            log_fname=None, mode="basic", moe=0.1):
         """ (many times ppsf) Run Parallel Fault Simulation with count of 
         test patterns in tp_steps list over the given number of Processes.
         All faults are considered. 
@@ -357,24 +357,42 @@ class PPSF(FaultSim):
                 outfile.write(f"#TP={tp}\n")
             
             for fault in fl_curr.faults:
+                is_done = False
                 fault_cont = fl_cont.faults[fault_idx[str(fault)]]
                 fault_cont.D_count_list += np.array(fault.D_count_list)
                 mu = np.mean(fault_cont.D_count_list/tp_tot)
                 std = np.std(fault_cont.D_count_list/tp_tot)
                 if mu == 0 and std == 0: # all zero
                     fl_temp.copy_fault(fault)
-                elif std == 0: # Why this happens at low number of tps (sometimes)?
-                    print(f'(logging) {str(fault)}\tmu={mu}, {fault_cont.D_count_list}')
-                elif mu/std > ci:
-                    res_final[str(fault)] = mu/tp_tot
-                    # MSA added for debugging purposes
+                    continue
+                elif std == 0: 
+                    #TODO Why this happens at low number of tps (sometimes)?
+                    print(f'(Warning) {str(fault)}\tmu={mu}, {fault_cont.D_count_list}')
+                    continue
+
+                se = np.sqrt(mu*(1-mu)/(tp_tot*num_proc))
+                e_rel = ci*se/mu 
+
+                if mode=="basic" and mu/std > ci:
+                    is_done = True
+                elif mode=="advanced" and (mu/std > ci) and (e_rel<moe):
+                    is_done = True
+
+                if is_done:
                     fault_cont.final_mu = mu
                     fault_cont.final_std = std
                     fault_cont.final_tp = tp_tot 
-                    if save_log:
-                        outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
+                    msg = "STOP:\t"
                 else:
                     fl_temp.copy_fault(fault)
+                    msg = "CONT:\t"
+
+                if save_log:
+                    # outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
+                    _counts = ",".join([str(int(x)) for x in fault_cont.D_count_list])
+                    msg += f"{fault}\t{mu:.4e}\t{std:.4e}\t{se:.4e}\t{e_rel:.4e}"
+                    msg += f"\t{_counts}\n"
+                    outfile.write(msg)
 
             if verbose:
                 msg = f"TP = {tp:5}: Simulated faults = #{len(fl_curr.faults)}\t"
