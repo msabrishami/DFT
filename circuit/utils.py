@@ -192,12 +192,15 @@ def path_ppsf():
     pass
 
 
-def path_ppsf_ci(c_name, ci, cpu):
+def path_ppsf_ci(c_name, ci, cpu, moe=None):
     path = os.path.join(cfg.FAULT_SIM_DIR, c_name)
     path = os.path.join(path, "ppsf")
     if not os.path.exists(path):
         os.makedirs(path)
-    fname = f"{c_name}-ppsf-ci{ci}-proc{cpu}.ppsf"
+    if moe is None:
+        fname = f"{c_name}-ppsf-ci{ci}-proc{cpu}.ppsf"
+    else:
+        fname = f"{c_name}-ppsf-ci{ci}-proc{cpu}-moe{moe}.ppsf"
     fname = os.path.join(path, fname)
     return fname
 
