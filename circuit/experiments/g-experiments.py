@@ -748,17 +748,18 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
     return graph
 
 
-def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8):
+def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8, moe=0.1):
     ppsf = PPSF(circuit)
     tg = TPGenerator(circuit)
-    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc)
+    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc, moe)
     if os.path.exists(fname):
         print(f"Data exists in: {fname}")
     else:
         print(f"Generating data for {fname}")
         _res, fl = ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
+                log_fname = fname, 
                 verbose=True, ci=ci, num_proc=num_proc, 
-                fault_count='all', save_log=True)
+                fault_count='all', save_log=True, mode="advanced", moe=moe)
         #TODO: maybe integrate this update into ppsf.multiprocess_ci_run
         for fault, dp in _res.items():
             node = fault.split('@')[0]
@@ -796,7 +797,7 @@ if __name__ == "__main__":
     elif args.func == "gen-ppsf":
         gen_ppsf(circuit, tp_steps=[100, 200, 500, 1e3, 2e3, 5e3, 1e4, 
             2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7], 
-                 ci=args.ci, num_proc=args.cpu)
+                 ci=args.ci, num_proc=args.cpu,moe=0.1)
 
     elif args.func == "compare-tpfc":
         args.tp = 2*AUTO_TP[circuit.c_name] 
