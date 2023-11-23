@@ -234,7 +234,7 @@ class PPSF(FaultSim):
     #TODO MSA: add the value of dp to node.stat["DP0"] and ["DP1"]
     def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
             num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, 
-            log_fname=None, mode="basic", moe=0.1):
+            log_fname=None, mode="basic", moe=0.1, target_fault=None):
         """ (many times ppsf) Run Parallel Fault Simulation with count of 
         test patterns in tp_steps list over the given number of Processes.
         All faults are considered. 
@@ -277,12 +277,19 @@ class PPSF(FaultSim):
         fl_curr = FaultList(self.circuit)
         fl_cont = FaultList(self.circuit)
         
+        if target_fault is not None:
+            if isinstance(target_fault, list):
+                fl_curr.add_str_list(target_fault)
+                fl_cont.add_str_list(target_fault)
+            if isinstance(target_fault, str):
+                fl_curr.add_str(target_fault)
+                fl_cont.add_str(target_fault)
+
         # Creating fault list (fl_curr) based on given OP and fault_count
-        if op is None:
+        elif op is None:
             if fault_count is None or fault_count == 'all':
                 fl_cont.add_all()
                 fl_curr.add_all()
-
         else:
             fanin_nodes = utils.get_fanin_BFS(self.circuit, op, depth)
             
@@ -326,7 +333,9 @@ class PPSF(FaultSim):
         ### Setting log file name and path 
         if log_fname is None:
             log_fname = utils.path_ppsf_ci(self.circuit.c_name, ci, num_proc)
-
+        
+        #TODO: consider an automatic fname with given op or at least 
+        #       add this info in the description 
         log_fname = os.path.join(path, log_fname)
         if save_log:
             outfile = open(log_fname, "w")
@@ -436,13 +445,15 @@ class PPSF(FaultSim):
             res[words[0]] = [int(x) for x in words[1:]]
         return res
 
-    def load_pd_ppsf_conf(self, fname):
+    def load_pd_ppsf_conf(self, fname, mode="advanced"):
         """load a ppsf log file with confidence log file """ 
         #TODO We need to make sure files are saved correctly 
         #TODO Consider writing down the policy for continual TP 
         #TODO This method is also defined in utils and other places! 
         if not os.path.exists(fname):
             raise Exception(f'File {fname} not exists')
+        if mode not in ["basic", "advanced"]:
+            raise Exception(f"(ERROR) mode should be either \"basic\" or \"advance\"")
         lines = open(fname, "r").readlines()
         res = {}
         current_tp = 0
@@ -454,12 +465,30 @@ class PPSF(FaultSim):
             elif line.startswith("#TP: (remaining"):
                 print("(Warning) PPSF was not completed with the given " + 
                         "confidence interval for some of the faults")
-            else:
+            elif mode == "basic":
                 fault, mu_d, sigma_d = line.split()
                 node, ssaf = fault.split('@')
                 node = self.circuit.nodes[node]
                 node.stat["DP" + ssaf] = float(mu_d)
                 res[fault] = float(mu_d)
+            elif mode == "advanced":
+                """
+                1. stat: 
+                    CONT fault.pd was not yet finalized in this round
+                    STOP fault.pd was finalized given its criteria
+                2. fault: node-number@stuck-value
+                3. mu_d: mean of fault.pd among all processes
+                4. sigma_d: standard deviation of fault.md among all processes
+                5. se: standard error for fault, given all observations of RVs
+                6. e_rel: relative error given ci, calculated by ci*se/mu 
+                7. counts: list of count of RV observations (Binomial ~ N*p)
+                """
+                stat, fault, mu_d, sigma_d, se, e_rel, counts = line.split("\t")
+                node, ssaf = fault.split('@')
+                node = self.circuit.nodes[node]
+                node.stat["DP" + ssaf] = float(mu_d)
+                res[fault] = float(mu_d)
+
 
         print(f'Loaded PPSF data from: {fname}')
         return res

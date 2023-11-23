@@ -26,7 +26,7 @@ from fault_simulation.ppsf import PPSF
 
 from tp_generator import TPGenerator
 
-colors = ['r', 'g', 'b', 'c', 'm', 'y', 'brown',
+colors = ['r', 'g', 'b', 'brown', 'm', 'y', 'c', 
           'purple', 'turquoise', 'salmon', 'skyblue']
 
 const_base = 1.1
@@ -70,8 +70,9 @@ def pars_args():
                         help="Repetition count for figures")
     parser.add_argument("-ci", type=int, required=False,
                         help="Confidence value (mu/std)")
-    parser.add_argument("-figmode", type=str, required=False, choices=['hist', 'scatter','both'],
-                        help="Draw histogram or scatter plot for function ppsf-error-ci",)
+    parser.add_argument("-figmode", type=str, required=False, 
+            choices=['hist', 'scatter','both'],
+            help="Draw histogram or scatter plot for function ppsf-error-ci",)
     args = parser.parse_args()
 
     return args
@@ -352,7 +353,7 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     copy_cis = _cis.copy()
     for c in copy_cis:
 
-        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu)
+        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu, moe=0.1)
 
         # fname = os.path.join(path, f"{circuit.c_name}_ppsf_ci{c}_proc{cpu}.ppsf")
         if not os.path.exists(fname):
@@ -399,7 +400,7 @@ def ppsf_corr_ci(circuit, cpu, _cis, heatmap=False):
     fig.tight_layout()
     
     path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
-    fname = f"{path}/ppsf-corr-{circuit.c_name}-CIs-max{max_ci}-proc{cpu}.png"
+    fname = f"{path}/ppsf/ppsf-corr-{circuit.c_name}-maxCI{max_ci}-proc{cpu}.png"
     plt.savefig(fname)
     print(f"Figure saved in {fname}")
 
@@ -424,14 +425,14 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     cis = []
     copy_cis = _cis.copy()
     for c in copy_cis:
-        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu)
+        fname = utils.path_ppsf_ci(circuit.c_name, c, cpu, moe=0.1)
         path = os.path.join(FAULT_SIM_DIR, circuit.c_name)
         if not os.path.exists(fname):
             copy_cis.remove(c)
             print(f"Data is not available in: {fname}")
             continue
         ppsf = PPSF(circuit)
-        cis.append(ppsf.load_pd_ppsf_conf(fname))
+        cis.append(ppsf.load_pd_ppsf_conf(fname, mode="advanced"))
     
     if len(cis) == 0:
         raise Exception('No data was loaded.')
@@ -471,7 +472,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
 
         if hist_scatter == "scatter":
             sns.scatterplot(x=df[max_ci_col], y=df[col+"_error"],
-                            color=colors[idx], alpha=0.5, s=8,
+                            color=colors[idx], alpha=0.5, s=12,
                             label=col.replace("ci", "CI="))
 
             plt.xscale("log")
@@ -748,17 +749,23 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
     return graph
 
 
-def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8, moe=0.1):
+def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8, moe=0.1, target_fault=None):
     ppsf = PPSF(circuit)
     tg = TPGenerator(circuit)
     fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc, moe)
+
+    # TODO: Ad hoc method here 
+    if target_fault is not None:
+        fname = fname.replace(".ppsf", f"-{str(target_fault)}.ppsf")
+        print(fname)
+
     if os.path.exists(fname):
         print(f"Data exists in: {fname}")
     else:
         print(f"Generating data for {fname}")
-        _res, fl = ppsf.multiprocess_ci_run(tp_steps=tp_steps,#op=circuit.nodes_lev[5],
-                log_fname = fname, 
-                verbose=True, ci=ci, num_proc=num_proc, 
+        _res, fl = ppsf.multiprocess_ci_run(tp_steps=tp_steps,
+                target_fault=target_fault,
+                log_fname=fname, verbose=True, ci=ci, num_proc=num_proc, 
                 fault_count='all', save_log=True, mode="advanced", moe=moe)
         #TODO: maybe integrate this update into ppsf.multiprocess_ci_run
         for fault, dp in _res.items():
@@ -782,6 +789,7 @@ if __name__ == "__main__":
                     tpLoad=args.tpLoad, tp=args.tp, num_proc=args.cpu)
 
     elif args.func == "tpfc-pfs":
+        #TODO: consider parallel processing for this! 
         if circuit.c_name in AUTO_TP:
             print("TP count is automatically changed from {} to {}".format(
                         args.tp, AUTO_TP[circuit.c_name]))
@@ -795,9 +803,13 @@ if __name__ == "__main__":
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
     
     elif args.func == "gen-ppsf":
-        gen_ppsf(circuit, tp_steps=[100, 200, 500, 1e3, 2e3, 5e3, 1e4, 
-            2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7], 
-                 ci=args.ci, num_proc=args.cpu,moe=0.1)
+        tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 
+                1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8]
+        tp_steps = [2000]*200
+        tp_steps = [200]*200
+        gen_ppsf(circuit, tp_steps=tp_steps, 
+                 ci=args.ci, num_proc=args.cpu,moe=0.05,
+                 target_fault="n240@0") 
 
     elif args.func == "compare-tpfc":
         args.tp = 2*AUTO_TP[circuit.c_name] 
@@ -809,10 +821,11 @@ if __name__ == "__main__":
         ppsf_ci(circuit=circuit, cpu=args.cpu, _cis=cis)
 
     elif args.func == "ppsf-corr":
+        cis = [1, 2, 3, 4, 5] # , 6, 7, 8, 9, 10]
         ppsf_corr_ci(circuit=circuit, _cis=cis, cpu=args.cpu)
 
     elif args.func == "ppsf-error":
-        cis = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+        cis = [1, 2, 3, 4, 5] # , 6, 7, 8, 9, 10]
         if args.figmode == "both":
             ppsf_error_ci(circuit=circuit, hist_scatter="hist", cpu=args.cpu, _cis=cis)
             ppsf_error_ci(circuit=circuit, hist_scatter="scatter", cpu=args.cpu, _cis=cis)
@@ -821,7 +834,7 @@ if __name__ == "__main__":
                     cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        tps = [1000,2000,5000,10**4,10**5,10**6, 10**7,10**8]
+        tps = [1000,2000,5000,10**4,10**5,10**6, 10**7] #,10**8]
         stafan(circuit, tps=tps, ci=1, num_proc=args.cpu)
         #TODO Some of the pandas methods are going to be deprecated 
     
@@ -837,7 +850,6 @@ if __name__ == "__main__":
     elif args.func == "dfc-pfs":
         dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, 
                 op_count=args.opCount)
-    
     
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
