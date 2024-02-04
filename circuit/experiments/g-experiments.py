@@ -497,7 +497,7 @@ def ppsf_error_ci(circuit, hist_scatter, cpu, _cis):
     plt.savefig(fname, bbox_inches="tight")
     print(f"Figure saved in {fname}")
 
-def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5): 
+def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5, plot=True): 
     """
     TODO: Description.
     TODO: finalize axis scales
@@ -519,13 +519,18 @@ def stafan(circuit: DFTCircuit, tps, ci=5, num_proc=5):
             circuit.save_STAFAN(fname=fname, verbose=False)
         else:
             circuit.load_STAFAN(fname)
+        if plot == False:
+            continue
         for n in circuit.nodes_lev:
             row = {"Node":n.num, "C0": n.C0, "C1": n.C1,
                             "B0": n.B0, "B1": n.B1,
                             "D0":n.B1*n.C1 ,"D1":n.B0*n.C0,
                             "TP":tp}
             df = pd.concat([df, pd.DataFrame(row, index=[0])], ignore_index=True)
-    
+
+    if plot == False:
+        return 
+
     max_tp = max(tps)
     tps.remove(max_tp)
 
@@ -604,8 +609,16 @@ def ppsf_stafan(circuit: DFTCircuit, tp, ci, num_proc):
         dp_stafan.append(gnode["C1"]*gnode["B1"])
         dp_ppsf.append(gnode["DP1"])
         dp_stafan.append(gnode["C0"]*gnode["B0"])
+    mse = 0
+    mse_rel = 0
     for idx in range(len(dp_ppsf)):
         rel_error.append(abs(dp_ppsf[idx]-dp_stafan[idx])/dp_ppsf[idx])
+        mse +=  (dp_ppsf[idx]-dp_stafan[idx])**2
+        mse_rel += (abs(dp_ppsf[idx]-dp_stafan[idx])/dp_ppsf[idx])**2
+    mse = mse / len(dp_ppsf)
+    mse_rel = mse_rel / len(dp_ppsf) 
+    # TODO: Double check this part of the implementation
+    # print(f"HERE {circuit.c_name}\t MSE = {mse:.5f}\t MSE_REL = {mse_rel:5f}") 
     sns.scatterplot(x=dp_ppsf, y=rel_error)
     plt.xscale("log")
     plt.yscale("log")
@@ -730,7 +743,7 @@ def gen_graph(circuit, tp_count, num_proc=20, ci=3):
         circuit.STAFAN(tp_count=tp_count, num_proc=num_proc, save_log=True)
     
     # PPSF with CI
-    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc)
+    fname = utils.path_ppsf_ci(circuit.c_name, ci, num_proc, moe=0.1)
     ppsf = PPSF(circuit)
     if os.path.exists(fname):
         ppsf_res = ppsf.load_pd_ppsf_conf(fname)
@@ -773,7 +786,55 @@ def gen_ppsf(circuit, tp_steps, ci=3, num_proc=8, moe=0.1, target_fault=None):
             stuck = fault.split('@')[1]
             circuit.nodes[node].stat["DP" + stuck] = dp
 
+def profile(circuit, tp, num_proc, run_stafan=False):
+    # circuit.STAFAN_C(tp)
+    res = "Circuit name: " + circuit.c_name + "\t"
+    res += "#Nodes: " + str(len(circuit.nodes)) + "\t"
+    res += "#PI: " + str(len(circuit.PI)) + "\t"
+    res += "#PO: " + str(len(circuit.PO)) + "\t"
+    max_level = max([node.lev for node in circuit.PO])
+    res += "Max-Lev: " + str(max_level) + "\t"
+    print(res)
+    if not run_stafan:
+        return None
+    circuit.STAFAN_multi_tmp(tp, num_proc)
+    C0s = [x.C0 for x in circuit.nodes_lev]
+    C1s = [x.C1 for x in circuit.nodes_lev]
+    Cs = C0s + C1s
+    levs = [node.lev for node in circuit.nodes_lev]
 
+
+    bad_count = 0
+    for c0 in C0s:
+        if c0==1 or c0==0:
+            bad_count += 1
+    res += "#Bad-C: " + str(bad_count)
+    print(res)
+    return 
+    
+    _title = f"Gate={len(circuit.nodes)}, PI={len(circuit.PI)}, PO={len(circuit.PO)}"
+    
+    bins = 20
+    if len(circuit.nodes_lev) > 1000:
+        bins = 50
+
+    # bins = np.logspace(np.floor(np.log10(min(C0s))), 
+    #         np.log10(max(C0s)), 20)
+    sns.histplot(C0s, bins=bins, kde=True)
+    plt.title(_title + "\nC0 Histogram")
+    # plt.xscale("log")
+    plt.xlabel("STAFAN C0")
+    plt.ylabel("Count")
+    plt.savefig(circuit.c_name + "_Cs.png")
+    plt.close()
+
+    bins = 20
+    if len(circuit.nodes_lev) > 1000:
+        bins = 50
+    sns.histplot(levs, bins=bins, kde=True)
+    plt.title(_title + "\nLevel Histogram")
+    plt.savefig(circuit.c_name + "_levs.png")
+    plt.close()
 
 if __name__ == "__main__":
     args = pars_args()
@@ -803,13 +864,9 @@ if __name__ == "__main__":
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
     
     elif args.func == "gen-ppsf":
-        tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 
-                1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8]
-        tp_steps = [2000]*200
-        tp_steps = [200]*200
+        tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6] 
         gen_ppsf(circuit, tp_steps=tp_steps, 
-                 ci=args.ci, num_proc=args.cpu,moe=0.05,
-                 target_fault="n240@0") 
+                 ci=args.ci, num_proc=args.cpu,moe=0.1) 
 
     elif args.func == "compare-tpfc":
         args.tp = 2*AUTO_TP[circuit.c_name] 
@@ -834,8 +891,8 @@ if __name__ == "__main__":
                     cpu=args.cpu, _cis=cis)
     
     elif args.func == "stafan":
-        tps = [1000,2000,5000,10**4,10**5,10**6, 10**7] #,10**8]
-        stafan(circuit, tps=tps, ci=1, num_proc=args.cpu)
+        tps = [1000,2000,5000,10**4,10**5,10**6]# , 10**7] #,10**8]
+        stafan(circuit, tps=tps, ci=3, num_proc=args.cpu, plot=False)
         #TODO Some of the pandas methods are going to be deprecated 
     
     elif args.func == "gen-graph":
@@ -844,13 +901,80 @@ if __name__ == "__main__":
     elif args.func == "ppsf-stafan":
         ppsf_stafan(circuit, tp=args.tp, ci=args.ci, num_proc=args.cpu)
 
+    elif args.func == "profile":
+        profile(circuit, args.tp, args.cpu, run_stafan=False) 
+
+    elif args.func == "tnx":
+        fname = utils.path_ppsf_ci(circuit.c_name, args.ci, args.cpu, 0.1)
+        print(fname)
+        if not os.path.exists(fname):
+            print("ERROR: DOES NOT EXIST")
+            exit()
+        ppsf = PPSF(circuit)
+        res = ppsf.load_pd_ppsf_conf(fname)
+        PDs = list(res.values())
+        bins = np.logspace(np.floor(10*np.log10(min(PDs)))/10,
+                           np.log10(max(PDs)), 20)
+
+        sns.histplot(PDs, bins=bins)  
+        plt.xscale("log")
+        plt.xlabel("PD using PPSF")
+        plt.ylabel("Histogram of PDs")
+        plt.title(f"Detection probability histogram with PPSF\n" + \
+                f"for circuit {circuit.c_name}")
+
+        plt.xlabel("PD using PPSF")
+        path = os.path.join(FAULT_SIM_DIR, circuit.c_name + "/ppsf/")
+        if not os.path.exists(path):
+            os.makedirs(path)
+        fname = f"ppsf-PD-hist-{circuit.c_name}-ci{args.ci}-log.png"
+        fname = os.path.join(path, fname)
+        plt.tight_layout()
+        plt.savefig(fname)
+        print(f"\nFigure saved in {fname}")
+
+
+
+
+
     # ^^ Testd up to here ^^
 
     #Delta FC
     elif args.func == "dfc-pfs":
         dfc_pfs_analysis(circuit, tp_count=args.tp, times=args.times, 
                 op_count=args.opCount)
-    
+
+    elif args.func == "stafan-hist":
+        fname = utils.path_stafan_code(circuit.c_name, args.tp)
+        print(fname)                                                         
+        if not os.path.exists(fname):                                        
+            print("ERROR: DOES NOT EXIST")                                   
+            exit()                                                           
+        circuit.load_STAFAN(fname)
+        PDs = []
+        for node in circuit.nodes_lev:
+            PDs.append(node.C1 * node.B1)
+            PDs.append(node.C0 * node.B0)
+        #print(min(PDs), max(PDs))
+        # bins = np.logspace(np.floor(10*np.log10(min(PDs)))/10, np.log10(max(PDs)), 20)
+        sns.histplot(PDs, bins=20)                                         
+        plt.xscale("log")                                                    
+        plt.xlabel("PD using STAFAN") 
+        plt.ylabel("Histogram of PDs")                                       
+        plt.title(f"Detection probability histogram with STAFAN\n" + \
+                f"for circuit {circuit.c_name}")                             
+        plt.xlabel("PD using PPSF")                                          
+        # path = os.path.join(STAFAN_DIR, circuit.c_name ")        
+        # if not os.path.exists(path):                                         
+        #         os.makedirs(path)                                                
+        fname = f"ppsf-PD-hist-{circuit.c_name}-ci{args.ci}-log.png"         
+        # fname = os.path.join(path, fname)                                    
+        plt.tight_layout()                                                   
+        plt.savefig(fname)                                                   
+        print(f"\nFigure saved in {fname}")                                  
+        IPython.embed()
+
+
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
     

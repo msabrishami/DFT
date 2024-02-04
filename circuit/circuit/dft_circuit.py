@@ -159,6 +159,56 @@ class DFTCircuit(circuit.Circuit):
         conn.send((one_count_list, zero_count_list, sen_count_list))
         conn.close()
 
+
+    def STAFAN_multi_tmp(self, tp_count, num_proc=1, verbose=False, save_log=False):
+        # TEMPORARY FUNCTION
+
+        """ 
+        Calculating STAFAN controllability and observability in parallel. 
+        Random TPs are generated within the method itself and are not stored. 
+        
+        Arguments:
+        ---------
+        total_tp : (int) total number of test pattern vectors (not less than num_proc)
+        num_proc : (int) number of processors that will be used in parallel processing 
+        """
+        self._stafan_tp = tp_count
+        if verbose:
+            print(f'TEMP STAFAN measurements ' + 
+                  f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
+                  f' with {tp_count} tps on {num_proc} process(es) ...')
+
+        if tp_count < num_proc:
+            raise ValueError("Total TPs should be higher than process numbers")
+        
+        start_time = time.time()
+
+        process_list = []
+        for id_proc in range(num_proc):
+            parent_conn, child_conn = Pipe()
+            p = Process(target = self.STAFAN_C_handler, 
+                    args =(child_conn, id_proc, tp_count//num_proc+1 , num_proc))
+            p.start()
+            process_list.append((p, parent_conn))
+
+        one_count_list = [0] * len(self.nodes_lev) 
+        zero_count_list = [0] * len(self.nodes_lev) 
+        sen_count_list = [0] *  len(self.nodes_lev)
+
+        for p, conn in process_list:
+            tup = conn.recv()
+            for i in range(len(tup[0])):
+                one_count_list[i] += tup[0][i]
+                zero_count_list[i] += tup[1][i]
+                sen_count_list[i] += tup[2][i]
+            p.join()
+        
+        for idx, node in enumerate(self.nodes_lev):
+            node.C1 = one_count_list[idx] / tp_count
+            node.C0 = zero_count_list[idx] / tp_count
+            node.S = sen_count_list[idx] / tp_count
+
+
     def STAFAN(self, tp_count, num_proc=1, verbose=True, save_log=False):
         """ 
         Calculating STAFAN controllability and observability in parallel. 

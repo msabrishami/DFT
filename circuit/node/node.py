@@ -73,8 +73,9 @@ class Node(ABC):
 
     def __str__(self):
         res = ", ".join([str(self.num), self.ntype, self.gtype, str(self.lev)]) 
-        res += " FIN: " + " ".join([str(fin.num) for fin in self.unodes])
-        res += " FOUT: " + " ".join([str(fout.num) for fout in self.dnodes])
+        res += ", FIN: [" + " ".join([str(fin.num) for fin in self.unodes])
+        res += "], FOUT: [" + " ".join([str(fout.num) for fout in self.dnodes])
+        res += "]"
         return res
     
     def add_unode(self, unode):
@@ -178,7 +179,11 @@ class NOT(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
-        self.value = 1 if (self.unodes[0].value == 0) else 0
+        try: 
+            self.value = 1 if (self.unodes[0].value == 0) else 0
+        except:
+            import IPython
+            IPython.embed()
 
     def imply_b(self):
         self.value = self.unodes[0].value ^ Node.bitwise_not

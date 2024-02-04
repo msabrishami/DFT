@@ -174,8 +174,11 @@ class DFTOR(node.OR, DFTNode):
                 print(f"Warning (OR.stafan_b): C1=0 for node {unode.num}", end="\t")
                 ne_C0 = [x.C0 for x in unode.get_neighbors(inclusive=False)]
                 print(f"|ne|={len(ne_C0)}", end="\t")
+                import IPython
+                IPython.embed()
                 if 0 in ne_C0:
                     raise ValueError("Error (OR.stafan_b): unresolved issue")
+                
                 unode.B1 = self.B1
                 for x in ne_C0:
                     unode.B1 *= x
