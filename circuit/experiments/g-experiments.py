@@ -864,9 +864,25 @@ if __name__ == "__main__":
         tpfc_ppsf(circuit=circuit, ci=args.ci, cpu=args.cpu, tp=args.tp)
     
     elif args.func == "gen-ppsf":
+<<<<<<< HEAD
         tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6] 
         gen_ppsf(circuit, tp_steps=tp_steps, 
                  ci=args.ci, num_proc=args.cpu,moe=0.1) 
+=======
+<<<<<<< HEAD
+        tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6] 
+        gen_ppsf(circuit, tp_steps=tp_steps, 
+                 ci=args.ci, num_proc=args.cpu,moe=0.1) 
+=======
+        tp_steps = [100, 200, 500, 1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 
+                1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8]
+        tp_steps = [2000]*200
+        tp_steps = [200]*200
+        gen_ppsf(circuit, tp_steps=tp_steps, 
+                 ci=args.ci, num_proc=args.cpu,moe=0.05,
+                 target_fault="n240@0") 
+>>>>>>> f7f122f8183c3755e72044d076c98fc14c01e748
+>>>>>>> 051a858a0c9dd4c902a7b2a31c743ce030d335b4
 
     elif args.func == "compare-tpfc":
         args.tp = 2*AUTO_TP[circuit.c_name] 
@@ -973,7 +989,6 @@ if __name__ == "__main__":
         plt.savefig(fname)                                                   
         print(f"\nFigure saved in {fname}")                                  
         IPython.embed()
-
 
     else:
         raise ValueError(f"Function \"{args.func}\" does not exist.")
