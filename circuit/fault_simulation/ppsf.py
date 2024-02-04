@@ -276,6 +276,8 @@ class PPSF(FaultSim):
 
         fl_curr = FaultList(self.circuit)
         fl_cont = FaultList(self.circuit)
+
+        runtime_log = [] 
         
         if target_fault is not None:
             if isinstance(target_fault, list):
@@ -309,15 +311,16 @@ class PPSF(FaultSim):
 
         if verbose:
             pr =f"Running PPSF with:\n"
-            pr+=f"\t| tp steps = {tp_steps}\n"
-            pr+=f"\t| confidence interval = {ci}\n"
-            pr+=f"\t| fault count = {len(fl_curr.faults)}\n"
-            pr+=f"\t| CPU count = {num_proc}\n"
+            pr += f"\t| tp steps = {tp_steps}\n"
+            pr += f"\t| confidence interval = {ci}\n"
+            pr += f"\t| fault count = {len(fl_curr.faults)}\n"
+            pr += f"\t| CPU count = {num_proc}\n"
         
             if op:
                 pr+=f"\t| observation point (node_num) = {op.num}\n"
                 pr+=f"\t| BFS depth = {depth}\n"
-            
+
+            runtime_log.append(pr)
             print(pr)
             
         fault_idx = {}
@@ -344,7 +347,7 @@ class PPSF(FaultSim):
         ### Starting PPSF simulation 
         tp_tot = 0
         res_final = {}
-        
+
         for tp in tp_steps:
             tp = int(tp)
             tp_tot += tp
@@ -408,6 +411,7 @@ class PPSF(FaultSim):
                 msg += f"Finalized faults = #{len(fl_curr.faults)-len(fl_temp.faults):4}"
                 msg += f"\tRemaining faults = #{len(fl_temp.faults):4}"
                 msg += f"\tElpased time = {time.time()-time_s:.2f}s"
+                runtime_log.append(msg + "\n")
                 print(msg)
 
             fl_curr = fl_temp
@@ -417,20 +421,33 @@ class PPSF(FaultSim):
 
         # Writing down the remaining faults
         if save_log and (len(fl_curr.faults) != 0):
-            outfile.write("\n#TP: (remaining faults)\n")
+            # outfile.write("\n#TP: (remaining faults)\n")
         
             for fault in fl_curr.faults:
                 fault_cont = fl_cont.faults[fault_idx[str(fault)]]
                 fault_cont.D_count_list += np.array(fault.D_count_list)
                 mu = np.mean(fault_cont.D_count_list/tp_tot)
                 std = np.std(fault_cont.D_count_list/tp_tot)
-                outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
+
+                msg = "REMAINED:\t"
+                _counts = ",".join([str(int(x)) for x in fault_cont.D_count_list])
+                msg += f"{fault}\t{mu:.4e}\t{std:.4e}\t{se:.4e}\t{e_rel:.4e}"
+                msg += f"\t{_counts}\n"
+                # outfile.write(f"{fault}\t{mu:.4e}\t{std:.4e}\n")
+                outfile.write(msg)
                 
                 res_final[str(fault)] = mu
 
-            print(f"\nLog for step-based PPSF is saved in {log_fname}")
-            outfile.close()
-        
+
+        outfile.write("### RUNTIME LOG ###\n")
+        outfile.writelines(runtime_log)
+        outfile.close()
+        print(f"\nLog for step-based PPSF is saved in {log_fname}")
+
+
+            
+            
+
         return res_final, fl_cont
 
     def load_ppsf_parallel(fname):
