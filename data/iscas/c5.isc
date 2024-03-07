@@ -1,0 +1,26 @@
+*c17 iscas example (to test conversion program only)
+*---------------------------------------------------
+*
+*
+*  total number of lines in the netlist ..............    17
+*  simplistically reduced equivalent fault set size =     22
+*        lines from primary input  gates .......     5
+*        lines from primary output gates .......     2
+*        lines from interior gate outputs ......     4
+*        lines from **     3 ** fanout stems ...     6
+*
+*        avg_fanin  =  2.00,     max_fanin  =  2
+*        avg_fanout =  2.00,     max_fanout =  2
+*
+*
+*
+*
+*
+    1     1gat inpt    1   0      >sa1
+    2     2gat inpt    1   0      >sa1
+    3     3gat nand    1   2      >sa1
+     1     2
+    4     4gat inpt    1   0      >sa1
+    5     5gat and     0   2      >sa1
+     3     4
+

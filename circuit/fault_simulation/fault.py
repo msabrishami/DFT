@@ -66,8 +66,9 @@ class FaultList:
 
     def add_n_random(self, n=1):
         """Add n random unique faults"""
-        if n >= len(self.circuit.nodes_lev):
-            raise "Required random faults are more than number of nodes in your circuit"
+        if n > 2*len(self.circuit.nodes_lev):
+            print("Required random faults are more than number of nodes in your circuit")
+            n = 2*len(self.circuit.nodes_lev)
         
         import random
         for n_num in random.choices(list(self.circuit.nodes.keys()), k=n):
