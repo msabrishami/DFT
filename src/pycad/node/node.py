@@ -5,8 +5,7 @@ import sys
 from enum import Enum
 from abc import ABC, abstractmethod
 
-sys.path.append('../')
-from config import X_VALUE
+from pycad.config import X_VALUE
 class gtype(Enum):
     IPT = 0
     BRCH = 1

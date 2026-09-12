@@ -1,9 +1,8 @@
 import sys
 from abc import ABC, abstractmethod
 
-sys.path.insert(0,'..')
-import utils
-import node.node as node
+from pycad import utils
+from pycad.node import node
 
 class DFTNode(ABC):
     """For now, it is designed for STAFAN, SCOAP, PFS and PPSF"""
