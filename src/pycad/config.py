@@ -1,9 +1,11 @@
 import os
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(ROOT_DIR, 'data')
+# Root of the data directory (circuit netlists and generated results).
+# Defaults to the ``data/`` folder of a source checkout; override with the
+# PYCAD_DATA_DIR environment variable when PyCAD is installed elsewhere.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.environ.get("PYCAD_DATA_DIR", os.path.join(_REPO_ROOT, "data"))
 
-LIB_CELLS_PATH = os.path.join(DATA_DIR, "library")
 MODELSIM_DIR = os.path.join(DATA_DIR, "modelsim")
 
 MODELSIM_INPUT_DIR = "input" 
