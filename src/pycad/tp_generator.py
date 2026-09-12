@@ -1,7 +1,7 @@
 import random
-import config
+from pycad import config
 import os
-import utils
+from pycad import utils
 
 class TPGenerator:
     def __init__(self, circuit):

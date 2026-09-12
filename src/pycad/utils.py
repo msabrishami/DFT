@@ -4,7 +4,7 @@ import numpy as np
 
 from collections import deque
 from functools import reduce
-import config as cfg
+from pycad import config as cfg
 
 class bcolors:
     OKGREEN = '\033[92m'
