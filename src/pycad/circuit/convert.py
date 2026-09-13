@@ -1,5 +1,5 @@
 import pdb
-import config
+from pycad import config
 import os
 import re
 import sys
@@ -7,7 +7,7 @@ import sys
 sys.path.insert(1, config.LIB_CELLS_PATH)
 import library_cells
 
-from circuit.circuit_loader import read_verilog_syntax
+from pycad.circuit.circuit_loader import read_verilog_syntax
 
 class Converter:
     def __init__(self, ckt, verilog_format):

@@ -2,11 +2,10 @@ import random
 import sys
 import networkx as nx
 
-from circuit.circuit_loader import CircuitLoader
-from node import node
+from pycad.circuit.circuit_loader import CircuitLoader
+from pycad.node import node
 
-sys.path.append('../')
-from config import X_VALUE
+from pycad.config import X_VALUE
 #TODO: we need a flag to make sure no new nodes are added to the circuit, 
 #           for example, we all cell types in method foo after loading the circuit, 
 #           after adding new nodes, results of foo may still not be valid. 

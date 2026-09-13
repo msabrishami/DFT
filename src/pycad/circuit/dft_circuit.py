@@ -6,12 +6,12 @@ from collections import deque
 from multiprocessing import Pipe, Process
 import networkx as nx
 
-import config
-import utils
-from node import dft_node
-from tp_generator import TPGenerator
+from pycad import config
+from pycad import utils
+from pycad.node import dft_node
+from pycad.tp_generator import TPGenerator
 
-from circuit import circuit
+from pycad.circuit import circuit
 
 class DFTCircuit(circuit.Circuit):
     """ 

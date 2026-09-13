@@ -1,8 +1,8 @@
 import re
-import config
+from pycad import config
 
-from node.node import Node
-from node import node
+from pycad.node.node import Node
+from pycad.node import node
 
 class CircuitLoader:
     """ Read a circuit netlist (gate level), 
