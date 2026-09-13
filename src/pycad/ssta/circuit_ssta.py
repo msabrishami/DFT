@@ -6,10 +6,10 @@ import os
 import time
 import matplotlib.pyplot as plt
 
-import config
-import utils
-from circuit.circuit import Circuit
-from distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
+from pycad import config
+from pycad import utils
+from pycad.circuit.circuit import Circuit
+from pycad.ssta.distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
 
 
 class Circuit_SSTA(Circuit):
