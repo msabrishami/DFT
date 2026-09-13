@@ -10,9 +10,6 @@ from pycad.config import X_VALUE
 #           for example, we all cell types in method foo after loading the circuit, 
 #           after adding new nodes, results of foo may still not be valid. 
 
-# distributions added to the repo temporarily 
-# sys.path.insert(1, "/home/msabrishami/workspace/StatisticsSTA/")
-
 class Circuit:
     """ Representing a digital logic circuit, capable of doing logic simulation.  
 

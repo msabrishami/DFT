@@ -199,7 +199,8 @@ class CircuitLoader:
         i_node.unodes.append(u_node)
         i_node.dnodes.append(d_node)
 
-    def read_verilog_syntax(self,line):
+    @staticmethod
+    def read_verilog_syntax(line):
         if line.strip() == "endmodule":
             return ("module", None)
 
