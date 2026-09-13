@@ -3,8 +3,8 @@ import os
 import sys
 from abc import ABC, abstractmethod
 
-import config
-from fault_simulation import fault
+from pycad import config
+from pycad.fault_simulation import fault
 
 
 class FaultSim(ABC):

@@ -5,13 +5,12 @@ import time
 from multiprocessing import Pipe, Process
 import pdb
 
-sys.path.append('../')
-import config
+from pycad import config
 import numpy as np
-import utils
-from fault_simulation.fault import FaultList
-from fault_simulation.fault_simulation import FaultSim
-from tp_generator import TPGenerator
+from pycad import utils
+from pycad.fault_simulation.fault import FaultList
+from pycad.fault_simulation.fault_simulation import FaultSim
+from pycad.tp_generator import TPGenerator
 
 
 class PPSF(FaultSim):

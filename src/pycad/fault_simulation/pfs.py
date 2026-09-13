@@ -1,9 +1,9 @@
 import os
 
-import config
-from fault_simulation.fault_simulation import FaultSim
-from fault_simulation.fault import FaultList
-from tp_generator import TPGenerator
+from pycad import config
+from pycad.fault_simulation.fault_simulation import FaultSim
+from pycad.fault_simulation.fault import FaultList
+from pycad.tp_generator import TPGenerator
 
 VERBOSE_FREQ = 50
 class PFS(FaultSim):
