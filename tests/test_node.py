@@ -1,6 +1,6 @@
 import pytest
-from ..node import node
-from ..config import X_VALUE
+from pycad.node import node
+from pycad.config import X_VALUE
 
 #TODO: test with multiple unodes if applicable
 #TODO: see if gtype and ntype is checked in constructors
