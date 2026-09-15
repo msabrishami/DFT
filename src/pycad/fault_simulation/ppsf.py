@@ -3,7 +3,6 @@ import os
 import sys
 import time
 from multiprocessing import Pipe, Process
-import pdb
 
 from pycad import config
 import numpy as np

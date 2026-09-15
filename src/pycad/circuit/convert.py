@@ -1,4 +1,3 @@
-import pdb
 from pycad import config
 import os
 import re
@@ -151,9 +150,8 @@ class Converter:
             line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
             pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
             if not pin_format:
-                pdb.set_trace()
+                raise ValueError(f"Cannot parse pins in line: {line.strip()}")
             if "Z" not in pin_format[-1][0]:
-                pdb.set_trace()
                 raise NameError("Cannot detect the output pin as the last argumet, check code")
             words = line.split()
             gate = words[1]

@@ -178,11 +178,7 @@ class NOT(Node):
         Node.__init__(self, n_type, g_type, num)
 
     def imply(self):
-        try: 
-            self.value = 1 if (self.unodes[0].value == 0) else 0
-        except:
-            import IPython
-            IPython.embed()
+        self.value = 1 if (self.unodes[0].value == 0) else 0
 
     def imply_b(self):
         self.value = self.unodes[0].value ^ Node.bitwise_not
@@ -293,10 +289,7 @@ class XOR(Node):
         self.c_flag = 0 
 
     def imply(self):
-        try:
-            self.value = sum(self.unodes_val())%2
-        except:
-            print("(NODE) ERROR") # TODO: raise exception 
+        self.value = sum(self.unodes_val()) % 2
     
     def imply_b(self):
         self.value = self.unodes[0].value

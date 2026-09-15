@@ -119,8 +119,7 @@ class CircuitLoader:
             if x_type == "GATE":
                 gtype, nets = nets
                 if nets[0] not in _nodes:
-                    import pdb
-                    pdb.set_trace()
+                    raise ValueError(f"Net {nets[0]} is used by a gate but was never declared")
                 _nodes[nets[0]]['g_type'] = gtype 
                 new_node = Node.gen_node(_nodes[nets[0]], std_node_lib)
                 circuit.nodes[new_node.num] = new_node
