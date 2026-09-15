@@ -159,7 +159,8 @@ class TPGenerator:
         # this can be done using "yield" or "generate" -- check online 
 
         if not os.path.exists(fname):
-            raise 'Test file does not exist. Use gen_tp_file() or gen_full_tp_file() instead'
+            raise FileNotFoundError(
+                f"Test pattern file does not exist: {fname}. Use gen_file() or gen_full_file() to create it.")
             # return self.gen_tp_file(tp_count=tp_count,tp_fname=fname)
         
         infile = open(fname, 'r')

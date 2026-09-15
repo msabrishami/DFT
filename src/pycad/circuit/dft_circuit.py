@@ -285,12 +285,12 @@ class DFTCircuit(circuit.Circuit):
                 tp = int(input('Enter Number of test patterns: '))
                 self.STAFAN(tp)
             else:
-                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
+                raise RuntimeError("STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs().")
 
         nfc = 0
         for node in self.nodes_lev:
             if None in [node.C0,node.C1,node.B0,node.B1]:
-                raise "STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs()."
+                raise RuntimeError("STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs().")
             nfc += math.exp(-1 * node.C1 * node.B1 * tp) 
             nfc += math.exp(-1 * node.C0 * node.B0 * tp) 
 

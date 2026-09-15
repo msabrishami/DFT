@@ -114,7 +114,7 @@ class PPSF(FaultSim):
             faults.add_n_random(nf)
 
         if len(faults.faults) == 0:
-            raise "Warning: No fault is added."
+            raise ValueError("No fault was added to the fault list.")
 
         if verbose:
             pr =f"Running PPSF with:\n"
