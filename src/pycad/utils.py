@@ -127,7 +127,7 @@ def get_fanin_depth(circuit, node, lev_depth):
         if current_node.flagA == lev_depth:
             continue
         for unode in current_node.unodes:
-            if unode.flagA != None: # we have already seen it! 
+            if unode.flagA is not None: # we have already seen it! 
                 continue
             unode.flagA = current_node.flagA + 1 
             q.append(unode)
@@ -159,7 +159,7 @@ def get_fanin_BFS(circuit, node, lev_depth=False):
         current_node = q.popleft()
         res.append(current_node)
         for unode in current_node.unodes:
-            if unode.flagA != None:
+            if unode.flagA is not None:
                 continue
             unode.flagA = True
             q.append(unode)

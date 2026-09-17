@@ -65,9 +65,9 @@ class Distribution:
         -- f_T: the prob. value of T, i.e. f_T = f(t=T) """
         
         low, high = self.margin()
-        if low == None:
+        if low is None:
             print("Warning: possible mismatch in margin")
-            if self.m1 == None:
+            if self.m1 is None:
                 raise NameError("mean is not available")
             else:
                 low = self.m1 - margin*self.m2
@@ -99,9 +99,9 @@ class Distribution:
         """
 
         low, high = self.margin()
-        if low == None:
+        if low is None:
             print("Warning: possible mismatch in margin")
-            if self.m1 == None:
+            if self.m1 is None:
                 raise NameError("mean is not available")
             else:
                 low = self.m1 - margin*self.m2

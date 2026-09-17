@@ -88,7 +88,7 @@ class Circuit:
         while flag_change: 
             flag_change = False
             for _, node in self.nodes.items():
-                if node.lev == None: 
+                if node.lev is None: 
                     lev_u = [x.lev for x in node.unodes]
                     if None in lev_u:
                         continue
