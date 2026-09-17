@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def smooth_hist(vals, window=5):
     """ Average smoothing over a floating point series, it can be a series of 

@@ -1,7 +1,8 @@
-import random
-from pycad import config
 import os
-from pycad import utils
+import random
+
+from pycad import config, utils
+
 
 class TPGenerator:
     def __init__(self, circuit):
@@ -130,7 +131,7 @@ class TPGenerator:
 
         while True:
             front_tp = all_tps.popleft()
-            if not config.X_VALUE in front_tp:
+            if config.X_VALUE not in front_tp:
                 all_tps.append(front_tp)
                 break
             

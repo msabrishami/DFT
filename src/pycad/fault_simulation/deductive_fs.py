@@ -1,6 +1,5 @@
-import os
-from pycad import config
 from pycad.fault_simulation.fault_simulation import FaultSim
+
 
 class DFS(FaultSim):
     def __init__(self, circuit):

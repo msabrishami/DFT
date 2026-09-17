@@ -1,8 +1,8 @@
 import os
 
 from pycad import config
-from pycad.fault_simulation.fault_simulation import FaultSim
 from pycad.fault_simulation.fault import FaultList
+from pycad.fault_simulation.fault_simulation import FaultSim
 from pycad.tp_generator import TPGenerator
 
 VERBOSE_FREQ = 50
@@ -212,7 +212,7 @@ class PFS(FaultSim):
             raise TypeError("Other types not defined yet.")
         
         if verbose:
-            pr =f"Running PFS with:\n"
+            pr ="Running PFS with:\n"
             pr+=f"\t| tp count = {len(tps)}\n"
             pr+=f"\t| fault count = {len(self.fault_list.faults)}\n"        
             print(pr)
@@ -276,7 +276,7 @@ class PFS(FaultSim):
             self.fault_list.add_all()
    
         if verbose:
-            pr =f"Running PFS-TPFC with:\n"
+            pr ="Running PFS-TPFC with:\n"
             pr+=f"\t| tp count = {len(tps)}\n"
             pr+=f"\t| fault count = {len(self.fault_list.faults)}\n"        
             print(pr)

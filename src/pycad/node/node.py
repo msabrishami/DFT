@@ -1,11 +1,12 @@
 
-import math 
+import math
 import sys
-
-from enum import Enum
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from pycad.config import X_VALUE
+
+
 class gtype(Enum):
     IPT = 0
     BRCH = 1

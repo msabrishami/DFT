@@ -1,16 +1,15 @@
 import math
 import os
-import re
 import time
 from multiprocessing import Pipe, Process
+
 import networkx as nx
 
-from pycad import config
-from pycad import utils
+from pycad import config, utils
+from pycad.circuit import circuit
 from pycad.node import dft_node
 from pycad.tp_generator import TPGenerator
 
-from pycad.circuit import circuit
 
 class DFTCircuit(circuit.Circuit):
     """ 
@@ -173,7 +172,7 @@ class DFTCircuit(circuit.Circuit):
         """
         self._stafan_tp = tp_count
         if verbose:
-            print(f'TEMP STAFAN measurements ' + 
+            print('TEMP STAFAN measurements ' + 
                   f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
                   f' with {tp_count} tps on {num_proc} process(es) ...')
 
@@ -220,7 +219,7 @@ class DFTCircuit(circuit.Circuit):
         """
         self._stafan_tp = tp_count
         if verbose:
-            print(f'\nCalculating STAFAN measurements (B0, B1, C0, C1) ' + 
+            print('\nCalculating STAFAN measurements (B0, B1, C0, C1) ' + 
                   f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
                   f' with {tp_count} tps on {num_proc} process(es) ...')
 
@@ -343,7 +342,7 @@ class DFTCircuit(circuit.Circuit):
         TPI_list = [] #list of node entropy 
         for node in self.nodes_lev:
             node_list = [node.num, node.Entropy]
-            if not '-' in node.num:
+            if '-' not in node.num:
                 TPI_list.append(node_list)
             #print(TPI_list)
         TPI_list.sort(key = lambda x: x[1])

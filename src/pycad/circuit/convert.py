@@ -1,7 +1,7 @@
-from pycad import config
 import os
 import re
 
+from pycad import config
 from pycad.circuit.circuit_loader import CircuitLoader
 from pycad.library import cells as library_cells
 
@@ -99,7 +99,7 @@ class Converter:
             
             # Similar to ISCAS85 circuits
             # elif self.verilog_format == "ISCAS85":
-            elif (");" in line) and ("(" in line) and not ("module" in line):
+            elif (");" in line) and ("(" in line) and "module" not in line:
 
                 words = line.replace("(", " ").replace(")"," ").replace(",", " ").split()
                 gate = words[1]

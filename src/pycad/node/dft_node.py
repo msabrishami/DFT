@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from pycad import utils
 from pycad.node import node
 
+
 class DFTNode(ABC):
     """For now, it is designed for STAFAN, SCOAP, PFS and PPSF"""
     def __init__(self):

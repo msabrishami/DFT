@@ -1,10 +1,12 @@
-import os
 import operator
-import numpy as np
-
+import os
 from collections import deque
 from functools import reduce
+
+import numpy as np
+
 from pycad import config as cfg
+
 
 class bcolors:
     OKGREEN = '\033[92m'

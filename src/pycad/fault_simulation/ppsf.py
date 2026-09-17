@@ -3,9 +3,9 @@ import os
 import time
 from multiprocessing import Pipe, Process
 
-from pycad import config
 import numpy as np
-from pycad import utils
+
+from pycad import config, utils
 from pycad.fault_simulation.fault import FaultList
 from pycad.fault_simulation.fault_simulation import FaultSim
 from pycad.tp_generator import TPGenerator
@@ -115,7 +115,7 @@ class PPSF(FaultSim):
             raise ValueError("No fault was added to the fault list.")
 
         if verbose:
-            pr =f"Running PPSF with:\n"
+            pr ="Running PPSF with:\n"
             pr+=f"\t| tp count = {len(tps)}\n"
             pr+=f"\t| fault count = {len(faults.faults)}\n"        
             print(pr)
@@ -309,7 +309,7 @@ class PPSF(FaultSim):
                     fl_curr.add(node.num, "0")
 
         if verbose:
-            pr =f"Running PPSF with:\n"
+            pr ="Running PPSF with:\n"
             pr += f"\t| tp steps = {tp_steps}\n"
             pr += f"\t| confidence interval = {ci}\n"
             pr += f"\t| fault count = {len(fl_curr.faults)}\n"
@@ -469,7 +469,7 @@ class PPSF(FaultSim):
         if not os.path.exists(fname):
             raise Exception(f'File {fname} not exists')
         if mode not in ["basic", "advanced"]:
-            raise Exception(f"(ERROR) mode should be either \"basic\" or \"advance\"")
+            raise Exception("(ERROR) mode should be either \"basic\" or \"advance\"")
         lines = open(fname, "r").readlines()
         res = {}
         current_tp = 0

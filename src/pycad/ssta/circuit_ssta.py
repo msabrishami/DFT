@@ -4,12 +4,12 @@
 ####################################
 import os
 import time
+
 import matplotlib.pyplot as plt
 
-from pycad import config
-from pycad import utils
+from pycad import config, utils
 from pycad.circuit.circuit import Circuit
-from pycad.ssta.distributions import Distribution, Normal, SkewNormal, MaxOp, SumOp, NumDist
+from pycad.ssta.distributions import Distribution, MaxOp, Normal, NumDist, SkewNormal, SumOp
 
 
 class Circuit_SSTA(Circuit):

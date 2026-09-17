@@ -1,10 +1,10 @@
 
 
 import numpy as np
-from scipy.stats import norm, skewnorm 
-from scipy.special import owens_t, erf
-from numpy import pi as PI
 from gekko import GEKKO
+from numpy import pi as PI
+from scipy.special import erf, owens_t
+from scipy.stats import norm, skewnorm
 
 AREA_CORRECTION = False
 #### MAIN ISSUE with ACCURACY are the boundaries!
@@ -123,7 +123,7 @@ class Distribution:
         -- T: time value (RV) of each sample
         -- f_T: the prob. value of T, i.e. f_T = f(t=T) """
         T, f_T = self.pmf(samples) 
-        F_T = np.zeros(f_T.shape);
+        F_T = np.zeros(f_T.shape)
         F_T[0] = f_T[0]
         for t in range(1,len(T)):
             dT = T[t] - T[t-1]
@@ -551,9 +551,9 @@ class MaxOp:
         
         # Dirac distribution 
         if d1 == 0:
-            return d2;
+            return d2
         if d2 == 0:
-            return d1;
+            return d1
         assert isinstance(d1, Distribution), print("Error: d1 is not numerical distribution") 
         assert isinstance(d2, Distribution), print("Error: d2 is not numerical distribution") 
         l1, h1 = d1.margin()
