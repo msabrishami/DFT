@@ -100,7 +100,7 @@ class PFS(FaultSim):
 
         return list(detected_faults)
 
-    def _multiple_tp_run(self, tps, log_fname: list = [None, None], fault_drop=None, verbose=False):
+    def _multiple_tp_run(self, tps, log_fname: tuple = (None, None), fault_drop=None, verbose=False):
         """ 
         FS for multiple input patterns
         the pattern list is obtained as a list consists of sublists of each pattern like:

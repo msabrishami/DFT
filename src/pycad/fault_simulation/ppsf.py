@@ -229,7 +229,7 @@ class PPSF(FaultSim):
         return fl_curr
     
     #TODO MSA: add the value of dp to node.stat["DP0"] and ["DP1"]
-    def multiprocess_ci_run(self, tp_steps=[], op=None, verbose=False, 
+    def multiprocess_ci_run(self, tp_steps=None, op=None, verbose=False, 
             num_proc=1, ci=1, depth=1, fault_count=None, save_log=True, 
             log_fname=None, mode="basic", moe=0.1, target_fault=None):
         """ (many times ppsf) Run Parallel Fault Simulation with count of 
@@ -274,6 +274,8 @@ class PPSF(FaultSim):
         fl_curr = FaultList(self.circuit)
         fl_cont = FaultList(self.circuit)
 
+        if tp_steps is None:
+            tp_steps = []
         runtime_log = [] 
         
         if target_fault is not None:
