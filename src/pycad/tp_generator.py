@@ -108,7 +108,7 @@ class TPGenerator:
             print("Error: cannot generate full tp file for circuits with PI > 12")
             return []
         fn = os.path.join(config.PATTERN_DIR, self.circuit.c_name + "_tp_full.tp")
-        tp_fname = fn if tp_fname==None else tp_fname
+        tp_fname = fn if tp_fname is None else tp_fname
         outfile = open(tp_fname, 'w')
         outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
         tps = self.gen_full()
