@@ -2,7 +2,6 @@ import math
 import os
 import re
 import time
-from collections import deque
 from multiprocessing import Pipe, Process
 import networkx as nx
 

@@ -1,6 +1,5 @@
 import math
 import os
-import sys
 import time
 from multiprocessing import Pipe, Process
 

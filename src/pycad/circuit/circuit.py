@@ -1,5 +1,4 @@
 import random
-import sys
 import networkx as nx
 
 from pycad.circuit.circuit_loader import CircuitLoader
