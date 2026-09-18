@@ -1,76 +1,40 @@
-import operator
+"""Small helpers shared by the simulators: bit-vector comparison and fan-in cones."""
 from collections import deque
-from functools import reduce
 
 import numpy as np
 
-from pycad import config as cfg
-
-
-class bcolors:
-    OKGREEN = '\033[92m'
-    FAIL = '\033[91m'
-    WARNING = '\033[93m'
-    ENDC = '\033[0m'
-
-mul_list = lambda arr: reduce(operator.mul, arr, 1)
-
-not_gate = lambda a: 1-a
-
-def ckt_type(cname):
-    print("FIX ME LATER -- CKT TYPE AUTOMATIC DETECTION")
-    return "EPFL"
-    if cname in cfg.ALL_ISCAS85:
-        return "ISCAS85"
-    elif cname in cfg.ALL_EPFL:
-        return "EPFL"
-    else:
-        raise NameError("Circuit is not known")
-
-def bin2int(bin_arr):
-    """ Its the other way around ... """ 
-    int_val = 0
-    print(bin_arr)
-    for idx, val in enumerate(bin_arr):
-        int_val += (val * (2**idx))
-    print(int_val)
-    return int_val
-
-def int2binList(val, bitwidth):
-    res = [] 
-    for k in range(bitwidth):
-        res.append(val%2)
-        val = int(val/2)
-    return res
 
 def comp_Zg_Zf_bin(Zg, Zf, bitwidth):
-    """ Compare two output dictionaries if the logic values are 
-    binary, like in PPSF fault simulation 
-    Zg and Zf are integer values.
-    
-    Return
+    """Compare good and faulty outputs of a bit-parallel simulation.
+
+    Parameters
+    ----------
+    Zg, Zf : dict
+        Output node number -> integer whose bits are the output values of the
+        good circuit and of the faulty circuit, one bit per test pattern.
+    bitwidth : int
+        Number of test patterns packed in each integer.
+
+    Returns
     -------
-    indices of test patterns that detected a fault
-    """ 
+    set of int
+        Indices of the test patterns for which at least one output differs.
+    """
     tps = set()
     for k in Zg:
-        val_g = bin(Zg[k])[2:][-bitwidth:]
-        val_f = bin(Zf[k])[2:][-bitwidth:]
-        val_g = "".join(['0']*(bitwidth - len(val_g))) + val_g
-        val_f = "".join(['0']*(bitwidth - len(val_f))) + val_f
+        val_g = bin(Zg[k])[2:][-bitwidth:].zfill(bitwidth)
+        val_f = bin(Zf[k])[2:][-bitwidth:].zfill(bitwidth)
         for j in range(len(val_g)):
             if val_g[j] != val_f[j]:
                 tps.add(j)
-    return tps 
+    return tps
 
-def print_out_bin(Z):
-    for k in Z:
-        print(k + "\t" + "{:064b}".format(Z[k]))
 
 def get_node_gtype_fin(node):
-    """ converts a node type from CKT658 to "c<lower-case><#fin>"
-    e.g. NAND with 3 inputs --> cnand2 
-    can be used for changing CSM cells into DFT cells 
+    """Convert a node into the cell name ``c<lower-case type><fan-in>``.
+
+    For example, a NAND with two inputs becomes ``cnand2``. Used for changing
+    CSM cells into DFT cells. Primary inputs and fan-out branches keep their type.
     """
     if node.ntype in ["PI", "FB"]:
         return node.gtype
@@ -81,70 +45,63 @@ def get_node_gtype_fin(node):
     if node.gtype in ["OR", "NOR", "NAND", "AND", "XOR", "XNOR"]:
         return "c" + node.gtype.lower() + str(len(node.unodes))
 
-def get_fanin_rec(circuit, node, res):
-    """ Only called within get_fanin mehtod, 
-    The recursive method for getting the fanins-code of node in a circuit 
-    Using DFS approach 
-    """
+
+def _get_fanin_rec(node, res):
+    """Depth-first collection of the node numbers in the fan-in cone of ``node``."""
     if node.num in res:
         return res
     res.add(node.num)
     if node.gtype == "IPT":
         return res
     for unode in node.unodes:
-        res.update(get_fanin_rec(circuit, unode, res))
+        _get_fanin_rec(unode, res)
     return res
 
+
 def get_fanin(circuit, node):
-    """ Find the nodes in the fanin-cone of a node in a circuit 
-    Using semi-DFS approach 
-    Returns a set of node numbers
-    Note: not really DFS, as we are considering levels, and not depth. 
+    """Return the set of node numbers in the fan-in cone of ``node``.
+
+    ``node`` is a Node, or the number (str) of a node in ``circuit``.
     """
     if isinstance(node, str):
         node = circuit.nodes[node]
-    res = set() 
-    get_fanin_rec(circuit, node, res)
-    return res
+    return _get_fanin_rec(node, set())
 
 
 def get_fanin_depth(circuit, node, lev_depth):
-    """ Finds the nodes in the fanin-cone of a node in a circuit
-    within a specific depth from the source node
-    The distance is based on hop-based min distance, and not circuit level
-    The algorithm is based on BFS running backward in circuit graph
-    node.flagA is used to record the backward level value
+    """Return the nodes in the fan-in cone of ``node`` within ``lev_depth`` hops.
+
+    The distance is the minimum number of hops, not the circuit level. This is a
+    breadth-first search running backward in the circuit graph. ``node.flagA``
+    records the backward level and is reset to None afterwards.
     """
     res = []
     q = deque()
     q.append(node)
-    node.flagA = 0 
-    
-    while(len(q) != 0):
+    node.flagA = 0
+
+    while q:
         current_node = q.popleft()
         res.append(current_node)
         if current_node.flagA == lev_depth:
             continue
         for unode in current_node.unodes:
-            if unode.flagA is not None: # we have already seen it! 
+            if unode.flagA is not None:  # already visited
                 continue
-            unode.flagA = current_node.flagA + 1 
+            unode.flagA = current_node.flagA + 1
             q.append(unode)
 
     for n in res:
         n.flagA = None
-    
+
     return res
 
 
 def get_fanin_BFS(circuit, node, lev_depth=False):
-    """ Finds the nodes in the fanin-cone of a node in a circuit
-    returns an ordered list of nodes 
-    Using BFS approach, based on level of nodes, and not hop-based
-    lev_depth : int 
-        depth of search based on level 
-    Note: not really BFS, as we are considering levels, and not hop-based depth
-    Note: node.flagA is used within this method 
+    """Return the nodes in the fan-in cone of ``node`` as a list, in BFS order.
+
+    If ``lev_depth`` is given, the search is limited to that many hops (see
+    ``get_fanin_depth``). ``node.flagA`` is used internally and reset afterwards.
     """
     if lev_depth:
         return get_fanin_depth(circuit, node, lev_depth)
@@ -153,8 +110,8 @@ def get_fanin_BFS(circuit, node, lev_depth=False):
     q = deque()
     q.append(node)
     node.flagA = True
-    
-    while(len(q) != 0):
+
+    while q:
         current_node = q.popleft()
         res.append(current_node)
         for unode in current_node.unodes:
@@ -162,28 +119,30 @@ def get_fanin_BFS(circuit, node, lev_depth=False):
                 continue
             unode.flagA = True
             q.append(unode)
-    
+
     for n in res:
         n.flagA = None
-    
+
     return res
 
-def estimate_FC(probs, tp): 
-    #TODO 4 Ghazal : documentation 
-    # probs is a dictionary, keys are faults strings, and values are ppsf probs
-    """ estimating the fault coverage of a circuit based on all the faults """
+
+def estimate_FC(probs, tp):
+    """Estimate the fault coverage after ``tp`` random test patterns.
+
+    Parameters
+    ----------
+    probs : dict
+        Fault string -> detection probability of one random pattern.
+    tp : int
+        Number of test patterns.
+    """
     nfc = 0
     for key in probs:
         nfc += np.exp(-probs[key] * tp)
 
-    return 1 - nfc/len(probs)
+    return 1 - nfc / len(probs)
+
 
 def fix_size(number, k):
-
-    while len(number) > k:
-        number = number[1:]
-
-    while len(number) < k:
-        number = '0'+number
-
-    return number
+    """Left-pad the digit string ``number`` with zeros, or cut it from the left, to length ``k``."""
+    return number[-k:].zfill(k) if k > 0 else ""
