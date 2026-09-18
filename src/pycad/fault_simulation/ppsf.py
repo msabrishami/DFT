@@ -5,7 +5,7 @@ from multiprocessing import Pipe, Process
 
 import numpy as np
 
-from pycad import config, utils
+from pycad import config, paths, utils
 from pycad.fault_simulation.fault import FaultList
 from pycad.fault_simulation.fault_simulation import FaultSim
 from pycad.tp_generator import TPGenerator
@@ -334,7 +334,7 @@ class PPSF(FaultSim):
         
         ### Setting log file name and path 
         if log_fname is None:
-            log_fname = utils.path_ppsf_ci(self.circuit.c_name, ci, num_proc)
+            log_fname = paths.ppsf_ci_file(self.circuit.c_name, ci, num_proc)
         
         #TODO: consider an automatic fname with given op or at least 
         #       add this info in the description 

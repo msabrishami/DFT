@@ -5,7 +5,7 @@ from multiprocessing import Pipe, Process
 
 import networkx as nx
 
-from pycad import config, utils
+from pycad import config, paths
 from pycad.circuit import circuit
 from pycad.node import dft_node
 from pycad.tp_generator import TPGenerator
@@ -300,7 +300,7 @@ class DFTCircuit(circuit.Circuit):
             os.makedirs(path)
         
         if fname is None:
-            fname = utils.path_stafan_code(self.c_name, self._stafan_tp) 
+            fname = paths.stafan_file(self.c_name, self._stafan_tp) 
         else:
             fname = os.path.join(path, fname)
         
