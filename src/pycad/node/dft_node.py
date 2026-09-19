@@ -1,6 +1,6 @@
+import math
 from abc import ABC, abstractmethod
 
-from pycad import utils
 from pycad.node import node
 
 
@@ -447,5 +447,5 @@ class DFTBRCH(node.BRCH, DFTNode):
         brchs = self.unodes[0].dnodes
         brchs_B1_c = [(1-brch.B1) for brch in brchs]
         brchs_B0_c = [(1-brch.B0) for brch in brchs]
-        self.unodes[0].B1 = 1 - utils.mul_list(brchs_B1_c)
-        self.unodes[0].B0 = 1 - utils.mul_list(brchs_B0_c)
+        self.unodes[0].B1 = 1 - math.prod(brchs_B1_c)
+        self.unodes[0].B0 = 1 - math.prod(brchs_B0_c)
