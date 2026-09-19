@@ -1,5 +1,12 @@
+"""Pin definitions of the standard-cell libraries PyCAD can read."""
+
 
 def NanGate_15nm():
+    """Pin names of the NanGate 15nm library cells.
+
+    Returns a dict mapping each cell name to its pins, inputs first and the
+    output pin(s) last.
+    """
     gate_IO = {}
     gate_IO["AND2_X1"] = ["A1","A2","Z"]
     gate_IO["AND2_X2"] = ["A1","A2","Z"]
@@ -81,7 +88,7 @@ def NanGate_15nm():
 
 
 def default():
-    # TODO: it only has output pins!
+    """Generic gate names with their output pin only (no input pins are listed)."""
     gate_IO = {}
     gate_IO["and"]  = ["Y"] 
     gate_IO["nand"] = ["Y"]
