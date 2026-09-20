@@ -3,6 +3,11 @@
 Open work items for PyCAD, roughly in priority order.
 
 ## Package
+- [ ] Support a primary output driven directly by a primary input in the loader
+      (`data/ckt/others/c2670.ckt` and `c7552.ckt` fail with `NotImplementedError: Unsupported
+      node ... node type PO, gate type IPT`).
+- [ ] Fix the SSTA module: `circuit_ssta.py` imports `pycad.utils` but needs the functions in
+      `pycad.ssta.utils_ssta`, and `cycle`, `margin` and `cuts` are undefined names.
 - [ ] Fix deductive fault simulation (`pycad.fault_simulation.deductive_fs`): the DFT node
       classes have no `dfs()` method, so `DFS.single()` raises `AttributeError`.
 - [ ] Port the best D-algorithm / PODEM / ATPG implementation from `legacy/inventory` into
