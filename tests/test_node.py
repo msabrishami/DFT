@@ -30,10 +30,6 @@ def test_ipt_imply_t():
     assert ipt_node.value == X_VALUE
 
 
-@pytest.mark.IPT
-def test_ipt_imply_b():
-    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    
     # ipt_node.imply_b([1])
     # assert ipt_node.value == [1]
 
@@ -80,14 +76,6 @@ def test_buff_imply_t():
     assert buff_node.value == X_VALUE
 
 
-@pytest.mark.BUFF
-def test_buff_imply_b():
-    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    buff_node = node.BUFF(node.NodeType.GATE, node.GateType.BUFF, "2")
-    
-    buff_node.add_unode(ipt_node)
-    ipt_node.add_dnode(buff_node)
-
 @pytest.mark.NOT
 def test_not_imply():
     ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
@@ -125,17 +113,6 @@ def test_not_imply_t():
     not_node.imply_t()
     assert not_node.value == 1
 
-@pytest.mark.NOT
-def test_not_imply_b():
-    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    not_node = node.NOT(node.NodeType.GATE, node.GateType.NOT, "2")
-    
-    not_node.add_unode(ipt_node)
-    ipt_node.add_dnode(not_node)
-
-    ipt_node.imply_b(1)
-    not_node.imply_b()
-    print(not_node.value)
     # assert not_node.value == 0
     
     # ipt_node.imply_b(0)
@@ -213,10 +190,6 @@ def test_or_imply_t():
     or_node.imply_t()
     assert or_node.value == X_VALUE
 
-@pytest.mark.OR
-def test_or_imply_b():
-    pass
-
 @pytest.mark.NOR
 def test_nor_imply():
     ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
@@ -293,17 +266,6 @@ def test_nor_imply_t():
     ipt_node2.imply_t(X_VALUE)
     nor_node.imply_t()
     assert nor_node.value == X_VALUE
-
-@pytest.mark.NOR
-def test_nor_imply_b():
-    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
-    nor_node = node.NOR(node.NodeType.GATE, node.GateType.NOR, "3")
-    
-    nor_node.add_unode(ipt_node1)
-    nor_node.add_unode(ipt_node2)
-    ipt_node1.add_dnode(nor_node)
-    ipt_node2.add_dnode(nor_node)
 
     # ipt_node1.imply(1)
     # ipt_node2.imply(1)
@@ -402,18 +364,6 @@ def test_and_imply_t():
     and_node.imply_t()
     assert and_node.value == X_VALUE
 
-@pytest.mark.AND
-def test_and_imply_b():
-    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
-    and_node = node.AND(node.NodeType.GATE, node.GateType.AND, "3")
-    
-    and_node.add_unode(ipt_node1)
-    and_node.add_unode(ipt_node2)
-    ipt_node1.add_dnode(and_node)
-    ipt_node2.add_dnode(and_node)
-    pass
-
 @pytest.mark.NAND
 def test_nand_imply():
     ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
@@ -490,18 +440,6 @@ def test_nand_imply_t():
     ipt_node2.imply_t(X_VALUE)
     nand_node.imply_t()
     assert nand_node.value == X_VALUE
-
-@pytest.mark.NAND
-def test_nand_imply_b():
-    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
-    nand_node = node.AND(node.NodeType.GATE, node.GateType.NAND, "3")
-    
-    nand_node.add_unode(ipt_node1)
-    nand_node.add_unode(ipt_node2)
-    ipt_node1.add_dnode(nand_node)
-    ipt_node2.add_dnode(nand_node)
-    pass
 
 @pytest.mark.XOR
 def test_xor_imply():
@@ -580,18 +518,6 @@ def test_xor_imply_t():
     xor_node.imply_t()
     assert xor_node.value == X_VALUE
 
-@pytest.mark.XOR
-def test_xor_imply_b():
-    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
-    xor_node = node.XOR(node.NodeType.GATE, node.GateType.XOR, "3")
-    
-    xor_node.add_unode(ipt_node1)
-    xor_node.add_unode(ipt_node2)
-    ipt_node1.add_dnode(xor_node)
-    ipt_node2.add_dnode(xor_node)
-    pass
-
 @pytest.mark.XNOR
 def test_xnor_imply():
     ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
@@ -669,18 +595,6 @@ def test_xnor_imply_t():
     xnor_node.imply_t()
     assert xnor_node.value == X_VALUE
 
-@pytest.mark.XNOR
-def test_xnor_imply_b():
-    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
-    xnor_node = node.XNOR(node.NodeType.GATE, node.GateType.XNOR, "3")
-    
-    xnor_node.add_unode(ipt_node1)
-    xnor_node.add_unode(ipt_node2)
-    ipt_node1.add_dnode(xnor_node)
-    ipt_node2.add_dnode(xnor_node)
-    pass
-
 @pytest.mark.BRCH
 def test_brch_imply():
     ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
@@ -716,11 +630,3 @@ def test_brch_imply_t():
     ipt_node.imply_t(X_VALUE)
     brch_node.imply_t()
     assert brch_node.value == X_VALUE
-
-@pytest.mark.BRCH
-def test_brch_imply_b():
-    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
-    brch_node = node.BRCH(node.NodeType.FB, node.GateType.BRCH, "2")
-    
-    brch_node.add_unode(ipt_node)
-    ipt_node.add_dnode(brch_node)
