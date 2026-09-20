@@ -22,10 +22,12 @@ def test_gen_node_builds_gates(n_type, g_type):
 
 def test_gen_node_builds_inputs_and_branches():
     assert isinstance(node.Node.gen_node(info("PI", "IPT"), LIB), node.IPT)
+    # a primary input that is also a primary output
+    assert isinstance(node.Node.gen_node(info("PO", "IPT"), LIB), node.IPT)
     assert isinstance(node.Node.gen_node(info("FB", "BRCH"), LIB), node.BRCH)
 
 
-@pytest.mark.parametrize("n_type, g_type", [("PO", "IPT"), ("GATE", "IPT"), ("PI", "AND"), ("FB", "NAND")])
+@pytest.mark.parametrize("n_type, g_type", [("GATE", "IPT"), ("PI", "AND"), ("FB", "NAND")])
 def test_gen_node_rejects_unsupported_combinations(n_type, g_type):
     with pytest.raises(NotImplementedError, match="Unsupported node"):
         node.Node.gen_node(info(n_type, g_type, "77"), LIB)

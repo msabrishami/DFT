@@ -180,12 +180,17 @@ class Node(ABC):
         ------
         NotImplementedError
             For a combination of node type and gate type that is not supported,
-            e.g. a GATE node driven by an IPT, which occurs in some .ckt files.
+            e.g. a GATE node driven by an IPT.
+
+        Notes
+        -----
+        A ``PO`` node with gate type ``IPT`` is a primary input that is also a
+        primary output. Some ISCAS netlists contain such nodes.
         """
         n_type, g_type, num = node_info['n_type'], node_info['g_type'], node_info['num']
         gate_types = ['XOR', 'OR', 'NOR', 'NOT', 'NAND', 'AND', 'BUFF', 'XNOR']
 
-        if n_type == "PI" and g_type == "IPT":
+        if n_type in ("PI", "PO") and g_type == "IPT":
             return std_node_lib['IPT'](n_type, g_type, num)
         if n_type == "FB" and g_type == "BRCH":
             return std_node_lib['BRCH'](n_type, g_type, num)
