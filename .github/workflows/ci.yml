@@ -25,5 +25,12 @@ jobs:
       - name: Install package
         run: pip install -e ".[dev]"
 
+      # Modules are added to this list as each layer of the package is cleaned up.
+      - name: Lint
+        run: >-
+          ruff check
+          src/pycad/config.py src/pycad/paths.py src/pycad/utils.py
+          src/pycad/tp_generator.py src/pycad/library
+
       - name: Run tests
         run: pytest -v
