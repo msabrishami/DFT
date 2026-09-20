@@ -9,12 +9,13 @@ class can evaluate its output from the values of its input nodes in three modes:
              independent simulations, e.g. one test pattern per bit
 """
 import math
+import operator
 import sys
 from abc import ABC, abstractmethod
 from enum import StrEnum
+from functools import reduce
 
 from pycad.config import X_VALUE
-
 
 # Integer codes of the types in the .ckt file format (the index is the code).
 _CKT_GATE_CODES = ("IPT", "BRCH", "XOR", "OR", "NOR", "NOT", "NAND", "AND", "XNOR", "BUFF")
@@ -119,7 +120,7 @@ class Node(ABC):
         pass
     
     @abstractmethod
-    def imply_b(self, bitwise_not):
+    def imply_b(self):
         ''' forward parallel implication for a logic gate ''' 
         pass
     
@@ -185,192 +186,139 @@ class Node(ABC):
         else:
             raise NotImplementedError()
     
-class BUFF(Node):
-    """ This gate is yet not tested""" 
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
+class _PassThrough(Node):
+    """A gate whose output is simply the value of its single input, in every mode."""
 
     def imply(self):
         self.value = self.unodes[0].value
 
-    def imply_b(self):
-        self.value = self.unodes[0].value
-    
-    def imply_t(self):
-        self.value = self.unodes[0].value
-    
+    imply_b = imply
+    imply_t = imply
+
+
+class BUFF(_PassThrough):
+    """Buffer."""
+
+
+class BRCH(_PassThrough):
+    """Fan-out branch: a copy of the stem signal."""
+
+
 class NOT(Node):
-    """ This gate is yet not tested""" 
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
+    """Inverter."""
 
     def imply(self):
         self.value = 1 if (self.unodes[0].value == 0) else 0
 
     def imply_b(self):
         self.value = self.unodes[0].value ^ Node.bitwise_not
-    
-    def imply_t(self):
-        if self.unodes[0].value == 0 or self.unodes[0].value == 1:
-            self.value = 1 - self.unodes[0].value
-        elif self.unodes[0].value == X_VALUE:
-                self.value = X_VALUE
 
-class OR(Node):
+    def imply_t(self):
+        value = self.unodes[0].value
+        if value == 0 or value == 1:
+            self.value = 1 - value
+        elif value == X_VALUE:
+            self.value = X_VALUE
+
+
+class _ControlledGate(Node):
+    """AND, NAND, OR and NOR: a controlling input value decides the output on its own.
+
+    Subclasses set ``CONTROL`` (the controlling input value), ``INVERT`` (1 if the
+    output is inverted) and ``_combine`` (the bitwise operation that merges inputs).
+
+    ``cval`` and ``inv`` hold the same information as 4-bit masks (15 is logic one,
+    0 is logic zero), the encoding used by the D-algorithm.
+    """
+
+    CONTROL: int
+    INVERT: int
+
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.cval = 15
-        self.inv = 0
+        self.cval = 15 * self.CONTROL
+        self.inv = 15 * self.INVERT
+
+    @staticmethod
+    def _combine(a, b):
+        raise NotImplementedError
 
     def imply(self):
-        self.value = 1 if (1 in self.unodes_val()) else 0
-    
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value | unode.value
-    
+        controlled = self.CONTROL in self.unodes_val()
+        self.value = (self.CONTROL if controlled else 1 - self.CONTROL) ^ self.INVERT
+
     def imply_t(self):
-        if 1 in self.unodes_val():
-            self.value = 1
-        elif X_VALUE in self.unodes_val():
+        values = self.unodes_val()
+        if self.CONTROL in values:
+            self.value = self.CONTROL ^ self.INVERT
+        elif X_VALUE in values:
             self.value = X_VALUE
         else:
-            self.value = 0
-
-class NOR(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-        self.cval = 15
-        self.inv = 15
-
-    def imply(self):
-        self.value = 0 if (1 in self.unodes_val()) else 1
+            self.value = (1 - self.CONTROL) ^ self.INVERT
 
     def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value | unode.value
-        self.value = self.value ^ Node.bitwise_not
-    
-    def imply_t(self):
-        if 1 in self.unodes_val():
-            self.value = 0
-        elif X_VALUE in self.unodes_val():
-            self.value = X_VALUE
-        else:
-            self.value = 1
-        
-class AND(Node):
+        self.value = reduce(self._combine, (unode.value for unode in self.unodes))
+        if self.INVERT:
+            self.value ^= Node.bitwise_not
+
+
+class AND(_ControlledGate):
+    CONTROL, INVERT = 0, 0
+    _combine = staticmethod(operator.and_)
+
+
+class NAND(_ControlledGate):
+    CONTROL, INVERT = 0, 1
+    _combine = staticmethod(operator.and_)
+
+
+class OR(_ControlledGate):
+    CONTROL, INVERT = 1, 0
+    _combine = staticmethod(operator.or_)
+
+
+class NOR(_ControlledGate):
+    CONTROL, INVERT = 1, 1
+    _combine = staticmethod(operator.or_)
+
+
+class _ParityGate(Node):
+    """XOR and XNOR: the output depends on the parity of the number of ones."""
+
+    INVERT: int
+
     def __init__(self, n_type, g_type, num):
         Node.__init__(self, n_type, g_type, num)
-        self.cval = 0
-        self.inv = 0
+        self.c_flag = 0
 
     def imply(self):
-        self.value = 0 if (0 in self.unodes_val()) else 1
-
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value & unode.value
-
-    def imply_t(self):
-        if 0 in self.unodes_val():
-            self.value = 0
-
-        elif X_VALUE in self.unodes_val():
-            self.value = X_VALUE
-        
-        else:
-            self.value = 1
-
-class NAND(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-        self.cval = 0
-        self.inv = 15
-    
-    def imply(self):
-        self.value = 1 if (0 in self.unodes_val()) else 0
-    
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value & unode.value
-        self.value = self.value ^ Node.bitwise_not
-
-    def imply_t(self):
-        if 0 in self.unodes_val():
-            self.value = 1
-
-        elif X_VALUE in self.unodes_val():
-            self.value = X_VALUE
-        
-        else:
-            self.value = 0
-
-class XOR(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0 
-
-    def imply(self):
-        self.value = sum(self.unodes_val()) % 2
-    
-    def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value ^ unode.value
+        self.value = (sum(self.unodes_val()) + self.INVERT) % 2
 
     def imply_t(self):
         if X_VALUE in self.unodes_val():
             self.value = X_VALUE
         else:
-            self.value = sum(self.unodes_val())%2
-
-class XNOR(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0 
-
-    def imply(self):
-        self.value = (sum(self.unodes_val())+1)%2
+            self.imply()
 
     def imply_b(self):
-        self.value = self.unodes[0].value
-        for unode in self.unodes[1:]:
-            self.value = self.value ^ unode.value
-        self.value = self.value ^ Node.bitwise_not
-    
-    def imply_t(self):
-        if X_VALUE in self.unodes_val():
-            self.value = X_VALUE
-        else:
-            self.value = (sum(self.unodes_val())+1) %2
+        self.value = reduce(operator.xor, (unode.value for unode in self.unodes))
+        if self.INVERT:
+            self.value ^= Node.bitwise_not
+
+
+class XOR(_ParityGate):
+    INVERT = 0
+
+
+class XNOR(_ParityGate):
+    INVERT = 1
+
 
 class IPT(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-    
+    """Primary input. Unlike the other gates, ``imply*`` take the value to apply."""
+
     def imply(self, value):
         self.value = value
-    
-    def imply_b(self, value):
-        self.value = value
 
-    def imply_t(self, value):
-        self.value = value
-
-class BRCH(Node):
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-    
-    def imply(self):
-        self.value = self.unodes[0].value
-    
-    def imply_b(self):
-        self.value = self.unodes[0].value
-
-    def imply_t(self):
-        self.value = self.unodes[0].value
+    imply_b = imply
+    imply_t = imply
