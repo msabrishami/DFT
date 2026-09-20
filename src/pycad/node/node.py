@@ -87,8 +87,8 @@ class Node(ABC):
         self.num = num
         self.lev = None 
         self.value = None
-        self.cval = None    #TODO: controlling value, set to 15 by mistake 
-        self.inv = None     #TODO: inverting value, set to 15 by mistake
+        self.cval = None    # controlling value as a 4-bit mask (set by AND/NAND/OR/NOR)
+        self.inv = None     # inversion as a 4-bit mask (set by AND/NAND/OR/NOR)
         self.unodes = []
         self.dnodes = []
         self.flagA = None   # Very professional 
@@ -112,6 +112,7 @@ class Node(ABC):
         self.dnodes.append(dnode)
     
     def unodes_val(self):
+        """Values of the input nodes, with the strings '0' and '1' converted to int."""
         return [int(unode.value) if unode.value=='0' or unode.value=='1' else unode.value for unode in self.unodes]
     
     @abstractmethod
@@ -130,20 +131,20 @@ class Node(ABC):
         pass
 
     def get_neighbors(self, value=False, inclusive=False):
-        ''' Return a list of nodes (or the values of nodes)
-        that have the same out gate as this node
-        inclusive: if set True, includes this node itself.
-        value: if set True, returns the value of neighbors node, by default list of nodes
-        '''
-        # TODO: Check this for all possible gates, specially branch
-        # TODO: not tested
+        """Return the nodes that feed the same gate as this node (its siblings).
+
+        Parameters
+        ----------
+        value : bool
+            If True, return the values of the neighbor nodes instead of the nodes.
+        inclusive : bool
+            If True, this node itself is included (first in the result).
+        """
         res = []
         if inclusive:
-            res.append(self.num)
+            res.append(self)
         if self.dnodes:
             for node in self.dnodes[0].unodes:
-                # if self.num == node.num and inclusive
-                #     res.append(node)
                 if self.num != node.num:
                     res.append(node)
 
@@ -166,25 +167,32 @@ class Node(ABC):
     
     @staticmethod
     def gen_node(node_info, std_node_lib):
-        """ Generate a node based on information in node_info
-            
-            Parameters
-            ----------
-            node_info : dict
-         """
-        
-        # TODO: How about when n_type is GATE and g_type is IPT? e.g. on 1908.ckt
-        if node_info['n_type'] == "PI" and node_info['g_type'] == "IPT":
-            return std_node_lib['IPT'](node_info['n_type'], node_info['g_type'], node_info['num'])
+        """Create the node described by ``node_info``.
 
-        elif node_info['n_type'] == "FB" and node_info['g_type'] == "BRCH":
-            return std_node_lib['BRCH'](node_info['n_type'], node_info['g_type'], node_info['num'])
+        Parameters
+        ----------
+        node_info : dict
+            Keys ``n_type``, ``g_type`` and ``num``.
+        std_node_lib : dict
+            Gate type name -> node class to instantiate (see ``Circuit.STD_NODE_LIB``).
 
-        elif node_info['n_type'] == "GATE" or node_info['n_type'] == "PO":
-            if node_info['g_type'] in ['XOR','OR','NOR','NOT','NAND','AND','BUFF','XNOR']:
-                return std_node_lib[node_info['g_type']](node_info['n_type'], node_info['g_type'], node_info['num'])
-        else:
-            raise NotImplementedError()
+        Raises
+        ------
+        NotImplementedError
+            For a combination of node type and gate type that is not supported,
+            e.g. a GATE node driven by an IPT, which occurs in some .ckt files.
+        """
+        n_type, g_type, num = node_info['n_type'], node_info['g_type'], node_info['num']
+        gate_types = ['XOR', 'OR', 'NOR', 'NOT', 'NAND', 'AND', 'BUFF', 'XNOR']
+
+        if n_type == "PI" and g_type == "IPT":
+            return std_node_lib['IPT'](n_type, g_type, num)
+        if n_type == "FB" and g_type == "BRCH":
+            return std_node_lib['BRCH'](n_type, g_type, num)
+        if n_type in ("GATE", "PO") and g_type in gate_types:
+            return std_node_lib[g_type](n_type, g_type, num)
+        raise NotImplementedError(
+            f"Unsupported node: number {num}, node type {n_type}, gate type {g_type}")
     
 class _PassThrough(Node):
     """A gate whose output is simply the value of its single input, in every mode."""
