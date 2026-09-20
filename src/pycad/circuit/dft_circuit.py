@@ -47,7 +47,7 @@ class DFTCircuit(circuit.Circuit):
     
     def SCOAP_CO(self):
         """ Calculates combinational observability based on SCOAP measure """ 
-        for node in self.PO:
+        for node in self.outputs:
             node.CO = 0
 
         for node in reversed(self.nodes_lev):
@@ -99,7 +99,7 @@ class DFTCircuit(circuit.Circuit):
         limit : Limit of test patterns to be generated.
             If limit is not given, all possible tps can be generated. 
             Every test pattern can be assigned a number by putting binary values of 
-            primary inputs together in the same sequence as in self.PI, and then converting 
+            primary inputs together in the same sequence as in self.inputs, and then converting 
             this value to a decimal one. 
         
         Note: Random input patterns are generated with replacement (not pseudo-random)
@@ -120,7 +120,7 @@ class DFTCircuit(circuit.Circuit):
         self.STAFAN_reset_flags()
         
         if limit is None:
-            limit = [0, pow(2, len(self.PI))-1]
+            limit = [0, pow(2, len(self.inputs))-1]
 
         for t in tps:
             self.STAFAN_C_single(t)
@@ -140,8 +140,8 @@ class DFTCircuit(circuit.Circuit):
             node.stafan_b()
     
     def STAFAN_C_handler(self, conn, id_proc, tp_count, tot_proc):
-        limit = [int(pow(2, len(self.PI))/tot_proc) * id_proc, 
-                int(pow(2, len(self.PI))/tot_proc) * (id_proc+1)-1]
+        limit = [int(pow(2, len(self.inputs))/tot_proc) * id_proc, 
+                int(pow(2, len(self.inputs))/tot_proc) * (id_proc+1)-1]
         
         self.STAFAN_C(tp_count, limit)
 
@@ -393,7 +393,7 @@ class DFTCircuit(circuit.Circuit):
             if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
                 HTO_old.add(node.num)
         orig_ntype = op.ntype
-        self.PO.append(op)
+        self.outputs.append(op)
         op.ntype = "PO"
         self.STAFAN_B()
         self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
@@ -405,7 +405,7 @@ class DFTCircuit(circuit.Circuit):
                     # print("\t{} was HTO, but now became ETO".format(node.num))
                     count = count + 1
         op.ntype = orig_ntype
-        self.PO = self.PO[:-1]
+        self.outputs = self.outputs[:-1]
         return count
     
     def save_scoap(self, fname=None):

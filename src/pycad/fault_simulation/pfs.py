@@ -28,7 +28,7 @@ class PFS(FaultSim):
             o.w. all faults in the fault_list are considered.
         Updates the fault.D_count of fault_list.faults
         Returns a list of detected faults in this pass
-        tp sequence is important, if circuit.PI=[Na, Nb, Nc], then tp=[Xa, Xb, Xc]
+        tp sequence is important, if circuit.inputs=[Na, Nb, Nc], then tp=[Xa, Xb, Xc]
         #TODO: Fix fault drop
         """
         detected_faults = set() 
@@ -67,7 +67,7 @@ class PFS(FaultSim):
                     mask_dict[faults_pass[i].node_num] = 2**i
 
             # pfs for one pass
-            node_dict = dict(zip([x.num for x in self.circuit.PI], tp))
+            node_dict = dict(zip([x.num for x in self.circuit.inputs], tp))
             for node in self.circuit.nodes_lev:
 
                 # PFS mask 
@@ -85,7 +85,7 @@ class PFS(FaultSim):
                 node.insert_f(node.bitwise_not, pfs_stuck_values)
             
             # output result
-            for i in self.circuit.PO:
+            for i in self.circuit.outputs:
                 # if some faults can be detected
                 if (i.pfs_V != 0) and (i.pfs_V != node.bitwise_not):
                     pfs_V_str = format(i.pfs_V,"b").zfill(self.wordlen)

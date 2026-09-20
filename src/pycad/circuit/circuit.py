@@ -66,8 +66,8 @@ class Circuit:
         self.c_name = c_fname.split('/')[-1].split('.')[0]
         self.nodes = {}
         self.nodes_lev = []
-        self.PI = [] # this should repalce input_num_list
-        self.PO = [] # this should be created to have a list of outputs
+        self.inputs = []  # primary input nodes, in netlist order
+        self.outputs = []  # primary output nodes, in netlist order
         
         self._load(c_fname, std_node_lib)
         self.levelize()
@@ -81,7 +81,7 @@ class Circuit:
         Branches are also considered as gates: lev(branch) = lev(stem) + 1 
         Algorithm is not efficient at all, don't care now
         """
-        for po in self.PI:
+        for po in self.inputs:
             po.lev = 0
 
         flag_change = True
@@ -110,13 +110,13 @@ class Circuit:
 
         dist = {} 
         MAX_WEIGHT = 10**9
-        nodes = list(self.nodes.values()) + self.PO + self.PI #~
+        nodes = list(self.nodes.values()) + self.outputs + self.inputs #~
 
         for node in nodes:
             dist[node] = MAX_WEIGHT
             
         unvisited_nodes = []
-        for po in self.PO:
+        for po in self.outputs:
             dist[po] = min(0,dist[po])
             unvisited_nodes.append(po)
             
@@ -132,10 +132,10 @@ class Circuit:
     def __str__(self):
         res = ["Circuit name: " + self.c_name]
         res.append("#Nodes: " + str(len(self.nodes)))
-        res.append("#PI: " + str(len(self.PI)) + " >> ") 
-        res.append("\t" + str([x.num for x in self.PI]))
-        res.append("#PO: " + str(len(self.PO)) + " >> ")
-        res.append("\t" + str([x.num for x in self.PO]))
+        res.append("#PI: " + str(len(self.inputs)) + " >> ") 
+        res.append("\t" + str([x.num for x in self.inputs]))
+        res.append("#PO: " + str(len(self.outputs)) + " >> ")
+        res.append("\t" + str([x.num for x in self.outputs]))
 
         for node in self.nodes_lev:
             res.append(str(node))
@@ -191,7 +191,7 @@ class Circuit:
         Logic simulation:
         Read a given pattern and perform the logic simulation
         Currently just works with binary logic
-        tp is a list of values (currently int) in the same order as in self.PI
+        tp is a list of values (currently int) in the same order as in self.inputs
 
         Return
         ------
@@ -200,7 +200,7 @@ class Circuit:
         if X_VALUE in tp:
             raise Exception('You have X in test pattern. Use logic_sim_t() instead.')
         
-        node_dict = dict(zip([x.num for x in self.PI], tp))
+        node_dict = dict(zip([x.num for x in self.inputs], tp))
 
         for node in self.nodes_lev:
             if node.gtype == "IPT":
@@ -208,21 +208,21 @@ class Circuit:
             else:
                 node.imply()
         
-        return [po.value for po in self.PO]
+        return [po.value for po in self.outputs]
     
     def logic_sim_t(self, tp):
         """
         Logic simulation:
         Read a given pattern and perform the logic simulation
         Currently just works with binary logic
-        tp is a list of values (currently int) in the same order as in self.PI
+        tp is a list of values (currently int) in the same order as in self.inputs
 
         Return
         ------
         list of output values
         """
 
-        node_dict = dict(zip([x.num for x in self.PI], tp))
+        node_dict = dict(zip([x.num for x in self.inputs], tp))
 
         for node in self.nodes_lev:
             if node.gtype == "IPT":
@@ -230,7 +230,7 @@ class Circuit:
             else:
                 node.imply_t()
         
-        return [po.value for po in self.PO]
+        return [po.value for po in self.outputs]
 
     def logic_sim_bitwise(self, tp, fault=None):
         """
@@ -240,7 +240,7 @@ class Circuit:
         Arguments
         ---------
         tp : list of int 
-            input pattern in the same order as in self.PI
+            input pattern in the same order as in self.inputs
         fault : Fault
             node.num@fault --> example: N43@0 means node N43 single stuck at zero 
         
@@ -249,7 +249,7 @@ class Circuit:
         list of output values
         """
 
-        node_dict = dict(zip([x.num for x in self.PI], tp))
+        node_dict = dict(zip([x.num for x in self.inputs], tp))
     
         if fault:
             for node in self.nodes_lev:
@@ -270,7 +270,7 @@ class Circuit:
                 else:
                     node.imply_b()
 
-        return [po.value for po in self.PO]
+        return [po.value for po in self.outputs]
         
     def logic_sim_file(self, in_fname, out_fname, stil=False): 
         #TODO: test
@@ -284,9 +284,9 @@ class Circuit:
         fr = open(in_fname, mode='r')
         fw = open(out_fname, mode='w')
         fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PI]) + "\n")
+        fw.write(",".join(['N'+str(node.num) for node in self.inputs]) + "\n")
         fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.PO]) + "\n")
+        fw.write(",".join(['N'+str(node.num) for node in self.outputs]) + "\n")
         temp = fr.readline()
         i=1
         for line in fr.readlines():
@@ -297,7 +297,7 @@ class Circuit:
             self.logic_sim(line_split)
             fw.write('Test # = '+str(i)+'\n')
             fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in self.PO]) + "\n")
+            fw.write(",".join([str(node.value) for node in self.outputs]) + "\n")
             i+=1
         fw.close()
         fr.close()
@@ -307,9 +307,9 @@ class Circuit:
             lines = infile.readlines()
             outfile = open(out_fname, "w")
             outfile.write("PI:")
-            outfile.write(",".join([node.num for node in self.PI]) + "\n")
+            outfile.write(",".join([node.num for node in self.inputs]) + "\n")
             outfile.write("PO:")
-            outfile.write(",".join([node.num for node in self.PO]) + "\n")
+            outfile.write(",".join([node.num for node in self.outputs]) + "\n")
             for idx, line in enumerate(lines[1:]):
                 tp=line.rstrip('\n').split(",")
                 # for x in range(len(line_split)):
@@ -321,7 +321,7 @@ class Circuit:
                 outfile.write("".join(line.strip().split(",")))
                 outfile.write(";\n")
                 outfile.write("      \"_po\"=")
-                for node in self.PO:
+                for node in self.outputs:
                     val = "H" if node.value==1 else "L"
                     outfile.write(val)
                 outfile.write("; } \n")
@@ -336,7 +336,7 @@ class Circuit:
         PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
         PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
         print(PI_t_order)
-        PI_num = [x.num for x in self.PI]
+        PI_num = [x.num for x in self.inputs]
         print(PI_num)
         print(f"Logic-Sim validation with {int((len(lines)-2)/3)} patterns")
         if PI_t_order != PI_num:
@@ -346,7 +346,7 @@ class Circuit:
             test_in  = [int(x) for x in lines[(t+1)*3].strip().split(',')]
             test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
             self.logic_sim(test_in)
-            logic_out = self.read_PO()
+            logic_out = self.read_outputs()
             for i in range(len(PO_t_order)):
                 out_node = PO_t_order[i]
                 out_node_golden = test_out[i]
@@ -416,14 +416,14 @@ class Circuit:
             new_unodes.append(old_brch)
             target.dnodes[0].unodes = new_unodes
 
-        self.PO.append(new_brch)    
+        self.outputs.append(new_brch)    
         self.nodes[new_brch.num] = new_brch
 
-    def read_PO(self):
+    def read_outputs(self):
         """ Read the values of POs in a dictionary.
         The key to the dictionary is the PO node and value is the value of node
         """ 
         res = {}
-        for node in self.PO:
+        for node in self.outputs:
             res[str(node.num)] = node.value
         return res

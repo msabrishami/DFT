@@ -108,7 +108,7 @@ class CircuitLoader:
                 for pi in nets:
                     new_node = Node.gen_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"}, std_node_lib)
                     circuit.nodes[new_node.num] = new_node
-                    circuit.PI.append(new_node)
+                    circuit.inputs.append(new_node)
 
             # PO: n_type=PO, g_type=unknown, Node will NOT be added
             if x_type == "PO":
@@ -125,7 +125,7 @@ class CircuitLoader:
                 new_node = Node.gen_node(_nodes[nets[0]], std_node_lib)
                 circuit.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
-                    circuit.PO.append(new_node)
+                    circuit.outputs.append(new_node)
 
         # 2nd time Parsing: Making All Connections
         for line in new_lines:
@@ -170,9 +170,9 @@ class CircuitLoader:
             # new_node.ntype = n_type
             # new_node.gtype = g_type
             if new_node.ntype == "PI":
-                circuit.PI.append(new_node)
+                circuit.inputs.append(new_node)
             elif new_node.ntype == "PO":
-                circuit.PO.append(new_node)
+                circuit.outputs.append(new_node)
             circuit.nodes[new_node.num] = new_node
             
         for line in lines:

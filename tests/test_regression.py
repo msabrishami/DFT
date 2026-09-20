@@ -28,8 +28,8 @@ def test_matches_golden_baseline(name):
     tps = TPGenerator(circuit).gen_n_random(20)
 
     assert len(circuit.nodes_lev) == expected["num_nodes"]
-    assert len(circuit.PI) == expected["num_pi"]
-    assert len(circuit.PO) == expected["num_po"]
+    assert len(circuit.inputs) == expected["num_pi"]
+    assert len(circuit.outputs) == expected["num_po"]
 
     assert [[int(v) for v in circuit.logic_sim(tp)] for tp in tps] == expected["logic_sim"]
 

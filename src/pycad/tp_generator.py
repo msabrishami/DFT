@@ -19,9 +19,9 @@ class TPGenerator:
 
         bits = [0, 1, config.X_VALUE]
         if mode == "b":
-            tp = [int(bits[random.randint(0,1)]) for _ in range(len(self.circuit.PI))]
+            tp = [int(bits[random.randint(0,1)]) for _ in range(len(self.circuit.inputs))]
         elif mode == "x":
-            tp = [bits[random.randint(0,2)] for _ in range(len(self.circuit.PI))]
+            tp = [bits[random.randint(0,2)] for _ in range(len(self.circuit.inputs))]
         
         return tp 
     
@@ -33,7 +33,7 @@ class TPGenerator:
         does not store the generated tps in file 
         """
 
-        if 1<<len(self.circuit.PI) < tp_count:
+        if 1<<len(self.circuit.inputs) < tp_count:
             unique = False
 
         if not unique:
@@ -66,7 +66,7 @@ class TPGenerator:
                 self.circuit.c_name + "_" + str(tp_count) + "_tp_" + mode + ".tp")
         tp_fname = fn if tp_fname is None else tp_fname
         outfile = open(tp_fname, 'w')
-        outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
+        outfile.write(",".join([str(node.num) for node in self.circuit.inputs]) + "\n")
         tps = self.gen_n_random(tp_count=tp_count,mode=mode,unique=unique)
         for tp in tps:
             tp_str = [str(val) for val in tp]
@@ -86,7 +86,7 @@ class TPGenerator:
         from queue import Queue
         tps = Queue()
     
-        n_digits = len(self.circuit.PI)
+        n_digits = len(self.circuit.inputs)
         tps.put(utils.fix_size("0", n_digits))
         n = 1<<n_digits
         
@@ -104,13 +104,13 @@ class TPGenerator:
 
     def gen_full_file(self, tp_fname=None):
         """Create a single file including all possible test patterns""" 
-        if len(self.circuit.PI) > 12:
+        if len(self.circuit.inputs) > 12:
             print("Error: cannot generate full tp file for circuits with PI > 12")
             return []
         fn = os.path.join(config.PATTERN_DIR, self.circuit.c_name + "_tp_full.tp")
         tp_fname = fn if tp_fname is None else tp_fname
         outfile = open(tp_fname, 'w')
-        outfile.write(",".join([str(node.num) for node in self.circuit.PI]) + "\n")
+        outfile.write(",".join([str(node.num) for node in self.circuit.inputs]) + "\n")
         tps = self.gen_full()
         for t in tps:
             outfile.write(",".join(str(t)) + "\n")

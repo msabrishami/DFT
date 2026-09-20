@@ -35,7 +35,7 @@ class PPSF(FaultSim):
         ---------
         tps : list of lists
                 test patterns. Each tp is itself a list. 
-                The order of tp values is the same as circuit.PI 
+                The order of tp values is the same as circuit.inputs 
         Returns
         -------
         res_fixed : set of the indices of tps that could detect the given fault
@@ -44,18 +44,18 @@ class PPSF(FaultSim):
             print("Error: number of tps should be wordlen")
             return None
 
-        tps_bin = [0] * len(self.circuit.PI)
+        tps_bin = [0] * len(self.circuit.inputs)
         for i in range(len(tps_bin)):
             for j in range(len(tps)):
                 tps_bin[i] += (tps[j][i]*(2**j))
 
         # Run without fault
         self.circuit.logic_sim_bitwise(tps_bin) 
-        Zg = self.circuit.read_PO() 
+        Zg = self.circuit.read_outputs() 
 
         # Run with fault
         self.circuit.logic_sim_bitwise(tps_bin, fault)
-        Zf = self.circuit.read_PO()
+        Zf = self.circuit.read_outputs()
 
         res = utils.comp_Zg_Zf_bin(Zg, Zf, len(tps))
 
