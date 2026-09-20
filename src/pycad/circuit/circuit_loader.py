@@ -1,29 +1,29 @@
+"""Reading gate-level netlists (``.ckt`` and Verilog) into a :class:`Circuit`."""
+import os
 import re
 
 from pycad import config
-from pycad.node import node
-from pycad.node.node import Node
+from pycad.node.node import GateType, Node, NodeType
 
 
 class CircuitLoader:
-    """ Read a circuit netlist (gate level), 
-    currently support .ckt (refer to USC EE658) and .v (Verilog) 
+    """Read a gate-level netlist and fill a Circuit with node objects.
+
+    Supported formats are ``.ckt`` (the format of USC EE658, see ``docs``) and
+    structural Verilog (``.v``). Creating the loader performs the reading.
+
+    Parameters
+    ----------
+    circuit : Circuit
+        The circuit to fill. Its ``nodes``, ``inputs`` and ``outputs`` are set.
+    circuit_fname : str
+        Netlist file name, with path and format.
+    std_node_lib : dict
+        Gate type name -> node class (see ``Circuit.STD_NODE_LIB``).
     """
-    
+
     def __init__(self, circuit, circuit_fname, std_node_lib):
-        """ Read a gate level netlist and feed the Circuit object 
-
-        Parameters
-        ----------
-        circuit : Circuit 
-            A Circuit object that will be be initialized and filled with the given node types
-        circuit_name : str
-            the name of the circuit netlist file, with path and format
-        std_node_lib : dict
-            A dictionary of each node type to its class
-        """ 
-
-        circuit_format = circuit_fname.split('/')[-1].split('.')[1]
+        circuit_format = os.path.splitext(circuit_fname)[1].lstrip(".")
 
         if circuit_format == 'ckt':
             self.read_ckt(circuit, circuit_fname, std_node_lib)
@@ -32,150 +32,132 @@ class CircuitLoader:
         else:
             raise NotImplementedError(f"Circuit format {circuit_format} is not supported!")
 
-    def connect_node(self, circuit,  line):
-        # As we move forward, find the upnodes and connects them
-        
+    @staticmethod
+    def connect_node(circuit, line):
+        """Connect the node described by a ``.ckt`` line to its fan-in nodes."""
         attr = line.split()
         ptr = circuit.nodes[attr[1]]
-        
-        # ntype=PI and gtype=IPT: good
-        # we don't care about #fan-out
-        if ptr.ntype == "PI" and ptr.gtype=="IPT":
-            None
-        
-        # ntype=FB and gtyep=BRCH
-        elif ptr.ntype == "FB" and ptr.gtype=="BRCH":
-            unode = circuit.nodes[attr[3]]
+
+        if ptr.gtype == "IPT":
+            # primary input (possibly also a primary output): nothing drives it
+            return
+        if ptr.ntype == "FB" and ptr.gtype == "BRCH":
+            # fan-out branch: the single fan-in is the stem
+            unode_nums = attr[3:4]
+        elif ptr.ntype in ("GATE", "PO") and ptr.gtype != "BRCH":
+            # gates with a single input behave as buffers
+            unode_nums = attr[5:]
+        else:
+            raise ValueError(
+                f"Node {ptr.num} has an inconsistent node type {ptr.ntype} and gate type {ptr.gtype}")
+
+        for unode_num in unode_nums:
+            unode = circuit.nodes[unode_num]
             ptr.unodes.append(unode)
             unode.dnodes.append(ptr)
-        
-        # ntype=GATE and gtype=BRCH
-        elif ptr.ntype == "GATE" and ptr.gtype=="BRCH":
-            print("ERROR: gate and branch", ptr.num)
 
-        # ntype=GATE or ntype=PO 
-        # we don't care about #fan-out
-        # some gates have a single input, they are buffer
-        elif ptr.ntype == "GATE" or ptr.ntype == "PO":
-            for unode_num in attr[5:]:
-                unode = circuit.nodes[unode_num]
-                ptr.unodes.append(unode)
-                unode.dnodes.append(ptr)
-        else:
-            print("ERROR: not known!", ptr.num)
+    @staticmethod
+    def _read_verilog_statements(circuit_fname):
+        """Verilog statements of a file: comments removed, continued lines joined."""
+        statements = []
+        pending = ''
+        with open(circuit_fname) as infile:
+            for line in infile:
+                line = line.split('//')[0]
+                # without ";" or "endmodule" the statement continues on the next line
+                if ';' not in line and 'endmodule' not in line:
+                    pending += line.rstrip()
+                else:
+                    statements.append(pending + line.rstrip())
+                    pending = ''
+        return statements
 
     def read_verilog(self, circuit, circuit_fname, std_node_lib):
+        """Read a structural Verilog netlist, each net as a node object.
+
+        Nets driven by a gate become nodes of that gate type, and a fan-out
+        branch node is inserted on every net that drives more than one gate.
         """
-        Read circuit from .v file, each node as an object
-        """
-        infile = open(circuit_fname, 'r')
-        eff_line = ''
-        lines = infile.readlines()
-        new_lines=[]
-        for line in lines:
-            # Remove comment in lines 
-            line_syntax = re.match(r'^.*//.*', line, re.IGNORECASE)
-            line = line[:line.index('//')] if line_syntax else line
+        statements = self._read_verilog_statements(circuit_fname)
 
-            # If there is no ";" or "endmodule" it means the line is continued
-            # Stack the contniuous lines to each other
-            if ';' not in line and 'endmodule' not in line:
-                eff_line = eff_line + line.rstrip()
-            else:
-                line = eff_line + line.rstrip()
-                eff_line = ''
-                new_lines.append(line)
+        # 1st pass: create all nodes. Wires and outputs are only declared here,
+        # their gate type is known when the gate that drives them is read.
+        declared = {}
+        for statement in statements:
+            x_type, nets = self.read_verilog_syntax(statement)
 
-        infile.close()
-
-        ## 1st time Parsing: Creating all nodes
-        # we need to use _nodes dict to collect all information
-        _nodes = {}
-        for line in new_lines:
-
-            x_type, nets = self.read_verilog_syntax(line)
-
-            if x_type == "module":
-                continue
-             
-            # Wire: n_type=GATE, gtype=unknown
             if x_type == "wire":
                 for wire in nets:
-                    _nodes[wire] = {'num':wire, 'n_type':"GATE", 'g_type':None}
+                    declared[wire] = {'num': wire, 'n_type': "GATE", 'g_type': None}
 
-            # PI: n_type=PI, g_type=IPT, Node will be added! 
-            if x_type == "PI":
+            elif x_type == "PI":
                 for pi in nets:
-                    new_node = Node.gen_node({'num': pi, 'n_type': "PI", 'g_type': "IPT"}, std_node_lib)
+                    new_node = Node.gen_node(
+                        {'num': pi, 'n_type': "PI", 'g_type': "IPT"}, std_node_lib)
                     circuit.nodes[new_node.num] = new_node
                     circuit.inputs.append(new_node)
 
-            # PO: n_type=PO, g_type=unknown, Node will NOT be added
-            if x_type == "PO":
+            elif x_type == "PO":
                 for po in nets:
-                    _nodes[po] = {'num': po, 'n_type':"PO", 'g_type': None}
+                    declared[po] = {'num': po, 'n_type': "PO", 'g_type': None}
 
-            # GATE, n_type = PO or GATE
-            # Node was seen before, in wire or in input/output, node will be added
-            if x_type == "GATE":
+            elif x_type == "GATE":
                 gtype, nets = nets
-                if nets[0] not in _nodes:
+                if nets[0] not in declared:
                     raise ValueError(f"Net {nets[0]} is used by a gate but was never declared")
-                _nodes[nets[0]]['g_type'] = gtype 
-                new_node = Node.gen_node(_nodes[nets[0]], std_node_lib)
+                declared[nets[0]]['g_type'] = gtype
+                new_node = Node.gen_node(declared[nets[0]], std_node_lib)
                 circuit.nodes[new_node.num] = new_node
                 if new_node.ntype == 'PO':
                     circuit.outputs.append(new_node)
 
-        # 2nd time Parsing: Making All Connections
-        for line in new_lines:
-            x_type, nets = self.read_verilog_syntax(line)
+        # 2nd pass: connect the gates
+        for statement in statements:
+            x_type, nets = self.read_verilog_syntax(statement)
             if x_type == "GATE":
-                gtype, nets = nets
+                _, nets = nets
                 for net in nets[1:]:
                     circuit.nodes[nets[0]].unodes.append(circuit.nodes[net])
                     circuit.nodes[net].dnodes.append(circuit.nodes[nets[0]])
 
-
-        # Branch modification 
-        # Inserting FB node back into the circuit
+        # Insert a fan-out branch node on every connection of a stem
         branches = {}
-        for node in circuit.nodes.values():
-            if len(node.dnodes) > 1:
-                for idx in range(len(node.dnodes)):
-                    ## New BNCH
-                    branch = Node.gen_node({'num': node.num + '-' + str(idx+1), 
-                        'n_type':"FB", 'g_type':"BRCH"}, std_node_lib)
+        for stem in circuit.nodes.values():
+            if len(stem.dnodes) > 1:
+                for idx in range(len(stem.dnodes)):
+                    branch = Node.gen_node({'num': stem.num + '-' + str(idx + 1),
+                                            'n_type': "FB", 'g_type': "BRCH"}, std_node_lib)
                     branches[branch.num] = branch
-                    CircuitLoader.insert_branch(node, node.dnodes[0], branch)
+                    CircuitLoader.insert_branch(stem, stem.dnodes[0], branch)
         circuit.nodes.update(branches)
 
     def read_ckt(self, circuit, circuit_fname, std_node_lib):
-        """
-        Read circuit from .ckt file, each node as an object
-        """
-        infile = open(circuit_fname, 'r')
-        lines = infile.readlines()
-        circuit.nodes= {}
-        # First time over the netlist
+        """Read a ``.ckt`` netlist, each node as an object."""
+        with open(circuit_fname) as infile:
+            lines = infile.readlines()
+        circuit.nodes = {}
+
+        # 1st pass: create all nodes
         for line in lines:
             if len(line) < 6:
                 continue
             attr = line.split()
-            node_info = dict()
-            node_info["n_type"] = node.NodeType.from_ckt_code(int(attr[0])).value
-            node_info["g_type"] = node.GateType.from_ckt_code(int(attr[2])).value
-            node_info["num"] = attr[1]
+            node_info = {
+                "n_type": NodeType.from_ckt_code(int(attr[0])).value,
+                "g_type": GateType.from_ckt_code(int(attr[2])).value,
+                "num": attr[1],
+            }
             new_node = Node.gen_node(node_info, std_node_lib)
-            # new_node.ntype = n_type
-            # new_node.gtype = g_type
-            if new_node.ntype == "PI":
+            if new_node.gtype == "IPT":
                 circuit.inputs.append(new_node)
-            elif new_node.ntype == "PO":
+            if new_node.ntype == "PO":
                 circuit.outputs.append(new_node)
             circuit.nodes[new_node.num] = new_node
-            
+
+        # 2nd pass: connect the nodes
         for line in lines:
+            if len(line) < 6:
+                continue
             self.connect_node(circuit, line.strip())
 
     @staticmethod
