@@ -163,8 +163,8 @@ class CircuitLoader:
                 continue
             attr = line.split()
             node_info = dict()
-            node_info["n_type"] = node.ntype(int(attr[0])).name
-            node_info["g_type"] = node.gtype(int(attr[2])).name
+            node_info["n_type"] = node.NodeType.from_ckt_code(int(attr[0])).value
+            node_info["g_type"] = node.GateType.from_ckt_code(int(attr[2])).value
             node_info["num"] = attr[1]
             new_node = Node.gen_node(node_info, std_node_lib)
             # new_node.ntype = n_type

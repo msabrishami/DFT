@@ -1,29 +1,57 @@
+"""Logic nodes of a gate-level circuit.
 
+A node represents a signal together with the gate that drives it. Every gate
+class can evaluate its output from the values of its input nodes in three modes:
+
+``imply``    two-valued logic (0 and 1)
+``imply_t``  three-valued logic (0, 1 and ``X_VALUE`` for unknown)
+``imply_b``  bit-parallel logic: the values are integers whose bits are
+             independent simulations, e.g. one test pattern per bit
+"""
 import math
 import sys
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
 
 from pycad.config import X_VALUE
 
 
-class gtype(Enum):
-    IPT = 0
-    BRCH = 1
-    XOR = 2
-    OR = 3
-    NOR = 4
-    NOT = 5
-    NAND = 6
-    AND = 7
-    XNOR = 8
-    BUFF = 9
+# Integer codes of the types in the .ckt file format (the index is the code).
+_CKT_GATE_CODES = ("IPT", "BRCH", "XOR", "OR", "NOR", "NOT", "NAND", "AND", "XNOR", "BUFF")
+_CKT_NODE_CODES = ("GATE", "PI", "FB", "PO")
 
-class ntype(Enum):
-    GATE = 0
-    PI = 1
-    FB = 2
-    PO = 3
+
+class GateType(StrEnum):
+    """Type of the gate that drives a node. Members compare equal to their names."""
+    IPT = "IPT"
+    BRCH = "BRCH"
+    XOR = "XOR"
+    OR = "OR"
+    NOR = "NOR"
+    NOT = "NOT"
+    NAND = "NAND"
+    AND = "AND"
+    XNOR = "XNOR"
+    BUFF = "BUFF"
+
+    @classmethod
+    def from_ckt_code(cls, code: int) -> "GateType":
+        """Gate type for the integer code used in the ``.ckt`` file format."""
+        return cls(_CKT_GATE_CODES[code])
+
+
+class NodeType(StrEnum):
+    """Role of a node in the circuit. Members compare equal to their names."""
+    GATE = "GATE"
+    PI = "PI"
+    FB = "FB"
+    PO = "PO"
+
+    @classmethod
+    def from_ckt_code(cls, code: int) -> "NodeType":
+        """Node type for the integer code used in the ``.ckt`` file format."""
+        return cls(_CKT_NODE_CODES[code])
+
 
 class Node(ABC):
     """ Representing the abstract of a circuit node, i.e. also representing its unique upnode gate.
@@ -37,12 +65,10 @@ class Node(ABC):
         logical value on the node, currently only accepting 2-value logic
     lev : int
         level of the node in circuit
-    gtype : TODO
-        the upnode gate type
-        supporting: IPT, BRCH, XOR, OR, NOR, NOT, NAND, AND, BUFF
-    ntype : TODO
-        the node type
-        supporting: GATE, PI, FB, PO
+    gtype : GateType
+        the upnode gate type (a plain string such as "NAND" is converted)
+    ntype : NodeType
+        the node type (a plain string such as "PI" is converted)
     unodes : list 
         list of upper hand node objects
     dnodes : list 
@@ -55,8 +81,8 @@ class Node(ABC):
     def __init__(self, n_type, g_type, num):
         self.bitwise_not = Node.bitwise_not
         self.bitlen = Node.bitlen
-        self.gtype = g_type
-        self.ntype = n_type
+        self.gtype = GateType(g_type)
+        self.ntype = NodeType(n_type)
         self.num = num
         self.lev = None 
         self.value = None

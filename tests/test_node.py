@@ -8,7 +8,7 @@ from pycad.node import node
 
 @pytest.mark.IPT
 def test_ipt_imply():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
     
     ipt_node.imply(1)
     assert ipt_node.value == 1
@@ -18,7 +18,7 @@ def test_ipt_imply():
 
 @pytest.mark.IPT
 def test_ipt_imply_t():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
     
     ipt_node.imply_t(1)
     assert ipt_node.value == 1
@@ -32,7 +32,7 @@ def test_ipt_imply_t():
 
 @pytest.mark.IPT
 def test_ipt_imply_b():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
     
     # ipt_node.imply_b([1])
     # assert ipt_node.value == [1]
@@ -45,8 +45,8 @@ def test_ipt_imply_b():
 
 @pytest.mark.BUFF
 def test_buff_imply():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    buff_node = node.BUFF(node.ntype.GATE, node.gtype.BUFF, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    buff_node = node.BUFF(node.NodeType.GATE, node.GateType.BUFF, "2")
     
     buff_node.add_unode(ipt_node)
     ipt_node.add_dnode(buff_node)
@@ -61,8 +61,8 @@ def test_buff_imply():
 
 @pytest.mark.BUFF
 def test_buff_imply_t():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    buff_node = node.BUFF(node.ntype.GATE, node.gtype.BUFF, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    buff_node = node.BUFF(node.NodeType.GATE, node.GateType.BUFF, "2")
     
     buff_node.add_unode(ipt_node)
     ipt_node.add_dnode(buff_node)
@@ -82,16 +82,16 @@ def test_buff_imply_t():
 
 @pytest.mark.BUFF
 def test_buff_imply_b():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    buff_node = node.BUFF(node.ntype.GATE, node.gtype.BUFF, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    buff_node = node.BUFF(node.NodeType.GATE, node.GateType.BUFF, "2")
     
     buff_node.add_unode(ipt_node)
     ipt_node.add_dnode(buff_node)
 
 @pytest.mark.NOT
 def test_not_imply():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    not_node = node.NOT(node.ntype.GATE, node.gtype.NOT, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    not_node = node.NOT(node.NodeType.GATE, node.GateType.NOT, "2")
     
     not_node.add_unode(ipt_node)
     ipt_node.add_dnode(not_node)
@@ -106,8 +106,8 @@ def test_not_imply():
 
 @pytest.mark.NOT
 def test_not_imply_t():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    not_node = node.NOT(node.ntype.GATE, node.gtype.NOT, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    not_node = node.NOT(node.NodeType.GATE, node.GateType.NOT, "2")
     
         
     not_node.add_unode(ipt_node)
@@ -127,8 +127,8 @@ def test_not_imply_t():
 
 @pytest.mark.NOT
 def test_not_imply_b():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    not_node = node.NOT(node.ntype.GATE, node.gtype.NOT, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    not_node = node.NOT(node.NodeType.GATE, node.GateType.NOT, "2")
     
     not_node.add_unode(ipt_node)
     ipt_node.add_dnode(not_node)
@@ -148,9 +148,9 @@ def test_not_imply_b():
 
 @pytest.mark.OR
 def test_or_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    or_node = node.OR(node.ntype.GATE, node.gtype.OR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    or_node = node.OR(node.NodeType.GATE, node.GateType.OR, "3")
     
     or_node.add_unode(ipt_node1)
     or_node.add_unode(ipt_node2)
@@ -179,9 +179,9 @@ def test_or_imply():
 
 @pytest.mark.OR
 def test_or_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    or_node = node.OR(node.ntype.GATE, node.gtype.OR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    or_node = node.OR(node.NodeType.GATE, node.GateType.OR, "3")
 
     ipt_node1.add_dnode(or_node)
     ipt_node2.add_dnode(or_node)
@@ -219,9 +219,9 @@ def test_or_imply_b():
 
 @pytest.mark.NOR
 def test_nor_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nor_node = node.NOR(node.ntype.GATE, node.gtype.NOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nor_node = node.NOR(node.NodeType.GATE, node.GateType.NOR, "3")
     
     nor_node.add_unode(ipt_node1)
     nor_node.add_unode(ipt_node2)
@@ -250,9 +250,9 @@ def test_nor_imply():
 
 @pytest.mark.NOR
 def test_nor_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nor_node = node.NOR(node.ntype.GATE, node.gtype.NOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nor_node = node.NOR(node.NodeType.GATE, node.GateType.NOR, "3")
     
     nor_node.add_unode(ipt_node1)
     nor_node.add_unode(ipt_node2)
@@ -296,9 +296,9 @@ def test_nor_imply_t():
 
 @pytest.mark.NOR
 def test_nor_imply_b():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nor_node = node.NOR(node.ntype.GATE, node.gtype.NOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nor_node = node.NOR(node.NodeType.GATE, node.GateType.NOR, "3")
     
     nor_node.add_unode(ipt_node1)
     nor_node.add_unode(ipt_node2)
@@ -327,9 +327,9 @@ def test_nor_imply_b():
 
 @pytest.mark.AND
 def test_and_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    and_node = node.AND(node.ntype.GATE, node.gtype.AND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    and_node = node.AND(node.NodeType.GATE, node.GateType.AND, "3")
     
     and_node.add_unode(ipt_node1)
     and_node.add_unode(ipt_node2)
@@ -358,9 +358,9 @@ def test_and_imply():
 
 @pytest.mark.AND
 def test_and_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    and_node = node.AND(node.ntype.GATE, node.gtype.AND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    and_node = node.AND(node.NodeType.GATE, node.GateType.AND, "3")
     
     and_node.add_unode(ipt_node1)
     and_node.add_unode(ipt_node2)
@@ -404,9 +404,9 @@ def test_and_imply_t():
 
 @pytest.mark.AND
 def test_and_imply_b():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    and_node = node.AND(node.ntype.GATE, node.gtype.AND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    and_node = node.AND(node.NodeType.GATE, node.GateType.AND, "3")
     
     and_node.add_unode(ipt_node1)
     and_node.add_unode(ipt_node2)
@@ -416,9 +416,9 @@ def test_and_imply_b():
 
 @pytest.mark.NAND
 def test_nand_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nand_node = node.NAND(node.ntype.GATE, node.gtype.NAND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nand_node = node.NAND(node.NodeType.GATE, node.GateType.NAND, "3")
     
     nand_node.add_unode(ipt_node1)
     nand_node.add_unode(ipt_node2)
@@ -447,9 +447,9 @@ def test_nand_imply():
 
 @pytest.mark.NAND
 def test_nand_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nand_node = node.NAND(node.ntype.GATE, node.gtype.NAND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nand_node = node.NAND(node.NodeType.GATE, node.GateType.NAND, "3")
     
     nand_node.add_unode(ipt_node1)
     nand_node.add_unode(ipt_node2)
@@ -493,9 +493,9 @@ def test_nand_imply_t():
 
 @pytest.mark.NAND
 def test_nand_imply_b():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    nand_node = node.AND(node.ntype.GATE, node.gtype.NAND, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    nand_node = node.AND(node.NodeType.GATE, node.GateType.NAND, "3")
     
     nand_node.add_unode(ipt_node1)
     nand_node.add_unode(ipt_node2)
@@ -505,9 +505,9 @@ def test_nand_imply_b():
 
 @pytest.mark.XOR
 def test_xor_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xor_node = node.XOR(node.ntype.GATE, node.gtype.XOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xor_node = node.XOR(node.NodeType.GATE, node.GateType.XOR, "3")
     
     xor_node.add_unode(ipt_node1)
     xor_node.add_unode(ipt_node2)
@@ -536,9 +536,9 @@ def test_xor_imply():
 
 @pytest.mark.XOR
 def test_xor_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xor_node = node.XOR(node.ntype.GATE, node.gtype.XOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xor_node = node.XOR(node.NodeType.GATE, node.GateType.XOR, "3")
     
     xor_node.add_unode(ipt_node1)
     xor_node.add_unode(ipt_node2)
@@ -582,9 +582,9 @@ def test_xor_imply_t():
 
 @pytest.mark.XOR
 def test_xor_imply_b():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xor_node = node.XOR(node.ntype.GATE, node.gtype.XOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xor_node = node.XOR(node.NodeType.GATE, node.GateType.XOR, "3")
     
     xor_node.add_unode(ipt_node1)
     xor_node.add_unode(ipt_node2)
@@ -594,9 +594,9 @@ def test_xor_imply_b():
 
 @pytest.mark.XNOR
 def test_xnor_imply():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xnor_node = node.XNOR(node.ntype.GATE, node.gtype.XNOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xnor_node = node.XNOR(node.NodeType.GATE, node.GateType.XNOR, "3")
     
     xnor_node.add_unode(ipt_node1)
     xnor_node.add_unode(ipt_node2)
@@ -625,9 +625,9 @@ def test_xnor_imply():
 
 @pytest.mark.XNOR
 def test_xnor_imply_t():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xnor_node = node.XNOR(node.ntype.GATE, node.gtype.XNOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xnor_node = node.XNOR(node.NodeType.GATE, node.GateType.XNOR, "3")
     
     xnor_node.add_unode(ipt_node1)
     xnor_node.add_unode(ipt_node2)
@@ -671,9 +671,9 @@ def test_xnor_imply_t():
 
 @pytest.mark.XNOR
 def test_xnor_imply_b():
-    ipt_node1 = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    ipt_node2 = node.IPT(node.ntype.PI, node.gtype.IPT, "2")
-    xnor_node = node.XNOR(node.ntype.GATE, node.gtype.XNOR, "3")
+    ipt_node1 = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    ipt_node2 = node.IPT(node.NodeType.PI, node.GateType.IPT, "2")
+    xnor_node = node.XNOR(node.NodeType.GATE, node.GateType.XNOR, "3")
     
     xnor_node.add_unode(ipt_node1)
     xnor_node.add_unode(ipt_node2)
@@ -683,8 +683,8 @@ def test_xnor_imply_b():
 
 @pytest.mark.BRCH
 def test_brch_imply():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    brch_node = node.BRCH(node.ntype.GATE, node.gtype.BRCH, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    brch_node = node.BRCH(node.NodeType.GATE, node.GateType.BRCH, "2")
 
     brch_node.add_unode(ipt_node)
     ipt_node.add_dnode(brch_node)
@@ -699,8 +699,8 @@ def test_brch_imply():
 
 @pytest.mark.BRCH
 def test_brch_imply_t():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    brch_node = node.BRCH(node.ntype.GATE, node.gtype.BRCH, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    brch_node = node.BRCH(node.NodeType.GATE, node.GateType.BRCH, "2")
 
     brch_node.add_unode(ipt_node)
     ipt_node.add_dnode(brch_node)
@@ -719,8 +719,8 @@ def test_brch_imply_t():
 
 @pytest.mark.BRCH
 def test_brch_imply_b():
-    ipt_node = node.IPT(node.ntype.PI, node.gtype.IPT, "1")
-    brch_node = node.BRCH(node.ntype.FB, node.gtype.BRCH, "2")
+    ipt_node = node.IPT(node.NodeType.PI, node.GateType.IPT, "1")
+    brch_node = node.BRCH(node.NodeType.FB, node.GateType.BRCH, "2")
     
     brch_node.add_unode(ipt_node)
     ipt_node.add_dnode(brch_node)
