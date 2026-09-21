@@ -1,3 +1,4 @@
+import math
 import random
 import warnings
 from collections import deque
@@ -116,29 +117,27 @@ class Circuit:
         self.nodes_lev = sorted(self.nodes.values(), key=lambda x: x.lev)
 
     def levelize_backward(self):
-        """ Calculate shortest distace from node to POs for all nodes
-            using Dijktra algorithm """
-        #TODO: test it
+        """Distance of every node to the nearest primary output.
 
-        dist = {} 
-        MAX_WEIGHT = 10**9
-        nodes = list(self.nodes.values()) + self.outputs + self.inputs #~
-
-        for node in nodes:
-            dist[node] = MAX_WEIGHT
-            
-        unvisited_nodes = []
+        Returns
+        -------
+        dict
+            Node -> minimum number of connections to a primary output. Nodes
+            that do not reach an output (dangling logic) map to ``math.inf``.
+        """
+        dist = {node: math.inf for node in self.nodes.values()}
+        queue = deque()
         for po in self.outputs:
-            dist[po] = min(0,dist[po])
-            unvisited_nodes.append(po)
-            
-        while unvisited_nodes:
-            for node in unvisited_nodes:
-                for unode in node.unodes:
-                    dist[unode] = min(1+dist[node],dist[unode])
-                    unvisited_nodes.append(unode)
-                unvisited_nodes.remove(node)
-            
+            dist[po] = 0
+            queue.append(po)
+
+        while queue:
+            node = queue.popleft()
+            for unode in node.unodes:
+                if dist[unode] == math.inf:
+                    dist[unode] = dist[node] + 1
+                    queue.append(unode)
+
         return dist
 
     def __str__(self):
@@ -154,49 +153,11 @@ class Circuit:
         return "\n".join(res)
 
     def get_rand_nodes(self, count=1):
+        """Return ``count`` different nodes of the circuit, chosen at random."""
         if count > len(self.nodes):
-            print("Error: count should be less than count of total nodes")
-            return None
-
-        return random.choices(self.nodes_lev,k=count)
-    
-    def print_fanin(self, target_node, depth):
-        # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
-        from collections import deque
-        queue = deque()
-        queue.append(target_node)
-        min_level = max(0, target_node.lev - depth) 
-        self.print_fanin_rec(queue, min_level)
-
-    def print_fanin_rec(self, queue, min_level):
-        # TODO: needs to be checked and tested -- maybe using utils.get_fanin?
-        """ prints the nodes in the fanin cone 
-        first time it is called, queue should be a list with target node as its only element
-        this is a simple BFS in the opposite direction of lines
-        
-        Arguments:
-        ----------
-        queue : list
-            a list of nodes, representing our queue for BFS
-        depth : int 
-            search depth for BFS, final node to be printed has depth=zero
-        """
-
-        print("queue is: " + ",".join([node.num for node in queue]))
-        if len(queue) == 0:
-            return 
-        
-        target_node = queue.popleft()
-        print(target_node)
-        
-        if target_node.lev == min_level:
-            return 
-        
-        for node in target_node.unodes:
-            print(f"added node {node.num} to the queue")
-            queue.append(node)
-            
-        self.print_fanin_rec(queue, min_level)
+            raise ValueError(
+                f"Cannot choose {count} nodes from a circuit with {len(self.nodes)} nodes")
+        return random.sample(self.nodes_lev, k=count)
 
     def logic_sim(self, tp):
         """
