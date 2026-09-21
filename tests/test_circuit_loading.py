@@ -33,8 +33,9 @@ def check_structure(circuit):
             assert node.lev == max(u.lev for u in node.unodes) + 1
         else:
             assert node.lev == 0
-        # a node with more than one fan-out always drives branches only
-        if len(node.dnodes) > 1:
+        # a node driving several different gates always drives branches only
+        # (a gate may list the same input twice, e.g. AND(x, x))
+        if len(set(node.dnodes)) > 1:
             assert all(d.ntype == "FB" for d in node.dnodes), node.num
         # an input has no fan-in, a branch has exactly one
         if node.gtype == "IPT":
@@ -98,3 +99,17 @@ def test_c17_logic_function():
 def test_unsupported_format_is_rejected():
     with pytest.raises(NotImplementedError):
         Circuit("somewhere/c17.xyz")
+
+
+@pytest.mark.parametrize("name", ["c2670", "c7552"])
+def test_input_that_is_also_an_output(name):
+    """Some ISCAS netlists declare a primary input as an output as well."""
+    circuit = Circuit(os.path.join(config.CKT_DIR, "others", f"{name}.ckt"))
+    check_structure(circuit)
+    both = [n for n in circuit.outputs if n.gtype == "IPT"]
+    assert both and all(n in circuit.inputs for n in both)
+    # such a node simply reflects the value applied to it
+    pattern = [i % 2 for i in range(len(circuit.inputs))]
+    values = circuit.logic_sim(pattern)
+    for node in both:
+        assert values[circuit.outputs.index(node)] == pattern[circuit.inputs.index(node)]
