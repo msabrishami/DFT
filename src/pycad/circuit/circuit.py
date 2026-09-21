@@ -1,4 +1,6 @@
 import random
+import warnings
+from collections import deque
 
 import networkx as nx
 
@@ -75,33 +77,43 @@ class Circuit:
     def _load(self, netlist_fname, std_node_lib):
         CircuitLoader(self, netlist_fname, std_node_lib)
 
-    def levelize(self):  
-        """
-        Levelization, assigns a level to each node
-        Branches are also considered as gates: lev(branch) = lev(stem) + 1 
-        Algorithm is not efficient at all, don't care now
-        """
-        for po in self.inputs:
-            po.lev = 0
+    def levelize(self):
+        """Assign a level to every node and order ``nodes_lev`` by level.
 
-        flag_change = True
-        while flag_change: 
-            flag_change = False
-            for _, node in self.nodes.items():
-                if node.lev is None: 
-                    lev_u = [x.lev for x in node.unodes]
-                    if None in lev_u:
-                        continue
-                    elif lev_u == []:
-                        print(f"Warning! Node {node.num} has zero fanins")
-                        print(node)
-                        print("level of this node is set to zero")
-                        node.lev = 0
-                    else:
-                        node.lev = max(lev_u) + 1
-                        flag_change = True
-    
-        self.nodes_lev = sorted(list(self.nodes.values()), key=lambda x:x.lev)
+        Inputs are at level 0 and every other node is one level above its
+        highest fan-in. Fan-out branches count as gates: the level of a branch
+        is the level of its stem plus one. Levels of all nodes are recomputed,
+        so this can be called again after the circuit was modified.
+
+        Raises
+        ------
+        ValueError
+            If the circuit has a combinational loop.
+        """
+        pending = {}  # node -> number of fan-ins whose level is still unknown
+        ready = deque()
+        for node in self.nodes.values():
+            node.lev = None
+            pending[node] = len(node.unodes)
+            if not node.unodes:
+                if node.gtype != "IPT":
+                    warnings.warn(f"Node {node.num} has no fan-in, its level is set to zero")
+                node.lev = 0
+                ready.append(node)
+
+        while ready:
+            node = ready.popleft()
+            for dnode in node.dnodes:
+                pending[dnode] -= 1
+                if pending[dnode] == 0:
+                    dnode.lev = max(unode.lev for unode in dnode.unodes) + 1
+                    ready.append(dnode)
+
+        unleveled = [node.num for node in self.nodes.values() if node.lev is None]
+        if unleveled:
+            raise ValueError(f"The circuit has a combinational loop through nodes {unleveled[:5]}")
+
+        self.nodes_lev = sorted(self.nodes.values(), key=lambda x: x.lev)
 
     def levelize_backward(self):
         """ Calculate shortest distace from node to POs for all nodes
