@@ -31,7 +31,9 @@ jobs:
           ruff check
           src/pycad/config.py src/pycad/paths.py src/pycad/utils.py
           src/pycad/tp_generator.py src/pycad/library
-          src/pycad/node/node.py tests
+          src/pycad/node/node.py
+          src/pycad/circuit/circuit.py src/pycad/circuit/circuit_loader.py
+          src/pycad/circuit/convert.py tests
 
       - name: Run tests
         run: pytest -v
