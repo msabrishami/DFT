@@ -57,8 +57,12 @@ class CircuitLoader:
             unode.dnodes.append(ptr)
 
     @staticmethod
-    def _read_verilog_statements(circuit_fname):
-        """Verilog statements of a file: comments removed, continued lines joined."""
+    def read_verilog_statements(circuit_fname):
+        """Statements of a Verilog file as a list of strings.
+
+        Comments are removed and statements that continue over several lines
+        are joined.
+        """
         statements = []
         pending = ''
         with open(circuit_fname) as infile:
@@ -78,7 +82,7 @@ class CircuitLoader:
         Nets driven by a gate become nodes of that gate type, and a fan-out
         branch node is inserted on every net that drives more than one gate.
         """
-        statements = self._read_verilog_statements(circuit_fname)
+        statements = self.read_verilog_statements(circuit_fname)
 
         # 1st pass: create all nodes. Wires and outputs are only declared here,
         # their gate type is known when the gate that drives them is read.
