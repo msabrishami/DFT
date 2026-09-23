@@ -1,4 +1,5 @@
 import math
+import os
 import random
 import warnings
 from collections import deque
@@ -7,71 +8,54 @@ import networkx as nx
 
 from pycad.circuit.circuit_loader import CircuitLoader
 from pycad.config import X_VALUE
-from pycad.node import node
+from pycad.node.node import AND, BRCH, BUFF, IPT, NAND, NOR, NOT, OR, XNOR, XOR
 
-#TODO: we need a flag to make sure no new nodes are added to the circuit, 
-#           for example, we all cell types in method foo after loading the circuit, 
-#           after adding new nodes, results of foo may still not be valid. 
 
 class Circuit:
-    """ Representing a digital logic circuit, capable of doing logic simulation.  
+    """A gate-level combinational circuit that can be logic simulated.
 
-        Attributes
-        ---------
-        STD_NODE_LIB : dict
-            dictionary of node type to related node class
-        c_fname : str
-            circuit name, full with path and format
-        c_name : str
-            circuit name, without path or format
-        nodes : list
-            list of nodes objects-->Wrong
-            dict of node.num to object of node
-        input_num_list : list
-            list of PI node numbers
-        nodes_cnt : 
-            total number of nodes in the circuit
-        nodes_lev : list
-            list of all nodes, ordered by level
-        """
-    
-    STD_NODE_LIB = {'AND':node.AND, 
-                    'XOR':node.XOR,
-                    'OR': node.OR, 
-                    'XNOR':node.XNOR,
-                    'BUFF':node.BUFF,
-                    'BRCH':node.BRCH,
-                    'NOR':node.NOR,
-                    'NOT':node.NOT,
-                    'NAND':node.NAND,
-                    'IPT':node.IPT}
+    The circuit is read from a netlist file (``.ckt`` or Verilog) and levelized.
+    Every net is a :class:`~pycad.node.node.Node`; every connection from a stem
+    to one of several gates goes through a fan-out branch node.
+
+    Attributes
+    ----------
+    STD_NODE_LIB : dict
+        Gate type name -> node class used when reading a netlist.
+    c_fname : str
+        Netlist file name, with path and format.
+    c_name : str
+        Circuit name: the file name without path and format.
+    nodes : dict
+        Node number (str) -> node object.
+    nodes_lev : list
+        All nodes ordered by level, i.e. in an order that is ready for simulation.
+    inputs : list
+        Primary input nodes, in netlist order.
+    outputs : list
+        Primary output nodes, in netlist order.
+    """
+
+    STD_NODE_LIB = {'AND':AND, 
+                    'XOR':XOR,
+                    'OR': OR, 
+                    'XNOR':XNOR,
+                    'BUFF':BUFF,
+                    'BRCH':BRCH,
+                    'NOR':NOR,
+                    'NOT':NOT,
+                    'NAND':NAND,
+                    'IPT':IPT}
 
 
     def __init__(self, c_fname, std_node_lib=STD_NODE_LIB):
-        """ 
-        Attributes 
-        ----------
-        c_fname : str
-            the name of the circuit with path and format
-        c_name : str
-            the full name of the circuit without path and format 
-        nodes : dict
-            from each node_num to Node object
-        nodes_lev: list
-            nodes ordered by level. Ready for logicsim.
-        PI : list
-            list of intput nodes
-        PO : list
-            list of output nodes
-        """
-
-        self.c_fname = c_fname 
-        self.c_name = c_fname.split('/')[-1].split('.')[0]
+        self.c_fname = c_fname
+        self.c_name = os.path.basename(c_fname).split('.')[0]
         self.nodes = {}
         self.nodes_lev = []
-        self.inputs = []  # primary input nodes, in netlist order
-        self.outputs = []  # primary output nodes, in netlist order
-        
+        self.inputs = []
+        self.outputs = []
+
         self._load(c_fname, std_node_lib)
         self.levelize()
 
@@ -98,7 +82,8 @@ class Circuit:
             pending[node] = len(node.unodes)
             if not node.unodes:
                 if node.gtype != "IPT":
-                    warnings.warn(f"Node {node.num} has no fan-in, its level is set to zero")
+                    warnings.warn(
+                        f"Node {node.num} has no fan-in, its level is set to zero", stacklevel=2)
                 node.lev = 0
                 ready.append(node)
 
@@ -159,244 +144,153 @@ class Circuit:
                 f"Cannot choose {count} nodes from a circuit with {len(self.nodes)} nodes")
         return random.sample(self.nodes_lev, k=count)
 
-    def logic_sim(self, tp):
-        """
-        Logic simulation:
-        Read a given pattern and perform the logic simulation
-        Currently just works with binary logic
-        tp is a list of values (currently int) in the same order as in self.inputs
+    def _simulate(self, tp, imply, fault=None):
+        """Apply ``tp`` to the inputs and evaluate all nodes in level order.
 
-        Return
-        ------
-        list of output values
+        ``imply`` is the name of the node method to use (``imply``, ``imply_t``
+        or ``imply_b``). With a ``fault``, the value of the faulty node is
+        overwritten right after it is computed (bit-parallel values only).
+        """
+        if len(tp) != len(self.inputs):
+            raise ValueError(
+                f"The pattern has {len(tp)} values but the circuit has {len(self.inputs)} inputs")
+        applied = {pi.num: value for pi, value in zip(self.inputs, tp, strict=True)}
+
+        for node in self.nodes_lev:
+            if node.gtype == "IPT":
+                getattr(node, imply)(applied[node.num])
+            else:
+                getattr(node, imply)()
+            if fault is not None and node.num == fault.node_num:
+                node.value = 0 if fault.stuck_val == '0' else node.bitwise_not
+
+        return [po.value for po in self.outputs]
+
+    def logic_sim(self, tp):
+        """Two-valued logic simulation of one pattern.
+
+        Parameters
+        ----------
+        tp : list
+            0/1 values, in the order of ``self.inputs``.
+
+        Returns
+        -------
+        list
+            Values of the outputs, in the order of ``self.outputs``.
         """
         if X_VALUE in tp:
-            raise Exception('You have X in test pattern. Use logic_sim_t() instead.')
-        
-        node_dict = dict(zip([x.num for x in self.inputs], tp))
+            raise ValueError("The pattern contains X, use logic_sim_t() instead")
+        return self._simulate(tp, "imply")
 
-        for node in self.nodes_lev:
-            if node.gtype == "IPT":
-                node.imply(node_dict[node.num])
-            else:
-                node.imply()
-        
-        return [po.value for po in self.outputs]
-    
     def logic_sim_t(self, tp):
+        """Three-valued logic simulation of one pattern (0, 1 or ``X_VALUE``).
+
+        Parameters and result are as in ``logic_sim``.
         """
-        Logic simulation:
-        Read a given pattern and perform the logic simulation
-        Currently just works with binary logic
-        tp is a list of values (currently int) in the same order as in self.inputs
-
-        Return
-        ------
-        list of output values
-        """
-
-        node_dict = dict(zip([x.num for x in self.inputs], tp))
-
-        for node in self.nodes_lev:
-            if node.gtype == "IPT":
-                node.imply_t(node_dict[node.num])
-            else:
-                node.imply_t()
-        
-        return [po.value for po in self.outputs]
+        return self._simulate(tp, "imply_t")
 
     def logic_sim_bitwise(self, tp, fault=None):
+        """Bit-parallel logic simulation: every bit of a value is a separate pattern.
+
+        Parameters
+        ----------
+        tp : list of int
+            One integer per input, in the order of ``self.inputs``.
+        fault : Fault, optional
+            A single stuck-at fault to inject, e.g. node ``43`` stuck at ``'0'``.
+
+        Returns
+        -------
+        list of int
+            Values of the outputs, in the order of ``self.outputs``.
         """
-        Logic simulation bitwise mode:
-        Reads a given pattern and perform the logic simulation bitwise
+        return self._simulate(tp, "imply_b", fault)
 
-        Arguments
-        ---------
-        tp : list of int 
-            input pattern in the same order as in self.inputs
-        fault : Fault
-            node.num@fault --> example: N43@0 means node N43 single stuck at zero 
-        
-        Return
-        ------
-        list of output values
+    def logic_sim_file(self, in_fname, out_fname):
+        """Simulate the patterns of a file and write patterns with responses.
+
+        The input file has a header line followed by one comma-separated
+        pattern per line (see ``TPGenerator``). The output file lists the input
+        and output node names and then, for every pattern, a ``Test # = k`` line,
+        the pattern and the response. ``check_golden`` reads this format.
         """
+        with open(in_fname) as fr, open(out_fname, 'w') as fw:
+            fw.write('Inputs: ' + ",".join('N' + str(node.num) for node in self.inputs) + "\n")
+            fw.write('Outputs: ' + ",".join('N' + str(node.num) for node in self.outputs) + "\n")
+            next(fr)  # header
+            for i, line in enumerate(fr, start=1):
+                line = line.rstrip('\n')
+                response = self.logic_sim([int(x) for x in line.split(',')])
+                fw.write(f'Test # = {i}\n')
+                fw.write(line + '\n')
+                fw.write(",".join(str(value) for value in response) + "\n")
 
-        node_dict = dict(zip([x.num for x in self.inputs], tp))
-    
-        if fault:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
-                if node.num == fault.node_num:
-                    if fault.stuck_val == '0':
-                        node.value = 0
-                    else:
-                        node.value = node.bitwise_not
+    def write_stil(self, in_fname, out_fname):
+        """Simulate the patterns of a file and write them as STIL capture vectors.
 
-        else:
-            for node in self.nodes_lev:
-                if node.gtype == "IPT":
-                    node.imply_b(node_dict[node.num])
-                else:
-                    node.imply_b()
-
-        return [po.value for po in self.outputs]
-        
-    def logic_sim_file(self, in_fname, out_fname, stil=False): 
-        #TODO: test
+        The input file is as for ``logic_sim_file``.
         """
-        logic simulation with given input vectors from a file
-        - generate an output folder in ../data/modelsim/circuit_name/ directory
-        - read an input file in the input folder
-        - generate a output file in output folder by using logic_sim() function
-        """
-        # Saeed needs to rewrite this method using 'yield' in load_tp_file     
-        fr = open(in_fname, mode='r')
-        fw = open(out_fname, mode='w')
-        fw.write('Inputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.inputs]) + "\n")
-        fw.write('Outputs: ')
-        fw.write(",".join(['N'+str(node.num) for node in self.outputs]) + "\n")
-        temp = fr.readline()
-        i=1
-        for line in fr.readlines():
-            line=line.rstrip('\n')
-            line_split=line.split(',')
-            for x in range(len(line_split)):
-                line_split[x]=int(line_split[x])
-            self.logic_sim(line_split)
-            fw.write('Test # = '+str(i)+'\n')
-            fw.write(line+'\n')
-            fw.write(",".join([str(node.value) for node in self.outputs]) + "\n")
-            i+=1
-        fw.close()
-        fr.close()
-        
-        if stil:
-            infile = open(in_fname, "r")
-            lines = infile.readlines()
-            outfile = open(out_fname, "w")
-            outfile.write("PI:")
-            outfile.write(",".join([node.num for node in self.inputs]) + "\n")
-            outfile.write("PO:")
-            outfile.write(",".join([node.num for node in self.outputs]) + "\n")
-            for idx, line in enumerate(lines[1:]):
-                tp=line.rstrip('\n').split(",")
-                # for x in range(len(line_split)):
-                #    line_split[x]=int(line_split[x])
-                # self.logic_sim(line_split)
-                self.logic_sim(tp)
-                outfile.write("\"pattern " + str(idx) + "\": Call \"capture\" {\n")
-                outfile.write("\"_pi\"=")
-                outfile.write("".join(line.strip().split(",")))
-                outfile.write(";\n")
-                outfile.write("      \"_po\"=")
-                for node in self.outputs:
-                    val = "H" if node.value==1 else "L"
-                    outfile.write(val)
-                outfile.write("; } \n")
-            outfile.close()
+        with open(in_fname) as fr, open(out_fname, 'w') as fw:
+            fw.write("PI:" + ",".join(node.num for node in self.inputs) + "\n")
+            fw.write("PO:" + ",".join(node.num for node in self.outputs) + "\n")
+            next(fr)  # header
+            for idx, line in enumerate(fr):
+                tp = line.strip().split(",")
+                response = self.logic_sim([int(x) for x in tp])
+                fw.write(f'"pattern {idx}": Call "capture" {{\n')
+                fw.write('"_pi"=' + "".join(tp) + ";\n")
+                fw.write('      "_po"=' + "".join("H" if v == 1 else "L" for v in response))
+                fw.write("; } \n")
 
-    def golden_test(self, golden_io_filename):
-        # compares the results of logic-sim of this circuit, 
-        #  ... provided a golden input/output file
-        # Saeed: this needs to be tested by myself later
-        infile = open(golden_io_filename, "r")
-        lines = infile.readlines()
-        PI_t_order  = [x[1:] for x in lines[0][8:].strip().split(',')]
-        PO_t_order = [x[1:] for x in lines[1][8:].strip().split(',')]
-        print(PI_t_order)
-        PI_num = [x.num for x in self.inputs]
-        print(PI_num)
-        print(f"Logic-Sim validation with {int((len(lines)-2)/3)} patterns")
-        if PI_t_order != PI_num:
-            print("Error: PI node order does not match! ")
+    def check_golden(self, golden_io_filename):
+        """Compare the logic simulation of this circuit with a golden file.
+
+        The golden file has the format written by ``logic_sim_file``, e.g. from
+        a reference simulator.
+
+        Returns
+        -------
+        bool
+            True if the input order matches and all responses are the same.
+        """
+        with open(golden_io_filename) as infile:
+            lines = [line.strip() for line in infile]
+        golden_inputs = [x[1:] for x in lines[0][8:].split(',')]
+        golden_outputs = [x[1:] for x in lines[1][9:].split(',')]
+        if golden_inputs != [node.num for node in self.inputs]:
             return False
-        for t in range(int((len(lines)-2)/3)):
-            test_in  = [int(x) for x in lines[(t+1)*3].strip().split(',')]
-            test_out = [int(x) for x in lines[(t+1)*3+1].strip().split(',')]
-            self.logic_sim(test_in)
-            logic_out = self.read_outputs()
-            for i in range(len(PO_t_order)):
-                out_node = PO_t_order[i]
-                out_node_golden = test_out[i]
-                if out_node_golden != logic_out["out"+str(out_node)]:
-                    print("Error: PO node order does not match! ")
-                    return False
-        print("Validation completed successfully - all correct")
+        if golden_outputs != [node.num for node in self.outputs]:
+            return False
+
+        for t in range((len(lines) - 2) // 3):
+            test_in = [int(x) for x in lines[3 * t + 3].split(',')]
+            test_out = [int(x) for x in lines[3 * t + 4].split(',')]
+            if self.logic_sim(test_in) != test_out:
+                return False
         return True
-    
+
     def make_num_int(self):
-        node2int = dict()
-        for idx, node in enumerate(self.nodes_lev):
-            node2int[node.num] = idx
-        return node2int
+        """Map every node number to its index in ``nodes_lev``."""
+        return {node.num: idx for idx, node in enumerate(self.nodes_lev)}
 
     def gen_graph(self):
+        """Directed graph of the circuit, with an edge from every fan-in to its node.
+
+        Graph nodes are the node numbers and carry the attributes ``lev``,
+        ``gtype`` and ``ntype``.
         """
-        Generate directed graph of the circuit 
-        Each node has attributes: lev
-        """
-        G = nx.DiGraph()
-        for n in self.nodes_lev:
-            n_num_normal = n.num
-            G.add_node(n_num_normal)
-            G.nodes[n_num_normal]['lev'] = n.lev
-            G.nodes[n_num_normal]['gtype'] = n.gtype
-            G.nodes[n_num_normal]['ntype'] = n.ntype
-            if n.gtype != 'IPT':
-                for unode in n.unodes:
-                    G.add_edge(unode.num, n_num_normal)
-            else:
-                pass
-        return G
+        graph = nx.DiGraph()
+        for node in self.nodes_lev:
+            graph.add_node(node.num, lev=node.lev, gtype=node.gtype, ntype=node.ntype)
+            for unode in node.unodes:
+                graph.add_edge(unode.num, node.num)
+        return graph
 
     def get_node_attr(self, node_attr):
-        data = []
-        for node in self.nodes_lev:
-            data.append(getattr(node, node_attr))
-
-        return data
-  
-    def make_PO(self, target):
-        """ connects this target node to a PO using a branch 
-        """
-        if target.ntype == "PO":
-            return 
-        # target becomes stem, create new branches:
-        new_brch = node.BRCH("PO", "BRCH", target.num+"-IPO") 
-        old_brch = node.BRCH("FB", "BRCH", target.num+"-OLD")
-
-        # fixing unodes for new branches
-        new_brch.unodes.append(target)
-        old_brch.unodes.append(target)
-        old_brch.dnodes = target.dnodes
-        
-        # fixing unodes for target.dnodes
-        # if target was stem:
-        if len(target.dnodes) > 1:
-            for dnode in target.dnodes:
-                dnode.unodes = [old_brch]
-        # if target was a gate
-        else:
-            new_unodes = []
-            for unode in target.dnodes[0].unodes:
-                if unode.num != target.num:
-                    new_unodes.append(unode)
-            new_unodes.append(old_brch)
-            target.dnodes[0].unodes = new_unodes
-
-        self.outputs.append(new_brch)    
-        self.nodes[new_brch.num] = new_brch
+        """List of the attribute ``node_attr`` of every node, in level order."""
+        return [getattr(node, node_attr) for node in self.nodes_lev]
 
     def read_outputs(self):
-        """ Read the values of POs in a dictionary.
-        The key to the dictionary is the PO node and value is the value of node
-        """ 
-        res = {}
-        for node in self.outputs:
-            res[str(node.num)] = node.value
-        return res
+        """Values of the outputs after a simulation: node number (str) -> value."""
+        return {str(node.num): node.value for node in self.outputs}
