@@ -678,7 +678,7 @@ def dfc_pfs_analysis(circuit:DFTCircuit, tp_count, times, op_count, log=True):
 
         for idx, tp in enumerate(tps):
             # remove those faults that are detected by this tp
-            new_faults = op_pfs.fault_list.remove_faults(tps_detected_init[idx])
+            new_faults = op_pfs.fault_list.faults_excluding(tps_detected_init[idx])
             if len(new_faults) == 0:
                 print("Skip!")
                 tps_detected_post.append(set())
