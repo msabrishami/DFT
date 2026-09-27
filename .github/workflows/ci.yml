@@ -33,7 +33,8 @@ jobs:
           src/pycad/tp_generator.py src/pycad/library
           src/pycad/node/node.py
           src/pycad/circuit/circuit.py src/pycad/circuit/circuit_loader.py
-          src/pycad/circuit/convert.py src/pycad/fault_simulation/fault.py tests
+          src/pycad/circuit/convert.py src/pycad/fault_simulation/fault.py
+          src/pycad/node/dft_node.py src/pycad/circuit/dft_circuit.py tests
 
       - name: Run tests
         run: pytest -v
