@@ -43,7 +43,7 @@ class DFTCircuit(circuit.Circuit):
     def SCOAP_CC(self):
         """ Calculates combinational controllability based on SCOAP measure """ 
         for node in self.nodes_lev:
-            node.eval_CC()
+            node.eval_cc()
     
     def SCOAP_CO(self):
         """ Calculates combinational observability based on SCOAP measure """ 
@@ -51,7 +51,7 @@ class DFTCircuit(circuit.Circuit):
             node.CO = 0
 
         for node in reversed(self.nodes_lev):
-            node.eval_CO()
+            node.eval_co()
     
     def SCOAP(self):
         self.SCOAP_CC()
