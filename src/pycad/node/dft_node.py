@@ -53,7 +53,6 @@ class DFTNode(ABC):
         self.one_count = 0
         self.zero_count = 0
         self.sen_count = 0
-        self.sense = False   # sensitized by the current pattern
         self.S = None
         self.C1 = None
         self.C0 = None

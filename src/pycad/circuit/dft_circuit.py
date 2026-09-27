@@ -1,468 +1,272 @@
+"""A circuit with the testability measures SCOAP and STAFAN."""
 import math
+import multiprocessing
 import os
-import time
-from multiprocessing import Pipe, Process
+import random
+import warnings
 
 import networkx as nx
 
 from pycad import config, paths
-from pycad.circuit import circuit
+from pycad.circuit.circuit import Circuit
 from pycad.node import dft_node
 from pycad.tp_generator import TPGenerator
 
 
-class DFTCircuit(circuit.Circuit):
-    """ 
-        An extended version of Circuit(), which is capable of SCOAP, STAFAN, PPSF, PFS
+class DFTCircuit(Circuit):
+    """A Circuit whose nodes also carry SCOAP and STAFAN measures.
 
-        Attributes
-        ---------
-        STD_NODE_LIB : dict
-            dictionary of node type to related node class
-        fault_name : 
-            full fault list in string format
-        fault_node_num : 
-            node numbers in full fault list
-        """
+    The circuit supports
 
-    STD_NODE_LIB = {'AND':dft_node.DFTAND, 
-                    'XOR':dft_node.DFTXOR,
-                    'OR': dft_node.DFTOR, 
-                    'XNOR':dft_node.DFTXNOR,
-                    'BUFF':dft_node.DFTBUFF,
-                    'BRCH':dft_node.DFTBRCH,
-                    'NOR':dft_node.DFTNOR,
-                    'NAND':dft_node.DFTNAND,
-                    'NOT':dft_node.DFTNOT,
-                    'IPT':dft_node.DFTIPT}
+    * SCOAP: ``scoap_cc`` (controllability), ``scoap_co`` (observability)
+    * STAFAN: ``stafan_c`` / ``stafan_b`` or ``stafan`` for both, ``stafan_fc``
+    * the fault simulators ``PFS`` and ``PPSF``
+
+    See :class:`~pycad.node.dft_node.DFTNode` for the measures stored in the nodes.
+    """
+
+    STD_NODE_LIB = {'AND': dft_node.DFTAND,
+                    'XOR': dft_node.DFTXOR,
+                    'OR': dft_node.DFTOR,
+                    'XNOR': dft_node.DFTXNOR,
+                    'BUFF': dft_node.DFTBUFF,
+                    'BRCH': dft_node.DFTBRCH,
+                    'NOR': dft_node.DFTNOR,
+                    'NAND': dft_node.DFTNAND,
+                    'NOT': dft_node.DFTNOT,
+                    'IPT': dft_node.DFTIPT}
 
     def __init__(self, netlist_fname):
         super().__init__(netlist_fname, DFTCircuit.STD_NODE_LIB)
-        self._stafan_executed = False
-    
-    def SCOAP_CC(self):
-        """ Calculates combinational controllability based on SCOAP measure """ 
+        self._stafan_ready = False   # C, S and B are set (computed or loaded)
+        self._stafan_tp_count = None  # number of patterns of the last computation
+
+    # ------------------------------------------------------------------- SCOAP
+    def scoap_cc(self):
+        """Combinational controllability (CC0, CC1) of all nodes, from inputs to outputs."""
         for node in self.nodes_lev:
             node.eval_cc()
-    
-    def SCOAP_CO(self):
-        """ Calculates combinational observability based on SCOAP measure """ 
+
+    def scoap_co(self):
+        """Combinational observability (CO) of all nodes, from outputs to inputs.
+
+        Needs the controllabilities, see ``scoap_cc``.
+        """
         for node in self.outputs:
             node.CO = 0
-
         for node in reversed(self.nodes_lev):
             node.eval_co()
-    
-    def SCOAP(self):
-        self.SCOAP_CC()
-        self.SCOAP_CO()
 
-    def STAFAN_reset_counts(self):
-        for node in self.nodes_lev:
-            node.one_count = 0
-            node.zero_count = 0
-            node.sen_count = 0
+    def scoap(self):
+        """All SCOAP measures."""
+        self.scoap_cc()
+        self.scoap_co()
 
-    def STAFAN_reset_flags(self):
-        for node in self.nodes_lev:
-            node.sense = False
-    
-    def STAFAN_C_single(self, tp):
-        """ Running STAFAN controllability step for one test pattern 
-        The initialization of nodes C1 and C0 are done in the prior method 
+    # ------------------------------------------------------------------ STAFAN
+    def _count_patterns(self, tps):
+        """Simulate patterns and count, per node, ones, zeros and sensitizations.
 
-        Arguments
-        ---------
-        tp : list 
-            a single test pattern vector 
+        Returns three lists in the order of ``nodes_lev``.
         """
-        self.logic_sim(tp)
-        self.STAFAN_reset_flags()
-            
-        for node in self.nodes_lev:
-            node.one_count = node.one_count + 1 if node.value==1 else node.one_count
-            node.zero_count = node.zero_count + 1 if node.value==0 else node.zero_count
+        size = len(self.nodes_lev)
+        ones, zeros, sensitized = [0] * size, [0] * size, [0] * size
+        for tp in tps:
+            self.logic_sim(tp)
+            for i, node in enumerate(self.nodes_lev):
+                if node.value == 1:
+                    ones[i] += 1
+                elif node.value == 0:
+                    zeros[i] += 1
+                if node.is_sensible():
+                    sensitized[i] += 1
+        return ones, zeros, sensitized
 
-            # sensitization
-            if node.is_sensible():
-                node.sense = True
-                node.sen_count += 1
+    def _count_random_patterns(self, count, seed):
+        tps = TPGenerator(self, rng=random.Random(seed)).gen_n_random(count)
+        return self._count_patterns(tps)
 
-    def STAFAN_C(self, tp, limit=None):
-        """ 
-        STAFAN controllability 
+    def _set_stafan_c(self, ones, zeros, sensitized, tp_count):
+        for node, one, zero, sen in zip(self.nodes_lev, ones, zeros, sensitized, strict=True):
+            node.one_count, node.zero_count, node.sen_count = one, zero, sen
+            node.C1 = one / tp_count
+            node.C0 = zero / tp_count
+            node.S = sen / tp_count
+        self._stafan_tp_count = tp_count
 
-        Arguments: 
+    def stafan_c(self, tp):
+        """STAFAN controllability and sensitization probabilities (C0, C1, S) of all nodes.
+
+        Parameters
         ----------
-        tp : Either the name of a test pattern file (str) or number of test patterns (int).
-            If tp is number of test patterns, they will be generated internally within limit
-        limit : Limit of test patterns to be generated.
-            If limit is not given, all possible tps can be generated. 
-            Every test pattern can be assigned a number by putting binary values of 
-            primary inputs together in the same sequence as in self.inputs, and then converting 
-            this value to a decimal one. 
-        
-        Note: Random input patterns are generated with replacement (not pseudo-random)
-        Note: random.choice method is very inefficient
+        tp : int, str or list
+            A number of random patterns to generate, the name of a pattern file,
+            or a list of patterns.
         """
-
-        tg = TPGenerator(self)
-        tps=[]
-        if isinstance(tp, str):
-            tps = tg.load_file(tp)
-        elif isinstance(tp, int):
-            tps = tg.gen_n_random(tp)
+        if isinstance(tp, int):
+            tps = TPGenerator(self).gen_n_random(tp)
+        elif isinstance(tp, str):
+            tps = TPGenerator.load_file(tp)
+        elif isinstance(tp, list):
+            tps = tp
         else:
-            raise TypeError
-        
-        # We need to reset the circuit
-        self.STAFAN_reset_counts()
-        self.STAFAN_reset_flags()
-        
-        if limit is None:
-            limit = [0, pow(2, len(self.inputs))-1]
+            raise TypeError("tp should be a pattern count, a file name or a list of patterns")
+        if not tps:
+            raise ValueError("STAFAN needs at least one test pattern")
 
-        for t in tps:
-            self.STAFAN_C_single(t)
+        self._set_stafan_c(*self._count_patterns(tps), len(tps))
 
-        # Calculate percentage/prob
-        for node in self.nodes_lev:
-            node.C1 = node.one_count / len(tps)
-            node.C0 = node.zero_count / len(tps)
-            node.S = node.sen_count / len(tps)
+    def stafan_b(self):
+        """STAFAN observability (B0, B1) of all nodes, from outputs to inputs.
 
-    def STAFAN_B(self):
-        """ Calculates the STAFAN observability probabilities for all nodes """
+        Needs ``stafan_c`` first.
+
+        Raises
+        ------
+        ValueError
+            If the observability of a node is undefined because controllabilities are zero.
+        """
         for node in reversed(self.nodes_lev):
-            if node.ntype=="PO":
+            if node.ntype == "PO":
                 node.B0 = 1.0
                 node.B1 = 1.0
             node.stafan_b()
-    
-    def STAFAN_C_handler(self, conn, id_proc, tp_count, tot_proc):
-        limit = [int(pow(2, len(self.inputs))/tot_proc) * id_proc, 
-                int(pow(2, len(self.inputs))/tot_proc) * (id_proc+1)-1]
-        
-        self.STAFAN_C(tp_count, limit)
 
-        one_count_list = []
-        zero_count_list = []
-        sen_count_list = []
+    def stafan(self, tp_count, num_proc=1, save_log=False):
+        """STAFAN controllability and observability with ``tp_count`` random patterns.
 
-        for i in self.nodes_lev:
-            one_count_list.append(i.one_count)
-            zero_count_list.append(i.zero_count)
-            sen_count_list.append(i.sen_count)
-        
-        conn.send((one_count_list, zero_count_list, sen_count_list))
-        conn.close()
+        The patterns are generated here and not stored. With ``num_proc`` > 1 the
+        patterns are split over processes (where the ``fork`` start method exists).
+        The result depends on the state of the global ``random`` generator, so
+        ``random.seed`` makes it reproducible for a fixed ``num_proc``.
 
-
-    def STAFAN_multi_tmp(self, tp_count, num_proc=1, verbose=False, save_log=False):
-        # TEMPORARY FUNCTION
-
-        """ 
-        Calculating STAFAN controllability and observability in parallel. 
-        Random TPs are generated within the method itself and are not stored. 
-        
-        Arguments:
-        ---------
-        total_tp : (int) total number of test pattern vectors (not less than num_proc)
-        num_proc : (int) number of processors that will be used in parallel processing 
+        Parameters
+        ----------
+        tp_count : int
+            Total number of patterns, at least ``num_proc``.
+        num_proc : int
+            Number of worker processes.
+        save_log : bool
+            Save the measures with ``save_stafan``.
         """
-        self._stafan_tp = tp_count
-        if verbose:
-            print('TEMP STAFAN measurements ' + 
-                  f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
-                  f' with {tp_count} tps on {num_proc} process(es) ...')
-
         if tp_count < num_proc:
-            raise ValueError("Total TPs should be higher than process numbers")
-        
-        start_time = time.time()
+            raise ValueError("The number of patterns must be at least the number of processes")
 
-        process_list = []
-        for id_proc in range(num_proc):
-            parent_conn, child_conn = Pipe()
-            p = Process(target = self.STAFAN_C_handler, 
-                    args =(child_conn, id_proc, tp_count//num_proc+1 , num_proc))
-            p.start()
-            process_list.append((p, parent_conn))
+        # every worker gets its own seed, otherwise forked workers would repeat patterns
+        seeds = [random.getrandbits(64) for _ in range(num_proc)]
+        shares = [tp_count // num_proc + (i < tp_count % num_proc) for i in range(num_proc)]
+        jobs = list(zip(shares, seeds, strict=True))
 
-        one_count_list = [0] * len(self.nodes_lev) 
-        zero_count_list = [0] * len(self.nodes_lev) 
-        sen_count_list = [0] *  len(self.nodes_lev)
-
-        for p, conn in process_list:
-            tup = conn.recv()
-            for i in range(len(tup[0])):
-                one_count_list[i] += tup[0][i]
-                zero_count_list[i] += tup[1][i]
-                sen_count_list[i] += tup[2][i]
-            p.join()
-        
-        for idx, node in enumerate(self.nodes_lev):
-            node.C1 = one_count_list[idx] / tp_count
-            node.C0 = zero_count_list[idx] / tp_count
-            node.S = sen_count_list[idx] / tp_count
-
-
-    def STAFAN(self, tp_count, num_proc=1, verbose=True, save_log=False):
-        """ 
-        Calculating STAFAN controllability and observability in parallel. 
-        Random TPs are generated within the method itself and are not stored. 
-        
-        Arguments:
-        ---------
-        total_tp : (int) total number of test pattern vectors (not less than num_proc)
-        num_proc : (int) number of processors that will be used in parallel processing 
-        """
-        self._stafan_tp = tp_count
-        if verbose:
-            print('\nCalculating STAFAN measurements (B0, B1, C0, C1) ' + 
-                  f'on {self.c_name} for all nodes ({len(self.nodes)}) ' + 
-                  f' with {tp_count} tps on {num_proc} process(es) ...')
-
-        if tp_count < num_proc:
-            raise ValueError("Total TPs should be higher than process numbers")
-        
-        start_time = time.time()
-
-        process_list = []
-        for id_proc in range(num_proc):
-            parent_conn, child_conn = Pipe()
-            p = Process(target = self.STAFAN_C_handler, 
-                    args =(child_conn, id_proc, tp_count//num_proc+1 , num_proc))
-            p.start()
-            process_list.append((p, parent_conn))
-
-        one_count_list = [0] * len(self.nodes_lev) 
-        zero_count_list = [0] * len(self.nodes_lev) 
-        sen_count_list = [0] *  len(self.nodes_lev)
-
-        for p, conn in process_list:
-            tup = conn.recv()
-            for i in range(len(tup[0])):
-                one_count_list[i] += tup[0][i]
-                zero_count_list[i] += tup[1][i]
-                sen_count_list[i] += tup[2][i]
-            p.join()
-        
-        for idx, node in enumerate(self.nodes_lev):
-            node.C1 = one_count_list[idx] / tp_count
-            node.C0 = zero_count_list[idx] / tp_count
-            node.S = sen_count_list[idx] / tp_count
-
-        if verbose: 
-            for node in self.nodes_lev:
-                if node.C0 == 0 or node.C1 == 0:
-                    print(f"Warning: node {node.num} controllability is zero")
-        try: 
-            self.STAFAN_B()
-        except ZeroDivisionError:
-            print("Node Ctrl is zero")
-            # pdb.set_trace() --> Take an action
-        
-        if verbose:
-            # print (f"Processor count: {num_proc}, TP-count: {total_tp}, Time: {duration:.2f} sec")
-            print(f"\nCalculations finished in {time.time() - start_time:.2f} sec.")
-        
-        self._stafan_executed = True
-        
-        if save_log:
-            self.save_STAFAN()
-    
-    def STAFAN_FC(self, tp):
-        """ Estimation of fault coverage for all faults 
-        All faults include all nodes, SS@0 and SS@1 
-        pd stands for probability of detection 
-        """
-        self._stafan_tp = tp
-        if not self._stafan_executed:
-            if 'y' in input('STAFAN is not calculated. Calculate it here (y/n)? '):
-                tp = int(input('Enter Number of test patterns: '))
-                self.STAFAN(tp)
-            else:
-                raise RuntimeError("STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs().")
-
-        nfc = 0
-        for node in self.nodes_lev:
-            if None in [node.C0,node.C1,node.B0,node.B1]:
-                raise RuntimeError("STAFAN is not calculated or loaded completely. First, call STAFAN() or load_TMs().")
-            nfc += math.exp(-1 * node.C1 * node.B1 * tp) 
-            nfc += math.exp(-1 * node.C0 * node.B0 * tp) 
-
-        return 1 - nfc/(2*len(self.nodes)) 
-
-    def save_STAFAN(self, fname=None, verbose=True):
-        path = os.path.join(config.STAFAN_DIR, self.c_name)
-        if not os.path.exists(path):
-            os.makedirs(path)
-        
-        if fname is None:
-            fname = paths.stafan_file(self.c_name, self._stafan_tp) 
+        if num_proc == 1 or "fork" not in multiprocessing.get_all_start_methods():
+            if num_proc > 1:
+                warnings.warn("Parallel STAFAN needs the 'fork' start method, running serially",
+                              RuntimeWarning, stacklevel=2)
+            results = [self._count_random_patterns(*job) for job in jobs]
         else:
-            fname = os.path.join(path, fname)
-        
+            with multiprocessing.get_context("fork").Pool(num_proc) as pool:
+                results = pool.starmap(self._count_random_patterns, jobs)
+
+        ones, zeros, sensitized = (
+            [sum(counts) for counts in zip(*lists, strict=True)]
+            for lists in zip(*results, strict=True))
+        self._set_stafan_c(ones, zeros, sensitized, tp_count)
+        self.stafan_b()
+        self._stafan_ready = True
+
+        if save_log:
+            self.save_stafan()
+
+    def stafan_fc(self, tp):
+        """Estimated fault coverage of ``tp`` random patterns, for all stuck-at faults.
+
+        Needs STAFAN measures, from ``stafan`` or ``load_stafan``.
+        """
+        if not self._stafan_ready or any(
+                None in (node.C0, node.C1, node.B0, node.B1) for node in self.nodes_lev):
+            raise RuntimeError("STAFAN is not calculated or loaded completely. "
+                               "First call stafan() or load_stafan().")
+        undetected = 0.0
+        for node in self.nodes_lev:
+            undetected += math.exp(-node.C1 * node.B1 * tp)
+            undetected += math.exp(-node.C0 * node.B0 * tp)
+        return 1 - undetected / (2 * len(self.nodes))
+
+    # ----------------------------------------------------------------- file I/O
+    def save_stafan(self, fname=None):
+        """Write the STAFAN measures of all nodes to a CSV file and return its name.
+
+        By default the file goes to ``config.STAFAN_DIR/<circuit>/`` and is named
+        after the number of patterns; a ``fname`` is taken relative to that directory.
+        """
+        directory = os.path.join(config.STAFAN_DIR, self.c_name)
+        if fname is None:
+            if self._stafan_tp_count is None:
+                raise RuntimeError("STAFAN is not calculated: nothing to save")
+            fname = paths.stafan_file(self.c_name, self._stafan_tp_count)
+        else:
+            fname = os.path.join(directory, fname)
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
+
         with open(fname, 'w') as outfile:
             outfile.write("Node,C0,C1,B0,B1,S\n")
             for node in self.nodes_lev:
-                ss = [f"{x:e}" for x in [node.C0, node.C1, node.B0, node.B1, node.S]]
-                outfile.write(",".join([node.num] + ss) + "\n")
-        if verbose:
-            print(f"Saved STAFAN test measuress in: {fname}")
+                values = [f"{x:e}" for x in (node.C0, node.C1, node.B0, node.B1, node.S)]
+                outfile.write(",".join([node.num] + values) + "\n")
+        return fname
 
-    def load_STAFAN(self, fname): # change name
-        lines = open(fname).readlines()[1:]
+    def load_stafan(self, fname):
+        """Read the measures from a file written by ``save_stafan``."""
+        with open(fname) as infile:
+            lines = infile.readlines()[1:]
         for line in lines:
             words = line.strip().split(",")
             node = self.nodes[words[0]]
-            node.C0 = float(words[1])  
-            node.C1 = float(words[2]) 
-            node.B0 = float(words[3]) 
-            node.B1 = float(words[4]) 
-            node.S  = float(words[5]) 
+            node.C0, node.C1, node.B0, node.B1, node.S = (float(x) for x in words[1:6])
+        self._stafan_ready = True
 
-        print("Loaded circuit STAFAN TMs from: " + fname)
-        self._stafan_executed = True
+    def save_scoap(self, fname=None):
+        """Write the SCOAP measures of all nodes to a CSV file and return its name.
 
-    ##### Entropy / OR not called anywhere
+        By default the file goes to ``config.SCOAP_DIR``.
+        """
+        if fname is None:
+            fname = os.path.join(config.SCOAP_DIR, f"{self.c_name}_scoap.txt")
+        os.makedirs(os.path.dirname(os.path.abspath(fname)), exist_ok=True)
+        with open(fname, "w") as outfile:
+            outfile.write("Node,CC0,CC1,CO\n")
+            for node in self.nodes_lev:
+                outfile.write(f"{node.num},{node.CC0},{node.CC1},{node.CO}\n")
+        return fname
 
-    def CALC_ENTROPY(self):
-        for node in self.nodes_lev:
-            node.Entropy = -((node.C1*math.log(node.C1, 2.0)) + 
-                    (node.C0*math.log(node.C0, 2.0)))
-
-    def co_ob_info(self):
+    def print_measures(self):
+        """Print a table of the measures of all nodes."""
         print("\t".join(self.nodes_lev[0].print_info(get_labels=True)))
         for node in self.nodes_lev:
             node.print_info(print_labels=False)
-    
-    def CALC_TPI(self, num_TPI, fname):
-        TPI_list = [] #list of node entropy 
-        for node in self.nodes_lev:
-            node_list = [node.num, node.Entropy]
-            if '-' not in node.num:
-                TPI_list.append(node_list)
-            #print(TPI_list)
-        TPI_list.sort(key = lambda x: x[1])
-        print(TPI_list)
-        TPI_list = TPI_list[:num_TPI]
-        print(TPI_list)
-        
-        if not os.path.exists('../data/stafan-data'):
-            os.makedirs('../data/stafan-data')
-        outfile = open(fname, "w")
-        for item in TPI_list: 
-            outfile.write(item[0] + "\n")
-        outfile.close()
 
-    def TPI_stat(self, HTO_th, HTC_th):
-        """ Categorization of nodes based on STAFAN's measurement into 4 groups:
-        ETD: easy to detect 
-        HTC: hard to control, but easy to observe 
-        HTO: hard to observe, but easy to control 
-        HTD: hard to control, hard to observe
+    # ------------------------------------------------------------------- graphs
+    def gen_graph(self):
+        """Directed graph of the circuit with the measures as node attributes.
+
+        Besides the attributes of ``Circuit.gen_graph`` (``lev``, ``gtype``,
+        ``ntype``), each node has the SCOAP measures ``CC0``, ``CC1``, ``CO``,
+        the STAFAN measures ``C0``, ``C1``, ``S``, ``B0``, ``B1``, and, if known
+        from PPSF-CI, the detection probabilities ``DP0`` and ``DP1``.
         """
+        graph = super().gen_graph()
         for node in self.nodes_lev:
-            if (node.B0 >= HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "ETD"
-            elif (node.B0 >= HTO_th) and (node.C0 < HTC_th):
-                node.stat["SS@1"] = "HTC"
-            elif (node.B0 < HTO_th) and (node.C0 >= HTC_th):
-                node.stat["SS@1"] = "HTO"
-            else: 
-                node.stat["SS@1"] = "HTD"
-
-            if (node.B1 >= HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "ETD"
-            elif (node.B1 >= HTO_th) and (node.C1 < HTC_th):
-                node.stat["SS@0"] = "HTC"
-            elif (node.B1 < HTO_th) and (node.C1 >= HTC_th):
-                node.stat["SS@0"] = "HTO"
-            else:
-                node.stat["SS@0"] = "HTD"
-    
-    def NVIDIA_count(self, op, HTO_th, HTC_th):
-        """ count the number of nodes that change from HTO to ETO 
-        by making node an observation point """ 
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_old = set()
-        for node in self.nodes_lev: 
-            if (node.stat["SS@0"] == "HTO") or (node.stat["SS@1"] == "HTO"):
-                HTO_old.add(node.num)
-        orig_ntype = op.ntype
-        self.outputs.append(op)
-        op.ntype = "PO"
-        self.STAFAN_B()
-        self.TPI_stat(HTO_th=HTO_th, HTC_th=HTC_th)
-        HTO_new = set()
-        count = 0
-        for node in self.nodes_lev:
-            if node.num in HTO_old:
-                if (node.stat["SS@0"] != "HTO") and (node.stat["SS@1"] != "HTO"):
-                    # print("\t{} was HTO, but now became ETO".format(node.num))
-                    count = count + 1
-        op.ntype = orig_ntype
-        self.outputs = self.outputs[:-1]
-        return count
-    
-    def save_scoap(self, fname=None):
-        if fname is None:
-            path = config.SCOAP_DIR
-            if not os.path.exists(path):
-                os.makedirs(path)
-            fname = os.path.join(path, f"{self.c_name}_scoap.txt")
-        with open(fname, "w") as outfile:
-            outfile.write("CC0,CC1,CO\n")
-            for node in self.nodes_lev:
-                outfile.write(f"{node.CC0},{node.CC1},{node.CO}\n")
-        print(f"SCOAP metrics saved in {fname}")
-
-    
-    def gen_graph(self, fname=None):
-        """
-        Generate directed graph of the circuit 
-        Each node has attributes: 
-            basic: lev, gtype, ntype
-            SCOAP: CC0, CC1, CO
-            STAFAN: C0, C1, S, B0, B1
-            Detection probability (by PPSF-CI): DP0, DP1
-        """
-
-        G = nx.DiGraph()
-        for n in self.nodes_lev:
-            n_num_normal = n.num
-            G.add_node(n_num_normal)
-            G.nodes[n_num_normal]['lev'] = n.lev
-            G.nodes[n_num_normal]['gtype'] = n.gtype
-            G.nodes[n_num_normal]['ntype'] = n.ntype
-            G.nodes[n_num_normal]['CC0'] = n.CC0
-            G.nodes[n_num_normal]['CC1'] = n.CC1
-            G.nodes[n_num_normal]['CO'] = n.CO
-            G.nodes[n_num_normal]['C0'] = n.C0
-            G.nodes[n_num_normal]['C1'] = n.C1
-            G.nodes[n_num_normal]['S'] = n.S
-            G.nodes[n_num_normal]['B0'] = n.B0
-            G.nodes[n_num_normal]['B1'] = n.B1
-            if "DP0" in n.stat:
-                G.nodes[n_num_normal]['DP0'] = n.stat["DP0"]
-                G.nodes[n_num_normal]['DP1'] = n.stat["DP1"]
-            if n.gtype != 'IPT':
-                for unode in n.unodes:
-                    G.add_edge(unode.num, n_num_normal)
-            else:
-                pass
-
-        if fname is not None:
-            nx.write_gml(G, fname)
-            print(f"Saved graph with testability features in: {fname}")
-
-        return G
-
-    def load_graph(self, fname):
-        #TODO: needs to load the info into circuit features
-        graph = nx.read_gml(fname)
-        print(f"Loaded graph with testability features from: {fname}")
+            attrs = graph.nodes[node.num]
+            for name in ("CC0", "CC1", "CO", "C0", "C1", "S", "B0", "B1"):
+                attrs[name] = getattr(node, name)
+            if "DP0" in node.stat:
+                attrs["DP0"] = node.stat["DP0"]
+                attrs["DP1"] = node.stat["DP1"]
         return graph
+
+    def write_graph(self, fname):
+        """Write ``gen_graph()`` in GML format."""
+        nx.write_gml(self.gen_graph(), fname)
+
+    @staticmethod
+    def read_graph(fname):
+        """Read a graph written by ``write_graph``."""
+        return nx.read_gml(fname)

@@ -33,8 +33,8 @@ def test_matches_golden_baseline(name):
 
     assert [[int(v) for v in circuit.logic_sim(tp)] for tp in tps] == expected["logic_sim"]
 
-    circuit.SCOAP_CC()
-    circuit.SCOAP_CO()
+    circuit.scoap_cc()
+    circuit.scoap_co()
     scoap = {str(n.num): [n.CC0, n.CC1, n.CO] for n in circuit.nodes_lev}
     assert scoap == expected["scoap"]
 
