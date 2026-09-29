@@ -93,7 +93,7 @@ def test_pfs_detects_exactly_the_oracle_faults_for_every_pattern():
 def test_pfs_run_counts_detections_like_the_oracle():
     circuit = DFTCircuit(C17)
     faults = FaultList(circuit, fault_count="all")
-    fc, detected = PFS(circuit).run(PATTERNS, faults=faults, save_log=False)
+    fc, detected = PFS(circuit).run(PATTERNS, faults=faults, log_dir=None)
     assert faults.get_D_count() == oracle_detection_counts(PATTERNS)
     assert fc[-1] == 1.0
     assert sorted(str(f) for f in detected) == sorted(f"{n}@{s}" for n, s in ALL_FAULTS)
@@ -103,7 +103,7 @@ def test_pfs_fault_coverage_curve_is_the_oracle_curve():
     circuit = DFTCircuit(C17)
     random.seed(6)
     tps = [PATTERNS[i] for i in random.sample(range(32), 12)]
-    fc, _ = PFS(circuit).run(tps, faults="all", save_log=False)
+    fc, _ = PFS(circuit).run(tps, faults="all", log_dir=None)
     seen = set()
     expected = []
     for p in tps:
@@ -115,8 +115,8 @@ def test_pfs_fault_coverage_curve_is_the_oracle_curve():
 def test_pfs_fault_dropping_does_not_change_the_coverage_curve():
     circuit = DFTCircuit(C17)
     tps = PATTERNS[:20]
-    plain, _ = PFS(circuit).run(tps, faults="all", save_log=False)
-    dropped, _ = PFS(circuit).run(tps, faults="all", fault_drop=1, save_log=False)
+    plain, _ = PFS(circuit).run(tps, faults="all", log_dir=None)
+    dropped, _ = PFS(circuit).run(tps, faults="all", fault_drop=1, log_dir=None)
     assert dropped == pytest.approx(plain)
 
 
@@ -159,7 +159,7 @@ def test_pfs_and_ppsf_agree_on_c432():
     random.seed(12)
     tps = [[random.randint(0, 1) for _ in circuit.inputs] for _ in range(70)]
     pfs_faults = FaultList(circuit, fault_count="all")
-    PFS(circuit).run(tps, faults=pfs_faults, save_log=False)
+    PFS(circuit).run(tps, faults=pfs_faults, log_dir=None)
     ppsf_faults = FaultList(circuit, fault_count="all")
     PPSF(circuit).run(tps, faults=ppsf_faults)
     assert pfs_faults.get_D_count() == ppsf_faults.get_D_count()

@@ -38,6 +38,6 @@ def test_matches_golden_baseline(name):
     scoap = {str(n.num): [n.CC0, n.CC1, n.CO] for n in circuit.nodes_lev}
     assert scoap == expected["scoap"]
 
-    fc, detected = PFS(circuit).run(tps, faults="all", save_log=False)
+    fc, detected = PFS(circuit).run(tps, faults="all", log_dir=None)
     assert float(fc[-1]) == pytest.approx(expected["pfs_fc"])
     assert sorted(str(f) for f in detected) == expected["pfs_detected"]

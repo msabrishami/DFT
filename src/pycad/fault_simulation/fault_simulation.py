@@ -1,78 +1,88 @@
-import math
+"""Common parts of the fault simulators."""
 import os
-import sys
 from abc import ABC, abstractmethod
 
-from pycad import config
-from pycad.fault_simulation import fault
+from pycad.fault_simulation.fault import FaultList
+from pycad.node.node import Node
+from pycad.tp_generator import TPGenerator
 
 
 class FaultSim(ABC):
-    wordlen = int(math.log2(sys.maxsize))+1 # move to utils
-    bitwise_not = 2**wordlen-1
+    """Base class of the stuck-at fault simulators.
 
-    def __init__(self, circuit, faults=None): #TODO: rename fault mode
-        """
-        Parameters
-        ----------
-        fault_mode : int or FaultList or str
-            str: all: add all possible faults
-            None: None
-            integer: add n random faults
-            FaultList: user has passed the desired faults
-        """
+    Parameters
+    ----------
+    circuit : DFTCircuit
+        The circuit to simulate.
+    faults : FaultList, int, str or None
+        Faults to simulate, see ``resolve_faults``. ``None`` starts with an empty list.
+
+    Attributes
+    ----------
+    wordlen : int
+        Number of bits of the integers used for bit-parallel simulation.
+    fault_list : FaultList
+        The faults simulated by default.
+    """
+
+    wordlen = Node.bitlen
+    bitwise_not = Node.bitwise_not
+
+    def __init__(self, circuit, faults=None):
         self.circuit = circuit
+        self.fault_list = FaultList(circuit) if faults is None else self.resolve_faults(faults)
 
-        if not isinstance(faults, fault.FaultList):
-            self.fault_list = fault.FaultList(circuit)
-        else:
-            self.fault_list = faults
+    def resolve_faults(self, faults):
+        """Turn a description of faults into a FaultList.
 
-        self.fs_type = ""
-        self.fault_set_all = set()
-        for node in self.circuit.nodes_lev:
-            self.fault_set_all.add((node.num, 0))
-            self.fault_set_all.add((node.num, 1))
-        self.fault_set_rest = self.fault_set_all
+        ``faults`` is
 
-        if faults == 'all':
-            self.add_all()
-
-        if isinstance(faults, int):
-            self.add_n_random(faults)
-
-    def add_n_random(self, n=1):
-        self.fault_list.add_n_random(n)
-
-    def add_all(self):
-        self.fault_list.add_all()
-
-    def fs_folder(self):
+        * a ``FaultList``: used as it is,
+        * ``'all'``: both stuck-at faults of every node,
+        * an ``int``: that many different random faults,
+        * a ``str``: the name of a fault file (``<node>@<value>`` per line),
+        * a list of ``<node>@<value>`` strings,
+        * ``None``: the simulator's own fault list, or all faults if that is empty.
         """
-        Creating the required directories for fault simulation
-        """
-        paths = [config.FAULT_SIM_DIR, config.FAULT_SIM_DIR + '/' + self.circuit.c_name]
+        if isinstance(faults, FaultList):
+            return faults
+        if faults is None:
+            if len(self.fault_list) > 0:
+                return self.fault_list
+            return FaultList(self.circuit, fault_count="all")
+        if faults == 'all' or isinstance(faults, int):
+            return FaultList(self.circuit, fault_count=faults)
+        if isinstance(faults, str):
+            return FaultList(fname=faults)
+        if isinstance(faults, list):
+            fault_list = FaultList(self.circuit)
+            fault_list.add_str_list(faults)
+            return fault_list
+        raise TypeError(f"Cannot make a fault list from {faults!r}")
 
-        for path in paths:
-            if not os.path.exists(path):
-                print(f"Creating directory {path}")
-                os.makedirs(path)
+    def resolve_patterns(self, tps):
+        """Turn a pattern count, a pattern file name or a list of patterns into a list."""
+        if isinstance(tps, int):
+            return TPGenerator(self.circuit).gen_n_random(tps)
+        if isinstance(tps, str):
+            return TPGenerator.load_file(tps)
+        if isinstance(tps, list):
+            return tps
+        raise TypeError("tps should be a pattern count, a file name or a list of patterns")
 
-    # def single(self): -->renamed
-    #     """ Single pass of simulation. 
-    #     DFS/PFSP: single test pattern
-    #     PPSF: single fault
-    #     """
-    #     raise NotImplementedError()
+    def check_pattern(self, tp):
+        """Raise ValueError unless ``tp`` is a binary pattern with one value per input."""
+        if len(tp) != len(self.circuit.inputs):
+            raise ValueError(f"The pattern has {len(tp)} values but the circuit has "
+                             f"{len(self.circuit.inputs)} inputs")
+        if any(value not in (0, 1) for value in tp):
+            raise ValueError("Fault simulation needs binary patterns without X")
 
-    # def fs_for_atpg(self):
-    #     """ DFS/PFS for ATPG use """
-    #     raise NotImplementedError()
+    def log_path(self, log_dir, name):
+        """Path of a log file inside ``log_dir``, creating the directory."""
+        os.makedirs(log_dir, exist_ok=True)
+        return os.path.join(log_dir, name)
 
     @abstractmethod
-    def run(self, tp_num=1, t_mode='rand', r_mode='b'):
-        """ Defined in children: DFS, PFS """
-        pass
-
-    def return_rest_fault(self):  # seems redundant
-        return self.fault_set_rest
+    def run(self, tps, faults=None, **kwargs):
+        """Simulate the patterns ``tps`` for the faults and update their ``D_count``."""
