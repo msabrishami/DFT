@@ -1,6 +1,5 @@
 """A circuit with the testability measures SCOAP and STAFAN."""
 import math
-import multiprocessing
 import os
 import random
 import warnings
@@ -10,6 +9,7 @@ import networkx as nx
 from pycad import config, paths
 from pycad.circuit.circuit import Circuit
 from pycad.node import dft_node
+from pycad.parallel import parallel_map
 from pycad.tp_generator import TPGenerator
 
 
@@ -120,22 +120,36 @@ class DFTCircuit(Circuit):
 
         Needs ``stafan_c`` first.
 
+        A node whose controllability is zero gets an approximate observability, reported
+        in one ``RuntimeWarning``.
+
         Raises
         ------
         ValueError
             If the observability of a node is undefined because controllabilities are zero.
         """
-        for node in reversed(self.nodes_lev):
-            if node.ntype == "PO":
-                node.B0 = 1.0
-                node.B1 = 1.0
-            node.stafan_b()
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", RuntimeWarning)
+            for node in reversed(self.nodes_lev):
+                if node.ntype == "PO":
+                    node.B0 = 1.0
+                    node.B1 = 1.0
+                node.stafan_b()
+
+        approximated = [w for w in caught if "approximating" in str(w.message)]
+        for w in caught:
+            if w not in approximated:
+                warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+        if approximated:
+            warnings.warn(f"The observability of {len(approximated)} nodes was approximated "
+                          "because their controllability is zero; use more test patterns",
+                          RuntimeWarning, stacklevel=2)
 
     def stafan(self, tp_count, num_proc=1, save_log=False):
         """STAFAN controllability and observability with ``tp_count`` random patterns.
 
         The patterns are generated here and not stored. With ``num_proc`` > 1 the
-        patterns are split over processes (where the ``fork`` start method exists).
+        patterns are split over processes (see :mod:`pycad.parallel`).
         The result depends on the state of the global ``random`` generator, so
         ``random.seed`` makes it reproducible for a fixed ``num_proc``.
 
@@ -156,14 +170,7 @@ class DFTCircuit(Circuit):
         shares = [tp_count // num_proc + (i < tp_count % num_proc) for i in range(num_proc)]
         jobs = list(zip(shares, seeds, strict=True))
 
-        if num_proc == 1 or "fork" not in multiprocessing.get_all_start_methods():
-            if num_proc > 1:
-                warnings.warn("Parallel STAFAN needs the 'fork' start method, running serially",
-                              RuntimeWarning, stacklevel=2)
-            results = [self._count_random_patterns(*job) for job in jobs]
-        else:
-            with multiprocessing.get_context("fork").Pool(num_proc) as pool:
-                results = pool.starmap(self._count_random_patterns, jobs)
+        results = parallel_map(self, "_count_random_patterns", jobs, num_proc)
 
         ones, zeros, sensitized = (
             [sum(counts) for counts in zip(*lists, strict=True)]

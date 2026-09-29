@@ -244,3 +244,13 @@ def test_print_measures(c17, capsys):
     lines = capsys.readouterr().out.splitlines()
     assert lines[0].split("\t")[:3] == ["N", "LEV", "GATE"]
     assert len(lines) == 1 + len(c17.nodes)
+
+
+@pytest.mark.skipif("fork" not in multiprocessing.get_all_start_methods(),
+                    reason="parallel STAFAN needs the fork start method")
+def test_parallel_stafan_on_a_circuit_too_deep_to_pickle():
+    random.seed(1)
+    circuit = DFTCircuit(os.path.join(config.CKT_DIR, "c6288.ckt"))
+    with pytest.warns(RuntimeWarning, match="approximated"):
+        circuit.stafan(60, num_proc=2)
+    assert all(n.one_count + n.zero_count == 60 for n in circuit.nodes_lev)
