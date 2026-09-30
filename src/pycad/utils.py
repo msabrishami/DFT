@@ -1,33 +1,7 @@
-"""Small helpers shared by the simulators: bit-vector comparison and fan-in cones."""
+"""Small helpers for working with nodes: cell names and fan-in cones."""
 from collections import deque
 
 import numpy as np
-
-
-def comp_Zg_Zf_bin(Zg, Zf, bitwidth):
-    """Compare good and faulty outputs of a bit-parallel simulation.
-
-    Parameters
-    ----------
-    Zg, Zf : dict
-        Output node number -> integer whose bits are the output values of the
-        good circuit and of the faulty circuit, one bit per test pattern.
-    bitwidth : int
-        Number of test patterns packed in each integer.
-
-    Returns
-    -------
-    set of int
-        Indices of the test patterns for which at least one output differs.
-    """
-    tps = set()
-    for k in Zg:
-        val_g = bin(Zg[k])[2:][-bitwidth:].zfill(bitwidth)
-        val_f = bin(Zf[k])[2:][-bitwidth:].zfill(bitwidth)
-        for j in range(len(val_g)):
-            if val_g[j] != val_f[j]:
-                tps.add(j)
-    return tps
 
 
 def get_node_gtype_fin(node):
