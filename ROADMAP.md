@@ -5,16 +5,11 @@ Open work items for PyCAD, roughly in priority order.
 ## Package
 - [ ] Fix the SSTA module: `circuit_ssta.py` imports `pycad.utils` but needs the functions in
       `pycad.ssta.utils_ssta`, and `cycle`, `margin` and `cuts` are undefined names.
-- [ ] Fix deductive fault simulation (`pycad.fault_simulation.deductive_fs`): the DFT node
-      classes have no `dfs()` method, so `DFS.single()` raises `AttributeError`.
 - [ ] Port the best D-algorithm / PODEM / ATPG implementation from `legacy/inventory` into
       the package, with tests (several near-duplicate versions exist there).
 - [ ] Revive observation point insertion (`legacy/tpi`). It currently depends on
       `legacy/experiments` (`pd_ppsf`), which in turn imports `tpi`.
 - [ ] Replace the entry-point scripts in `legacy/scripts` with a documented `pycad` CLI.
-- [ ] Remove debugging hooks (`import IPython`, `pdb`) from `pycad.node`.
-- [ ] Stop fault simulators creating `data/fault_sim/<circuit>` directories as a side effect
-      of construction.
 - [ ] Add type hints and docstrings to the public API; add linting (ruff) to CI.
 - [ ] Decide what to do with the SSTA module (needs the `gekko` extra).
 
