@@ -163,3 +163,199 @@ def test_pfs_and_ppsf_agree_on_c432():
     ppsf_faults = FaultList(circuit, fault_count="all")
     PPSF(circuit).run(tps, faults=ppsf_faults)
     assert pfs_faults.get_D_count() == ppsf_faults.get_D_count()
+
+
+# --------------------------------------------------- behavior around the simulators
+def test_constructing_a_simulator_creates_no_directories(tmp_path):
+    circuit = DFTCircuit(C17)
+    PFS(circuit)
+    PPSF(circuit)
+    assert not (tmp_path / "fault_sim").exists()
+
+
+def test_running_without_log_dir_writes_nothing(tmp_path):
+    circuit = DFTCircuit(C17)
+    PFS(circuit).run(PATTERNS, faults="all")
+    PPSF(circuit).run(PATTERNS, faults="all")
+    assert not (tmp_path / "fault_sim").exists()
+
+
+def test_pfs_logs_are_written_to_the_given_directory(tmp_path):
+    circuit = DFTCircuit(C17)
+    log_dir = tmp_path / "logs"
+    PFS(circuit).run(PATTERNS[:4], faults="all", log_dir=str(log_dir))
+    names = sorted(p.name for p in log_dir.iterdir())
+    assert names == ["c17-pfs-tp4-f34.log", "c17-pfs-tpfc-tp4-f34.log"]
+    text = (log_dir / names[0]).read_text()
+    assert "Detected" in text and text.rstrip().endswith("%")
+
+
+def test_ppsf_log(tmp_path):
+    circuit = DFTCircuit(C17)
+    PPSF(circuit).run(PATTERNS, faults="all", log_dir=str(tmp_path))
+    lines = (tmp_path / "c17_PPSF_f34_tp32.ppsf").read_text().splitlines()
+    assert lines[0] == "#TP=32"
+    assert len(lines) == 1 + 34 + 1
+    assert lines[-1] == "Fault Coverage = 100.0000%"
+
+
+def test_faults_can_be_given_in_every_supported_form(tmp_path):
+    circuit = DFTCircuit(C17)
+    sim = PFS(circuit)
+    assert len(sim.resolve_faults("all")) == 34
+    assert len(sim.resolve_faults(7)) == 7
+    assert [str(f) for f in sim.resolve_faults(["3@1", "22@0"])] == ["3@1", "22@0"]
+    fault_file = tmp_path / "faults.txt"
+    fault_file.write_text("10@0\n11@1\n")
+    assert [str(f) for f in sim.resolve_faults(str(fault_file))] == ["10@0", "11@1"]
+    own = FaultList(circuit, fault_count=3)
+    assert sim.resolve_faults(own) is own
+    with pytest.raises(TypeError):
+        sim.resolve_faults(2.5)
+
+
+def test_without_faults_the_simulator_uses_its_list_or_all_faults():
+    circuit = DFTCircuit(C17)
+    sim = PFS(circuit)
+    assert len(sim.resolve_faults(None)) == 34
+    sim.fault_list = FaultList(circuit, fault_count=5)
+    assert sim.resolve_faults(None) is sim.fault_list
+    assert len(PFS(circuit, faults=4).fault_list) == 4
+
+
+def test_run_resets_detection_counts():
+    circuit = DFTCircuit(C17)
+    faults = FaultList(circuit, fault_count="all")
+    sim = PFS(circuit)
+    sim.run(PATTERNS, faults=faults)
+    first = faults.get_D_count()
+    sim.run(PATTERNS, faults=faults)
+    assert faults.get_D_count() == first
+
+
+def test_fault_dropping_limits_the_detection_count():
+    circuit = DFTCircuit(C17)
+    faults = FaultList(circuit, fault_count="all")
+    PFS(circuit).run(PATTERNS, faults=faults, fault_drop=2)
+    assert max(faults.get_D_count().values()) == 2
+
+
+@pytest.mark.parametrize("sim_class", [PFS, PPSF])
+def test_patterns_are_validated(sim_class):
+    circuit = DFTCircuit(C17)
+    with pytest.raises(ValueError, match="5 inputs"):
+        sim_class(circuit).run([[0, 1]], faults="all")
+    with pytest.raises(ValueError, match="binary"):
+        sim_class(circuit).run([[0, 1, "X", 0, 1]], faults="all")
+    with pytest.raises(TypeError):
+        sim_class(circuit).run(1.5, faults="all")
+
+
+def test_ppsf_without_faults_is_an_error():
+    circuit = DFTCircuit(C17)
+    with pytest.raises(ValueError, match="No fault"):
+        PPSF(circuit).run(PATTERNS, faults=FaultList(circuit))
+
+
+def test_ppsf_single_pass_returns_pattern_indices():
+    circuit = DFTCircuit(C17)
+    tps = PATTERNS[:10]
+    fault = FaultList(circuit, nodes=[circuit.nodes["16"]]).faults[0]
+    expected = {j for j, p in enumerate(tps) if oracle_detects(p, fault.node_num, int(fault.stuck_val))}
+    assert PPSF(circuit)._one_fault_run(tps, fault) == expected
+    with pytest.raises(ValueError, match="64"):
+        PPSF(circuit)._one_fault_run(PATTERNS * 3, fault)
+
+
+def test_random_pattern_count_and_pattern_file_inputs(tmp_path):
+    circuit = DFTCircuit(C17)
+    pattern_file = tmp_path / "tps.tp"
+    pattern_file.write_text("1,2,3,6,7\n" + "\n".join(",".join(map(str, p)) for p in PATTERNS))
+    fc_file, _ = PFS(circuit).run(str(pattern_file), faults="all")
+    fc_list, _ = PFS(circuit).run(PATTERNS, faults="all")
+    assert fc_file == fc_list
+    random.seed(3)
+    fc_random, _ = PFS(circuit).run(40, faults="all")
+    assert len(fc_random) == 40 and fc_random == sorted(fc_random)
+
+
+# ------------------------------------------------------------ confidence intervals
+def test_run_ci_estimates_the_true_detection_probabilities():
+    circuit = DFTCircuit(C17)
+    exact = {k: v / 32 for k, v in oracle_detection_counts(PATTERNS).items()}
+    random.seed(2)
+    estimates = PPSF(circuit).run_ci([2000, 2000, 4000], faults="all", num_proc=4, ci=5)
+    assert set(estimates) == set(exact)
+    for fault, est in estimates.items():
+        assert est.mu == pytest.approx(exact[fault], abs=0.04), fault
+        assert est.converged and est.tp_count in (2000, 4000, 8000)
+        assert sum(est.counts) / (est.tp_count * 4) == pytest.approx(est.mu)
+
+
+def test_run_ci_is_reproducible_with_the_seed():
+    circuit = DFTCircuit(C17)
+
+    def run():
+        random.seed(5)
+        return PPSF(circuit).run_ci([200, 200], faults="all", num_proc=2)
+
+    assert run() == run()
+
+
+def test_run_ci_processes_use_different_patterns():
+    circuit = DFTCircuit(C17)
+    random.seed(1)
+    estimates = PPSF(circuit).run_ci([300], faults="all", num_proc=3, ci=1000)
+    assert any(len(set(est.counts)) > 1 for est in estimates.values())
+
+
+def test_run_ci_never_detected_faults_stay_unconverged():
+    circuit = DFTCircuit(C17)
+    for seed in range(100):  # find a seed whose single pattern misses the fault
+        random.seed(seed)
+        est = PPSF(circuit).run_ci([1], faults=["22@0"], num_proc=1, ci=1000)["22@0"]
+        if est.mu == 0:
+            break
+    assert est.mu == 0, "no seed gave a pattern that misses 22@0"
+    assert not est.converged and est.e_rel == float("inf")
+    assert est.counts == (0,) and est.tp_count == 1
+
+
+def test_run_ci_advanced_mode_needs_a_small_relative_error():
+    circuit = DFTCircuit(C17)
+    random.seed(3)
+    loose = PPSF(circuit).run_ci([500, 500], faults=["10@0"], num_proc=2, ci=1, mode="advanced",
+                                 moe=10)
+    random.seed(3)
+    tight = PPSF(circuit).run_ci([500, 500], faults=["10@0"], num_proc=2, ci=1, mode="advanced",
+                                 moe=1e-9)
+    assert loose["10@0"].converged and not tight["10@0"].converged
+    with pytest.raises(ValueError, match="mode"):
+        PPSF(circuit).run_ci([10], faults="all", mode="fancy")
+
+
+def test_run_ci_log_round_trips_into_the_nodes(tmp_path):
+    circuit = DFTCircuit(C17)
+    random.seed(7)
+    log = str(tmp_path / "ci.ppsf")
+    estimates = PPSF(circuit).run_ci([400, 400], faults="all", num_proc=2, ci=2, log_fname=log)
+    text = open(log).read()
+    assert text.startswith("#TP=400\n") and "### RUNTIME LOG ###" in text
+
+    fresh = DFTCircuit(C17)
+    probabilities = PPSF(fresh).load_detection_probabilities(log)
+    assert set(probabilities) == set(estimates)
+    for fault, est in estimates.items():
+        assert probabilities[fault] == pytest.approx(est.mu, rel=1e-3)
+    assert fresh.nodes["10"].stat["DP0"] == pytest.approx(probabilities["10@0"])
+    assert fresh.nodes["10"].stat["DP1"] == pytest.approx(probabilities["10@1"])
+
+
+def test_run_ci_for_the_faults_in_the_fan_in_cone_of_a_node():
+    from pycad import utils
+    circuit = DFTCircuit(C17)
+    cone = utils.get_fanin_BFS(circuit, circuit.nodes["22"], 1)
+    faults = FaultList(nodes=cone)
+    random.seed(1)
+    estimates = PPSF(circuit).run_ci([300], faults=faults, num_proc=2)
+    assert {k.split("@")[0] for k in estimates} == {n.num for n in cone}
