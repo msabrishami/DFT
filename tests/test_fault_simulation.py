@@ -13,6 +13,7 @@ import pytest
 from pycad import config
 from pycad.circuit.circuit import Circuit
 from pycad.circuit.dft_circuit import DFTCircuit
+from pycad.fault_simulation.deductive_fs import DFS
 from pycad.fault_simulation.fault import FaultList
 from pycad.fault_simulation.pfs import PFS
 from pycad.fault_simulation.ppsf import PPSF
@@ -359,3 +360,53 @@ def test_run_ci_for_the_faults_in_the_fan_in_cone_of_a_node():
     random.seed(1)
     estimates = PPSF(circuit).run_ci([300], faults=faults, num_proc=2)
     assert {k.split("@")[0] for k in estimates} == {n.num for n in cone}
+
+
+# ------------------------------------------------------------------------ DFS
+def test_dfs_detects_exactly_the_oracle_faults_for_every_pattern():
+    circuit = Circuit(C17)  # a plain circuit is enough
+    dfs = DFS(circuit)
+    for pattern in PATTERNS:
+        expected = {f"{n}@{s}" for n, s in ALL_FAULTS if oracle_detects(pattern, n, s)}
+        assert dfs.single(pattern) == expected, pattern
+
+
+def test_dfs_run_matches_the_oracle_counts():
+    circuit = Circuit(C17)
+    faults = FaultList(circuit, fault_count="all")
+    fc, detected = DFS(circuit).run(PATTERNS, faults=faults)
+    assert faults.get_D_count() == oracle_detection_counts(PATTERNS)
+    assert fc[-1] == 1.0 and len(detected) == 34
+
+
+@pytest.mark.parametrize("name", ["c17", "add2", "FA", "FA_NAND", "cmini", "x3mult", "c432", "c499"])
+def test_dfs_agrees_with_pfs(name):
+    """Two different algorithms, same detected faults (the circuits include XOR gates)."""
+    circuit = DFTCircuit(os.path.join(config.CKT_DIR, f"{name}.ckt"))
+    rng = random.Random(31)
+    tps = [[rng.randint(0, 1) for _ in circuit.inputs] for _ in range(25)]
+    pfs_faults = FaultList(circuit, fault_count="all")
+    dfs_faults = FaultList(circuit, fault_count="all")
+    pfs_fc, _ = PFS(circuit).run(tps, faults=pfs_faults)
+    dfs_fc, _ = DFS(circuit).run(tps, faults=dfs_faults)
+    assert dfs_faults.get_D_count() == pfs_faults.get_D_count()
+    assert dfs_fc == pytest.approx(pfs_fc)
+
+
+def test_dfs_reports_only_the_requested_faults():
+    circuit = Circuit(C17)
+    fc, detected = DFS(circuit).run(PATTERNS, faults=["10@0", "22@1"])
+    assert sorted(str(f) for f in detected) == ["10@0", "22@1"]
+    assert fc[-1] == 1.0
+
+
+def test_dfs_log(tmp_path):
+    circuit = Circuit(C17)
+    DFS(circuit).run(PATTERNS[:3], faults="all", log_dir=str(tmp_path))
+    lines = (tmp_path / "c17-dfs-tp3-f34.log").read_text().splitlines()
+    assert len(lines) == 3 and lines[0].startswith("    0 \t FC=")
+
+
+def test_dfs_rejects_bad_patterns():
+    with pytest.raises(ValueError):
+        DFS(Circuit(C17)).single([1, 0])
