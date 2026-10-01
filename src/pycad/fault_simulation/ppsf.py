@@ -1,5 +1,6 @@
 """Parallel-pattern single-fault simulation (PPSF): one fault, many patterns at a time."""
 import math
+import os
 import random
 import time
 from typing import NamedTuple
@@ -144,7 +145,7 @@ class PPSF(FaultSim):
         tps = TPGenerator(self.circuit, rng=random.Random(seed)).gen_n_random(tp_count)
         return self._count_detections(tps, [Fault(num, val) for num, val in sites])
 
-    def run_ci(self, tp_steps, faults=None, num_proc=1, ci=1, mode="basic", moe=0.1,
+    def run_ci(self, tp_steps, faults=None, num_proc=2, ci=1, mode="basic", moe=0.1,
                log_fname=None):
         """Estimate detection probabilities of faults with random patterns, step by step.
 
@@ -153,8 +154,9 @@ class PPSF(FaultSim):
         counts the detections of each fault. A fault is *finished* once the
         counts of the processes agree well enough, i.e. when ``mu / std > ci``
         (and, in the ``advanced`` mode, also the relative error is below ``moe``),
-        or when all processes counted the same. Finished faults are not simulated
-        in the following steps.
+        or when every pattern detected the fault. If all processes counted the same
+        but not every pattern detected the fault, no spread can be estimated and the
+        fault stays unfinished. Finished faults are not simulated in the following steps.
 
         Parameters
         ----------
@@ -163,7 +165,8 @@ class PPSF(FaultSim):
         faults : FaultList, int, str, list or None
             The faults to estimate, see ``FaultSim.resolve_faults``.
         num_proc : int
-            Number of processes, i.e. of independent observations per fault.
+            Number of processes, i.e. of independent observations per fault. At
+            least 2, because the spread of the counts is part of the stopping rule.
         ci : float
             Confidence factor of the stopping rule.
         mode : {'basic', 'advanced'}
@@ -182,6 +185,8 @@ class PPSF(FaultSim):
         """
         if mode not in CI_MODES:
             raise ValueError(f"mode must be one of {CI_MODES}, not {mode!r}")
+        if num_proc < 2:
+            raise ValueError("run_ci needs at least 2 processes to estimate a spread")
         fault_list = self.resolve_faults(faults)
         if len(fault_list) == 0:
             raise ValueError("No fault was added to the fault list.")
@@ -223,8 +228,10 @@ class PPSF(FaultSim):
                 if est.mu == 0:
                     unfinished.append(fault)  # not detected yet: nothing to estimate
                     continue
-                done = est.std == 0 or (est.mu / est.std > ci
-                                        and (mode == "basic" or est.e_rel < moe))
+                if est.std == 0:
+                    done = est.mu == 1  # detected by every pattern: nothing left to estimate
+                else:
+                    done = est.mu / est.std > ci and (mode == "basic" or est.e_rel < moe)
                 if done:
                     estimates[str(fault)] = est._replace(converged=True)
                 else:
@@ -246,6 +253,7 @@ class PPSF(FaultSim):
                 log.append(line("REMAINED:", fault, estimates[str(fault)]))
 
         if log_fname is not None:
+            os.makedirs(os.path.dirname(os.path.abspath(log_fname)), exist_ok=True)
             with open(log_fname, "w") as outfile:
                 outfile.writelines(log)
                 outfile.write("### RUNTIME LOG ###\n")
