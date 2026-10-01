@@ -180,8 +180,11 @@ class DFTNOT(DFTNode, node.NOT):
 class DFTBRCH(_DFTPassThrough, node.BRCH):
     def eval_co(self):
         # The observability of a stem is computed by each of its branches. This
-        # repeats the same minimum for every branch, which is harmless.
-        self.unodes[0].CO = min(branch.CO for branch in self.unodes[0].dnodes)
+        # repeats the same minimum for every branch, which is harmless. A stem that
+        # is also a primary output is observed directly.
+        stem = self.unodes[0]
+        best = min(branch.CO for branch in stem.dnodes)
+        stem.CO = 0 if stem.ntype == "PO" else best
 
     def stafan_b(self):
         # Observability of a stem from its branches: a fault on the stem is seen

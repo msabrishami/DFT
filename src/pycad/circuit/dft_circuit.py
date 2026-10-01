@@ -50,8 +50,11 @@ class DFTCircuit(Circuit):
     def scoap_co(self):
         """Combinational observability (CO) of all nodes, from outputs to inputs.
 
-        Needs the controllabilities, see ``scoap_cc``.
+        Needs the controllabilities, see ``scoap_cc``. Nodes that reach no output
+        keep ``CO = math.inf``.
         """
+        for node in self.nodes_lev:
+            node.CO = math.inf
         for node in self.outputs:
             node.CO = 0
         for node in reversed(self.nodes_lev):
@@ -121,13 +124,19 @@ class DFTCircuit(Circuit):
         Needs ``stafan_c`` first.
 
         A node whose controllability is zero gets an approximate observability, reported
-        in one ``RuntimeWarning``.
+        in one ``RuntimeWarning``. Nodes that reach no output get ``B0 = B1 = 0``.
 
         Raises
         ------
+        RuntimeError
+            If the controllabilities were not computed yet.
         ValueError
             If the observability of a node is undefined because controllabilities are zero.
         """
+        if any(node.C0 is None or node.C1 is None or node.S is None for node in self.nodes_lev):
+            raise RuntimeError("Call stafan_c() before stafan_b()")
+        for node in self.nodes_lev:
+            node.B0 = node.B1 = 0.0
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", RuntimeWarning)
             for node in reversed(self.nodes_lev):
@@ -144,6 +153,7 @@ class DFTCircuit(Circuit):
             warnings.warn(f"The observability of {len(approximated)} nodes was approximated "
                           "because their controllability is zero; use more test patterns",
                           RuntimeWarning, stacklevel=2)
+        self._stafan_ready = True
 
     def stafan(self, tp_count, num_proc=1, save_log=False):
         """STAFAN controllability and observability with ``tp_count`` random patterns.
