@@ -87,6 +87,7 @@ class CircuitLoader:
         # 1st pass: create all nodes. Wires and outputs are only declared here,
         # their gate type is known when the gate that drives them is read.
         declared = {}
+        output_order = []
         for statement in statements:
             x_type, nets = self.read_verilog_syntax(statement)
 
@@ -104,6 +105,7 @@ class CircuitLoader:
             elif x_type == "PO":
                 for po in nets:
                     declared[po] = {'num': po, 'n_type': "PO", 'g_type': None}
+                    output_order.append(po)
 
             elif x_type == "GATE":
                 gtype, nets = nets
@@ -112,8 +114,9 @@ class CircuitLoader:
                 declared[nets[0]]['g_type'] = gtype
                 new_node = Node.gen_node(declared[nets[0]], std_node_lib)
                 circuit.nodes[new_node.num] = new_node
-                if new_node.ntype == 'PO':
-                    circuit.outputs.append(new_node)
+
+        # outputs in the order of the declaration, not of the gates that drive them
+        circuit.outputs = [circuit.nodes[po] for po in output_order if po in circuit.nodes]
 
         # 2nd pass: connect the gates
         for statement in statements:
