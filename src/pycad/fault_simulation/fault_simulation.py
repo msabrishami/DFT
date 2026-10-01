@@ -2,7 +2,7 @@
 import os
 from abc import ABC, abstractmethod
 
-from pycad.fault_simulation.fault import FaultList
+from pycad.fault_simulation.fault import Fault, FaultList
 from pycad.node.node import Node
 from pycad.tp_generator import TPGenerator
 
@@ -41,9 +41,22 @@ class FaultSim(ABC):
         * ``'all'``: both stuck-at faults of every node,
         * an ``int``: that many different random faults,
         * a ``str``: the name of a fault file (``<node>@<value>`` per line),
-        * a list of ``<node>@<value>`` strings,
+        * a list of ``<node>@<value>`` strings or of ``Fault`` objects,
         * ``None``: the simulator's own fault list, or all faults if that is empty.
+
+        Raises
+        ------
+        ValueError
+            If a fault is on a node that is not in the circuit.
         """
+        fault_list = self._build_fault_list(faults)
+        unknown = [str(f) for f in fault_list.faults if f.node_num not in self.circuit.nodes]
+        if unknown:
+            raise ValueError(
+                f"Faults on nodes that are not in circuit {self.circuit.c_name}: {unknown[:5]}")
+        return fault_list
+
+    def _build_fault_list(self, faults):
         if isinstance(faults, FaultList):
             return faults
         if faults is None:
@@ -56,19 +69,25 @@ class FaultSim(ABC):
             return FaultList(fname=faults)
         if isinstance(faults, list):
             fault_list = FaultList(self.circuit)
-            fault_list.add_str_list(faults)
+            for fault in faults:
+                if isinstance(fault, Fault):
+                    fault_list.add_fault(fault)
+                else:
+                    fault_list.add_str(fault)
             return fault_list
         raise TypeError(f"Cannot make a fault list from {faults!r}")
 
     def resolve_patterns(self, tps):
         """Turn a pattern count, a pattern file name or a list of patterns into a list."""
         if isinstance(tps, int):
-            return TPGenerator(self.circuit).gen_n_random(tps)
-        if isinstance(tps, str):
-            return TPGenerator.load_file(tps)
-        if isinstance(tps, list):
-            return tps
-        raise TypeError("tps should be a pattern count, a file name or a list of patterns")
+            tps = TPGenerator(self.circuit).gen_n_random(tps)
+        elif isinstance(tps, str):
+            tps = TPGenerator.load_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be a pattern count, a file name or a list of patterns")
+        if not tps:
+            raise ValueError("At least one test pattern is needed")
+        return tps
 
     def check_pattern(self, tp):
         """Raise ValueError unless ``tp`` is a binary pattern with one value per input."""
