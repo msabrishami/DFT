@@ -76,12 +76,10 @@ class Node(ABC):
         list of lower hand node objects
     """
 
-    bitlen = int(math.log2(sys.maxsize))+1 # move to utils
-    bitwise_not = 2**bitlen-1
+    bitlen = int(math.log2(sys.maxsize)) + 1   # width of the bit-parallel values
+    bitwise_not = 2**bitlen - 1                # all bits set
 
     def __init__(self, n_type, g_type, num):
-        self.bitwise_not = Node.bitwise_not
-        self.bitlen = Node.bitlen
         self.gtype = GateType(g_type)
         self.ntype = NodeType(n_type)
         self.num = num
@@ -91,8 +89,7 @@ class Node(ABC):
         self.inv = None     # inversion as a 4-bit mask (set by AND/NAND/OR/NOR)
         self.unodes = []
         self.dnodes = []
-        self.flagA = None   # Very professional 
-        self.flagB = None   # Very professional 
+        self.flagA = None   # scratch mark of graph traversals (see pycad.utils)
 
         # # SSTA Project
         self.dd_cell = None
@@ -113,7 +110,8 @@ class Node(ABC):
     
     def unodes_val(self):
         """Values of the input nodes, with the strings '0' and '1' converted to int."""
-        return [int(unode.value) if unode.value=='0' or unode.value=='1' else unode.value for unode in self.unodes]
+        return [int(unode.value) if unode.value in ('0', '1') else unode.value
+                for unode in self.unodes]
     
     @abstractmethod
     def imply(self):
@@ -151,20 +149,6 @@ class Node(ABC):
         return [n.value for n in res] if value else res
 
 
-    def print_info(self, get_labels=False, print_labels=True):
-        if get_labels:
-            return ["N", "LEV", "GATE"]
-        if print_labels:
-            print(f"N:{str(self.num).zfill(4)}\t", end="")
-            print(f"LEV:{str(self.lev).zfill(2)}\t", end="")
-            print(f"GATE:{self.gtype}\t", end="")
-            print()
-        else:
-            print(f"N:{str(self.num).zfill(4)}\t", end="")
-            print(f"{str(self.lev).zfill(2)}\t", end="")
-            print(f"{self.gtype}\t", end="")
-            print()
-    
     @staticmethod
     def gen_node(node_info, std_node_lib):
         """Create the node described by ``node_info``.
@@ -299,10 +283,6 @@ class _ParityGate(Node):
     """XOR and XNOR: the output depends on the parity of the number of ones."""
 
     INVERT: int
-
-    def __init__(self, n_type, g_type, num):
-        Node.__init__(self, n_type, g_type, num)
-        self.c_flag = 0
 
     def imply(self):
         self.value = (sum(self.unodes_val()) + self.INVERT) % 2
