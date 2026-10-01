@@ -113,3 +113,16 @@ def test_input_that_is_also_an_output(name):
     values = circuit.logic_sim(pattern)
     for node in both:
         assert values[circuit.outputs.index(node)] == pattern[circuit.inputs.index(node)]
+
+
+def test_verilog_outputs_follow_the_declaration_order(tmp_path):
+    netlist = tmp_path / "order.v"
+    netlist.write_text("module t (a, b, z1, z2);\n"
+                       "  input a, b;\n"
+                       "  output z1, z2;\n"
+                       "  or g2 (z2, a, b);\n"     # the gate of z2 comes first
+                       "  and g1 (z1, a, b);\n"
+                       "endmodule\n")
+    circuit = Circuit(str(netlist))
+    assert [n.num for n in circuit.outputs] == ["z1", "z2"]
+    assert circuit.logic_sim([1, 0]) == [0, 1]

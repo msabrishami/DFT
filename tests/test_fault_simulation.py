@@ -314,12 +314,12 @@ def test_run_ci_never_detected_faults_stay_unconverged():
     circuit = DFTCircuit(C17)
     for seed in range(100):  # find a seed whose single pattern misses the fault
         random.seed(seed)
-        est = PPSF(circuit).run_ci([1], faults=["22@0"], num_proc=1, ci=1000)["22@0"]
+        est = PPSF(circuit).run_ci([1], faults=["22@0"], num_proc=2, ci=1000)["22@0"]
         if est.mu == 0:
             break
     assert est.mu == 0, "no seed gave a pattern that misses 22@0"
     assert not est.converged and est.e_rel == float("inf")
-    assert est.counts == (0,) and est.tp_count == 1
+    assert est.counts == (0, 0) and est.tp_count == 1
 
 
 def test_run_ci_advanced_mode_needs_a_small_relative_error():
@@ -410,3 +410,58 @@ def test_dfs_log(tmp_path):
 def test_dfs_rejects_bad_patterns():
     with pytest.raises(ValueError):
         DFS(Circuit(C17)).single([1, 0])
+
+
+# ----------------------------------------------------------- regression tests (review)
+def fake_counts(monkeypatch, per_process):
+    """Make every worker report the same detection counts."""
+    monkeypatch.setattr(
+        PPSF, "_random_detection_counts",
+        lambda self, tp_count, seed, sites: [per_process] * len(sites))
+
+
+def test_run_ci_needs_two_processes():
+    with pytest.raises(ValueError, match="2 processes"):
+        PPSF(DFTCircuit(C17)).run_ci([100], faults="all", num_proc=1)
+
+
+def test_run_ci_equal_counts_are_not_converged_unless_every_pattern_detects(monkeypatch):
+    circuit = DFTCircuit(C17)
+    fake_counts(monkeypatch, 5)   # both processes: 5 of 10 patterns, no spread to judge by
+    est = PPSF(circuit).run_ci([10, 10], faults=["10@0"], num_proc=2)["10@0"]
+    assert not est.converged and est.tp_count == 20 and est.std == 0
+
+    fake_counts(monkeypatch, 10)  # every pattern detects the fault
+    est = PPSF(circuit).run_ci([10, 10], faults=["10@0"], num_proc=2)["10@0"]
+    assert est.converged and est.mu == 1 and est.tp_count == 10
+
+
+def test_run_ci_creates_the_directory_of_the_log(tmp_path):
+    log = tmp_path / "does" / "not" / "exist" / "ci.ppsf"
+    PPSF(DFTCircuit(C17)).run_ci([50], faults=["10@0"], num_proc=2, log_fname=str(log))
+    assert log.exists()
+
+
+def test_faults_can_be_given_as_fault_objects():
+    circuit = DFTCircuit(C17)
+    fc, detected = PFS(circuit).run(PATTERNS, faults="all")
+    fc_dfs, detected_dfs = DFS(circuit).run(PATTERNS, faults=detected)
+    assert fc_dfs[-1] == 1.0 and len(detected_dfs) == len(detected)
+
+
+def test_faults_on_unknown_nodes_are_an_error(tmp_path):
+    circuit = DFTCircuit(C17)
+    for sim in (PFS(circuit), PPSF(circuit), DFS(circuit)):
+        with pytest.raises(ValueError, match="99999@0"):
+            sim.run(PATTERNS, faults=["10@0", "99999@0"])
+    fault_file = tmp_path / "other.txt"
+    fault_file.write_text("77777@1\n")
+    with pytest.raises(ValueError, match="not in circuit c17"):
+        PFS(circuit).run(PATTERNS, faults=str(fault_file))
+
+
+@pytest.mark.parametrize("sim_class", [PFS, PPSF, DFS])
+def test_an_empty_pattern_list_is_an_error(sim_class, tmp_path):
+    with pytest.raises(ValueError, match="pattern"):
+        sim_class(Circuit(C17) if sim_class is DFS else DFTCircuit(C17)).run(
+            [], faults="all", log_dir=str(tmp_path))

@@ -1,5 +1,6 @@
 """SCOAP and STAFAN on whole circuits, checked against hand-worked and brute-force oracles."""
 import itertools
+import math
 import multiprocessing
 import os
 import random
@@ -254,3 +255,50 @@ def test_parallel_stafan_on_a_circuit_too_deep_to_pickle():
     with pytest.warns(RuntimeWarning, match="approximated"):
         circuit.stafan(60, num_proc=2)
     assert all(n.one_count + n.zero_count == 60 for n in circuit.nodes_lev)
+
+
+# ------------------------------------------------------ regression tests (review)
+DANGLING = """\
+1 1 0 1 0
+1 2 0 2 0
+1 3 0 1 0
+2 7 1 2
+2 8 1 2
+0 5 7 0 2 1 7
+3 6 3 0 2 8 3
+"""  # AND(1, 7) drives nothing; the only output is OR(8, 3)
+
+
+def test_logic_that_reaches_no_output_is_unobservable_not_a_crash(tmp_path):
+    netlist = tmp_path / "dangling.ckt"
+    netlist.write_text(DANGLING)
+    circuit = DFTCircuit(str(netlist))
+    circuit.scoap()
+    assert circuit.nodes["5"].CO == math.inf and circuit.nodes["1"].CO == math.inf
+    assert circuit.nodes["2"].CO < math.inf   # observable through its other branch
+
+    random.seed(1)
+    circuit.stafan(200)
+    assert (circuit.nodes["5"].B0, circuit.nodes["5"].B1) == (0.0, 0.0)
+    assert (circuit.nodes["1"].B0, circuit.nodes["1"].B1) == (0.0, 0.0)
+    assert circuit.nodes["2"].B1 > 0
+
+
+def test_a_primary_output_with_fan_out_keeps_observability_zero(tmp_path):
+    netlist = tmp_path / "po_fanout.ckt"
+    netlist.write_text("1 1 0 1 0\n1 2 0 1 0\n"
+                       "3 3 7 2 2 1 2\n"       # AND, a primary output ...
+                       "2 4 1 3\n2 5 1 3\n"   # ... that also feeds two branches
+                       "3 6 5 0 1 4\n3 7 5 0 1 5\n")
+    circuit = DFTCircuit(str(netlist))
+    circuit.scoap()
+    assert circuit.nodes["3"].CO == 0
+    assert circuit.nodes["1"].CO == circuit.nodes["2"].cc(1) + 0 + 1  # AND with CO 0
+
+
+def test_stafan_b_after_stafan_c_enables_the_fault_coverage_estimate(c17):
+    with pytest.raises(RuntimeError, match="stafan_c"):
+        c17.stafan_b()
+    c17.stafan_c(PATTERNS)
+    c17.stafan_b()
+    assert 0 < c17.stafan_fc(5) < 1
