@@ -133,7 +133,8 @@ class DFTNode(ABC):
             return True
         if gate.gtype in ('AND', 'NAND', 'OR', 'NOR'):
             # a controlling value on another input blocks this one
-            return gate.CONTROL not in self.get_neighbors(inclusive=False, value=True)
+            return not any(other.value == gate.CONTROL
+                           for other in gate.unodes if other.num != self.num)
         raise ValueError(f"Node {self.num} feeds a gate of unsupported type {gate.gtype}")
 
 
