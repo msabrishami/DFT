@@ -29,22 +29,22 @@ class DFS(FaultSim):
 
         deduced = {}
         for node in self.circuit.nodes_lev:
-            own = f"{node.num}@{1 - node.value}"
             if node.gtype == "IPT":
                 faults = set()
             else:
                 faults = self._propagate(node, [deduced[u.num] for u in node.unodes])
-            deduced[node.num] = faults | {own}
+            faults.add(f"{node.num}@{1 - node.value}")  # the node's own fault
+            deduced[node.num] = faults
 
         return set().union(*(deduced[po.num] for po in self.circuit.outputs))
 
     @staticmethod
     def _propagate(node, input_sets):
-        """Faults of the inputs of ``node`` that reach its output."""
+        """Faults of the inputs of ``node`` that reach its output, as a new set."""
         if node.gtype in ("BUFF", "BRCH", "NOT"):
             return set(input_sets[0])
         if node.gtype in ("XOR", "XNOR"):
-            return reduce(lambda a, b: a ^ b, input_sets)
+            return reduce(lambda a, b: a ^ b, input_sets, set())
 
         controlled = [s for s, u in zip(input_sets, node.unodes, strict=True)
                       if u.value == node.CONTROL]

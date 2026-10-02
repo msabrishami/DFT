@@ -135,7 +135,8 @@ class FaultList:
         strings. This list is not changed; the order of this list is kept.
         """
         excluded = {str(fault) for fault in faults}
-        return [str(fault) for fault in self.faults if str(fault) not in excluded]
+        names = [str(fault) for fault in self.faults]
+        return [name for name in names if name not in excluded]
 
     def add_file(self, fname):
         """Add the faults of a file with one ``<node-num>@<stuck value>`` per line."""

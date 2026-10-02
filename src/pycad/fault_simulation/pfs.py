@@ -103,7 +103,8 @@ class PFS(FaultSim):
             detected = self._one_tp_run(tp, fault_drop)
             detected_all.update(dict.fromkeys(detected))
             fault_coverage.append(self.fault_list.calc_fc())
-            history.append((tp, detected, len(detected_all)))
+            if log_dir is not None:
+                history.append((tp, detected, len(detected_all)))
 
         if log_dir is not None:
             self._write_logs(log_dir, history, total, fault_coverage)
