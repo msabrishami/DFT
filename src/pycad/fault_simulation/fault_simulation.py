@@ -77,16 +77,12 @@ class FaultSim(ABC):
             return fault_list
         raise TypeError(f"Cannot make a fault list from {faults!r}")
 
-    def resolve_patterns(self, tps):
-        """Turn a pattern count, a pattern file name or a list of patterns into a list."""
-        if isinstance(tps, int):
-            tps = TPGenerator(self.circuit).gen_n_random(tps)
-        elif isinstance(tps, str):
-            tps = TPGenerator.load_file(tps)
-        elif not isinstance(tps, list):
-            raise TypeError("tps should be a pattern count, a file name or a list of patterns")
-        if not tps:
-            raise ValueError("At least one test pattern is needed")
+    def _prepare(self, tps, faults):
+        """Patterns and faults of a run, with the detection counts of the faults reset."""
+        tps = TPGenerator(self.circuit).resolve(tps)
+        self.fault_list = self.resolve_faults(faults)
+        for fault in self.fault_list.faults:
+            fault.D_count = 0
         return tps
 
     def check_pattern(self, tp):
@@ -103,5 +99,10 @@ class FaultSim(ABC):
         return os.path.join(log_dir, name)
 
     @abstractmethod
-    def run(self, tps, faults=None, **kwargs):
-        """Simulate the patterns ``tps`` for the faults and update their ``D_count``."""
+    def run(self, tps, faults=None, log_dir=None):
+        """Simulate the patterns ``tps`` for the faults and update their ``D_count``.
+
+        The ``D_count`` of the faults counts the patterns that detect them, and
+        the faults simulated are ``self.fault_list`` afterwards. What is returned
+        differs per simulator.
+        """

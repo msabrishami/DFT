@@ -38,6 +38,26 @@ class TPGenerator:
             return [0, 1, config.X_VALUE]
         raise ValueError(f"Unknown pattern mode {mode!r}, use 'b' (binary) or 'x' (with X)")
 
+    def resolve(self, tps):
+        """A list of patterns from a pattern count, a pattern file name or a list.
+
+        Raises
+        ------
+        TypeError
+            For any other kind of argument.
+        ValueError
+            If there are no patterns.
+        """
+        if isinstance(tps, int):
+            tps = self.gen_n_random(tps)
+        elif isinstance(tps, str):
+            tps = self.load_file(tps)
+        elif not isinstance(tps, list):
+            raise TypeError("tps should be a pattern count, a file name or a list of patterns")
+        if not tps:
+            raise ValueError("At least one test pattern is needed")
+        return tps
+
     def gen_single(self, mode="b"):
         """One random pattern.
 

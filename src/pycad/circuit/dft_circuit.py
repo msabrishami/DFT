@@ -105,17 +105,7 @@ class DFTCircuit(Circuit):
             A number of random patterns to generate, the name of a pattern file,
             or a list of patterns.
         """
-        if isinstance(tp, int):
-            tps = TPGenerator(self).gen_n_random(tp)
-        elif isinstance(tp, str):
-            tps = TPGenerator.load_file(tp)
-        elif isinstance(tp, list):
-            tps = tp
-        else:
-            raise TypeError("tp should be a pattern count, a file name or a list of patterns")
-        if not tps:
-            raise ValueError("STAFAN needs at least one test pattern")
-
+        tps = TPGenerator(self).resolve(tp)
         self._set_stafan_c(*self._count_patterns(tps), len(tps))
 
     def stafan_b(self):

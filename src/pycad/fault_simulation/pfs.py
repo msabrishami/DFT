@@ -91,10 +91,7 @@ class PFS(FaultSim):
             ``(fc, detected)``: the fault coverage after each pattern (fractions)
             and the list of all faults detected at least once.
         """
-        tps = self.resolve_patterns(tps)
-        self.fault_list = self.resolve_faults(faults)
-        for fault in self.fault_list.faults:
-            fault.D_count = 0
+        tps = self._prepare(tps, faults)
 
         total = len(self.fault_list)
         fault_coverage, history = [], []

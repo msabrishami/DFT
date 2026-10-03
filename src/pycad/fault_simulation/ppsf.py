@@ -118,8 +118,7 @@ class PPSF(FaultSim):
         dict
             Fault string -> ``D_count``, for the detected faults only.
         """
-        tps = self.resolve_patterns(tps)
-        self.fault_list = self.resolve_faults(faults)
+        tps = self._prepare(tps, faults)
         if len(self.fault_list) == 0:
             raise ValueError("No fault was added to the fault list.")
 

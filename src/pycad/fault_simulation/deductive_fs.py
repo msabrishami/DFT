@@ -75,11 +75,9 @@ class DFS(FaultSim):
             ``(fc, detected)``: the fault coverage after each pattern (fractions)
             and the list of all faults detected at least once.
         """
-        tps = self.resolve_patterns(tps)
-        self.fault_list = self.resolve_faults(faults)
+        tps = self._prepare(tps, faults)
         by_name = {}
         for fault in self.fault_list.faults:
-            fault.D_count = 0
             by_name.setdefault(str(fault), []).append(fault)
 
         fault_coverage = []
