@@ -4,14 +4,13 @@ import warnings
 
 import networkx as nx
 import pytest
+from c17_oracle import C17, nand
 
 from pycad import config
 from pycad.circuit.circuit import Circuit
 from pycad.circuit.circuit_loader import CircuitLoader
 from pycad.fault_simulation.fault import Fault
 from pycad.node import node
-
-C17 = os.path.join(config.CKT_DIR, "c17.ckt")
 
 
 def test_levelize_can_be_repeated():
@@ -144,9 +143,6 @@ def test_bitwise_sim_with_a_fault_matches_hand_derived_c17(stuck):
         for i, bit in enumerate(pattern):
             words[i] |= bit << k
     faulty = circuit.logic_sim_bitwise(words, Fault("16", stuck))
-
-    def nand(a, b):
-        return 1 - (a & b)
 
     for k, (n1, _n2, n3, n6, n7) in enumerate(ALL_C17_PATTERNS):
         n10, n11 = nand(n1, n3), nand(n3, n6)

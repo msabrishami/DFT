@@ -1,17 +1,14 @@
 """SCOAP and STAFAN on whole circuits, checked against hand-worked and brute-force oracles."""
-import itertools
 import math
 import multiprocessing
 import os
 import random
 
 import pytest
+from c17_oracle import C17, PATTERNS, c17_node_values
 
 from pycad import config
 from pycad.circuit.dft_circuit import DFTCircuit
-
-C17 = os.path.join(config.CKT_DIR, "c17.ckt")
-PATTERNS = [list(p) for p in itertools.product([0, 1], repeat=5)]  # all 32, input order 1,2,3,6,7
 
 
 @pytest.fixture
@@ -56,25 +53,6 @@ def test_scoap_is_defined_for_every_bundled_circuit():
 
 
 # --------------------------------------------------------------------- STAFAN
-def nand(a, b):
-    return 1 - (a & b)
-
-
-def c17_values(pattern):
-    """All node values of c17 for a pattern, from the textbook equations."""
-    n1, n2, n3, n6, n7 = pattern
-    v = {"1": n1, "2": n2, "3": n3, "6": n6, "7": n7, "8": n3, "9": n3}
-    v["10"] = nand(n1, n3)
-    v["11"] = nand(n3, n6)
-    v["14"] = v["15"] = v["11"]
-    v["16"] = nand(n2, v["11"])
-    v["20"] = v["21"] = v["16"]
-    v["19"] = nand(v["15"], n7)
-    v["22"] = nand(v["10"], v["20"])
-    v["23"] = nand(v["21"], v["19"])
-    return v
-
-
 # node -> the other input of the gate it feeds (the node is sensitized when that input is 1);
 # stems and outputs are always sensitized
 C17_OTHER_INPUT = {"1": "8", "8": "1", "9": "6", "6": "9", "2": "14", "14": "2",
@@ -83,7 +61,7 @@ C17_OTHER_INPUT = {"1": "8", "8": "1", "9": "6", "6": "9", "2": "14", "14": "2",
 
 def test_stafan_controllability_and_sensitization_with_all_patterns(c17):
     c17.stafan_c(PATTERNS)
-    values = [c17_values(p) for p in PATTERNS]
+    values = [c17_node_values(p) for p in PATTERNS]
     for node in c17.nodes_lev:
         ones = sum(v[node.num] for v in values)
         assert node.C1 == pytest.approx(ones / 32), node.num

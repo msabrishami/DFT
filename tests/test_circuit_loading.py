@@ -3,6 +3,7 @@ import glob
 import os
 
 import pytest
+from c17_oracle import PATTERNS, c17_outputs
 
 from pycad import config
 from pycad.circuit.circuit import Circuit
@@ -79,21 +80,10 @@ def test_c17_has_the_textbook_structure():
 
 
 def test_c17_logic_function():
-    """c17: N22 = NAND(N10, N16), N23 = NAND(N16, N19) with the textbook equations."""
     circuit = Circuit(os.path.join(config.CKT_DIR, "c17.ckt"))
     assert [n.num for n in circuit.inputs] == ["1", "2", "3", "6", "7"]
-
-    def nand(a, b):
-        return 1 - (a & b)
-
-    for pattern in range(32):
-        n1, n2, n3, n6, n7 = [(pattern >> i) & 1 for i in range(5)]
-        n10 = nand(n1, n3)
-        n11 = nand(n3, n6)
-        n16 = nand(n2, n11)
-        n19 = nand(n11, n7)
-        expected = [nand(n10, n16), nand(n16, n19)]
-        assert circuit.logic_sim([n1, n2, n3, n6, n7]) == expected, pattern
+    for pattern in PATTERNS:
+        assert circuit.logic_sim(pattern) == c17_outputs(pattern), pattern
 
 
 def test_unsupported_format_is_rejected():
