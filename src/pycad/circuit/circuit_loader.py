@@ -22,6 +22,9 @@ class CircuitLoader:
         Gate type name -> node class (see ``Circuit.STD_NODE_LIB``).
     """
 
+    # "<cell> <instance> (<arguments>);" -> groups: cell, instance, arguments
+    GATE_INSTANCE = re.compile(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', re.IGNORECASE)
+
     def __init__(self, circuit, circuit_fname, std_node_lib):
         circuit_format = os.path.splitext(circuit_fname)[1].lstrip(".")
 
@@ -189,6 +192,17 @@ class CircuitLoader:
         i_node.dnodes.append(d_node)
 
     @staticmethod
+    def named_pins(arguments):
+        """``(pin, net)`` pairs of a gate instance written with named pins, e.g. ``.A(n1)``.
+
+        The output pin must be the last one. Returns an empty list for positional arguments.
+        """
+        pins = re.findall(r'\.(\w+)\((\w*)\)', arguments.replace(" ", ""))
+        if pins and "Z" not in pins[-1][0]:
+            raise NameError("Cannot detect the output pin as the last argument, check code")
+        return pins
+
+    @staticmethod
     def read_verilog_syntax(line):
         if line.strip() == "endmodule":
             return ("module", None)
@@ -212,26 +226,16 @@ class CircuitLoader:
             return ("PO", nets)
 
         # Gate
-        line_syntax = re.match(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', line, re.IGNORECASE)
+        line_syntax = CircuitLoader.GATE_INSTANCE.match(line)
         if line_syntax:
             if line_syntax.group(1) == "module":
                 return ("module", None)
-            
+
             gtype = CircuitLoader.cell2gate(line_syntax.group(1))
-            # #we may not use gname for now. 
-            # gname = line_syntax.group(2)
-            
-            # TODO: Saeed fixed this but was not tested on all circuits
-            # It had issues with netlists that have gate description in multiple lines
-            # pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3))
-            pin_format = re.findall(r'\.(\w+)\((\w*)\)', line_syntax.group(3).replace(" ", ""))
+            pin_format = CircuitLoader.named_pins(line_syntax.group(3))
             if pin_format:
-                #TODO: for now, we considered PO as the last pin
-                if "Z" not in pin_format[-1][0]:
-                    raise NameError("Cannot detect the output pin as the last argumet, check code")
-                nets = [pin_format[-1][1]]
-                for x in pin_format[:-1]:
-                    nets.append(x[1])
+                # the output is the first net, then the inputs
+                nets = [pin_format[-1][1]] + [net for _, net in pin_format[:-1]]
             else:
                 # verilog with no pin format
                 nets = line_syntax.group(3).replace(' ', '').split(',')

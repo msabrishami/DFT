@@ -9,8 +9,6 @@ import re
 from pycad.circuit.circuit_loader import CircuitLoader
 from pycad.library import cells
 
-_PINS_OF_INSTANCE = re.compile(r'\s*(.+?) (.+?)\s*\((.*)\s*\);$', re.IGNORECASE)
-_NAMED_PIN = re.compile(r'\.(\w+)\((\w*)\)')
 _TMAX_POINT = re.compile(r"(?:(?:[A-Z]+\d*\_\d+)|(?:[A-Z]+\d+))\/[A-Z]+")
 
 
@@ -41,7 +39,6 @@ class Converter:
         else:
             raise ValueError(f"The verilog format {verilog_format} is not supported")
 
-        self.verilog_format = verilog_format
         self.gate2node = {}
         self.node2gate = {}
         self.gate2cell = {}
@@ -53,14 +50,11 @@ class Converter:
             if x_type != "GATE":
                 continue
 
-            instance = _PINS_OF_INSTANCE.match(statement)
-            pins = _NAMED_PIN.findall(instance.group(3).replace(" ", ""))
+            cell, gate, arguments = CircuitLoader.GATE_INSTANCE.match(statement).groups()
+            pins = CircuitLoader.named_pins(arguments)
             if not pins:
                 raise ValueError(f"Cannot parse pins in line: {statement.strip()}")
-            if "Z" not in pins[-1][0]:
-                raise NameError("Cannot detect the output pin as the last argument")
 
-            cell, gate = statement.split()[:2]
             node = pins[-1][1]
             self.gate2node[gate] = node
             self.node2gate[node] = gate
