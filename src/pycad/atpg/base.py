@@ -103,13 +103,28 @@ class Atpg(ABC):
         """Search a test for ``fault`` (a ``Fault`` or ``"<node>@<value>"``); an AtpgResult."""
 
     def detects(self, pattern, fault):
-        """True if the fully specified ``pattern`` detects ``fault`` (by simulation)."""
-        if not isinstance(fault, Fault):
-            fault = Fault.from_str(fault)
+        """True if the fully specified ``pattern`` detects ``fault`` (by simulation).
+
+        Raises
+        ------
+        ValueError
+            If the pattern has unspecified (X) inputs; see ``fill_x``.
+        """
+        return self._detected_among(pattern, [fault])[0]
+
+    def _detected_among(self, pattern, faults):
+        """For each fault, whether ``pattern`` detects it; the good circuit is simulated once."""
+        if X_VALUE in pattern:
+            raise ValueError("The pattern has unspecified inputs, fill them first (fill_x)")
         words = [int(v) for v in pattern]
         good = self.circuit.logic_sim_bitwise(words)
-        faulty = self.circuit.logic_sim_bitwise(words, fault)
-        return any((g ^ f) & 1 for g, f in zip(good, faulty, strict=True))
+        detected = []
+        for fault in faults:
+            if not isinstance(fault, Fault):
+                fault = Fault.from_str(fault)
+            faulty = self.circuit.logic_sim_bitwise(words, fault)
+            detected.append(any((g ^ f) & 1 for g, f in zip(good, faulty, strict=True)))
+        return detected
 
     def generate_test_set(self, faults=None, fill=None, rng=random):
         """Generate tests for a list of faults, dropping faults that earlier tests detect.
@@ -143,7 +158,8 @@ class Atpg(ABC):
                 result.patterns.append(pattern)
                 result.detected.append(fault)
                 still = []
-                for other in pending:
-                    (result.detected if self.detects(pattern, other) else still).append(other)
+                for other, hit in zip(pending, self._detected_among(pattern, pending),
+                                      strict=True):
+                    (result.detected if hit else still).append(other)
                 pending = still
         return result

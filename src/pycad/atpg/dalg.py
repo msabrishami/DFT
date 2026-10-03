@@ -222,9 +222,10 @@ class DAlgorithm(Atpg):
                 state, queue = next(stack[-1])
             except StopIteration:
                 stack.pop()
-                backtracks += 1
-                if backtracks > self.backtrack_limit:
-                    return AtpgResult(ABORTED, None, backtracks)
+                if stack:  # a decision with no choice left is abandoned: a backtrack
+                    backtracks += 1
+                    if backtracks > self.backtrack_limit:
+                        return AtpgResult(ABORTED, None, backtracks)
                 continue
             if not self._imply(state, target, cone, queue):
                 continue

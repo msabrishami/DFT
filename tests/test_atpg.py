@@ -12,6 +12,7 @@ from pycad.atpg.dalg import imply_gate
 from pycad.circuit.circuit import Circuit
 from pycad.config import X_VALUE
 from pycad.fault_simulation.fault import Fault, FaultList
+from pycad.node import node as node_mod
 
 ALGORITHMS = [Podem, DAlgorithm]
 
@@ -98,12 +99,24 @@ def test_algorithms_agree_on_testability(c17, redundant_circuit):
             assert podem.generate(fault).status == dalg.generate(fault).status, fault
 
 
-def test_backtrack_limit_aborts():
-    circuit = ckt("c432")
-    atpg = Podem(circuit, backtrack_limit=0)
-    statuses = {atpg.generate(f).status
-                for f in FaultList(circuit, fault_count="all").faults[:200]}
-    assert statuses <= {"detected", "redundant", "aborted"}
+@pytest.mark.parametrize("algorithm", ALGORITHMS)
+def test_backtrack_limit_is_exact(redundant_circuit, algorithm):
+    """A search that needs n backtracks succeeds with limit n and aborts with n - 1."""
+    needed = algorithm(redundant_circuit, backtrack_limit=1000).generate("b@0")
+    assert needed.status == "redundant" and needed.backtracks > 0
+    exact = algorithm(redundant_circuit, backtrack_limit=needed.backtracks).generate("b@0")
+    assert exact.status == "redundant"
+    short = algorithm(redundant_circuit, backtrack_limit=needed.backtracks - 1).generate("b@0")
+    assert short.status == "aborted"
+
+
+@pytest.mark.parametrize("algorithm", ALGORITHMS)
+def test_detects_rejects_unspecified_inputs(c17, algorithm):
+    atpg = algorithm(c17)
+    pattern = atpg.generate("10@0").pattern
+    if X_VALUE in pattern:
+        with pytest.raises(ValueError, match="unspecified"):
+            atpg.detects(pattern, "10@0")
 
 
 @pytest.mark.parametrize("algorithm", ALGORITHMS)
@@ -133,8 +146,6 @@ def test_fill_x():
 @pytest.mark.parametrize("gtype", ["AND", "NAND", "OR", "NOR", "XOR", "XNOR", "NOT", "BUFF"])
 def test_implication_agrees_with_three_valued_logic(gtype):
     """Every implied value is forced by the given ones; complete inputs give the output."""
-    circuit_gate = None
-    from pycad.node import node as node_mod
     fanin = 1 if gtype in ("NOT", "BUFF") else 3
     circuit_gate = getattr(node_mod, gtype)("GATE", gtype, "g")
     values = (0, 1, X_VALUE)
@@ -150,6 +161,11 @@ def test_implication_agrees_with_three_valued_logic(gtype):
                 continue
             assert result is not None, (ins, out)
             new_ins, new_out = result
+            # complete for what is forced: a value all completions share is implied
+            for k in range(fanin):
+                shared = {c[k] for c in completions}
+                if len(shared) == 1 and fanin == 1:
+                    assert new_ins[k] == shared.pop(), (ins, out)
             # sound: every completion agrees with what was implied
             for c in completions:
                 assert all(n in (X_VALUE, v) for n, v in zip(new_ins, c, strict=True))
