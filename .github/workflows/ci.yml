@@ -35,7 +35,7 @@ jobs:
           src/pycad/circuit/circuit.py src/pycad/circuit/circuit_loader.py
           src/pycad/circuit/convert.py src/pycad/fault_simulation/fault.py
           src/pycad/node/dft_node.py src/pycad/circuit/dft_circuit.py
-          src/pycad/fault_simulation src/pycad/parallel.py tests
+          src/pycad/fault_simulation src/pycad/atpg src/pycad/parallel.py tests
 
       - name: Run tests
         run: pytest -v

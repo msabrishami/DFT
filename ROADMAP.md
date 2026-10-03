@@ -5,8 +5,8 @@ Open work items for PyCAD, roughly in priority order.
 ## Package
 - [ ] Fix the SSTA module: `circuit_ssta.py` imports `pycad.utils` but needs the functions in
       `pycad.ssta.utils_ssta`, and `cycle`, `margin` and `cuts` are undefined names.
-- [ ] Port the best D-algorithm / PODEM / ATPG implementation from `legacy/inventory` into
-      the package, with tests (several near-duplicate versions exist there).
+- [x] `pycad.atpg`: PODEM and the D-algorithm, rewritten on the current library and tested
+      against exhaustive search and fault simulation (the old versions stay in `legacy/inventory`).
 - [ ] Revive observation point insertion (`legacy/tpi`). It currently depends on
       `legacy/experiments` (`pd_ppsf`), which in turn imports `tpi`.
 - [ ] Replace the entry-point scripts in `legacy/scripts` with a documented `pycad` CLI.
