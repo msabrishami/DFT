@@ -31,7 +31,6 @@ ALL_CIRCUIT_DIRS = [CKT_DIR,
                     ISCAS89_DIR]
 
 ALL_ISCAS85 = ["c17", "c432", "c499", "c880", "c1355", "c1908", "c3540", "c5315", "c6288", "c7552"]
-V_FORMATS = ["EPFL", "ISCAS85"]
 
 # Generated results (not tracked by git)
 PATTERN_DIR = os.path.join(DATA_DIR, "patterns")
