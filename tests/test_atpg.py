@@ -1,13 +1,14 @@
 """ATPG: every generated test is checked by fault simulation, redundancy by exhaustion."""
+import functools
 import itertools
 import os
 import random
 
 import pytest
+from c17_oracle import c17_outputs
 
 from pycad import config
 from pycad.atpg import DAlgorithm, Podem, fill_x
-from pycad.atpg.base import eval_gate
 from pycad.atpg.dalg import imply_gate
 from pycad.circuit.circuit import Circuit
 from pycad.config import X_VALUE
@@ -17,6 +18,7 @@ from pycad.node import node as node_mod
 ALGORITHMS = [Podem, DAlgorithm]
 
 
+@functools.lru_cache(maxsize=None)
 def ckt(name):
     return Circuit(os.path.join(config.CKT_DIR, f"{name}.ckt"))
 
@@ -155,7 +157,7 @@ def test_implication_agrees_with_three_valued_logic(gtype):
             completions = [
                 c for c in itertools.product((0, 1), repeat=fanin)
                 if all(i in (X_VALUE, v) for i, v in zip(ins, c, strict=True))
-                and out in (X_VALUE, eval_gate_with(circuit_gate, c))]
+                and out in (X_VALUE, circuit_gate.eval_t(c))]
             if not completions:
                 assert result is None, (ins, out)
                 continue
@@ -169,14 +171,11 @@ def test_implication_agrees_with_three_valued_logic(gtype):
             # sound: every completion agrees with what was implied
             for c in completions:
                 assert all(n in (X_VALUE, v) for n, v in zip(new_ins, c, strict=True))
-                assert new_out in (X_VALUE, eval_gate_with(circuit_gate, c))
-
-
-def eval_gate_with(gate, ins):
-    return eval_gate(gate, list(ins))
+                assert new_out in (X_VALUE, circuit_gate.eval_t(c))
 
 
 def random_circuit(tmp_path, seed):
+    """A small random netlist (the same one for the same seed)."""
     rng = random.Random(seed)
     signals = [f"i{k}" for k in range(5)]
     gates = []
@@ -197,14 +196,24 @@ def random_circuit(tmp_path, seed):
     return Circuit(str(path))
 
 
-@pytest.mark.parametrize("algorithm", ALGORITHMS)
 @pytest.mark.parametrize("seed", range(12))
-def test_random_circuits_match_exhaustive_search(tmp_path, algorithm, seed):
+def test_random_circuits_match_exhaustive_search(tmp_path, seed):
     circuit = random_circuit(tmp_path, seed)
-    atpg = algorithm(circuit, backtrack_limit=10_000)
+    atpgs = [algorithm(circuit, backtrack_limit=10_000) for algorithm in ALGORITHMS]
     for fault in FaultList(circuit, fault_count="all"):
-        testable = bool(detecting_patterns(circuit, fault))
-        result = atpg.generate(fault)
-        assert result.status == ("detected" if testable else "redundant"), (seed, fault)
-        if testable:
-            assert atpg.detects(fill_x(result.pattern, 0), fault), (seed, fault)
+        testable = bool(detecting_patterns(circuit, fault))  # one oracle run for both
+        for atpg in atpgs:
+            result = atpg.generate(fault)
+            assert result.status == ("detected" if testable else "redundant"), (seed, fault)
+            if testable:
+                assert atpg.detects(fill_x(result.pattern, 0), fault), (seed, fault)
+
+
+@pytest.mark.parametrize("algorithm", ALGORITHMS)
+def test_c17_tests_detect_by_the_hand_written_oracle(c17, algorithm):
+    """Independent of the library simulators: c17 written out gate by gate."""
+    atpg = algorithm(c17)
+    for fault in FaultList(c17, fault_count="all"):
+        pattern = fill_x(atpg.generate(fault).pattern, 0)
+        forced = (fault.node_num, int(fault.stuck_val))
+        assert c17_outputs(pattern, forced) != c17_outputs(pattern), fault

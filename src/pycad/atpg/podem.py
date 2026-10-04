@@ -6,50 +6,55 @@ to an input, assigns that input and simulates the good and the faulty circuit
 with three-valued logic. If the objective cannot be reached, the last input
 assignment is flipped.
 """
-from pycad.atpg.base import ABORTED, DETECTED, REDUNDANT, Atpg, AtpgResult, eval_gate
-from pycad.config import X_VALUE
+from pycad.atpg.base import (
+    ABORTED,
+    DETECTED,
+    MULTI_INPUT,
+    PARITY,
+    REDUNDANT,
+    Atpg,
+    AtpgResult,
+    differs,
+)
+from pycad.config import X_VALUE as X
 from pycad.node.node import GateType
-
-X = X_VALUE
-_CONTROLLED = (GateType.AND, GateType.NAND, GateType.OR, GateType.NOR)
-_PARITY = (GateType.XOR, GateType.XNOR)
 
 
 class Podem(Atpg):
     """PODEM test generator, see :class:`~pycad.atpg.base.Atpg`."""
 
-    def _simulate(self, assigned, target, stuck):
+    def _simulate(self, assigned, target, stuck, cone):
+        """Good and faulty values; the faulty circuit only differs inside ``cone``."""
         good = [X] * len(self.nodes)
-        faulty = [X] * len(self.nodes)
         for i, node in enumerate(self.nodes):
             if node.gtype == GateType.IPT:
-                good[i] = faulty[i] = assigned.get(i, X)
+                good[i] = assigned.get(i, X)
             else:
-                good[i] = eval_gate(node, [good[j] for j in self.fanin[i]])
-                faulty[i] = eval_gate(node, [faulty[j] for j in self.fanin[i]])
+                good[i] = node.eval_t([good[j] for j in self.fanin[i]])
+        faulty = good[:]
+        for i in cone:
+            node = self.nodes[i]
             if i == target:
                 faulty[i] = stuck
+            elif node.gtype != GateType.IPT:
+                faulty[i] = node.eval_t([faulty[j] for j in self.fanin[i]])
         return good, faulty
 
-    @staticmethod
-    def _differs(good, faulty, i):
-        return good[i] != X and faulty[i] != X and good[i] != faulty[i]
-
-    def _objective(self, good, faulty, target, stuck):
+    def _objective(self, good, faulty, target, stuck, cone):
         """The next (node, value) to achieve; ``None`` if the fault cannot be detected any more."""
         if good[target] == stuck:
             return None
         if good[target] == X:
             return target, 1 - stuck
-        for i, node in enumerate(self.nodes):
+        for i in cone:  # the D-frontier lies inside the cone
             if X not in (good[i], faulty[i]):
                 continue
-            if not any(self._differs(good, faulty, j) for j in self.fanin[i]):
+            if not any(differs(good[j], faulty[j]) for j in self.fanin[i]):
                 continue
             for j in self.fanin[i]:
                 if good[j] == X:
-                    value = 0 if node.gtype in _PARITY else 1 - node.CONTROL
-                    return j, value
+                    node = self.nodes[i]
+                    return j, 0 if node.gtype in PARITY else 1 - node.CONTROL
         return None
 
     def _backtrace(self, good, i, value):
@@ -57,33 +62,33 @@ class Podem(Atpg):
         while self.nodes[i].gtype != GateType.IPT:
             node = self.nodes[i]
             fanin = self.fanin[i]
-            if node.gtype == GateType.NOT:
-                value ^= 1
+            if node.gtype not in MULTI_INPUT:  # NOT, BUFF, BRCH
+                if node.gtype == GateType.NOT:
+                    value ^= 1
                 i = fanin[0]
                 continue
-            if node.gtype not in _CONTROLLED and node.gtype not in _PARITY:
-                i = fanin[0]
-                continue
-            j = next(j for j in fanin if good[j] == X)
-            if node.gtype in _PARITY:
+            if node.gtype in PARITY:
                 known = sum(good[k] for k in fanin if good[k] != X)
                 value = (value ^ node.INVERT ^ known) & 1
             else:
                 value ^= node.INVERT
-            i = j
-        return i, value
+            i = next(j for j in fanin if good[j] == X)
+        return i, int(value)
 
     def generate(self, fault):
         target, stuck = self._site(fault)
+        cone = self._cone(target)
+        in_cone = set(cone)
+        cone_outputs = [i for i in self.output_pos if i in in_cone]
         assigned = {}
         stack = []  # [input, value, other value already tried]
         backtracks = 0
         while True:
-            good, faulty = self._simulate(assigned, target, stuck)
-            if any(self._differs(good, faulty, i) for i in self.output_pos):
+            good, faulty = self._simulate(assigned, target, stuck, cone)
+            if any(differs(good[i], faulty[i]) for i in cone_outputs):
                 pattern = [assigned.get(i, X) for i in self.input_pos]
                 return AtpgResult(DETECTED, pattern, backtracks)
-            objective = self._objective(good, faulty, target, stuck)
+            objective = self._objective(good, faulty, target, stuck, cone)
             if objective is not None:
                 pi, value = self._backtrace(good, *objective)
                 assigned[pi] = value

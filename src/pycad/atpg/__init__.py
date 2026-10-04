@@ -5,11 +5,11 @@ from pycad.atpg.base import (
     REDUNDANT,
     Atpg,
     AtpgResult,
-    TestSet,
+    PatternSet,
     fill_x,
 )
 from pycad.atpg.dalg import DAlgorithm
 from pycad.atpg.podem import Podem
 
 __all__ = ["ABORTED", "DETECTED", "REDUNDANT", "Atpg", "AtpgResult", "DAlgorithm",
-           "Podem", "TestSet", "fill_x"]
+           "PatternSet", "Podem", "fill_x"]

@@ -192,6 +192,10 @@ class _PassThrough(Node):
     imply_b = imply
     imply_t = imply
 
+    def eval_t(self, ins):
+        """Three-valued output for the input values ``ins`` (0, 1 or ``X_VALUE``)."""
+        return ins[0]
+
 
 class BUFF(_PassThrough):
     """Buffer."""
@@ -210,12 +214,12 @@ class NOT(Node):
     def imply_b(self):
         self.value = self.unodes[0].value ^ Node.bitwise_not
 
+    def eval_t(self, ins):
+        """Three-valued output for the input values ``ins`` (0, 1 or ``X_VALUE``)."""
+        return X_VALUE if ins[0] == X_VALUE else 1 - ins[0]
+
     def imply_t(self):
-        value = self.unodes[0].value
-        if value == 0 or value == 1:
-            self.value = 1 - value
-        elif value == X_VALUE:
-            self.value = X_VALUE
+        self.value = self.eval_t(self.unodes_val())
 
 
 class _ControlledGate(Node):
@@ -244,14 +248,16 @@ class _ControlledGate(Node):
         controlled = self.CONTROL in self.unodes_val()
         self.value = (self.CONTROL if controlled else 1 - self.CONTROL) ^ self.INVERT
 
+    def eval_t(self, ins):
+        """Three-valued output for the input values ``ins`` (0, 1 or ``X_VALUE``)."""
+        if self.CONTROL in ins:
+            return self.CONTROL ^ self.INVERT
+        if X_VALUE in ins:
+            return X_VALUE
+        return (1 - self.CONTROL) ^ self.INVERT
+
     def imply_t(self):
-        values = self.unodes_val()
-        if self.CONTROL in values:
-            self.value = self.CONTROL ^ self.INVERT
-        elif X_VALUE in values:
-            self.value = X_VALUE
-        else:
-            self.value = (1 - self.CONTROL) ^ self.INVERT
+        self.value = self.eval_t(self.unodes_val())
 
     def imply_b(self):
         self.value = reduce(self._combine, (unode.value for unode in self.unodes))
@@ -287,11 +293,14 @@ class _ParityGate(Node):
     def imply(self):
         self.value = (sum(self.unodes_val()) + self.INVERT) % 2
 
+    def eval_t(self, ins):
+        """Three-valued output for the input values ``ins`` (0, 1 or ``X_VALUE``)."""
+        if X_VALUE in ins:
+            return X_VALUE
+        return (sum(ins) + self.INVERT) % 2
+
     def imply_t(self):
-        if X_VALUE in self.unodes_val():
-            self.value = X_VALUE
-        else:
-            self.imply()
+        self.value = self.eval_t(self.unodes_val())
 
     def imply_b(self):
         self.value = reduce(operator.xor, (unode.value for unode in self.unodes))
