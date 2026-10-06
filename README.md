@@ -14,6 +14,10 @@ It reads combinational netlists and offers, on one common circuit model:
 Statistical static timing analysis (`pycad.ssta`) and test point insertion are not part of the
 stable API yet, see [ROADMAP.md](ROADMAP.md).
 
+The package can produce test-related datasets, for example circuit graphs with SCOAP, STAFAN
+and detection-probability node attributes, that are used in downstream machine learning
+applications (see `gnn/`).
+
 ## Install
 
 ```bash
@@ -81,6 +85,35 @@ how the modules fit together.
 | `data/` | benchmark netlists (ISCAS-85 `.ckt`, Verilog) |
 | `gnn/` | graph neural network experiments (optional, work in progress) |
 | `legacy/` | earlier scripts, experiments and implementations kept for reference |
+
+## Developers and affiliation
+
+PyCAD development was first started by a group of graduate students at the University of
+Southern California (USC), computer engineering, as a joint research project with
+[The System Power Optimization and Regulation Technology (SPORT) Lab][1].
+
+**Main developers**
+
+- [M. Saeed Abrishami][10]
+- [Ghazal Rafiei][21]
+
+**Graduate students who worked with this platform during their EE658 course**
+
+- [Luke Grantham][20]
+- [Yang Shen][14]
+
+**Advisors**
+
+- [Prof. Massoud Pedram][11]
+- [Prof. Shahin Nazarian][12]
+
+[1]: http://sportlab.usc.edu/
+[10]: http://sportlab.usc.edu/~msabrishami/
+[11]: http://www.mpedram.com/
+[12]: http://sportlab.usc.edu/~shahin/
+[14]: https://www.linkedin.com/in/yshen245/
+[20]: https://www.linkedin.com/in/lukegrantham/
+[21]: https://github.com/ghazalrafiei
 
 ## License
 
