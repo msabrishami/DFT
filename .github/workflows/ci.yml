@@ -25,17 +25,8 @@ jobs:
       - name: Install package
         run: pip install -e ".[dev]"
 
-      # Modules are added to this list as each layer of the package is cleaned up.
       - name: Lint
-        run: >-
-          ruff check
-          src/pycad/config.py src/pycad/paths.py src/pycad/utils.py
-          src/pycad/tp_generator.py src/pycad/library
-          src/pycad/node/node.py
-          src/pycad/circuit/circuit.py src/pycad/circuit/circuit_loader.py
-          src/pycad/circuit/convert.py src/pycad/fault_simulation/fault.py
-          src/pycad/node/dft_node.py src/pycad/circuit/dft_circuit.py
-          src/pycad/fault_simulation src/pycad/atpg src/pycad/parallel.py tests
+        run: ruff check src/pycad --exclude src/pycad/ssta tests
 
       - name: Run tests
         run: pytest -v

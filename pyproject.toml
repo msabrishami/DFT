@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycad"
-version = "0.1.0"
+version = "2.0.0"
 description = "Python package for digital circuit analysis, design for test (DFT) and CAD research"
 readme = "README.md"
 license = "MIT"
