@@ -20,9 +20,11 @@ A renovation of the whole repository. The code before it is tagged `legacy-v0`.
 - Large helper and experiment code moved to `legacy/`; nothing was deleted.
 
 ### Fixed
-- STAFAN observability was wrong for some gates; dangling logic, primary outputs with fan-out
-  and X-valued ties are handled; PPSF confidence-interval runs converged too early with one
-  process; faults on unknown nodes and empty pattern lists are rejected instead of ignored.
+- SCOAP and STAFAN crashed on logic that reaches no output; a primary output with fan-out got a
+  nonzero observability; PPSF confidence-interval runs converged too early with one process
+  and could lose their log; faults on unknown nodes and empty pattern lists are rejected
+  instead of being ignored; Verilog outputs follow the declaration order; `stafan_fc` works
+  after `stafan_c` and `stafan_b`.
 
 ### Testing
 - 390+ tests: unit tests per gate and layer, a golden regression test, independent oracles
