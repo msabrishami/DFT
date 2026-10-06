@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- README: the SPORT Lab affiliation, developers and advisors.
+
 ## 2.0.0
 
 A renovation of the whole repository. The code before it is tagged `legacy-v0`.
